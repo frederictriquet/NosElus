@@ -82,6 +82,38 @@
 	</section>
 </div>
 
+{#if data.monthlyEvolution.length > 0}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Évolution des votes</h2>
+	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+		Répartition des votes par mois
+	</p>
+	<div class="evolution-chart">
+		{#each data.monthlyEvolution.slice(-12) as month}
+			{@const maxTotal = Math.max(...data.monthlyEvolution.map(m => m.total))}
+			{@const height = (month.total / maxTotal) * 100}
+			{@const pourPct = month.total > 0 ? (month.pour / month.total) * 100 : 0}
+			{@const contrePct = month.total > 0 ? (month.contre / month.total) * 100 : 0}
+			{@const abstPct = month.total > 0 ? (month.abstention / month.total) * 100 : 0}
+			<div class="evolution-bar-container" title="{month.month}: {month.total} votes">
+				<div class="evolution-bar" style="height: {height}%;">
+					<div class="bar-segment pour" style="height: {pourPct}%"></div>
+					<div class="bar-segment contre" style="height: {contrePct}%"></div>
+					<div class="bar-segment abstention" style="height: {abstPct}%"></div>
+				</div>
+				<span class="evolution-label">{month.month.slice(5)}</span>
+				<span class="evolution-value">{month.total}</span>
+			</div>
+		{/each}
+	</div>
+	<div class="evolution-legend">
+		<span class="legend-item"><span class="legend-box pour"></span> Pour</span>
+		<span class="legend-item"><span class="legend-box contre"></span> Contre</span>
+		<span class="legend-item"><span class="legend-box abstention"></span> Abstention</span>
+	</div>
+</section>
+{/if}
+
 <style>
 	h2 {
 		font-size: 1.25rem;
@@ -144,5 +176,95 @@
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
+	}
+
+	/* Evolution chart */
+	.evolution-chart {
+		display: flex;
+		align-items: flex-end;
+		gap: 0.5rem;
+		height: 180px;
+		padding-bottom: 2rem;
+	}
+
+	.evolution-bar-container {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		height: 100%;
+		position: relative;
+	}
+
+	.evolution-bar {
+		width: 100%;
+		display: flex;
+		flex-direction: column-reverse;
+		border-radius: 4px 4px 0 0;
+		overflow: hidden;
+		min-height: 4px;
+		margin-top: auto;
+	}
+
+	.bar-segment {
+		width: 100%;
+	}
+
+	.bar-segment.pour {
+		background: var(--color-success);
+	}
+
+	.bar-segment.contre {
+		background: var(--color-danger);
+	}
+
+	.bar-segment.abstention {
+		background: var(--color-warning);
+	}
+
+	.evolution-label {
+		position: absolute;
+		bottom: -1.5rem;
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
+	}
+
+	.evolution-value {
+		position: absolute;
+		bottom: 100%;
+		margin-bottom: 0.25rem;
+		font-size: 0.7rem;
+		font-weight: 500;
+	}
+
+	.evolution-legend {
+		display: flex;
+		gap: 1.5rem;
+		margin-top: 1rem;
+		font-size: 0.75rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.legend-box {
+		width: 12px;
+		height: 12px;
+		border-radius: 3px;
+	}
+
+	.legend-box.pour {
+		background: var(--color-success);
+	}
+
+	.legend-box.contre {
+		background: var(--color-danger);
+	}
+
+	.legend-box.abstention {
+		background: var(--color-warning);
 	}
 </style>

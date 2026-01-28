@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs } from '$lib/server/db';
-import { count, eq, sql, desc } from 'drizzle-orm';
+import { count, eq, sql, desc, inArray } from 'drizzle-orm';
 
 export const load: PageServerLoad = async () => {
 	// Total counts
@@ -87,6 +87,102 @@ export const load: PageServerLoad = async () => {
 		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
 		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 
+	// Get groups with votes for proximity matrix
+	const activeGroups = groupStats.filter((g) => g.totalVotes > 0);
+	const groupIds = activeGroups.map((g) => g.groupId);
+
+	// Heatmap: Get recent scrutins with group votes
+	const recentScrutins = await db
+		.select({
+			id: scrutins.id,
+			title: scrutins.title,
+			date: scrutins.date,
+			result: scrutins.result
+		})
+		.from(scrutins)
+		.orderBy(desc(scrutins.date))
+		.limit(15);
+
+	const scrutinIds = recentScrutins.map((s) => s.id);
+
+	// Get votes for heatmap (group positions per scrutin)
+	const heatmapData =
+		scrutinIds.length > 0 && groupIds.length > 0
+			? await db
+					.select({
+						scrutinId: votes.scrutinId,
+						groupId: votes.groupId,
+						position: votes.position,
+						count: count()
+					})
+					.from(votes)
+					.where(inArray(votes.scrutinId, scrutinIds))
+					.groupBy(votes.scrutinId, votes.groupId, votes.position)
+			: [];
+
+	// Build heatmap matrix: for each scrutin and group, determine majority position
+	const heatmapMatrix: Record<string, Record<string, { position: string; count: number }>> = {};
+	for (const row of heatmapData) {
+		if (!row.groupId) continue;
+		if (!heatmapMatrix[row.scrutinId]) {
+			heatmapMatrix[row.scrutinId] = {};
+		}
+		const current = heatmapMatrix[row.scrutinId][row.groupId];
+		if (!current || row.count > current.count) {
+			heatmapMatrix[row.scrutinId][row.groupId] = {
+				position: row.position,
+				count: row.count
+			};
+		}
+	}
+
+	// Calculate group proximity matrix (how often groups vote the same way)
+	const proximityMatrix: Record<string, Record<string, number>> = {};
+	const pairCounts: Record<string, Record<string, { same: number; total: number }>> = {};
+
+	// Initialize
+	for (const g1 of groupIds) {
+		proximityMatrix[g1] = {};
+		pairCounts[g1] = {};
+		for (const g2 of groupIds) {
+			pairCounts[g1][g2] = { same: 0, total: 0 };
+		}
+	}
+
+	// Count agreements per scrutin
+	for (const scrutinId of Object.keys(heatmapMatrix)) {
+		const scrutinVotes = heatmapMatrix[scrutinId];
+		const votingGroups = Object.keys(scrutinVotes);
+
+		for (let i = 0; i < votingGroups.length; i++) {
+			for (let j = i + 1; j < votingGroups.length; j++) {
+				const g1 = votingGroups[i];
+				const g2 = votingGroups[j];
+				pairCounts[g1][g2].total++;
+				pairCounts[g2][g1].total++;
+				if (scrutinVotes[g1].position === scrutinVotes[g2].position) {
+					pairCounts[g1][g2].same++;
+					pairCounts[g2][g1].same++;
+				}
+			}
+		}
+	}
+
+	// Calculate percentages
+	for (const g1 of groupIds) {
+		for (const g2 of groupIds) {
+			if (g1 === g2) {
+				proximityMatrix[g1][g2] = 100;
+			} else if (pairCounts[g1][g2].total > 0) {
+				proximityMatrix[g1][g2] = Math.round(
+					(pairCounts[g1][g2].same / pairCounts[g1][g2].total) * 100
+				);
+			} else {
+				proximityMatrix[g1][g2] = 0;
+			}
+		}
+	}
+
 	return {
 		totals: {
 			actors: totalActors.value,
@@ -97,6 +193,24 @@ export const load: PageServerLoad = async () => {
 		topParticipation,
 		scrutinResults: results,
 		groupStats,
-		monthlyActivity
+		monthlyActivity,
+		// Phase 4 additions
+		heatmap: {
+			scrutins: recentScrutins,
+			groups: activeGroups.map((g) => ({
+				id: g.groupId,
+				name: g.groupShortName || g.groupName,
+				color: g.groupColor
+			})),
+			matrix: heatmapMatrix
+		},
+		proximityMatrix: {
+			groups: activeGroups.map((g) => ({
+				id: g.groupId,
+				name: g.groupShortName || g.groupName,
+				color: g.groupColor
+			})),
+			matrix: proximityMatrix
+		}
 	};
 };

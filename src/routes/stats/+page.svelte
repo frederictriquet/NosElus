@@ -138,6 +138,108 @@
 	</div>
 </section>
 
+{#if data.proximityMatrix.groups.length > 1}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Proximité politique entre groupes</h2>
+	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+		Pourcentage de votes identiques entre les groupes parlementaires (sur les 15 derniers scrutins)
+	</p>
+	<div class="proximity-matrix">
+		<table class="matrix-table">
+			<thead>
+				<tr>
+					<th></th>
+					{#each data.proximityMatrix.groups as group}
+						<th class="matrix-header" title={group.name}>
+							<span class="group-dot" style="background: {group.color || '#888'}"></span>
+						</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each data.proximityMatrix.groups as rowGroup}
+					<tr>
+						<td class="matrix-row-header">
+							<span class="group-dot" style="background: {rowGroup.color || '#888'}"></span>
+							<span class="group-abbr">{rowGroup.name}</span>
+						</td>
+						{#each data.proximityMatrix.groups as colGroup}
+							{@const value = data.proximityMatrix.matrix[rowGroup.id]?.[colGroup.id] ?? 0}
+							<td
+								class="matrix-cell"
+								class:diagonal={rowGroup.id === colGroup.id}
+								class:high={value >= 70 && rowGroup.id !== colGroup.id}
+								class:medium={value >= 40 && value < 70}
+								class:low={value < 40 && rowGroup.id !== colGroup.id}
+								title="{rowGroup.name} / {colGroup.name}: {value}%"
+							>
+								{rowGroup.id === colGroup.id ? '-' : value + '%'}
+							</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+</section>
+{/if}
+
+{#if data.heatmap.scrutins.length > 0 && data.heatmap.groups.length > 0}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Heatmap des votes récents</h2>
+	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+		Position majoritaire de chaque groupe sur les 15 derniers scrutins
+	</p>
+	<div class="heatmap-container">
+		<table class="heatmap-table">
+			<thead>
+				<tr>
+					<th class="heatmap-scrutin-header">Scrutin</th>
+					{#each data.heatmap.groups as group}
+						<th class="heatmap-group-header" title={group.name}>
+							<span class="group-dot" style="background: {group.color || '#888'}"></span>
+						</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each data.heatmap.scrutins as scrutin}
+					<tr>
+						<td class="heatmap-scrutin-cell">
+							<a href="/scrutins/{scrutin.id}" title={scrutin.title}>
+								{scrutin.title?.slice(0, 40)}{(scrutin.title?.length || 0) > 40 ? '...' : ''}
+							</a>
+							<span class="scrutin-date">{new Date(scrutin.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+						</td>
+						{#each data.heatmap.groups as group}
+							{@const vote = data.heatmap.matrix[scrutin.id]?.[group.id]}
+							<td
+								class="heatmap-cell"
+								class:pour={vote?.position === 'pour'}
+								class:contre={vote?.position === 'contre'}
+								class:abstention={vote?.position === 'abstention'}
+								class:empty={!vote}
+								title="{group.name}: {vote?.position || 'non voté'}"
+							>
+								{#if vote?.position === 'pour'}✓
+								{:else if vote?.position === 'contre'}✗
+								{:else if vote?.position === 'abstention'}○
+								{:else}-{/if}
+							</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	<div class="heatmap-legend">
+		<span class="legend-item"><span class="legend-box pour"></span> Pour</span>
+		<span class="legend-item"><span class="legend-box contre"></span> Contre</span>
+		<span class="legend-item"><span class="legend-box abstention"></span> Abstention</span>
+	</div>
+</section>
+{/if}
+
 <style>
 	h2 {
 		font-size: 1.25rem;
@@ -257,5 +359,165 @@
 	.ranking-value {
 		color: var(--color-primary);
 		font-weight: 600;
+	}
+
+	/* Proximity Matrix */
+	.proximity-matrix {
+		overflow-x: auto;
+	}
+
+	.matrix-table {
+		border-collapse: collapse;
+		font-size: 0.75rem;
+	}
+
+	.matrix-header {
+		padding: 0.5rem;
+		text-align: center;
+	}
+
+	.matrix-row-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		white-space: nowrap;
+	}
+
+	.group-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		display: inline-block;
+		flex-shrink: 0;
+	}
+
+	.group-abbr {
+		font-weight: 500;
+		font-size: 0.75rem;
+	}
+
+	.matrix-cell {
+		padding: 0.5rem;
+		text-align: center;
+		font-weight: 600;
+		min-width: 50px;
+	}
+
+	.matrix-cell.diagonal {
+		background: var(--color-border);
+		color: var(--color-text-muted);
+	}
+
+	.matrix-cell.high {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.matrix-cell.medium {
+		background: #fef3c7;
+		color: #92400e;
+	}
+
+	.matrix-cell.low {
+		background: #fee2e2;
+		color: #991b1b;
+	}
+
+	/* Heatmap */
+	.heatmap-container {
+		overflow-x: auto;
+	}
+
+	.heatmap-table {
+		border-collapse: collapse;
+		width: 100%;
+		font-size: 0.8rem;
+	}
+
+	.heatmap-scrutin-header {
+		text-align: left;
+		padding: 0.5rem;
+		min-width: 200px;
+	}
+
+	.heatmap-group-header {
+		padding: 0.5rem;
+		text-align: center;
+	}
+
+	.heatmap-scrutin-cell {
+		padding: 0.5rem;
+		max-width: 250px;
+	}
+
+	.heatmap-scrutin-cell a {
+		font-size: 0.75rem;
+		line-height: 1.3;
+		display: block;
+		color: inherit;
+	}
+
+	.scrutin-date {
+		font-size: 0.65rem;
+		color: var(--color-text-muted);
+	}
+
+	.heatmap-cell {
+		text-align: center;
+		padding: 0.5rem;
+		font-weight: 700;
+		min-width: 40px;
+	}
+
+	.heatmap-cell.pour {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.heatmap-cell.contre {
+		background: #fee2e2;
+		color: #991b1b;
+	}
+
+	.heatmap-cell.abstention {
+		background: #fef3c7;
+		color: #92400e;
+	}
+
+	.heatmap-cell.empty {
+		background: var(--color-bg);
+		color: var(--color-text-muted);
+	}
+
+	.heatmap-legend {
+		display: flex;
+		gap: 1.5rem;
+		margin-top: 1rem;
+		font-size: 0.75rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.legend-box {
+		width: 16px;
+		height: 16px;
+		border-radius: 4px;
+	}
+
+	.legend-box.pour {
+		background: #dcfce7;
+	}
+
+	.legend-box.contre {
+		background: #fee2e2;
+	}
+
+	.legend-box.abstention {
+		background: #fef3c7;
 	}
 </style>

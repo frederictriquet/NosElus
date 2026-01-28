@@ -82,7 +82,9 @@
 ### 4.2 Visualisations
 - [x] Graphique barres activité mensuelle
 - [x] Barre de répartition des votes
-- [ ] Heatmap des votes par groupe
+- [x] Heatmap des votes par groupe (15 derniers scrutins)
+- [x] Matrice de proximité politique entre groupes
+- [x] Évolution temporelle des votes par député
 - [ ] Carte des circonscriptions
 - [ ] Timeline de carrière politique
 

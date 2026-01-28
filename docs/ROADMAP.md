@@ -1,3 +1,5 @@
+
+
 # Roadmap NosElus
 
 ## Phase 1 - Fondations (0-4 semaines)
@@ -85,8 +87,9 @@
 - [x] Heatmap des votes par groupe (15 derniers scrutins)
 - [x] Matrice de proximité politique entre groupes
 - [x] Évolution temporelle des votes par député
-- [ ] Carte des circonscriptions
-- [ ] Timeline de carrière politique
+- [x] Statistiques et évolution par groupe parlementaire
+- [ ] Carte des circonscriptions *(nécessite données GeoJSON)*
+- [ ] Timeline de carrière politique *(nécessite données mandats)*
 
 ### 4.3 Comparateur
 - [x] Comparaison de deux élus

@@ -19,11 +19,13 @@
 - [ ] ETL Sénat - Travaux législatifs (DOSLEG) *(Phase 2)*
 
 ### 1.3 API de base (backend)
-- [ ] Endpoint REST `/api/actors` - Liste des députés/sénateurs
-- [ ] Endpoint REST `/api/actors/:id` - Détail d'un élu
-- [ ] Endpoint REST `/api/scrutins` - Liste des scrutins
-- [ ] Endpoint REST `/api/scrutins/:id` - Détail d'un scrutin avec votes
-- [ ] Endpoint REST `/api/organs` - Groupes parlementaires
+- [x] Endpoint REST `/api/v1/actors` - Liste des députés (618 importés)
+- [x] Endpoint REST `/api/v1/actors/:id` - Détail d'un élu + votes
+- [x] Endpoint REST `/api/v1/scrutins` - Liste des scrutins (4105 importés)
+- [x] Endpoint REST `/api/v1/scrutins/:id` - Détail d'un scrutin avec votes
+- [x] Endpoint REST `/api/v1/organs` - Groupes parlementaires (11 importés)
+- [x] Endpoint REST `/api/v1/search` - Recherche globale
+- [x] Pagination, filtres et tri sur tous les endpoints
 
 ---
 

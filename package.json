@@ -35,6 +35,7 @@
 		"etl:actors": "node --import tsx scripts/etl/import-actors.ts",
 		"etl:scrutins": "node --import tsx scripts/etl/import-scrutins.ts",
 		"etl:all": "node --import tsx scripts/etl/import-all.ts",
+		"etl:nosdeputes": "node --import tsx scripts/etl/import-nosdeputes.ts",
 		"lint-staged": "lint-staged",
 		"commitlint": "commitlint"
 	},

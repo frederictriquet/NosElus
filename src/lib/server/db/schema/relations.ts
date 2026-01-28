@@ -10,7 +10,8 @@ import { amendments } from './amendments';
 // Relations pour actors
 export const actorsRelations = relations(actors, ({ many }) => ({
 	mandates: many(mandates),
-	votes: many(votes),
+	votes: many(votes, { relationName: 'actorVotes' }),
+	delegatedVotes: many(votes, { relationName: 'delegation' }),
 	amendments: many(amendments)
 }));
 
@@ -23,7 +24,7 @@ export const organsRelations = relations(organs, ({ one, many }) => ({
 	}),
 	children: many(organs, { relationName: 'organHierarchy' }),
 	mandates: many(mandates),
-	votes: many(votes)
+	votes: many(votes, { relationName: 'groupVotes' })
 }));
 
 // Relations pour mandates
@@ -55,11 +56,13 @@ export const votesRelations = relations(votes, ({ one }) => ({
 	}),
 	actor: one(actors, {
 		fields: [votes.actorId],
-		references: [actors.id]
+		references: [actors.id],
+		relationName: 'actorVotes'
 	}),
 	group: one(organs, {
 		fields: [votes.groupId],
-		references: [organs.id]
+		references: [organs.id],
+		relationName: 'groupVotes'
 	}),
 	delegator: one(actors, {
 		fields: [votes.delegatorId],

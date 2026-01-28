@@ -1,0 +1,43 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import Button from './Button.svelte';
+
+describe('Button', () => {
+	it('should render with text', () => {
+		render(Button, { props: { children: 'Click me' } });
+		expect(screen.getByRole('button')).toHaveTextContent('Click me');
+	});
+
+	it('should apply primary variant by default', () => {
+		render(Button, { props: { children: 'Click me' } });
+		const button = screen.getByRole('button');
+		expect(button).toHaveClass('btn-primary');
+	});
+
+	it('should apply secondary variant when specified', () => {
+		render(Button, { props: { variant: 'secondary', children: 'Click me' } });
+		const button = screen.getByRole('button');
+		expect(button).toHaveClass('btn-secondary');
+	});
+
+	it('should be disabled when disabled prop is true', () => {
+		render(Button, { props: { disabled: true, children: 'Click me' } });
+		const button = screen.getByRole('button');
+		expect(button).toBeDisabled();
+	});
+
+	it('should call onclick handler when clicked', async () => {
+		const handleClick = vi.fn();
+		const { component } = render(Button, {
+			props: {
+				onclick: handleClick,
+				children: 'Click me'
+			}
+		});
+
+		const button = screen.getByRole('button');
+		await button.click();
+
+		expect(handleClick).toHaveBeenCalledTimes(1);
+	});
+});

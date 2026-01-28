@@ -1,0 +1,25 @@
+# Build outputs
+.svelte-kit/
+build/
+dist/
+.output/
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+.stryker-tmp/
+reports/
+
+# Misc
+*.log
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Generated files
+CHANGELOG.md
+.release-please-manifest.json

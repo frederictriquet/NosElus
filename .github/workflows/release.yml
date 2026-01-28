@@ -1,0 +1,48 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Run Release Please
+        uses: googleapis/release-please-action@v4
+        id: release
+
+      - name: Checkout code
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm ci
+
+      - name: Build project
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm run build
+
+      - name: Upload release artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build-${{ steps.release.outputs.tag_name }}
+          path: build/
+          retention-days: 90

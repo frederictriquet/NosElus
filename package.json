@@ -1,0 +1,68 @@
+{
+	"name": "noselus",
+	"description": "Projet basé sur SvelteBase template",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"author": "",
+	"license": "MIT",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "husky || true",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui",
+		"test:coverage": "vitest run --coverage",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:debug": "playwright test --debug",
+		"test:all": "npm run test && npm run test:e2e",
+		"test:mutation": "stryker run",
+		"test:mutation:incremental": "stryker run --incremental",
+		"docker:build": "docker compose build",
+		"docker:up": "docker compose up -d",
+		"docker:down": "docker compose down",
+		"docker:logs": "docker compose logs -f",
+		"docker:restart": "docker compose restart",
+		"lint-staged": "lint-staged",
+		"commitlint": "commitlint"
+	},
+	"lint-staged": {
+		"*.{js,ts,svelte}": [
+			"svelte-check --tsconfig ./tsconfig.json"
+		],
+		"*.{js,ts,svelte,css,md,json}": [
+			"prettier --write"
+		]
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^20.2.0",
+		"@commitlint/config-conventional": "^20.2.0",
+		"@playwright/test": "^1.57.0",
+		"@stryker-mutator/core": "^8.6.0",
+		"@stryker-mutator/typescript-checker": "^8.6.0",
+		"@stryker-mutator/vitest-runner": "^8.6.0",
+		"@sveltejs/adapter-auto": "^3.2.5",
+		"@sveltejs/adapter-node": "^5.4.0",
+		"@sveltejs/kit": "^2.8.3",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/svelte": "^5.2.9",
+		"@vitest/ui": "^4.0.15",
+		"happy-dom": "^20.0.11",
+		"husky": "^9.1.7",
+		"jsdom": "^27.0.1",
+		"lint-staged": "^16.2.7",
+		"prettier": "^3.7.4",
+		"prettier-plugin-svelte": "^3.4.0",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.5",
+		"typescript": "^5.6.3",
+		"vite": "^5.4.11",
+		"vitest": "^4.0.15"
+	}
+}

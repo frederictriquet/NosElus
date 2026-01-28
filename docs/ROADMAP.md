@@ -71,20 +71,25 @@
 ## Phase 4 - Analyse avancée (13-18 semaines)
 
 ### 4.1 Statistiques
-- [ ] Taux de participation par député
-- [ ] Cohésion de vote par groupe
+- [x] Taux de participation par député (Top 10)
+- [x] Cohésion de vote par groupe (tableau votes par groupe)
+- [x] Répartition globale des votes (pour/contre/abstention)
+- [x] Activité mensuelle (graphique à barres)
+- [x] Résultats des scrutins (adoptés/rejetés)
 - [ ] Alignement avec le gouvernement
 - [ ] Évolution des positions dans le temps
 
 ### 4.2 Visualisations
-- [ ] Graphiques temporels des votes
+- [x] Graphique barres activité mensuelle
+- [x] Barre de répartition des votes
 - [ ] Heatmap des votes par groupe
 - [ ] Carte des circonscriptions
 - [ ] Timeline de carrière politique
 
 ### 4.3 Comparateur
-- [ ] Comparaison de deux élus
-- [ ] Similarité de vote
+- [x] Comparaison de deux élus
+- [x] Similarité de vote (taux d'accord)
+- [x] Liste des votes divergents
 - [ ] Distance politique calculée
 
 ---

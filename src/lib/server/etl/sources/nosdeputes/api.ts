@@ -109,12 +109,12 @@ export async function fetchScrutinVotes(
 		? `/${legislature}/scrutin/${scrutinId}/json`
 		: `/scrutin/${scrutinId}/json`;
 
-	const data = await fetchJson<{ votes: { vote: Array<{ vote: NosDeputesVote }> } }>(
+	const data = await fetchJson<{ votes?: Array<{ vote: NosDeputesVote }> }>(
 		`${baseUrl}${path}`
 	);
 
-	if (!data.votes?.vote) return [];
-	return data.votes.vote.map((v) => v.vote);
+	if (!data.votes) return [];
+	return data.votes.map((v) => v.vote);
 }
 
 export interface NosDeputesGroupe {

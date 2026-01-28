@@ -1,38 +1,19 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
-
 	let { data } = $props();
-	let mapContainer: HTMLDivElement;
-	let map: any;
-	let L: any;
 
 	// Calculate total for percentages
 	const totalDeputies = data.groupDistribution.reduce((sum, g) => sum + g.deputyCount, 0);
 
-	onMount(async () => {
-		if (browser) {
-			L = await import('leaflet');
-			await import('leaflet/dist/leaflet.css');
+	// Political spectrum order (left to right)
+	const spectrumOrder = ['PO_GP_LFI', 'PO_GP_GDR', 'PO_GP_ECO', 'PO_GP_SOC', 'PO_GP_LIOT', 'PO_GP_MODEM', 'PO_GP_REN', 'PO_GP_HOR', 'PO_GP_LR', 'PO_GP_RN', 'PO_GP_NI'];
 
-			// Create map centered on France
-			map = L.map(mapContainer).setView([46.603354, 1.888334], 6);
-
-			// Add OpenStreetMap tiles
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-			}).addTo(map);
-
-			// Add a marker for Paris (Assemblée Nationale)
-			const marker = L.marker([48.8608, 2.3185]).addTo(map);
-			marker.bindPopup('<b>Assemblée Nationale</b><br>Palais Bourbon');
-		}
+	const sortedGroups = [...data.groupDistribution].sort((a, b) => {
+		return spectrumOrder.indexOf(a.groupId) - spectrumOrder.indexOf(b.groupId);
 	});
 </script>
 
 <svelte:head>
-	<title>Carte - NosElus</title>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<title>Carte politique - NosElus</title>
 </svelte:head>
 
 <div class="page-header">
@@ -41,27 +22,36 @@
 </div>
 
 <div class="card" style="margin-bottom: 1.5rem;">
-	<h2>Hémicycle</h2>
+	<h2>Hémicycle de l'Assemblée nationale</h2>
 	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
-		Répartition des {totalDeputies} députés par groupe parlementaire
+		Répartition des {totalDeputies} députés par groupe parlementaire (16ème législature)
 	</p>
-	<div class="hemicycle">
-		{#each data.groupDistribution as group}
-			{@const widthPct = (group.deputyCount / totalDeputies) * 100}
-			<div
-				class="hemicycle-segment"
-				style="flex: {group.deputyCount}; background: {group.groupColor || '#888'};"
-				title="{group.groupShortName || group.groupName}: {group.deputyCount} députés ({widthPct.toFixed(1)}%)"
-			>
-				{#if widthPct > 8}
-					<span class="segment-label">{group.groupShortName}</span>
-					<span class="segment-count">{group.deputyCount}</span>
-				{/if}
-			</div>
-		{/each}
+
+	<div class="hemicycle-container">
+		<div class="hemicycle-bar">
+			{#each sortedGroups as group}
+				{@const widthPct = (group.deputyCount / totalDeputies) * 100}
+				<a
+					href="/groupes/{group.groupId}"
+					class="hemicycle-segment"
+					style="flex: {group.deputyCount}; background: {group.groupColor || '#888'};"
+					title="{group.groupShortName || group.groupName}: {group.deputyCount} députés ({widthPct.toFixed(1)}%)"
+				>
+					{#if widthPct > 6}
+						<span class="segment-label">{group.groupShortName}</span>
+						<span class="segment-count">{group.deputyCount}</span>
+					{/if}
+				</a>
+			{/each}
+		</div>
+		<div class="spectrum-labels">
+			<span class="spectrum-left">← Gauche</span>
+			<span class="spectrum-right">Droite →</span>
+		</div>
 	</div>
+
 	<div class="hemicycle-legend">
-		{#each data.groupDistribution as group}
+		{#each sortedGroups as group}
 			<a href="/groupes/{group.groupId}" class="legend-item">
 				<span class="legend-color" style="background: {group.groupColor || '#888'}"></span>
 				<span class="legend-name">{group.groupShortName || group.groupName}</span>
@@ -72,14 +62,27 @@
 </div>
 
 <div class="card" style="margin-bottom: 1.5rem;">
-	<h2>Carte de France</h2>
-	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
-		Assemblée Nationale - Palais Bourbon
-	</p>
-	<div bind:this={mapContainer} class="map-container"></div>
-	<p style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">
-		Note : Les données de circonscription ne sont pas encore importées. La carte complète avec la répartition par circonscription sera disponible après l'import des données de mandats.
-	</p>
+	<h2>Répartition politique</h2>
+	<div class="bar-chart">
+		{#each sortedGroups as group}
+			{@const widthPct = (group.deputyCount / totalDeputies) * 100}
+			<div class="bar-row">
+				<a href="/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
+				<div class="bar-track">
+					<div
+						class="bar-fill"
+						style="width: {widthPct * 2}%; background: {group.groupColor || '#888'};"
+					></div>
+				</div>
+				<span class="bar-value">{group.deputyCount}</span>
+			</div>
+		{/each}
+	</div>
+	<div class="majority-line">
+		<div class="majority-marker" style="left: {(289 / totalDeputies) * 100}%">
+			<span class="majority-label">Majorité absolue (289)</span>
+		</div>
+	</div>
 </div>
 
 <section class="card">
@@ -116,12 +119,17 @@
 		margin-bottom: 0.5rem;
 	}
 
-	.hemicycle {
+	/* Hemicycle Bar */
+	.hemicycle-container {
+		margin: 1.5rem 0;
+	}
+
+	.hemicycle-bar {
 		display: flex;
-		height: 60px;
-		border-radius: 30px 30px 0 0;
+		height: 80px;
+		border-radius: 40px 40px 0 0;
 		overflow: hidden;
-		margin-bottom: 1rem;
+		box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
 	}
 
 	.hemicycle-segment {
@@ -132,21 +140,33 @@
 		color: white;
 		text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 		min-width: 0;
-		transition: transform 0.2s;
+		text-decoration: none;
+		transition: transform 0.2s, filter 0.2s;
 	}
 
 	.hemicycle-segment:hover {
-		transform: scaleY(1.1);
+		filter: brightness(1.1);
+		transform: scaleY(1.05);
 		z-index: 1;
+		text-decoration: none;
 	}
 
 	.segment-label {
-		font-size: 0.75rem;
-		font-weight: 600;
+		font-size: 0.7rem;
+		font-weight: 700;
 	}
 
 	.segment-count {
-		font-size: 0.65rem;
+		font-size: 0.6rem;
+		opacity: 0.9;
+	}
+
+	.spectrum-labels {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.5rem 0;
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
 	}
 
 	.hemicycle-legend {
@@ -154,6 +174,7 @@
 		flex-wrap: wrap;
 		gap: 0.75rem;
 		justify-content: center;
+		margin-top: 1rem;
 	}
 
 	.legend-item {
@@ -187,10 +208,82 @@
 		color: var(--color-text-muted);
 	}
 
-	.map-container {
-		height: 400px;
-		border-radius: var(--radius);
-		z-index: 0;
+	/* Bar Chart */
+	.bar-chart {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.bar-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.bar-label {
+		width: 50px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-align: right;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.bar-label:hover {
+		color: var(--color-primary);
+	}
+
+	.bar-track {
+		flex: 1;
+		height: 24px;
+		background: var(--color-bg);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.bar-fill {
+		height: 100%;
+		border-radius: 4px;
+		transition: width 0.3s ease;
+	}
+
+	.bar-value {
+		width: 40px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-align: right;
+	}
+
+	.majority-line {
+		position: relative;
+		height: 2px;
+		background: var(--color-border);
+		margin: 1rem 50px 0 50px;
+	}
+
+	.majority-marker {
+		position: absolute;
+		top: -8px;
+		transform: translateX(-50%);
+	}
+
+	.majority-marker::before {
+		content: '';
+		display: block;
+		width: 2px;
+		height: 18px;
+		background: var(--color-danger);
+		margin: 0 auto;
+	}
+
+	.majority-label {
+		display: block;
+		font-size: 0.65rem;
+		color: var(--color-danger);
+		white-space: nowrap;
+		margin-top: 4px;
 	}
 
 	.groups-grid {

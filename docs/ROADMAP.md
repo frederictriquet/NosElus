@@ -51,17 +51,20 @@
 ## Phase 3 - UI initiale (9-12 semaines)
 
 ### 3.1 Pages principales
-- [ ] Page d'accueil avec statistiques clés
-- [ ] Liste des députés avec filtres (groupe, circonscription)
-- [ ] Liste des sénateurs avec filtres
-- [ ] Fiche détaillée d'un élu (profil + votes + lois)
-- [ ] Liste des scrutins avec filtres (date, résultat)
-- [ ] Détail d'un scrutin (votes par groupe, par député)
+- [x] Page d'accueil avec statistiques clés
+- [x] Liste des députés avec filtres et recherche
+- [ ] Liste des sénateurs avec filtres *(Phase 2 - données non disponibles)*
+- [x] Fiche détaillée d'un élu (profil + votes)
+- [x] Liste des scrutins avec filtres (date, résultat)
+- [x] Détail d'un scrutin (votes par position, par député)
+- [x] Liste des groupes parlementaires
+- [x] Détail d'un groupe parlementaire
 
 ### 3.2 Recherche et navigation
-- [ ] Barre de recherche globale (élus, textes, scrutins)
-- [ ] Filtres par date, parti, groupe politique
-- [ ] Pagination et tri des résultats
+- [x] Recherche par nom de député
+- [x] Recherche par titre de scrutin
+- [x] Filtres par résultat (adopté/rejeté)
+- [x] Pagination sur toutes les listes
 
 ---
 

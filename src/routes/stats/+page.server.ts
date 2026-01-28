@@ -183,6 +183,132 @@ export const load: PageServerLoad = async () => {
 		}
 	}
 
+	// ===== GOVERNMENT ALIGNMENT =====
+	// Presidential majority groups: Renaissance, MoDem, Horizons
+	const majorityGroupIds = ['PO_GP_REN', 'PO_GP_MODEM', 'PO_GP_HOR'];
+
+	// For each scrutin, determine majority position (what did majority vote for)
+	const majorityVotes = await db
+		.select({
+			scrutinId: votes.scrutinId,
+			position: votes.position,
+			count: count()
+		})
+		.from(votes)
+		.where(inArray(votes.groupId, majorityGroupIds))
+		.groupBy(votes.scrutinId, votes.position);
+
+	// Build majority position per scrutin
+	const majorityPosition: Record<string, string> = {};
+	const scrutinMajorityCounts: Record<string, Record<string, number>> = {};
+
+	for (const row of majorityVotes) {
+		if (!scrutinMajorityCounts[row.scrutinId]) {
+			scrutinMajorityCounts[row.scrutinId] = {};
+		}
+		scrutinMajorityCounts[row.scrutinId][row.position] = row.count;
+	}
+
+	for (const [scrutinId, positions] of Object.entries(scrutinMajorityCounts)) {
+		let maxPos = 'pour';
+		let maxCount = 0;
+		for (const [pos, cnt] of Object.entries(positions)) {
+			if (cnt > maxCount) {
+				maxCount = cnt;
+				maxPos = pos;
+			}
+		}
+		majorityPosition[scrutinId] = maxPos;
+	}
+
+	// Calculate alignment per group (how often they vote with majority)
+	const groupAlignmentData = await db
+		.select({
+			groupId: votes.groupId,
+			scrutinId: votes.scrutinId,
+			position: votes.position,
+			count: count()
+		})
+		.from(votes)
+		.groupBy(votes.groupId, votes.scrutinId, votes.position);
+
+	// Build group majority position per scrutin
+	const groupScrutinPosition: Record<string, Record<string, string>> = {};
+	const tempCounts: Record<string, Record<string, Record<string, number>>> = {};
+
+	for (const row of groupAlignmentData) {
+		if (!row.groupId) continue;
+		if (!tempCounts[row.groupId]) tempCounts[row.groupId] = {};
+		if (!tempCounts[row.groupId][row.scrutinId]) tempCounts[row.groupId][row.scrutinId] = {};
+		tempCounts[row.groupId][row.scrutinId][row.position] = row.count;
+	}
+
+	for (const [gId, scrutins] of Object.entries(tempCounts)) {
+		groupScrutinPosition[gId] = {};
+		for (const [sId, positions] of Object.entries(scrutins)) {
+			let maxPos = 'pour';
+			let maxCount = 0;
+			for (const [pos, cnt] of Object.entries(positions)) {
+				if (cnt > maxCount) {
+					maxCount = cnt;
+					maxPos = pos;
+				}
+			}
+			groupScrutinPosition[gId][sId] = maxPos;
+		}
+	}
+
+	// Calculate alignment rate per group
+	const governmentAlignment: Array<{
+		groupId: string;
+		groupName: string;
+		groupShortName: string | null;
+		groupColor: string | null;
+		alignmentRate: number;
+		commonScrutins: number;
+	}> = [];
+
+	for (const g of activeGroups) {
+		const groupPositions = groupScrutinPosition[g.groupId] || {};
+		let aligned = 0;
+		let total = 0;
+
+		for (const [scrutinId, groupPos] of Object.entries(groupPositions)) {
+			if (majorityPosition[scrutinId]) {
+				total++;
+				if (groupPos === majorityPosition[scrutinId]) {
+					aligned++;
+				}
+			}
+		}
+
+		governmentAlignment.push({
+			groupId: g.groupId,
+			groupName: g.groupName,
+			groupShortName: g.groupShortName,
+			groupColor: g.groupColor,
+			alignmentRate: total > 0 ? (aligned / total) * 100 : 0,
+			commonScrutins: total
+		});
+	}
+
+	governmentAlignment.sort((a, b) => b.alignmentRate - a.alignmentRate);
+
+	// ===== POSITION EVOLUTION OVER TIME =====
+	// Calculate monthly ratio of pour vs contre votes globally
+	const positionEvolution = await db
+		.select({
+			month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
+			pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+			contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+			abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+			total: count()
+		})
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
+		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
+
 	return {
 		totals: {
 			actors: totalActors.value,
@@ -211,6 +337,8 @@ export const load: PageServerLoad = async () => {
 				color: g.groupColor
 			})),
 			matrix: proximityMatrix
-		}
+		},
+		governmentAlignment,
+		positionEvolution
 	};
 };

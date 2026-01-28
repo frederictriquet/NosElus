@@ -240,6 +240,66 @@
 </section>
 {/if}
 
+{#if data.governmentAlignment.length > 0}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Alignement avec le gouvernement</h2>
+	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+		Taux d'alignement avec la majorité présidentielle (Renaissance, MoDem, Horizons)
+	</p>
+	<div class="alignment-list">
+		{#each data.governmentAlignment as group}
+			<div class="alignment-item">
+				<div class="alignment-group">
+					<span class="group-dot" style="background: {group.groupColor || '#888'}"></span>
+					<span class="alignment-name">{group.groupShortName || group.groupName}</span>
+				</div>
+				<div class="alignment-bar-container">
+					<div
+						class="alignment-bar"
+						class:high={group.alignmentRate >= 70}
+						class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70}
+						class:low={group.alignmentRate < 40}
+						style="width: {group.alignmentRate}%"
+					></div>
+				</div>
+				<span class="alignment-value" class:high={group.alignmentRate >= 70} class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70} class:low={group.alignmentRate < 40}>
+					{group.alignmentRate.toFixed(0)}%
+				</span>
+			</div>
+		{/each}
+	</div>
+</section>
+{/if}
+
+{#if data.positionEvolution.length > 0}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Évolution des positions dans le temps</h2>
+	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+		Répartition des votes par mois
+	</p>
+	<div class="evolution-timeline">
+		{#each data.positionEvolution.slice(-12) as month}
+			{@const pourPct = month.total > 0 ? (month.pour / month.total) * 100 : 0}
+			{@const contrePct = month.total > 0 ? (month.contre / month.total) * 100 : 0}
+			{@const abstPct = month.total > 0 ? (month.abstention / month.total) * 100 : 0}
+			<div class="timeline-column" title="{month.month}: {month.total} votes">
+				<div class="timeline-bar">
+					<div class="timeline-segment pour" style="height: {pourPct}%"></div>
+					<div class="timeline-segment contre" style="height: {contrePct}%"></div>
+					<div class="timeline-segment abstention" style="height: {abstPct}%"></div>
+				</div>
+				<span class="timeline-label">{month.month.slice(5)}</span>
+			</div>
+		{/each}
+	</div>
+	<div class="evolution-legend" style="margin-top: 1rem;">
+		<span class="legend-item"><span class="legend-box pour"></span> Pour</span>
+		<span class="legend-item"><span class="legend-box contre"></span> Contre</span>
+		<span class="legend-item"><span class="legend-box abstention"></span> Abstention</span>
+	</div>
+</section>
+{/if}
+
 <style>
 	h2 {
 		font-size: 1.25rem;
@@ -519,5 +579,131 @@
 
 	.legend-box.abstention {
 		background: #fef3c7;
+	}
+
+	/* Government Alignment */
+	.alignment-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.alignment-item {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.alignment-group {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 80px;
+	}
+
+	.alignment-name {
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.alignment-bar-container {
+		flex: 1;
+		height: 20px;
+		background: var(--color-bg);
+		border-radius: 10px;
+		overflow: hidden;
+	}
+
+	.alignment-bar {
+		height: 100%;
+		border-radius: 10px;
+		transition: width 0.3s ease;
+	}
+
+	.alignment-bar.high {
+		background: var(--color-success);
+	}
+
+	.alignment-bar.medium {
+		background: var(--color-warning);
+	}
+
+	.alignment-bar.low {
+		background: var(--color-danger);
+	}
+
+	.alignment-value {
+		min-width: 45px;
+		text-align: right;
+		font-weight: 700;
+		font-size: 0.875rem;
+	}
+
+	.alignment-value.high {
+		color: var(--color-success);
+	}
+
+	.alignment-value.medium {
+		color: var(--color-warning);
+	}
+
+	.alignment-value.low {
+		color: var(--color-danger);
+	}
+
+	/* Evolution Timeline */
+	.evolution-timeline {
+		display: flex;
+		align-items: flex-end;
+		gap: 0.5rem;
+		height: 200px;
+		padding-bottom: 1.5rem;
+	}
+
+	.timeline-column {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		height: 100%;
+		position: relative;
+	}
+
+	.timeline-bar {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column-reverse;
+		border-radius: 4px 4px 0 0;
+		overflow: hidden;
+	}
+
+	.timeline-segment {
+		width: 100%;
+	}
+
+	.timeline-segment.pour {
+		background: var(--color-success);
+	}
+
+	.timeline-segment.contre {
+		background: var(--color-danger);
+	}
+
+	.timeline-segment.abstention {
+		background: var(--color-warning);
+	}
+
+	.timeline-label {
+		position: absolute;
+		bottom: -1.25rem;
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
+	}
+
+	.evolution-legend {
+		display: flex;
+		gap: 1.5rem;
+		font-size: 0.75rem;
 	}
 </style>

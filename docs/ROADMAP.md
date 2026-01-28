@@ -78,8 +78,8 @@
 - [x] Répartition globale des votes (pour/contre/abstention)
 - [x] Activité mensuelle (graphique à barres)
 - [x] Résultats des scrutins (adoptés/rejetés)
-- [ ] Alignement avec le gouvernement
-- [ ] Évolution des positions dans le temps
+- [x] Alignement avec le gouvernement (majorité présidentielle REN/MODEM/HOR)
+- [x] Évolution des positions dans le temps (graphique mensuel)
 
 ### 4.2 Visualisations
 - [x] Graphique barres activité mensuelle

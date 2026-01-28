@@ -31,7 +31,7 @@ export function createImportStats(): ImportStats {
 
 export function getETLConfig(): ETLConfig {
 	return {
-		legislature: process.env.ETL_ASSEMBLEE_LEGISLATURE || '17',
+		legislature: process.env.ETL_ASSEMBLEE_LEGISLATURE || '16',
 		batchSize: parseInt(process.env.ETL_BATCH_SIZE || '100', 10),
 		dataDir: process.env.ETL_DATA_DIR
 	};

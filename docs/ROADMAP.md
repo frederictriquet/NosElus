@@ -95,7 +95,7 @@
 - [x] Comparaison de deux élus
 - [x] Similarité de vote (taux d'accord)
 - [x] Liste des votes divergents
-- [ ] Distance politique calculée
+- [x] Distance politique calculée (pondérée selon type de désaccord)
 
 ---
 

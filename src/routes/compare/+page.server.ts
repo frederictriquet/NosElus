@@ -80,9 +80,17 @@ export const load: PageServerLoad = async ({ url }) => {
 		.groupBy(votes.scrutinId)
 		.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`);
 
-	// Calculate agreement rate
+	// Calculate agreement rate and political distance
 	let sameVotes = 0;
 	let differentVotes = 0;
+	let totalDistance = 0;
+
+	// Distance weights: pour<->contre = 2, pour/contre<->abstention = 1, same = 0
+	const getVoteDistance = (v1: string, v2: string): number => {
+		if (v1 === v2) return 0;
+		if ((v1 === 'pour' && v2 === 'contre') || (v1 === 'contre' && v2 === 'pour')) return 2;
+		return 1; // abstention vs pour/contre
+	};
 
 	for (const v of commonVotes) {
 		if (v.position1 === v.position2) {
@@ -90,11 +98,17 @@ export const load: PageServerLoad = async ({ url }) => {
 		} else {
 			differentVotes++;
 		}
+		totalDistance += getVoteDistance(v.position1, v.position2);
 	}
 
 	const agreementRate = commonVotes.length > 0
 		? (sameVotes / commonVotes.length) * 100
 		: 0;
+
+	// Political distance: normalized 0-100 (0 = identical, 100 = completely opposed)
+	// Max possible distance is 2 per vote (pour vs contre on every vote)
+	const maxDistance = commonVotes.length * 2;
+	const politicalDistance = maxDistance > 0 ? (totalDistance / maxDistance) * 100 : 0;
 
 	// Get sample of disagreements
 	const disagreements = await db
@@ -130,6 +144,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			sameVotes,
 			differentVotes,
 			agreementRate,
+			politicalDistance,
 			disagreements
 		}
 	};

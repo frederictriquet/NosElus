@@ -65,13 +65,34 @@
 </div>
 
 {#if data.comparison}
-	<div class="agreement-card">
-		<div class="agreement-value" class:high={data.comparison.agreementRate >= 70} class:medium={data.comparison.agreementRate >= 40 && data.comparison.agreementRate < 70} class:low={data.comparison.agreementRate < 40}>
-			{data.comparison.agreementRate.toFixed(1)}%
+	<div class="metrics-row">
+		<div class="agreement-card">
+			<div class="agreement-value" class:high={data.comparison.agreementRate >= 70} class:medium={data.comparison.agreementRate >= 40 && data.comparison.agreementRate < 70} class:low={data.comparison.agreementRate < 40}>
+				{data.comparison.agreementRate.toFixed(1)}%
+			</div>
+			<div class="agreement-label">de votes identiques</div>
+			<div class="agreement-detail">
+				sur {data.comparison.commonVotes} votes en commun
+			</div>
 		</div>
-		<div class="agreement-label">de votes identiques</div>
-		<div class="agreement-detail">
-			sur {data.comparison.commonVotes} votes en commun
+		<div class="agreement-card distance-card">
+			<div class="distance-value" class:close={data.comparison.politicalDistance < 20} class:moderate={data.comparison.politicalDistance >= 20 && data.comparison.politicalDistance < 50} class:far={data.comparison.politicalDistance >= 50}>
+				{data.comparison.politicalDistance.toFixed(1)}
+			</div>
+			<div class="agreement-label">distance politique</div>
+			<div class="agreement-detail">
+				{#if data.comparison.politicalDistance < 20}
+					Très proches
+				{:else if data.comparison.politicalDistance < 35}
+					Proches
+				{:else if data.comparison.politicalDistance < 50}
+					Modérément éloignés
+				{:else if data.comparison.politicalDistance < 70}
+					Éloignés
+				{:else}
+					Très éloignés
+				{/if}
+			</div>
 		</div>
 	</div>
 
@@ -171,17 +192,23 @@
 		padding-bottom: 0.5rem;
 	}
 
+	.metrics-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+		margin-bottom: 2rem;
+	}
+
 	.agreement-card {
 		text-align: center;
 		padding: 2rem;
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow);
-		margin-bottom: 2rem;
 	}
 
 	.agreement-value {
-		font-size: 4rem;
+		font-size: 3rem;
 		font-weight: 700;
 	}
 
@@ -195,6 +222,29 @@
 
 	.agreement-value.low {
 		color: var(--color-danger);
+	}
+
+	.distance-value {
+		font-size: 3rem;
+		font-weight: 700;
+	}
+
+	.distance-value.close {
+		color: var(--color-success);
+	}
+
+	.distance-value.moderate {
+		color: var(--color-warning);
+	}
+
+	.distance-value.far {
+		color: var(--color-danger);
+	}
+
+	@media (max-width: 600px) {
+		.metrics-row {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.agreement-label {

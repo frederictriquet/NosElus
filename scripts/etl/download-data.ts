@@ -1,9 +1,12 @@
-import { mkdir, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { mkdir, writeFile, readFile, unlink } from 'fs/promises';
+import { existsSync, createReadStream, createWriteStream } from 'fs';
+import { createUnzip } from 'zlib';
+import { pipeline } from 'stream/promises';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const BASE_URL = 'https://data.assemblee-nationale.fr/static/openData/repository';
-const LEGISLATURE = process.env.ETL_ASSEMBLEE_LEGISLATURE || '17';
+const LEGISLATURE = process.env.ETL_ASSEMBLEE_LEGISLATURE || '16';
 
 interface DatasetInfo {
 	name: string;
@@ -11,6 +14,7 @@ interface DatasetInfo {
 	outputDir: string;
 }
 
+// URLs pour la législature 16 et 17
 const DATASETS: DatasetInfo[] = [
 	{
 		name: 'Acteurs et Organes',
@@ -19,7 +23,7 @@ const DATASETS: DatasetInfo[] = [
 	},
 	{
 		name: 'Scrutins',
-		url: `${BASE_URL}/${LEGISLATURE}/vp/scrutins/Scrutins_XVII.json.zip`,
+		url: `${BASE_URL}/${LEGISLATURE}/vp/scrutins/Scrutins.json.zip`,
 		outputDir: 'scrutins'
 	}
 ];
@@ -37,11 +41,24 @@ async function downloadFile(url: string, outputPath: string): Promise<void> {
 	console.log(`  -> Sauvegardé: ${outputPath}`);
 }
 
+async function unzipFile(zipPath: string, outputDir: string): Promise<void> {
+	console.log(`Décompression: ${zipPath}`);
+
+	try {
+		// Utiliser unzip système (plus fiable pour les gros fichiers)
+		execSync(`unzip -o "${zipPath}" -d "${outputDir}"`, { stdio: 'pipe' });
+		console.log(`  -> Décompressé dans: ${outputDir}`);
+	} catch (error) {
+		console.error(`Erreur lors de la décompression:`, error);
+		throw error;
+	}
+}
+
 async function main() {
 	const dataDir = process.env.ETL_DATA_DIR || './data/assemblee';
 
 	console.log('='.repeat(60));
-	console.log('NosElus - Téléchargement des données');
+	console.log('NosElus - Téléchargement des données Assemblée Nationale');
 	console.log('='.repeat(60));
 	console.log(`Répertoire de destination: ${dataDir}`);
 	console.log(`Législature: ${LEGISLATURE}`);
@@ -61,31 +78,54 @@ async function main() {
 		}
 
 		const filename = path.basename(dataset.url);
-		const outputPath = path.join(outputDir, filename);
+		const zipPath = path.join(outputDir, filename);
 
 		try {
-			await downloadFile(dataset.url, outputPath);
+			// Télécharger
+			await downloadFile(dataset.url, zipPath);
+
+			// Décompresser
+			await unzipFile(zipPath, outputDir);
+
+			// Supprimer le ZIP
+			await unlink(zipPath);
+			console.log(`  -> ZIP supprimé`);
+
 		} catch (error) {
 			console.error(`Erreur: ${error}`);
 
-			// Essayer une URL alternative
-			console.log('Tentative avec URL alternative...');
-			const altUrl = dataset.url.replace('.json.zip', '.xml.zip');
-			try {
-				await downloadFile(altUrl, outputPath.replace('.json.zip', '.xml.zip'));
-			} catch {
-				console.error(`Échec du téléchargement pour ${dataset.name}`);
+			// Essayer une URL alternative (avec numéro de législature en chiffres romains)
+			const altUrls = [
+				dataset.url.replace('Scrutins.json.zip', `Scrutins_XVI.json.zip`),
+				dataset.url.replace('Scrutins.json.zip', `Scrutins_XVII.json.zip`),
+				dataset.url.replace('.json.zip', '.xml.zip')
+			];
+
+			for (const altUrl of altUrls) {
+				if (altUrl !== dataset.url) {
+					console.log(`Tentative avec URL alternative: ${altUrl}`);
+					try {
+						const altFilename = path.basename(altUrl);
+						const altZipPath = path.join(outputDir, altFilename);
+						await downloadFile(altUrl, altZipPath);
+						await unzipFile(altZipPath, outputDir);
+						await unlink(altZipPath);
+						break;
+					} catch {
+						continue;
+					}
+				}
 			}
 		}
 	}
 
 	console.log('\n' + '='.repeat(60));
 	console.log('Téléchargement terminé!');
+	console.log('='.repeat(60));
 	console.log('');
 	console.log('Prochaines étapes:');
-	console.log('1. Décompresser les fichiers ZIP');
-	console.log(`2. Configurer ETL_DATA_DIR=${dataDir}`);
-	console.log('3. Lancer npm run etl:all');
+	console.log(`  export ETL_DATA_DIR=${dataDir}`);
+	console.log('  npm run etl:all');
 	console.log('='.repeat(60));
 }
 

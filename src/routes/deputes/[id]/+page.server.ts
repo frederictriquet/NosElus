@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins } from '$lib/server/db';
-import { eq, count, desc, sql } from 'drizzle-orm';
+import { db, actors, votes, scrutins, organs } from '$lib/server/db';
+import { eq, count, desc, sql, asc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -74,11 +74,48 @@ export const load: PageServerLoad = async ({ params }) => {
 		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
 		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 
+	// Timeline: first and last vote dates
+	const [firstVote] = await db
+		.select({ date: scrutins.date })
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.where(eq(votes.actorId, params.id))
+		.orderBy(asc(scrutins.date))
+		.limit(1);
+
+	const [lastVote] = await db
+		.select({ date: scrutins.date })
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.where(eq(votes.actorId, params.id))
+		.orderBy(desc(scrutins.date))
+		.limit(1);
+
+	// Get deputy's group (from most recent vote)
+	const [deputyGroup] = await db
+		.select({
+			groupId: votes.groupId,
+			groupName: organs.name,
+			groupShortName: organs.shortName,
+			groupColor: organs.color
+		})
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.leftJoin(organs, eq(votes.groupId, organs.id))
+		.where(eq(votes.actorId, params.id))
+		.orderBy(desc(scrutins.date))
+		.limit(1);
+
 	return {
 		actor,
 		voteCount: voteCount.value,
 		recentVotes,
 		distribution,
-		monthlyEvolution
+		monthlyEvolution,
+		timeline: {
+			firstVote: firstVote?.date || null,
+			lastVote: lastVote?.date || null
+		},
+		group: deputyGroup || null
 	};
 };

@@ -88,8 +88,10 @@
 - [x] Matrice de proximité politique entre groupes
 - [x] Évolution temporelle des votes par député
 - [x] Statistiques et évolution par groupe parlementaire
-- [ ] Carte des circonscriptions *(nécessite données GeoJSON)*
-- [ ] Timeline de carrière politique *(nécessite données mandats)*
+- [x] Période d'activité parlementaire (premier/dernier vote)
+- [x] Badge groupe parlementaire sur page député
+- [ ] Carte des circonscriptions *(nécessite données GeoJSON + Leaflet)*
+- [ ] Timeline de carrière détaillée *(nécessite import données mandats)*
 
 ### 4.3 Comparateur
 - [x] Comparaison de deux élus

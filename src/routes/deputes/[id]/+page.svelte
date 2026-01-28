@@ -130,11 +130,114 @@
 </section>
 {/if}
 
+{#if data.careerMilestones.length > 0}
+<section class="card" style="margin-top: 1.5rem;">
+	<h2>Parcours parlementaire</h2>
+	<div class="career-timeline">
+		{#each data.careerMilestones as milestone, i}
+			<div class="timeline-item" class:first={milestone.type === 'first_vote'} class:last={milestone.type === 'last_vote'}>
+				<div class="timeline-marker">
+					{#if milestone.type === 'first_vote'}
+						<span class="marker-icon">&#9654;</span>
+					{:else if milestone.type === 'last_vote'}
+						<span class="marker-icon">&#9632;</span>
+					{:else}
+						<span class="marker-icon">&#9733;</span>
+					{/if}
+				</div>
+				<div class="timeline-content">
+					<div class="timeline-date">{new Date(milestone.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+					<div class="timeline-title">{milestone.title}</div>
+					{#if milestone.description}
+						<div class="timeline-desc">{milestone.description}</div>
+					{/if}
+				</div>
+			</div>
+		{/each}
+	</div>
+</section>
+{/if}
+
 <style>
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;
 		margin-bottom: 0.5rem;
+	}
+
+	/* Career Timeline */
+	.career-timeline {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		margin-top: 1rem;
+		position: relative;
+		padding-left: 2rem;
+	}
+
+	.career-timeline::before {
+		content: '';
+		position: absolute;
+		left: 0.5rem;
+		top: 0.5rem;
+		bottom: 0.5rem;
+		width: 2px;
+		background: var(--color-border);
+	}
+
+	.timeline-item {
+		display: flex;
+		gap: 1rem;
+		padding: 0.75rem 0;
+		position: relative;
+	}
+
+	.timeline-marker {
+		position: absolute;
+		left: -1.5rem;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		background: var(--color-surface);
+		border: 2px solid var(--color-border);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.65rem;
+	}
+
+	.timeline-item.first .timeline-marker {
+		border-color: var(--color-success);
+		color: var(--color-success);
+	}
+
+	.timeline-item.last .timeline-marker {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+
+	.marker-icon {
+		line-height: 1;
+	}
+
+	.timeline-content {
+		flex: 1;
+	}
+
+	.timeline-date {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.timeline-title {
+		font-weight: 600;
+		font-size: 0.875rem;
+	}
+
+	.timeline-desc {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
 	}
 
 	.group-badge {

@@ -61,6 +61,7 @@
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.9",
+		"@types/leaflet": "^1.9.21",
 		"@vitest/ui": "^4.0.15",
 		"drizzle-kit": "^0.31.8",
 		"happy-dom": "^20.0.11",
@@ -79,6 +80,7 @@
 	"dependencies": {
 		"@tricoteuses/assemblee": "^2.5.31",
 		"drizzle-orm": "^0.45.1",
+		"leaflet": "^1.9.4",
 		"postgres": "^3.4.8"
 	}
 }

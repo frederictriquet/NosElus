@@ -19,6 +19,7 @@
 			<a href="/scrutins" class:active={$page.url.pathname.startsWith('/scrutins')}>Scrutins</a>
 			<a href="/groupes" class:active={$page.url.pathname.startsWith('/groupes')}>Groupes</a>
 			<a href="/stats" class:active={$page.url.pathname.startsWith('/stats')}>Stats</a>
+			<a href="/carte" class:active={$page.url.pathname.startsWith('/carte')}>Carte</a>
 			<a href="/compare" class:active={$page.url.pathname.startsWith('/compare')}>Comparer</a>
 		</nav>
 	</div>

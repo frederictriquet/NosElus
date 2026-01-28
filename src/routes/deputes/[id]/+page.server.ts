@@ -106,6 +106,46 @@ export const load: PageServerLoad = async ({ params }) => {
 		.orderBy(desc(scrutins.date))
 		.limit(1);
 
+	// Career milestones: key votes and activity markers
+	const careerMilestones: Array<{
+		date: string;
+		type: 'first_vote' | 'last_vote' | 'milestone';
+		title: string;
+		description?: string;
+	}> = [];
+
+	if (firstVote) {
+		careerMilestones.push({
+			date: firstVote.date,
+			type: 'first_vote',
+			title: 'Premier vote enregistré',
+			description: 'Début de l\'activité parlementaire'
+		});
+	}
+
+	// Add yearly milestones if we have data
+	if (monthlyEvolution.length > 12) {
+		// Find the month with most activity
+		const maxMonth = monthlyEvolution.reduce((max, m) => m.total > max.total ? m : max, monthlyEvolution[0]);
+		careerMilestones.push({
+			date: maxMonth.month + '-01',
+			type: 'milestone',
+			title: 'Mois le plus actif',
+			description: `${maxMonth.total} votes en ${maxMonth.month}`
+		});
+	}
+
+	if (lastVote && firstVote && lastVote.date !== firstVote.date) {
+		careerMilestones.push({
+			date: lastVote.date,
+			type: 'last_vote',
+			title: 'Dernier vote enregistré',
+			description: 'Activité la plus récente'
+		});
+	}
+
+	careerMilestones.sort((a, b) => a.date.localeCompare(b.date));
+
 	return {
 		actor,
 		voteCount: voteCount.value,
@@ -116,6 +156,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			firstVote: firstVote?.date || null,
 			lastVote: lastVote?.date || null
 		},
-		group: deputyGroup || null
+		group: deputyGroup || null,
+		careerMilestones
 	};
 };

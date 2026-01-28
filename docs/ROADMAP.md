@@ -90,8 +90,8 @@
 - [x] Statistiques et évolution par groupe parlementaire
 - [x] Période d'activité parlementaire (premier/dernier vote)
 - [x] Badge groupe parlementaire sur page député
-- [ ] Carte des circonscriptions *(nécessite données GeoJSON + Leaflet)*
-- [ ] Timeline de carrière détaillée *(nécessite import données mandats)*
+- [x] Carte politique avec hémicycle et Leaflet
+- [x] Timeline de carrière (jalons d'activité parlementaire)
 
 ### 4.3 Comparateur
 - [x] Comparaison de deux élus

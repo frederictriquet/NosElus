@@ -28,6 +28,13 @@
 		"docker:down": "docker compose down",
 		"docker:logs": "docker compose logs -f",
 		"docker:restart": "docker compose restart",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"etl:actors": "node --import tsx scripts/etl/import-actors.ts",
+		"etl:scrutins": "node --import tsx scripts/etl/import-scrutins.ts",
+		"etl:all": "node --import tsx scripts/etl/import-all.ts",
 		"lint-staged": "lint-staged",
 		"commitlint": "commitlint"
 	},
@@ -53,6 +60,7 @@
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.9",
 		"@vitest/ui": "^4.0.15",
+		"drizzle-kit": "^0.31.8",
 		"happy-dom": "^20.0.11",
 		"husky": "^9.1.7",
 		"jsdom": "^27.0.1",
@@ -61,8 +69,14 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.5",
+		"tsx": "^4.21.0",
 		"typescript": "^5.6.3",
 		"vite": "^5.4.11",
 		"vitest": "^4.0.15"
+	},
+	"dependencies": {
+		"@tricoteuses/assemblee": "^2.5.31",
+		"drizzle-orm": "^0.45.1",
+		"postgres": "^3.4.8"
 	}
 }

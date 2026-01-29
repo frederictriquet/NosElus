@@ -46,9 +46,9 @@
 - [x] Support import incrémental avec tracking des syncs
 
 ### 2.3 Dossiers législatifs
-- [ ] ETL dossiers législatifs AN
+- [x] ETL dossiers législatifs AN
 - [ ] ETL dossiers législatifs Sénat (DOSLEG)
-- [ ] Lier scrutins aux textes de loi
+- [x] Lier scrutins aux textes de loi
 
 ---
 

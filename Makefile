@@ -107,6 +107,9 @@ etl-actors: ## Import des acteurs uniquement
 etl-scrutins: ## Import des scrutins et votes
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:scrutins
 
+etl-laws: ## Import des dossiers législatifs
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:laws
+
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes
 

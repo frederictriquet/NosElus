@@ -1,5 +1,6 @@
 import { importActors, importOrgans, importMandates } from '../../src/lib/server/etl/sources/assemblee/actors.js';
 import { importScrutins, importVotes } from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
+import { importLaws, linkScrutinsToLaws } from '../../src/lib/server/etl/sources/assemblee/laws.js';
 import { getETLConfig, type ImportStats } from '../../src/lib/server/etl/types.js';
 import { parseArgs, getLastSync, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
 
@@ -76,7 +77,7 @@ async function main() {
 	try {
 		// Step 1: Import organs (needed for foreign keys)
 		console.log('\n' + '='.repeat(40));
-		console.log('Step 1/5: Importing Organs');
+		console.log('Step 1/7: Importing Organs');
 		console.log('='.repeat(40));
 		const organsStats = await importOrgans(config);
 		allStats.organs = organsStats;
@@ -88,7 +89,7 @@ async function main() {
 
 		// Step 2: Import actors
 		console.log('\n' + '='.repeat(40));
-		console.log('Step 2/5: Importing Actors');
+		console.log('Step 2/7: Importing Actors');
 		console.log('='.repeat(40));
 		const actorsStats = await importActors(config);
 		allStats.actors = actorsStats;
@@ -100,7 +101,7 @@ async function main() {
 
 		// Step 3: Import mandates
 		console.log('\n' + '='.repeat(40));
-		console.log('Step 3/5: Importing Mandates');
+		console.log('Step 3/7: Importing Mandates');
 		console.log('='.repeat(40));
 		const mandatesStats = await importMandates(config);
 		allStats.mandates = mandatesStats;
@@ -112,7 +113,7 @@ async function main() {
 
 		// Step 4: Import scrutins
 		console.log('\n' + '='.repeat(40));
-		console.log('Step 4/5: Importing Scrutins');
+		console.log('Step 4/7: Importing Scrutins');
 		console.log('='.repeat(40));
 		const scrutinsStats = await importScrutins(config);
 		allStats.scrutins = scrutinsStats;
@@ -124,7 +125,7 @@ async function main() {
 
 		// Step 5: Import votes
 		console.log('\n' + '='.repeat(40));
-		console.log('Step 5/5: Importing Votes');
+		console.log('Step 5/7: Importing Votes');
 		console.log('='.repeat(40));
 		const votesStats = await importVotes(config);
 		allStats.votes = votesStats;
@@ -133,6 +134,26 @@ async function main() {
 			legislature: config.legislature,
 			status: votesStats.errors > 0 ? 'partial' : 'success'
 		});
+
+		// Step 6: Import laws (dossiers législatifs)
+		console.log('\n' + '='.repeat(40));
+		console.log('Step 6/7: Importing Laws (Dossiers Législatifs)');
+		console.log('='.repeat(40));
+		const lawsStats = await importLaws(config);
+		allStats.laws = lawsStats;
+		console.log(`✓ Laws: ${lawsStats.inserted} inserted, ${lawsStats.updated} updated, ${lawsStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'laws', lawsStats, {
+			legislature: config.legislature,
+			status: lawsStats.errors > 0 ? 'partial' : 'success'
+		});
+
+		// Step 7: Link scrutins to laws
+		console.log('\n' + '='.repeat(40));
+		console.log('Step 7/7: Linking Scrutins to Laws');
+		console.log('='.repeat(40));
+		const linkStats = await linkScrutinsToLaws(config);
+		allStats.scrutinLawLinks = linkStats;
+		console.log(`✓ Links: ${linkStats.updated} scrutins linked, ${linkStats.skipped} not found, ${linkStats.errors} errors`);
 
 		const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
@@ -144,6 +165,8 @@ async function main() {
 		console.log(`  Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated (${mandatesStats.errors} errors)`);
 		console.log(`  Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated (${scrutinsStats.errors} errors)`);
 		console.log(`  Votes:    ${votesStats.inserted} inserted, ${votesStats.updated} updated (${votesStats.errors} errors)`);
+		console.log(`  Laws:     ${lawsStats.inserted} inserted, ${lawsStats.updated} updated (${lawsStats.errors} errors)`);
+		console.log(`  Links:    ${linkStats.updated} scrutins linked to laws`);
 		console.log('');
 		console.log(`Total time: ${duration}s`);
 		console.log(`Mode: ${config.incremental ? 'INCREMENTAL' : 'FULL'}`);

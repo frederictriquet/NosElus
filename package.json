@@ -34,6 +34,7 @@
 		"db:studio": "drizzle-kit studio",
 		"etl:actors": "node --import tsx scripts/etl/import-actors.ts",
 		"etl:scrutins": "node --import tsx scripts/etl/import-scrutins.ts",
+		"etl:laws": "node --import tsx scripts/etl/import-laws.ts",
 		"etl:all": "node --import tsx scripts/etl/import-all.ts",
 		"etl:nosdeputes": "node --import tsx scripts/etl/import-nosdeputes.ts",
 		"etl:download": "node --import tsx scripts/etl/download-data.ts",

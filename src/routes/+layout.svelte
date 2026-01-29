@@ -25,7 +25,7 @@
 	</div>
 </header>
 
-<main>
+<main class="main">
 	<div class="container">
 		{@render children()}
 	</div>
@@ -38,10 +38,25 @@
 </footer>
 
 <style>
+	:global(html, body) {
+		height: 100%;
+		margin: 0;
+	}
+
+	:global(body) {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.main {
+		flex: 1 0 auto;
+		padding-bottom: 2rem;
+	}
+
 	.footer {
+		flex-shrink: 0;
 		background: var(--color-surface);
 		border-top: 1px solid var(--color-border);
 		padding: 1.5rem 0;
-		margin-top: auto;
 	}
 </style>

@@ -1,0 +1,1 @@
+ALTER TABLE "mandates" ALTER COLUMN "quality" SET DATA TYPE text;

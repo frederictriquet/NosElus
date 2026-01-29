@@ -1,0 +1,1 @@
+ALTER TABLE "mandates" ALTER COLUMN "election_cause" SET DATA TYPE text;

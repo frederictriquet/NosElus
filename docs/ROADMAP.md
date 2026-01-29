@@ -34,9 +34,9 @@
 ## Phase 2 - Données historiques (5-8 semaines)
 
 ### 2.1 Historique députés
-- [ ] Intégrer données AN historiques depuis 1997
-- [ ] Consolider affiliations politiques successives
-- [ ] Mapper les mandats avec les législatures
+- [x] Intégrer données AN historiques depuis 1997 (2100 députés, législatures 12-17)
+- [x] Consolider affiliations politiques successives (8321 mandats GP)
+- [x] Mapper les mandats avec les législatures (3924 mandats député)
 
 ### 2.2 Votes historiques
 - [ ] Charger scrutins archivés XIVe législature
@@ -144,8 +144,8 @@
 
 | Source | Type | Statut | Documentation |
 |--------|------|--------|---------------|
-| NosDéputés.fr | API JSON | En cours | [API](https://www.nosdeputes.fr/api) |
-| Assemblée Nationale | JSON/XML | À faire | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
+| NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
+| Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | CSV/SQL | À faire | [data.senat.fr](https://data.senat.fr/) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 

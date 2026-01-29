@@ -13,7 +13,7 @@ export const mandates = pgTable(
 			.notNull()
 			.references(() => organs.id),
 		type: varchar('type', { length: 50 }).notNull(), // membre, président, etc.
-		quality: varchar('quality', { length: 100 }), // Qualité spécifique (apparenté, etc.)
+		quality: text('quality'), // Qualité spécifique (ex: "Rapporteur spécial au nom de la commission...")
 		startDate: date('start_date').notNull(),
 		endDate: date('end_date'),
 		// Infos spécifiques aux mandats parlementaires
@@ -22,7 +22,7 @@ export const mandates = pgTable(
 		departmentCode: varchar('department_code', { length: 5 }),
 		constituency: varchar('constituency', { length: 100 }), // Circonscription
 		constituencyNumber: varchar('constituency_number', { length: 5 }),
-		electionCause: varchar('election_cause', { length: 100 }), // Cause d'élection
+		electionCause: text('election_cause'), // Cause d'élection (peut être long)
 		mandateEndCause: text('mandate_end_cause'), // Cause de fin de mandat
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull()

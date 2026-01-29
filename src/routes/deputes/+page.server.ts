@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { db, actors } from '$lib/server/db';
-import { count, ilike, or, asc, desc } from 'drizzle-orm';
+import { db, actors, mandates, organs } from '$lib/server/db';
+import { count, ilike, or, asc, desc, eq, sql, isNull } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -22,8 +22,8 @@ export const load: PageServerLoad = async ({ url }) => {
 	const sortColumn = sort === 'firstName' ? actors.firstName : actors.lastName;
 	const orderBy = order === 'desc' ? desc(sortColumn) : asc(sortColumn);
 
-	// Get data
-	const data = await db
+	// Get deputies
+	const deputiesRaw = await db
 		.select({
 			id: actors.id,
 			fullName: actors.fullName,
@@ -38,8 +38,35 @@ export const load: PageServerLoad = async ({ url }) => {
 		.limit(limit)
 		.offset(offset);
 
+	// Get current group for these deputies (from mandates - GP = groupe parlementaire)
+	const deputyIds = deputiesRaw.map(d => d.id);
+	const groupsData = deputyIds.length > 0 ? await db
+		.select({
+			actorId: mandates.actorId,
+			groupId: organs.id,
+			groupShortName: organs.shortName,
+			groupColor: organs.color
+		})
+		.from(mandates)
+		.innerJoin(organs, eq(mandates.organId, organs.id))
+		.where(sql`${mandates.actorId} IN ${deputyIds} AND ${organs.type} = 'GP' AND ${mandates.endDate} IS NULL`)
+		: [];
+
+	// Build lookup map
+	const groupByActor = new Map<string, { id: string; shortName: string | null; color: string | null }>();
+	for (const g of groupsData) {
+		if (!groupByActor.has(g.actorId) && g.groupId) {
+			groupByActor.set(g.actorId, { id: g.groupId, shortName: g.groupShortName, color: g.groupColor });
+		}
+	}
+
+	const deputies = deputiesRaw.map(d => ({
+		...d,
+		group: groupByActor.get(d.id) || null
+	}));
+
 	return {
-		deputies: data,
+		deputies,
 		pagination: {
 			page,
 			limit,

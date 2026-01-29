@@ -11,10 +11,10 @@
 		variant?: 'full' | 'compact' | 'thumbnail' | 'inline';
 		/** Groupe politique */
 		group?: {
-			id?: string;
-			name?: string;
-			shortName?: string;
-			color?: string;
+			id?: string | null;
+			name?: string | null;
+			shortName?: string | null;
+			color?: string | null;
 		} | null;
 		/** Informations supplémentaires (profession, circonscription, etc.) */
 		subtitle?: string;
@@ -44,7 +44,7 @@
 </script>
 
 {#if variant === 'thumbnail'}
-	<a {href} class="elected-thumbnail" title={name}>
+	<a {href} class="elected-thumbnail" style={group?.color ? `border-color: ${group.color}` : ''} title="{name}{group?.shortName ? ` (${group.shortName})` : ''}">
 		<img src={photoUrl || placeholder} alt={name} />
 	</a>
 {:else if variant === 'inline'}
@@ -52,16 +52,30 @@
 		{#if rank !== undefined}
 			<span class="elected-rank">{rank}</span>
 		{/if}
+		{#if group?.color}
+			<span class="group-dot" style="background: {group.color}"></span>
+		{/if}
 		<img src={photoUrl || placeholder} alt={name} class="elected-photo-sm" />
 		<span class="elected-name">{name}</span>
+		{#if group?.shortName}
+			<span class="elected-group-tag">{group.shortName}</span>
+		{/if}
 		{#if stat}
 			<span class="elected-stat">{stat}</span>
 		{/if}
 	</a>
 {:else if variant === 'compact'}
 	<a {href} class="elected-compact">
+		{#if group?.color}
+			<span class="group-dot" style="background: {group.color}"></span>
+		{/if}
 		<img src={photoUrl || placeholder} alt={name} class="elected-photo-sm" />
-		<span class="elected-name">{name}</span>
+		<div class="elected-compact-info">
+			<span class="elected-name">{name}</span>
+			{#if group?.shortName}
+				<span class="elected-group-inline">{group.shortName}</span>
+			{/if}
+		</div>
 	</a>
 {:else}
 	<a {href} class="elected-card">
@@ -137,6 +151,15 @@
 		font-size: 0.875rem;
 	}
 
+	.elected-group-tag {
+		font-size: 0.7rem;
+		padding: 0.125rem 0.375rem;
+		background: var(--color-bg);
+		border-radius: 4px;
+		color: var(--color-text-muted);
+		font-weight: 500;
+	}
+
 	/* Compact - photo + nom, petit format */
 	.elected-compact {
 		display: flex;
@@ -152,6 +175,17 @@
 	.elected-compact:hover {
 		background: var(--color-bg);
 		text-decoration: none;
+	}
+
+	.elected-compact-info {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	.elected-group-inline {
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
 	}
 
 	.elected-photo-sm {

@@ -120,6 +120,7 @@
 								name={deputy.name}
 								photoUrl={deputy.photoUrl}
 								variant="thumbnail"
+								group={{ id: group.groupId, shortName: group.groupShortName, color: group.groupColor }}
 							/>
 						{/each}
 						{#if group.deputyCount > 5}

@@ -1,6 +1,6 @@
-import { db, actors, organs, scrutins, votes } from '../../../db';
+import { db, actors, organs, scrutins, votes, mandates } from '../../../db';
 import { fetchDeputes, fetchGroupes, fetchScrutins, fetchScrutinVotes } from './api';
-import { mapDepute, mapGroupe, mapScrutin, mapVote } from './mappers';
+import { mapDepute, mapDeputeMandate, mapGroupe, mapScrutin, mapVote } from './mappers';
 import { createImportStats, type ImportStats, type ETLConfig } from '../../types';
 import { logProgress } from '../../utils';
 import { sql } from 'drizzle-orm';
@@ -40,6 +40,33 @@ export async function importDeputesFromNosdeputes(config: ETLConfig): Promise<Im
 			console.error(`[NosDéputés] Error inserting batch:`, error);
 			stats.errors += batch.length;
 		}
+	}
+
+	// Import mandates (linking deputies to their groups)
+	console.log('[NosDéputés] Creating mandates for group memberships...');
+	const mappedMandates = deputes
+		.map(d => mapDeputeMandate(d, config.legislature))
+		.filter((m): m is NonNullable<typeof m> => m !== null);
+
+	if (mappedMandates.length > 0) {
+		for (let i = 0; i < mappedMandates.length; i += batchSize) {
+			const batch = mappedMandates.slice(i, i + batchSize);
+			try {
+				await db
+					.insert(mandates)
+					.values(batch)
+					.onConflictDoUpdate({
+						target: mandates.id,
+						set: {
+							endDate: sql`excluded.end_date`,
+							updatedAt: sql`now()`
+						}
+					});
+			} catch (error) {
+				console.error(`[NosDéputés] Error inserting mandates:`, error);
+			}
+		}
+		console.log(`[NosDéputés] Created ${mappedMandates.length} group mandates`);
 	}
 
 	logProgress(stats, 'Députés');
@@ -133,12 +160,16 @@ export async function importVotesFromNosdeputes(
 ): Promise<ImportStats> {
 	const stats = createImportStats();
 
-	// First, build a map of député slug -> actor ID
-	console.log('[NosDéputés] Building député slug map...');
+	// First, build maps of député slug -> actor ID and slug -> group ID
+	console.log('[NosDéputés] Building député slug maps...');
 	const deputes = await fetchDeputes(config.legislature);
 	const slugToId = new Map<string, string>();
+	const slugToGroupId = new Map<string, string>();
 	for (const d of deputes) {
 		slugToId.set(d.slug, `PA${d.id_an || d.id}`);
+		if (d.groupe_sigle) {
+			slugToGroupId.set(d.slug, `PO_GP_${d.groupe_sigle}`);
+		}
 	}
 
 	console.log('[NosDéputés] Fetching scrutins for votes...');
@@ -161,7 +192,7 @@ export async function importVotesFromNosdeputes(
 
 			if (scrutinVotes.length > 0) {
 				const mappedVotes = scrutinVotes
-					.map((v) => mapVote(scrutinId, v, slugToId))
+					.map((v) => mapVote(scrutinId, v, slugToId, slugToGroupId))
 					.filter((v): v is NonNullable<typeof v> => v !== null);
 
 				stats.total += scrutinVotes.length;

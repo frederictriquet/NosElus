@@ -53,6 +53,7 @@
 				id={deputy.id}
 				name={deputy.fullName}
 				photoUrl={deputy.photoUrl}
+				group={deputy.group}
 				subtitle={deputy.profession || ''}
 			/>
 		{/each}

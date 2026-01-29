@@ -75,6 +75,7 @@
 					name={vote.actorName}
 					photoUrl={vote.actorPhoto}
 					variant="compact"
+					group={vote.groupId ? { id: vote.groupId, shortName: vote.groupShortName, color: vote.groupColor } : null}
 				/>
 			{/each}
 		</div>

@@ -1,5 +1,5 @@
 import type { NosDeputesDepute, NosDeputesScrutin, NosDeputesVote, NosDeputesGroupe } from './api';
-import type { NewActor, NewOrgan, NewScrutin, NewVote } from '../../../db';
+import type { NewActor, NewOrgan, NewScrutin, NewVote, NewMandate } from '../../../db';
 
 export function mapDepute(depute: NosDeputesDepute): NewActor {
 	return {
@@ -15,6 +15,30 @@ export function mapDepute(depute: NosDeputesDepute): NewActor {
 		profession: depute.profession || null,
 		photoUrl: `https://www.nosdeputes.fr/depute/photo/${depute.slug}/160`,
 		chamber: 'AN'
+	};
+}
+
+export function mapDeputeMandate(depute: NosDeputesDepute, legislature: string = '16'): NewMandate | null {
+	if (!depute.groupe_sigle) return null;
+
+	const actorId = `PA${depute.id_an || depute.id}`;
+	const organId = `PO_GP_${depute.groupe_sigle}`;
+
+	return {
+		id: `${actorId}_${organId}_${legislature}`,
+		actorId,
+		organId,
+		type: 'membre',
+		quality: null,
+		startDate: depute.mandat_debut || new Date().toISOString().split('T')[0],
+		endDate: depute.mandat_fin || null,
+		legislature,
+		department: null,
+		departmentCode: depute.num_deptmt || null,
+		constituency: depute.nom_circo || null,
+		constituencyNumber: depute.num_circo ? String(depute.num_circo) : null,
+		electionCause: null,
+		mandateEndCause: null
 	};
 }
 
@@ -74,7 +98,8 @@ export function mapScrutin(scrutin: NosDeputesScrutin, legislature: string = '16
 export function mapVote(
 	scrutinId: string,
 	vote: NosDeputesVote,
-	deputeSlugToId: Map<string, string>
+	deputeSlugToId: Map<string, string>,
+	deputeSlugToGroupId?: Map<string, string>
 ): NewVote | null {
 	const actorId = deputeSlugToId.get(vote.parlementaire_slug);
 	if (!actorId) return null;
@@ -94,11 +119,13 @@ export function mapVote(
 			position = 'non-votant';
 	}
 
+	const groupId = deputeSlugToGroupId?.get(vote.parlementaire_slug) || null;
+
 	return {
 		id: `${scrutinId}_${actorId}`,
 		scrutinId,
 		actorId,
-		groupId: null,
+		groupId,
 		position,
 		delegation: vote.par_delegation ? 'delegation' : null,
 		delegatorId: null

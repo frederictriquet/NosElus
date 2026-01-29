@@ -293,31 +293,6 @@
 		text-decoration: none;
 	}
 
-	.vote-position {
-		padding: 0.25rem 0.5rem;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		font-weight: 500;
-		text-transform: uppercase;
-		background: var(--color-bg);
-		white-space: nowrap;
-	}
-
-	.vote-position.pour {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.vote-position.contre {
-		background: #fee2e2;
-		color: #991b1b;
-	}
-
-	.vote-position.abstention {
-		background: #fef3c7;
-		color: #92400e;
-	}
-
 	.vote-info {
 		flex: 1;
 		min-width: 0;
@@ -334,93 +309,8 @@
 		margin-top: 0.25rem;
 	}
 
-	/* Evolution chart */
+	/* Override evolution chart height for this page */
 	.evolution-chart {
-		display: flex;
-		align-items: flex-end;
-		gap: 0.5rem;
 		height: 180px;
-		padding-bottom: 2rem;
-	}
-
-	.evolution-bar-container {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		height: 100%;
-		position: relative;
-	}
-
-	.evolution-bar {
-		width: 100%;
-		display: flex;
-		flex-direction: column-reverse;
-		border-radius: 4px 4px 0 0;
-		overflow: hidden;
-		min-height: 4px;
-		margin-top: auto;
-	}
-
-	.bar-segment {
-		width: 100%;
-	}
-
-	.bar-segment.pour {
-		background: var(--color-success);
-	}
-
-	.bar-segment.contre {
-		background: var(--color-danger);
-	}
-
-	.bar-segment.abstention {
-		background: var(--color-warning);
-	}
-
-	.evolution-label {
-		position: absolute;
-		bottom: -1.5rem;
-		font-size: 0.7rem;
-		color: var(--color-text-muted);
-	}
-
-	.evolution-value {
-		position: absolute;
-		bottom: 100%;
-		margin-bottom: 0.25rem;
-		font-size: 0.7rem;
-		font-weight: 500;
-	}
-
-	.evolution-legend {
-		display: flex;
-		gap: 1.5rem;
-		margin-top: 1rem;
-		font-size: 0.75rem;
-	}
-
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.legend-box {
-		width: 12px;
-		height: 12px;
-		border-radius: 3px;
-	}
-
-	.legend-box.pour {
-		background: var(--color-success);
-	}
-
-	.legend-box.contre {
-		background: var(--color-danger);
-	}
-
-	.legend-box.abstention {
-		background: var(--color-warning);
 	}
 </style>

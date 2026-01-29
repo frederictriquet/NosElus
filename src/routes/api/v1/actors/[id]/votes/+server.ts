@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db, actors, votes, scrutins } from '$lib/server/db';
-import { eq, count, desc } from 'drizzle-orm';
+import { eq, count, desc, and } from 'drizzle-orm';
 import { parsePagination, paginatedResponse, parseFilters } from '$lib/server/api/helpers';
 
 export const GET: RequestHandler = async ({ params, url }) => {
@@ -23,11 +23,13 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		conditions.push(eq(votes.position, filters.position));
 	}
 
+	const whereClause = and(...conditions);
+
 	// Get total count
 	const [{ value: total }] = await db
 		.select({ value: count() })
 		.from(votes)
-		.where(conditions.length > 1 ? conditions.reduce((a, b) => eq(a, b) as never) : conditions[0]);
+		.where(whereClause);
 
 	// Get paginated votes with scrutin info
 	const actorVotes = await db
@@ -48,7 +50,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		})
 		.from(votes)
 		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-		.where(eq(votes.actorId, id))
+		.where(whereClause)
 		.orderBy(desc(scrutins.date))
 		.limit(pagination.limit)
 		.offset(pagination.offset);

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.where(eq(actors.id, params.id));
 
 	if (!actor) {
-		throw error(404, 'Député non trouvé');
+		throw error(404, { message: 'Député non trouvé' });
 	}
 
 	// Get vote stats
@@ -123,8 +123,8 @@ export const load: PageServerLoad = async ({ params }) => {
 		});
 	}
 
-	// Add yearly milestones if we have data
-	if (monthlyEvolution.length > 12) {
+	// Add yearly milestones if we have enough data
+	if (monthlyEvolution.length > 12 && monthlyEvolution[0]) {
 		// Find the month with most activity
 		const maxMonth = monthlyEvolution.reduce((max, m) => m.total > max.total ? m : max, monthlyEvolution[0]);
 		careerMilestones.push({

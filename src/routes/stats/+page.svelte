@@ -557,27 +557,22 @@
 		font-size: 0.75rem;
 	}
 
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.legend-box {
+	/* Override legend-box size for heatmap */
+	.heatmap-legend .legend-box {
 		width: 16px;
 		height: 16px;
 		border-radius: 4px;
 	}
 
-	.legend-box.pour {
+	.heatmap-legend .legend-box.pour {
 		background: #dcfce7;
 	}
 
-	.legend-box.contre {
+	.heatmap-legend .legend-box.contre {
 		background: #fee2e2;
 	}
 
-	.legend-box.abstention {
+	.heatmap-legend .legend-box.abstention {
 		background: #fef3c7;
 	}
 
@@ -699,11 +694,5 @@
 		bottom: -1.25rem;
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
-	}
-
-	.evolution-legend {
-		display: flex;
-		gap: 1.5rem;
-		font-size: 0.75rem;
 	}
 </style>

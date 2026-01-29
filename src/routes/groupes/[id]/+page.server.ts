@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.where(eq(organs.id, params.id));
 
 	if (!group) {
-		throw error(404, 'Groupe non trouvé');
+		throw error(404, { message: 'Groupe non trouvé' });
 	}
 
 	// Get vote distribution for this group

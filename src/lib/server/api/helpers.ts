@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 export interface PaginationParams {
 	page: number;
@@ -44,10 +44,6 @@ export function paginatedResponse<T>(
 			hasPrevious: pagination.page > 1
 		}
 	};
-}
-
-export function jsonResponse<T>(data: T, status = 200) {
-	return json(data, { status });
 }
 
 export function notFound(message = 'Resource not found') {

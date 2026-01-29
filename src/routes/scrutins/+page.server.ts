@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, scrutins } from '$lib/server/db';
-import { count, ilike, eq, desc, asc } from 'drizzle-orm';
+import { count, ilike, eq, desc, and } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		conditions.push(eq(scrutins.result, result));
 	}
 
-	const whereClause = conditions.length > 0 ? conditions[0] : undefined;
+	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Get total count
 	const [{ value: total }] = await db.select({ value: count() }).from(scrutins).where(whereClause);

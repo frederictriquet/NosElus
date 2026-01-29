@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
+
 	let { data } = $props();
 
 	let activeTab = $state<'pour' | 'contre' | 'abstention'>('pour');
@@ -68,14 +70,12 @@
 
 		<div class="voters-grid">
 			{#each data.votesByPosition[activeTab] as vote}
-				<a href="/deputes/{vote.actorId}" class="voter-card">
-					<img
-						src={vote.actorPhoto || '/placeholder.png'}
-						alt={vote.actorName}
-						class="voter-photo"
-					/>
-					<span class="voter-name">{vote.actorName}</span>
-				</a>
+				<ElectedCard
+					id={vote.actorId}
+					name={vote.actorName}
+					photoUrl={vote.actorPhoto}
+					variant="compact"
+				/>
 			{/each}
 		</div>
 
@@ -100,36 +100,5 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 		gap: 0.75rem;
-	}
-
-	.voter-card {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
-		border-radius: var(--radius);
-		text-decoration: none;
-		color: inherit;
-		transition: background 0.2s;
-	}
-
-	.voter-card:hover {
-		background: var(--color-bg);
-		text-decoration: none;
-	}
-
-	.voter-photo {
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		object-fit: cover;
-		background: var(--color-border);
-	}
-
-	.voter-name {
-		font-size: 0.875rem;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 </style>

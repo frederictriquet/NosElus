@@ -310,21 +310,6 @@
 		border-radius: 4px;
 	}
 
-	.dist-item.pour {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.dist-item.contre {
-		background: #fee2e2;
-		color: #991b1b;
-	}
-
-	.dist-item.abstention {
-		background: #fef3c7;
-		color: #92400e;
-	}
-
 	.comparison-stats {
 		display: flex;
 		flex-direction: column;
@@ -383,29 +368,6 @@
 		align-items: center;
 		gap: 0.5rem;
 		flex-shrink: 0;
-	}
-
-	.vote-badge {
-		padding: 0.25rem 0.5rem;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		font-weight: 500;
-		text-transform: uppercase;
-	}
-
-	.vote-badge.pour {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.vote-badge.contre {
-		background: #fee2e2;
-		color: #991b1b;
-	}
-
-	.vote-badge.abstention {
-		background: #fef3c7;
-		color: #92400e;
 	}
 
 	.vote-separator {

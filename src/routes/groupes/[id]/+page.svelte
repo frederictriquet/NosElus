@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
+
 	let { data } = $props();
 
 	function getTotalVotes() {
@@ -78,12 +80,14 @@
 		{:else}
 			<div class="members-list">
 				{#each data.members as member, i}
-					<a href="/deputes/{member.id}" class="member-item">
-						<span class="member-rank">{i + 1}</span>
-						<img src={member.photoUrl || '/placeholder.png'} alt={member.name} class="member-photo" />
-						<span class="member-name">{member.name}</span>
-						<span class="member-votes">{member.voteCount} votes</span>
-					</a>
+					<ElectedCard
+						id={member.id}
+						name={member.name}
+						photoUrl={member.photoUrl}
+						variant="inline"
+						rank={i + 1}
+						stat="{member.voteCount} votes"
+					/>
 				{/each}
 			</div>
 		{/if}
@@ -161,134 +165,7 @@
 	.members-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		margin-top: 1rem;
-	}
-
-	.member-item {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.5rem;
-		border-radius: var(--radius);
-		text-decoration: none;
-		color: inherit;
-		transition: background 0.2s;
-	}
-
-	.member-item:hover {
-		background: var(--color-bg);
-		text-decoration: none;
-	}
-
-	.member-rank {
-		width: 20px;
-		text-align: center;
-		font-weight: 700;
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-	}
-
-	.member-photo {
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		object-fit: cover;
-		background: var(--color-border);
-	}
-
-	.member-name {
-		flex: 1;
-		font-weight: 500;
-		font-size: 0.875rem;
-	}
-
-	.member-votes {
-		color: var(--color-primary);
-		font-weight: 600;
-		font-size: 0.875rem;
-	}
-
-	/* Evolution chart */
-	.evolution-chart {
-		display: flex;
-		align-items: flex-end;
-		gap: 0.5rem;
-		height: 150px;
-		margin-top: 1rem;
-		padding-bottom: 2rem;
-	}
-
-	.evolution-bar-container {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		height: 100%;
-		position: relative;
-	}
-
-	.evolution-bar {
-		width: 100%;
-		display: flex;
-		flex-direction: column-reverse;
-		border-radius: 4px 4px 0 0;
-		overflow: hidden;
-		min-height: 4px;
-		margin-top: auto;
-	}
-
-	.bar-segment {
-		width: 100%;
-	}
-
-	.bar-segment.pour {
-		background: var(--color-success);
-	}
-
-	.bar-segment.contre {
-		background: var(--color-danger);
-	}
-
-	.bar-segment.abstention {
-		background: var(--color-warning);
-	}
-
-	.evolution-label {
-		position: absolute;
-		bottom: -1.5rem;
-		font-size: 0.7rem;
-		color: var(--color-text-muted);
-	}
-
-	.evolution-legend {
-		display: flex;
-		gap: 1.5rem;
-		margin-top: 1rem;
-		font-size: 0.75rem;
-	}
-
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.legend-box {
-		width: 12px;
-		height: 12px;
-		border-radius: 3px;
-	}
-
-	.legend-box.pour {
-		background: var(--color-success);
-	}
-
-	.legend-box.contre {
-		background: var(--color-danger);
-	}
-
-	.legend-box.abstention {
-		background: var(--color-warning);
 	}
 </style>

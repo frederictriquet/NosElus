@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
+
 	let { data } = $props();
 
 	// Calculate total for percentages
@@ -28,22 +30,37 @@
 	</p>
 
 	<div class="hemicycle-container">
-		<div class="hemicycle-bar">
-			{#each sortedGroups as group}
-				{@const widthPct = (group.deputyCount / totalDeputies) * 100}
-				<a
-					href="/groupes/{group.groupId}"
-					class="hemicycle-segment"
-					style="flex: {group.deputyCount}; background: {group.groupColor || '#888'};"
-					title="{group.groupShortName || group.groupName}: {group.deputyCount} députés ({widthPct.toFixed(1)}%)"
-				>
-					{#if widthPct > 6}
-						<span class="segment-label">{group.groupShortName}</span>
-						<span class="segment-count">{group.deputyCount}</span>
-					{/if}
+		<svg viewBox="0 0 400 220" class="hemicycle-svg">
+			{#each sortedGroups as group, i}
+				{@const startAngle = sortedGroups.slice(0, i).reduce((sum, g) => sum + (g.deputyCount / totalDeputies) * 180, 0)}
+				{@const angle = (group.deputyCount / totalDeputies) * 180}
+				{@const startRad = (180 + startAngle) * Math.PI / 180}
+				{@const endRad = (180 + startAngle + angle) * Math.PI / 180}
+				{@const outerRadius = 180}
+				{@const innerRadius = 100}
+				{@const cx = 200}
+				{@const cy = 200}
+				{@const x1 = cx + outerRadius * Math.cos(startRad)}
+				{@const y1 = cy + outerRadius * Math.sin(startRad)}
+				{@const x2 = cx + outerRadius * Math.cos(endRad)}
+				{@const y2 = cy + outerRadius * Math.sin(endRad)}
+				{@const x3 = cx + innerRadius * Math.cos(endRad)}
+				{@const y3 = cy + innerRadius * Math.sin(endRad)}
+				{@const x4 = cx + innerRadius * Math.cos(startRad)}
+				{@const y4 = cy + innerRadius * Math.sin(startRad)}
+				{@const largeArc = angle > 180 ? 1 : 0}
+				<a href="/groupes/{group.groupId}">
+					<path
+						d="M {x1} {y1} A {outerRadius} {outerRadius} 0 {largeArc} 1 {x2} {y2} L {x3} {y3} A {innerRadius} {innerRadius} 0 {largeArc} 0 {x4} {y4} Z"
+						fill={group.groupColor || '#888'}
+						class="hemicycle-arc"
+					>
+						<title>{group.groupShortName || group.groupName}: {group.deputyCount} députés</title>
+					</path>
 				</a>
 			{/each}
-		</div>
+			<text x="200" y="195" text-anchor="middle" class="hemicycle-center-text">Perchoir</text>
+		</svg>
 		<div class="spectrum-labels">
 			<span class="spectrum-left">← Gauche</span>
 			<span class="spectrum-right">Droite →</span>
@@ -73,15 +90,15 @@
 						class="bar-fill"
 						style="width: {widthPct * 2}%; background: {group.groupColor || '#888'};"
 					></div>
+					{#if group === sortedGroups[sortedGroups.length - 1]}
+						<div class="majority-marker" style="left: {(289 / totalDeputies) * 200}%;">
+							<span class="majority-label">Majorité (289)</span>
+						</div>
+					{/if}
 				</div>
 				<span class="bar-value">{group.deputyCount}</span>
 			</div>
 		{/each}
-	</div>
-	<div class="majority-line">
-		<div class="majority-marker" style="left: {(289 / totalDeputies) * 100}%">
-			<span class="majority-label">Majorité absolue (289)</span>
-		</div>
 	</div>
 </div>
 
@@ -98,9 +115,12 @@
 				{#if data.deputiesByGroup[group.groupId]?.length > 0}
 					<div class="group-deputies">
 						{#each data.deputiesByGroup[group.groupId] as deputy}
-							<a href="/deputes/{deputy.id}" class="deputy-thumb" title={deputy.name}>
-								<img src={deputy.photoUrl || '/placeholder.png'} alt={deputy.name} />
-							</a>
+							<ElectedCard
+								id={deputy.id}
+								name={deputy.name}
+								photoUrl={deputy.photoUrl}
+								variant="thumbnail"
+							/>
 						{/each}
 						{#if group.deputyCount > 5}
 							<a href="/deputes?groupe={group.groupId}" class="deputy-more">+{group.deputyCount - 5}</a>
@@ -119,52 +139,38 @@
 		margin-bottom: 0.5rem;
 	}
 
-	/* Hemicycle Bar */
+	/* Hemicycle SVG */
 	.hemicycle-container {
 		margin: 1.5rem 0;
 	}
 
-	.hemicycle-bar {
-		display: flex;
-		height: 80px;
-		border-radius: 40px 40px 0 0;
-		overflow: hidden;
-		box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+	.hemicycle-svg {
+		width: 100%;
+		max-width: 500px;
+		height: auto;
+		display: block;
+		margin: 0 auto;
 	}
 
-	.hemicycle-segment {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-		min-width: 0;
-		text-decoration: none;
-		transition: transform 0.2s, filter 0.2s;
+	.hemicycle-arc {
+		transition: opacity 0.2s, transform 0.2s;
+		cursor: pointer;
 	}
 
-	.hemicycle-segment:hover {
-		filter: brightness(1.1);
-		transform: scaleY(1.05);
-		z-index: 1;
-		text-decoration: none;
+	.hemicycle-arc:hover {
+		opacity: 0.85;
 	}
 
-	.segment-label {
-		font-size: 0.7rem;
-		font-weight: 700;
-	}
-
-	.segment-count {
-		font-size: 0.6rem;
-		opacity: 0.9;
+	.hemicycle-center-text {
+		font-size: 12px;
+		fill: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	.spectrum-labels {
 		display: flex;
 		justify-content: space-between;
-		padding: 0.5rem 0;
+		padding: 0.5rem 10%;
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 	}
@@ -240,7 +246,8 @@
 		height: 24px;
 		background: var(--color-bg);
 		border-radius: 4px;
-		overflow: hidden;
+		overflow: visible;
+		position: relative;
 	}
 
 	.bar-fill {
@@ -256,30 +263,21 @@
 		text-align: right;
 	}
 
-	.majority-line {
-		position: relative;
-		height: 2px;
-		background: var(--color-border);
-		margin: 1rem 50px 0 50px;
-	}
-
 	.majority-marker {
 		position: absolute;
-		top: -8px;
-		transform: translateX(-50%);
-	}
-
-	.majority-marker::before {
-		content: '';
-		display: block;
+		top: -300px;
+		height: 340px;
 		width: 2px;
-		height: 18px;
 		background: var(--color-danger);
-		margin: 0 auto;
+		transform: translateX(-50%);
+		z-index: 10;
 	}
 
 	.majority-label {
-		display: block;
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
 		font-size: 0.65rem;
 		color: var(--color-danger);
 		white-space: nowrap;
@@ -333,20 +331,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-	}
-
-	.deputy-thumb {
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		overflow: hidden;
-		border: 2px solid var(--color-surface);
-	}
-
-	.deputy-thumb img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
 	}
 
 	.deputy-more {

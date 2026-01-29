@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
 
@@ -48,19 +49,12 @@
 {:else}
 	<div class="card-grid">
 		{#each data.deputies as deputy}
-			<a href="/deputes/{deputy.id}" class="deputy-card">
-				<img
-					src={deputy.photoUrl || '/placeholder.png'}
-					alt={deputy.fullName}
-					class="deputy-photo"
-				/>
-				<div class="deputy-info">
-					<div class="deputy-name">{deputy.fullName}</div>
-					{#if deputy.profession}
-						<div class="deputy-group">{deputy.profession}</div>
-					{/if}
-				</div>
-			</a>
+			<ElectedCard
+				id={deputy.id}
+				name={deputy.fullName}
+				photoUrl={deputy.photoUrl}
+				subtitle={deputy.profession || ''}
+			/>
 		{/each}
 	</div>
 
@@ -77,13 +71,3 @@
 	</div>
 {/if}
 
-<style>
-	.deputy-card {
-		text-decoration: none;
-		color: inherit;
-	}
-
-	.deputy-card:hover {
-		text-decoration: none;
-	}
-</style>

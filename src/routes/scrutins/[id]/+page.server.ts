@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.where(eq(scrutins.id, params.id));
 
 	if (!scrutin) {
-		throw error(404, 'Scrutin non trouvé');
+		throw error(404, { message: 'Scrutin non trouvé' });
 	}
 
 	// Get votes with actor info

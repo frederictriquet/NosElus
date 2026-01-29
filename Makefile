@@ -114,21 +114,26 @@ etl-colors: ## Synchronise les couleurs des groupes
 	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"
 	node --import tsx scripts/etl/sync-group-colors.ts
 
-etl-leg15: ## Import législature 15
+etl-leg14: ## Import législature 14 (2012-2017)
+	@$(MAKE) etl-all ETL_LEGISLATURE=14
+
+etl-leg15: ## Import législature 15 (2017-2022)
 	@$(MAKE) etl-all ETL_LEGISLATURE=15
 
-etl-leg16: ## Import législature 16
+etl-leg16: ## Import législature 16 (2022-2024)
 	@$(MAKE) etl-all ETL_LEGISLATURE=16
 
-etl-leg17: ## Import législature 17
+etl-leg17: ## Import législature 17 (2024-)
 	@$(MAKE) etl-all ETL_LEGISLATURE=17
 
-etl-all-legislatures: ## Import toutes les législatures (15, 16, 17)
-	@echo "$(CYAN)Import législature 15...$(RESET)"
+etl-all-legislatures: ## Import toutes les législatures (14, 15, 16, 17)
+	@echo "$(CYAN)Import législature 14 (XIVe - 2012-2017)...$(RESET)"
+	@$(MAKE) etl-all ETL_LEGISLATURE=14
+	@echo "$(CYAN)Import législature 15 (XVe - 2017-2022)...$(RESET)"
 	@$(MAKE) etl-all ETL_LEGISLATURE=15
-	@echo "$(CYAN)Import législature 16...$(RESET)"
+	@echo "$(CYAN)Import législature 16 (XVIe - 2022-2024)...$(RESET)"
 	@$(MAKE) etl-all ETL_LEGISLATURE=16
-	@echo "$(CYAN)Import législature 17...$(RESET)"
+	@echo "$(CYAN)Import législature 17 (XVIIe - 2024-)...$(RESET)"
 	@$(MAKE) etl-all ETL_LEGISLATURE=17
 	@echo "$(GREEN)✓ Toutes les législatures importées$(RESET)"
 

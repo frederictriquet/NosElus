@@ -40,9 +40,10 @@
 - [x] Mapper les mandats avec les législatures (3924 mandats député)
 
 ### 2.2 Votes historiques
-- [ ] Charger scrutins archivés XIVe législature
-- [ ] Charger scrutins archivés XVe législature
-- [ ] Charger scrutins XVIe législature (actuelle)
+- [x] Charger scrutins archivés XIVe législature (via @tricoteuses/assemblee)
+- [x] Charger scrutins archivés XVe législature (via @tricoteuses/assemblee)
+- [x] Charger scrutins XVIe législature (via @tricoteuses/assemblee)
+- [x] Support import incrémental avec tracking des syncs
 
 ### 2.3 Dossiers législatifs
 - [ ] ETL dossiers législatifs AN
@@ -155,5 +156,7 @@
 ## Notes techniques
 
 - **Stack**: SvelteKit + TypeScript + PostgreSQL + Drizzle ORM
-- **Législature actuelle**: 16 (nosdeputes.fr), 17 pas encore disponible
+- **Législatures supportées**: 14, 15, 16, 17 (via @tricoteuses/assemblee)
+- **Import**: `make etl-all-legislatures` pour importer toutes les législatures
+- **Mode incrémental**: `make etl-incremental` avec tracking dans table `sync_metadata`
 - **Fréquence ETL**: À définir (quotidien/hebdomadaire)

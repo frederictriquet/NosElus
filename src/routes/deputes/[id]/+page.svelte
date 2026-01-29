@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
+
 	let { data } = $props();
 
 	const totalVotes = data.distribution.pour + data.distribution.contre + data.distribution.abstention + data.distribution['non-votant'];
@@ -9,43 +11,22 @@
 	<title>{data.actor.fullName} - NosElus</title>
 </svelte:head>
 
-<div class="profile-header">
-	<img
-		src={data.actor.photoUrl || '/placeholder.png'}
-		alt={data.actor.fullName}
-		class="profile-photo"
-	/>
-	<div class="profile-info">
-		<h1>{data.actor.civility} {data.actor.fullName}</h1>
-		{#if data.group}
-			<a href="/groupes/{data.group.groupId}" class="group-badge" style="background: {data.group.groupColor || '#888'}20; border: 1px solid {data.group.groupColor || '#888'}; color: {data.group.groupColor || '#888'};">
-				<span class="group-dot" style="background: {data.group.groupColor || '#888'}"></span>
-				{data.group.groupShortName || data.group.groupName}
-			</a>
-		{/if}
-		<div class="profile-meta">
-			{#if data.actor.profession}
-				<span>{data.actor.profession}</span>
-			{/if}
-			{#if data.actor.birthDate}
-				<span>Né(e) le {new Date(data.actor.birthDate).toLocaleDateString('fr-FR')}</span>
-			{/if}
-			{#if data.actor.birthPlace}
-				<span>à {data.actor.birthPlace}</span>
-			{/if}
-		</div>
-		{#if data.timeline.firstVote && data.timeline.lastVote}
-			<div class="activity-period">
-				<span class="activity-label">Activité parlementaire :</span>
-				<span class="activity-dates">
-					{new Date(data.timeline.firstVote).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
-					→
-					{new Date(data.timeline.lastVote).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
-				</span>
-			</div>
-		{/if}
-	</div>
-</div>
+<ProfileHeader
+	name={data.actor.fullName}
+	civility={data.actor.civility}
+	photoUrl={data.actor.photoUrl}
+	type="depute"
+	group={data.group ? {
+		id: data.group.groupId,
+		name: data.group.groupName,
+		shortName: data.group.groupShortName,
+		color: data.group.groupColor
+	} : null}
+	profession={data.actor.profession}
+	birthDate={data.actor.birthDate}
+	birthPlace={data.actor.birthPlace}
+	timeline={data.timeline}
+/>
 
 <div class="card-grid">
 	<section class="card">
@@ -306,43 +287,6 @@
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
-	}
-
-	.group-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.375rem 0.75rem;
-		border-radius: 20px;
-		font-size: 0.875rem;
-		font-weight: 500;
-		text-decoration: none;
-		margin: 0.5rem 0;
-	}
-
-	.group-badge:hover {
-		text-decoration: none;
-		opacity: 0.9;
-	}
-
-	.group-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-	}
-
-	.activity-period {
-		margin-top: 0.5rem;
-		font-size: 0.875rem;
-	}
-
-	.activity-label {
-		color: var(--color-text-muted);
-	}
-
-	.activity-dates {
-		font-weight: 500;
-		color: var(--color-text);
 	}
 
 	.vote-item {

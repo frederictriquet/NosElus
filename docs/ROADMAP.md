@@ -142,6 +142,27 @@
 
 ---
 
+## Phase 7 - Parlement européen (31-38 semaines)
+
+### 7.1 Données eurodéputés
+- [ ] ETL Parlement européen - Eurodéputés français (81 MEPs, législature 2024-2029)
+- [ ] ETL Parlement européen - Groupes politiques européens
+- [ ] ETL votes en session plénière (via data.europarl.europa.eu ou itsyourparliament.eu)
+- [ ] Historique des mandats européens (depuis 2004)
+
+### 7.2 Interface eurodéputés
+- [ ] Page `/eurodeputes` - Liste des eurodéputés français avec filtres
+- [ ] Fiche détaillée eurodéputé (profil + votes européens)
+- [ ] Statistiques de vote au Parlement européen
+- [ ] Comparaison entre eurodéputés
+
+### 7.3 Intégration multi-chambres
+- [ ] Navigation unifiée AN / Sénat / PE
+- [ ] Recherche globale tous élus français
+- [ ] Statistiques comparées entre chambres
+
+---
+
 ## Sources de données
 
 | Source | Type | Statut | Documentation |
@@ -149,6 +170,8 @@
 | NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
+| Parlement européen | API RDF/JSON | Planifié | [data.europarl.europa.eu](https://data.europarl.europa.eu) |
+| It's Your Parliament | API XML | Planifié | [itsyourparliament.eu/api](http://www.itsyourparliament.eu/api/) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 
 ---

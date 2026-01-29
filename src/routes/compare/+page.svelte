@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
-	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
 
 	let { data } = $props();
 
@@ -40,14 +39,6 @@
 	<p class="page-subtitle">Comparez les votes de deux députés</p>
 </div>
 
-<div class="filters" style="margin-bottom: 1.5rem;">
-	<PeriodFilter
-		legislature={data.filters?.legislature}
-		dateFrom={data.filters?.dateFrom}
-		dateTo={data.filters?.dateTo}
-		showDateRange={true}
-	/>
-</div>
 
 <div class="card" style="margin-bottom: 2rem;">
 	<div class="compare-selectors">

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins, organs } from '$lib/server/db';
+import { db, actors, votes, scrutins, organs, amendments } from '$lib/server/db';
 import { eq, count, desc, sql, asc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
@@ -146,6 +146,61 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	careerMilestones.sort((a, b) => a.date.localeCompare(b.date));
 
+	// Get amendments stats
+	const [amendmentCount] = await db
+		.select({ value: count() })
+		.from(amendments)
+		.where(eq(amendments.authorId, params.id));
+
+	// Get amendment status distribution
+	const amendmentDistribution = await db
+		.select({
+			status: amendments.status,
+			count: count()
+		})
+		.from(amendments)
+		.where(eq(amendments.authorId, params.id))
+		.groupBy(amendments.status);
+
+	const amendmentStats = {
+		total: amendmentCount.value,
+		adopte: 0,
+		rejete: 0,
+		retire: 0,
+		tombe: 0,
+		autre: 0
+	};
+
+	for (const a of amendmentDistribution) {
+		const status = a.status?.toLowerCase() || '';
+		if (status.includes('adopt')) {
+			amendmentStats.adopte += a.count;
+		} else if (status.includes('rejet')) {
+			amendmentStats.rejete += a.count;
+		} else if (status.includes('retir')) {
+			amendmentStats.retire += a.count;
+		} else if (status.includes('tomb')) {
+			amendmentStats.tombe += a.count;
+		} else {
+			amendmentStats.autre += a.count;
+		}
+	}
+
+	// Get recent amendments
+	const recentAmendments = await db
+		.select({
+			id: amendments.id,
+			number: amendments.number,
+			article: amendments.article,
+			status: amendments.status,
+			depositDate: amendments.depositDate,
+			exposeSommaire: amendments.exposeSommaire
+		})
+		.from(amendments)
+		.where(eq(amendments.authorId, params.id))
+		.orderBy(desc(amendments.depositDate))
+		.limit(10);
+
 	return {
 		actor,
 		voteCount: voteCount.value,
@@ -157,6 +212,8 @@ export const load: PageServerLoad = async ({ params }) => {
 			lastVote: lastVote?.date || null
 		},
 		group: deputyGroup || null,
-		careerMilestones
+		careerMilestones,
+		amendmentStats,
+		recentAmendments
 	};
 };

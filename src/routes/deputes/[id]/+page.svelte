@@ -2,6 +2,7 @@
 	let { data } = $props();
 
 	const totalVotes = data.distribution.pour + data.distribution.contre + data.distribution.abstention + data.distribution['non-votant'];
+	const totalAmendments = $derived(data.amendmentStats.adopte + data.amendmentStats.rejete + data.amendmentStats.retire + data.amendmentStats.tombe + data.amendmentStats.autre);
 </script>
 
 <svelte:head>
@@ -158,6 +159,73 @@
 </section>
 {/if}
 
+{#if data.amendmentStats.total > 0}
+<div class="card-grid" style="margin-top: 1.5rem;">
+	<section class="card">
+		<h2>Amendements déposés</h2>
+		<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{data.amendmentStats.total} amendement{data.amendmentStats.total > 1 ? 's' : ''}</p>
+
+		{#if totalAmendments > 0}
+			<div class="amendment-bar" style="height: 24px; border-radius: 12px;">
+				<div class="amendment-bar-adopte" style="width: {(data.amendmentStats.adopte / totalAmendments) * 100}%"></div>
+				<div class="amendment-bar-rejete" style="width: {(data.amendmentStats.rejete / totalAmendments) * 100}%"></div>
+				<div class="amendment-bar-retire" style="width: {(data.amendmentStats.retire / totalAmendments) * 100}%"></div>
+				<div class="amendment-bar-tombe" style="width: {(data.amendmentStats.tombe / totalAmendments) * 100}%"></div>
+			</div>
+			<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center; flex-wrap: wrap; gap: 0.5rem;">
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{data.amendmentStats.adopte}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Adoptés</div>
+				</div>
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{data.amendmentStats.rejete}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Rejetés</div>
+				</div>
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{data.amendmentStats.retire}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Retirés</div>
+				</div>
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{data.amendmentStats.tombe}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Tombés</div>
+				</div>
+			</div>
+		{/if}
+	</section>
+
+	<section class="card">
+		<h2>Derniers amendements</h2>
+		{#if data.recentAmendments.length === 0}
+			<p class="empty-state">Aucun amendement enregistré</p>
+		{:else}
+			<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+				{#each data.recentAmendments as amendment}
+					<div class="amendment-item">
+						<span class="amendment-status" class:adopte={amendment.status?.toLowerCase().includes('adopt')} class:rejete={amendment.status?.toLowerCase().includes('rejet')} class:retire={amendment.status?.toLowerCase().includes('retir')} class:tombe={amendment.status?.toLowerCase().includes('tomb')}>
+							{amendment.status || 'En cours'}
+						</span>
+						<div class="amendment-info">
+							<div class="amendment-number">
+								Amendement n°{amendment.number}
+								{#if amendment.article}
+									<span class="amendment-article">sur {amendment.article}</span>
+								{/if}
+							</div>
+							{#if amendment.exposeSommaire}
+								<div class="amendment-summary">{amendment.exposeSommaire.slice(0, 100)}{amendment.exposeSommaire.length > 100 ? '...' : ''}</div>
+							{/if}
+							{#if amendment.depositDate}
+								<div class="amendment-date">{new Date(amendment.depositDate).toLocaleDateString('fr-FR')}</div>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</section>
+</div>
+{/if}
+
 <style>
 	h2 {
 		font-size: 1.25rem;
@@ -312,5 +380,95 @@
 	/* Override evolution chart height for this page */
 	.evolution-chart {
 		height: 180px;
+	}
+
+	/* Amendments styles */
+	.amendment-bar {
+		display: flex;
+		background: var(--color-bg);
+		overflow: hidden;
+	}
+
+	.amendment-bar-adopte {
+		background: var(--color-success);
+	}
+
+	.amendment-bar-rejete {
+		background: var(--color-danger);
+	}
+
+	.amendment-bar-retire {
+		background: var(--color-warning);
+	}
+
+	.amendment-bar-tombe {
+		background: var(--color-text-muted);
+	}
+
+	.amendment-item {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 0.5rem;
+		border-radius: var(--radius);
+	}
+
+	.amendment-status {
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-transform: capitalize;
+		white-space: nowrap;
+		background: var(--color-bg);
+		color: var(--color-text-muted);
+	}
+
+	.amendment-status.adopte {
+		background: var(--color-success-bg, #dcfce7);
+		color: var(--color-success);
+	}
+
+	.amendment-status.rejete {
+		background: var(--color-danger-bg, #fde2e2);
+		color: var(--color-danger);
+	}
+
+	.amendment-status.retire {
+		background: var(--color-warning-bg, #fef3c7);
+		color: var(--color-warning);
+	}
+
+	.amendment-status.tombe {
+		background: var(--color-bg);
+		color: var(--color-text-muted);
+	}
+
+	.amendment-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.amendment-number {
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.amendment-article {
+		font-weight: 400;
+		color: var(--color-text-muted);
+	}
+
+	.amendment-summary {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
+		line-height: 1.4;
+	}
+
+	.amendment-date {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
 	}
 </style>

@@ -6,3 +6,7 @@ export * from './scrutins-types';
 export * from './scrutins-loader';
 export * from './scrutins-mappers';
 export * from './scrutins-import';
+export * from './amendements-types';
+export * from './amendements-loader';
+export * from './amendements-mappers';
+export * from './amendements-import';

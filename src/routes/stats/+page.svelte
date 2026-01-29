@@ -1,6 +1,4 @@
 <script lang="ts">
-	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
-
 	let { data } = $props();
 
 	const totalDistribution = data.distribution.pour + data.distribution.contre + data.distribution.abstention;
@@ -15,14 +13,6 @@
 	<p class="page-subtitle">Analyse de l'activité parlementaire</p>
 </div>
 
-<div class="filters" style="margin-bottom: 1.5rem;">
-	<PeriodFilter
-		legislature={data.filters.legislature}
-		dateFrom={data.filters.dateFrom}
-		dateTo={data.filters.dateTo}
-		showDateRange={true}
-	/>
-</div>
 
 <div class="stats-grid">
 	<div class="stat-card">

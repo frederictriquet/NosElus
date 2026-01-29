@@ -1,14 +1,16 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, mandates } from '$lib/server/db';
 import { eq, and, sql, inArray, isNull, or, gte, notLike } from 'drizzle-orm';
-import { parsePeriodFilters, LEGISLATURE_DATES } from '$lib/server/api/helpers';
+import { parsePeriodFilters } from '$lib/server/api/helpers';
+import { getLegislatureDates, getCurrentLegislature } from '$lib/server/legislatures';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const periodFilters = parsePeriodFilters(url);
 
-	// Cette page nécessite une législature spécifique (défaut: 17e)
-	const legislature = periodFilters.legislature || '17';
-	const legislatureInfo = LEGISLATURE_DATES[legislature];
+	// Cette page nécessite une législature spécifique (défaut: législature courante)
+	const currentLeg = await getCurrentLegislature();
+	const legislature = periodFilters.legislature || currentLeg;
+	const legislatureInfo = await getLegislatureDates(legislature);
 
 	// Date de référence : aujourd'hui pour législature en cours, date de fin pour les passées
 	const referenceDate = legislatureInfo?.end || new Date().toISOString().split('T')[0];
@@ -102,7 +104,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		deputiesByGroup,
 		legislature,
 		legislatureLabel,
-		legislatureStart: legislatureInfo?.start || null,
-		legislatureEnd: legislatureInfo?.end || null
+		legislatureStart: legislatureInfo?.start ?? null,
+		legislatureEnd: legislatureInfo?.end ?? null
 	};
 };

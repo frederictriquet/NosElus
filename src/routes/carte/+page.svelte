@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
@@ -34,21 +33,6 @@
 	const majorityThreshold = $derived(Math.floor(totalDeputies / 2) + 1);
 	const maxGroupSize = $derived(Math.max(...sortedGroups.map(g => g.deputyCount), 0));
 	const barScaleMax = $derived(Math.max(maxGroupSize, majorityThreshold) * 1.05);
-
-	// Législatures disponibles
-	const LEGISLATURES = [
-		{ value: '17', label: '17e (2024-)' },
-		{ value: '16', label: '16e (2022-2024)' },
-		{ value: '15', label: '15e (2017-2022)' },
-		{ value: '14', label: '14e (2012-2017)' },
-		{ value: '13', label: '13e (2007-2012)' },
-		{ value: '12', label: '12e (2002-2007)' }
-	];
-
-	function handleLegislatureChange(e: Event) {
-		const value = (e.currentTarget as HTMLSelectElement).value;
-		goto(`/carte?legislature=${value}`);
-	}
 </script>
 
 <svelte:head>
@@ -58,22 +42,6 @@
 <div class="page-header">
 	<h1 class="page-title">Carte politique</h1>
 	<p class="page-subtitle">Répartition des forces politiques à l'Assemblée nationale</p>
-</div>
-
-<div class="filters" style="margin-bottom: 1.5rem;">
-	<div class="filter-group">
-		<label for="legislature-select" class="filter-label">Législature</label>
-		<select
-			id="legislature-select"
-			class="input"
-			value={data.legislature}
-			onchange={handleLegislatureChange}
-		>
-			{#each LEGISLATURES as leg}
-				<option value={leg.value}>{leg.label}</option>
-			{/each}
-		</select>
-	</div>
 </div>
 
 <div class="card" style="margin-bottom: 1.5rem;">

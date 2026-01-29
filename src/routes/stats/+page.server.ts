@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs, mandates } from '$lib/server/db';
-import { count, eq, sql, desc, inArray, and, gte, lte, type SQL } from 'drizzle-orm';
+import { count, eq, sql, desc, inArray, and, gte, lte, notLike, isNull, or, type SQL } from 'drizzle-orm';
 import { parsePeriodFilters } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -134,6 +134,15 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	// Group cohesion (percentage of votes aligned with group majority)
 	// This is a simplified version - we calculate % of "pour" votes per group
+	// Exclude PO_GP_* groups (imported from NosDéputés) to avoid duplicates
+	// Exclude groups that have ended (endDate in the past) to avoid showing old versions
+	const today = new Date().toISOString().split('T')[0];
+	const groupCondition = and(
+		eq(organs.type, 'GP'),
+		notLike(organs.id, 'PO_GP_%'),
+		or(isNull(organs.endDate), gte(organs.endDate, today))
+	);
+
 	const groupStatsQuery = filteredScrutinIds !== null
 		? filteredScrutinIds.length > 0
 			? db
@@ -149,7 +158,7 @@ export const load: PageServerLoad = async ({ url }) => {
 				})
 				.from(organs)
 				.leftJoin(votes, and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds)))
-				.where(eq(organs.type, 'GP'))
+				.where(groupCondition)
 				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
 				.orderBy(desc(count(votes.id)))
 			: db
@@ -164,7 +173,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					abstentionVotes: sql<number>`0`
 				})
 				.from(organs)
-				.where(eq(organs.type, 'GP'))
+				.where(groupCondition)
 				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
 		: db
 			.select({
@@ -179,7 +188,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			})
 			.from(organs)
 			.leftJoin(votes, eq(votes.groupId, organs.id))
-			.where(eq(organs.type, 'GP'))
+			.where(groupCondition)
 			.groupBy(organs.id, organs.name, organs.shortName, organs.color)
 			.orderBy(desc(count(votes.id)));
 
@@ -294,11 +303,22 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 
 	// ===== GOVERNMENT ALIGNMENT =====
-	// Presidential majority groups: Renaissance, MoDem, Horizons
-	const majorityGroupIds = ['PO_GP_REN', 'PO_GP_MODEM', 'PO_GP_HOR'];
+	// Presidential majority groups: Renaissance/EPR, MoDem/Dem, Horizons/HOR
+	// Find these groups dynamically by their shortName
+	const majorityShortNames = ['EPR', 'RE', 'REN', 'Dem', 'HOR'];
+	const majorityGroups = await db
+		.select({ id: organs.id })
+		.from(organs)
+		.where(and(
+			eq(organs.type, 'GP'),
+			inArray(organs.shortName, majorityShortNames)
+		));
+	const majorityGroupIds = majorityGroups.map(g => g.id);
 
 	// For each scrutin, determine majority position (what did majority vote for)
-	const majorityVotesConditions: SQL[] = [inArray(votes.groupId, majorityGroupIds)];
+	const majorityVotesConditions: SQL[] = majorityGroupIds.length > 0
+		? [inArray(votes.groupId, majorityGroupIds)]
+		: [sql`1 = 0`]; // No majority groups found
 	if (filteredScrutinIds !== null && filteredScrutinIds.length > 0) {
 		majorityVotesConditions.push(inArray(votes.scrutinId, filteredScrutinIds));
 	}

@@ -37,3 +37,4 @@ traefik/acme.json
 
 
 data/
+data/cache/

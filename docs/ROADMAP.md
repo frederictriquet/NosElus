@@ -14,8 +14,9 @@
 - [x] ETL NosDéputés.fr - Groupes parlementaires
 - [x] ETL NosDéputés.fr - Scrutins
 - [x] ETL NosDéputés.fr - Votes individuels
-- [ ] ETL Assemblée Nationale (data.assemblee-nationale.fr) - Députés *(optionnel, nécessite données Tricoteuses)*
-- [ ] ETL Assemblée Nationale - Scrutins détaillés *(optionnel)*
+- [x] ETL Assemblée Nationale (data.assemblee-nationale.fr) - Députés historiques (2100 députés, 12 245 mandats)
+- [x] ETL Assemblée Nationale - Scrutins détaillés (17 872 scrutins, 15e-17e législatures)
+- [x] ETL Assemblée Nationale - Votes nominatifs (1 993 587 votes)
 - [ ] ETL Assemblée Nationale - Amendements *(Phase 2)*
 - [ ] ETL Sénat (data.senat.fr) - Sénateurs *(Phase 2)*
 - [ ] ETL Sénat - Travaux législatifs (DOSLEG) *(Phase 2)*

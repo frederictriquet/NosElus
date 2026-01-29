@@ -6,13 +6,18 @@ import type { ANActeur, ANOrgane } from './types';
 const DATA_URL =
 	'https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip';
 
-const DATA_DIR = '/tmp/an_data';
-const ZIP_FILE = '/tmp/an_historique.json.zip';
+// Use persistent cache directory (survives reboots)
+const CACHE_DIR = process.env.ETL_CACHE_DIR || path.join(process.cwd(), 'data', 'cache');
+const DATA_DIR = path.join(CACHE_DIR, 'an_acteurs');
+const ZIP_FILE = path.join(CACHE_DIR, 'an_historique.json.zip');
 
 /**
  * Télécharge et extrait les données de l'Assemblée Nationale
  */
 export async function downloadAndExtractData(): Promise<void> {
+	// Ensure cache directory exists
+	fs.mkdirSync(CACHE_DIR, { recursive: true });
+
 	// Check if data already exists
 	if (fs.existsSync(path.join(DATA_DIR, 'json', 'acteur'))) {
 		console.log('[AN] Data already extracted, skipping download');
@@ -20,6 +25,7 @@ export async function downloadAndExtractData(): Promise<void> {
 	}
 
 	console.log('[AN] Downloading data from data.assemblee-nationale.fr...');
+	console.log(`[AN] Cache directory: ${CACHE_DIR}`);
 
 	// Download zip file
 	execSync(`curl -sL "${DATA_URL}" -o "${ZIP_FILE}"`, { stdio: 'inherit' });

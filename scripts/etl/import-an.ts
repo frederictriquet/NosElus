@@ -2,19 +2,32 @@
  * Script d'import des données historiques de l'Assemblée Nationale
  * Source: data.assemblee-nationale.fr
  *
- * Usage: npx tsx scripts/etl/import-an.ts [--stats-only] [--groupes] [--deputes] [--mandats] [--all]
+ * Usage: npx tsx scripts/etl/import-an.ts [options]
+ *
+ * Options:
+ *   --stats-only  : Afficher les statistiques sans importer
+ *   --organes     : Importer les organes (ASSEMBLEE + GP)
+ *   --deputes     : Importer les députés
+ *   --mandats     : Importer les mandats
+ *   --scrutins    : Importer les scrutins
+ *   --votes       : Importer les votes nominatifs
+ *   --all         : Tout importer
+ *   --leg=N       : Filtrer par législature (ex: --leg=17)
  */
 
 import {
 	importOrganesFromAN,
 	importDeputesFromAN,
 	importMandatsFromAN,
-	getANStats
+	getANStats,
+	importScrutinsFromAN,
+	importVotesFromAN,
+	getScrutinsStats
 } from '../../src/lib/server/etl/sources/assemblee-nationale';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
 
 const config: ETLConfig = {
-	legislature: '17', // Législature actuelle pour référence
+	legislature: '17',
 	batchSize: 100
 };
 
@@ -25,20 +38,39 @@ async function main() {
 	const importOrganes = args.includes('--organes') || args.includes('--all');
 	const importDeputes = args.includes('--deputes') || args.includes('--all');
 	const importMandats = args.includes('--mandats') || args.includes('--all');
+	const importScrutins = args.includes('--scrutins') || args.includes('--all');
+	const importVotes = args.includes('--votes') || args.includes('--all');
+
+	// Parse legislature filter
+	const legArg = args.find((a) => a.startsWith('--leg='));
+	const legislature = legArg ? legArg.split('=')[1] : undefined;
 
 	// If no specific flag, show stats
 	if (args.length === 0 || statsOnly) {
 		console.log('=== Statistiques données AN ===\n');
-		const stats = await getANStats();
-		console.log(`Total acteurs: ${stats.totalActeurs}`);
-		console.log(`Total députés: ${stats.totalDeputes}`);
-		console.log(`Total groupes parlementaires: ${stats.totalGroupes}`);
+
+		// Actor stats
+		const actorStats = await getANStats();
+		console.log(`Total acteurs: ${actorStats.totalActeurs}`);
+		console.log(`Total députés: ${actorStats.totalDeputes}`);
+		console.log(`Total groupes parlementaires: ${actorStats.totalGroupes}`);
 		console.log('\nDéputés par législature:');
-		const sortedLegs = Array.from(stats.legislatures.entries()).sort((a, b) =>
-			parseInt(a[0]) - parseInt(b[0])
+		const sortedLegs = Array.from(actorStats.legislatures.entries()).sort(
+			(a, b) => parseInt(a[0]) - parseInt(b[0])
 		);
 		for (const [leg, count] of sortedLegs) {
 			console.log(`  Législature ${leg}: ${count} députés`);
+		}
+
+		// Scrutins stats
+		console.log('\n--- Scrutins ---');
+		const scrutinsStats = await getScrutinsStats();
+		console.log(`Total scrutins: ${scrutinsStats.total}`);
+		console.log('Par législature:');
+		for (const [leg, count] of Object.entries(scrutinsStats.byLegislature).sort(
+			(a, b) => parseInt(a[0]) - parseInt(b[0])
+		)) {
+			console.log(`  Législature ${leg}: ${count} scrutins`);
 		}
 
 		if (statsOnly) {
@@ -49,11 +81,17 @@ async function main() {
 		console.log('  --organes  : Importer les organes (ASSEMBLEE + GP)');
 		console.log('  --deputes  : Importer les députés');
 		console.log('  --mandats  : Importer les mandats');
+		console.log('  --scrutins : Importer les scrutins (15e-17e législatures)');
+		console.log('  --votes    : Importer les votes nominatifs');
 		console.log('  --all      : Tout importer');
+		console.log('  --leg=N    : Filtrer par législature (ex: --leg=17)');
 		process.exit(0);
 	}
 
-	console.log('=== Import données Assemblée Nationale ===\n');
+	console.log('=== Import données Assemblée Nationale ===');
+	if (legislature) {
+		console.log(`Filtré sur la législature ${legislature}`);
+	}
 
 	// Import organes first (needed for mandates FK)
 	if (importOrganes) {
@@ -74,6 +112,20 @@ async function main() {
 		console.log('\n--- Mandats ---');
 		const mandatsStats = await importMandatsFromAN(config);
 		console.log(`Mandats: ${mandatsStats.inserted} importés, ${mandatsStats.errors} erreurs`);
+	}
+
+	// Import scrutins
+	if (importScrutins) {
+		console.log('\n--- Scrutins ---');
+		const scrutinsStats = await importScrutinsFromAN(config, legislature);
+		console.log(`Scrutins: ${scrutinsStats.inserted} importés, ${scrutinsStats.errors} erreurs`);
+	}
+
+	// Import votes
+	if (importVotes) {
+		console.log('\n--- Votes nominatifs ---');
+		const votesStats = await importVotesFromAN(config, legislature);
+		console.log(`Votes: ${votesStats.inserted} importés, ${votesStats.errors} erreurs`);
 	}
 
 	console.log('\n=== Import terminé ===');

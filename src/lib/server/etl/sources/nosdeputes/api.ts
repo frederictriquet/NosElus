@@ -139,7 +139,9 @@ export async function fetchGroupes(legislature?: string): Promise<NosDeputesGrou
 		`${baseUrl}/organismes/groupe/json`
 	);
 
+	// Include all groups (current and historical) that have a valid name
+	// Don't filter by groupe_actuel to get historical groups with their colors
 	return (data.organismes ?? [])
 		.map((o) => o.organisme)
-		.filter((o) => o.type === 'groupe' && o.groupe_actuel && o.nom !== false);
+		.filter((o) => o.type === 'groupe' && o.nom !== false);
 }

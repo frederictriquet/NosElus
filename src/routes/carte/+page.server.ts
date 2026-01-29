@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, mandates } from '$lib/server/db';
-import { eq, and, sql, inArray, isNull, or, gte } from 'drizzle-orm';
+import { eq, and, sql, inArray, isNull, or, gte, notLike } from 'drizzle-orm';
 import { parsePeriodFilters, LEGISLATURE_DATES } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	// Trouver les groupes parlementaires (GP) avec leurs membres ACTIFS dans cette législature
 	// Un mandat est actif à la date de référence si endDate est null ou >= referenceDate
+	// Exclure les groupes PO_GP_* (importés depuis nosdeputes.fr) qui dupliquent les groupes AN
 	const groupMandateCounts = await db
 		.select({
 			organId: mandates.organId,
@@ -24,7 +25,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		.innerJoin(organs, eq(organs.id, mandates.organId))
 		.where(and(
 			eq(mandates.legislature, legislature),
-			eq(organs.type, 'GP')
+			eq(organs.type, 'GP'),
+			notLike(organs.id, 'PO_GP_%')
 		))
 		.groupBy(mandates.organId);
 
@@ -50,11 +52,15 @@ export const load: PageServerLoad = async ({ url }) => {
 	const groupDistribution = groupMandateCounts
 		.map(c => {
 			const info = groupInfoById.get(c.organId);
+			const shortName = info?.groupShortName || c.organId;
+			const fullName = info?.groupName || c.organId;
+			// Utiliser la couleur de la base de données (importée via ETL depuis nosdeputes.fr)
+			const color = info?.groupColor || '#888';
 			return {
 				groupId: c.organId,
-				groupName: info?.groupName || c.organId,
-				groupShortName: info?.groupShortName || c.organId,
-				groupColor: info?.groupColor || '#888',
+				groupName: fullName,
+				groupShortName: shortName,
+				groupColor: color,
 				deputyCount: Number(c.deputyCount)
 			};
 		})

@@ -73,7 +73,7 @@ export async function importDeputesFromNosdeputes(config: ETLConfig): Promise<Im
 	return stats;
 }
 
-export async function importGroupesFromNosdeputes(config: ETLConfig): Promise<ImportStats> {
+export async function importGroupesFromNosdeputes(config: ETLConfig, legislatureNumber?: string): Promise<ImportStats> {
 	const stats = createImportStats();
 
 	console.log('[NosDéputés] Fetching groupes parlementaires...');
@@ -82,7 +82,9 @@ export async function importGroupesFromNosdeputes(config: ETLConfig): Promise<Im
 
 	stats.total = groupes.length;
 
-	const mappedOrgans = groupes.map(g => mapGroupe(g, config.legislature));
+	// Use legislatureNumber if provided, otherwise derive from config.legislature
+	const actualLegislature = legislatureNumber || config.legislature;
+	const mappedOrgans = groupes.map(g => mapGroupe(g, actualLegislature));
 
 	try {
 		await db

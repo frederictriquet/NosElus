@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
+	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
 
 	let { data } = $props();
 
@@ -40,6 +41,7 @@
 			bind:value={searchInput}
 		/>
 	</form>
+	<PeriodFilter legislature={data.filters.legislature} />
 </div>
 
 {#if data.deputies.length === 0}

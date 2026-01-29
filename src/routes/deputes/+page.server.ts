@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, mandates, organs } from '$lib/server/db';
-import { count, ilike, or, asc, desc, eq, sql, isNull } from 'drizzle-orm';
+import { count, ilike, or, asc, desc, eq, sql, and, inArray, type SQL } from 'drizzle-orm';
+import { parsePeriodFilters } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -9,11 +10,37 @@ export const load: PageServerLoad = async ({ url }) => {
 	const search = url.searchParams.get('q') || '';
 	const sort = url.searchParams.get('sort') || 'lastName';
 	const order = url.searchParams.get('order') || 'asc';
+	const periodFilters = parsePeriodFilters(url);
 
-	// Build where clause
-	const whereClause = search
-		? or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))
-		: undefined;
+	// Build base conditions
+	const conditions: SQL[] = [];
+
+	if (search) {
+		conditions.push(or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!);
+	}
+
+	// If legislature filter, only show deputies with mandate in that legislature
+	let actorIdsInLegislature: string[] | null = null;
+	if (periodFilters.legislature) {
+		const mandatesInLeg = await db
+			.selectDistinct({ actorId: mandates.actorId })
+			.from(mandates)
+			.where(eq(mandates.legislature, periodFilters.legislature));
+		actorIdsInLegislature = mandatesInLeg.map((m) => m.actorId);
+
+		if (actorIdsInLegislature.length > 0) {
+			conditions.push(inArray(actors.id, actorIdsInLegislature));
+		} else {
+			// No deputies in this legislature
+			return {
+				deputies: [],
+				pagination: { page, limit, total: 0, totalPages: 0 },
+				filters: { search, sort, order, legislature: periodFilters.legislature }
+			};
+		}
+	}
+
+	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Get total count
 	const [{ value: total }] = await db.select({ value: count() }).from(actors).where(whereClause);
@@ -76,7 +103,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		filters: {
 			search,
 			sort,
-			order
+			order,
+			legislature: periodFilters.legislature
 		}
 	};
 };

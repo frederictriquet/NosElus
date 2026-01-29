@@ -1,71 +1,102 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, organs } from '$lib/server/db';
-import { count, eq, desc } from 'drizzle-orm';
+import { db, actors, organs, mandates } from '$lib/server/db';
+import { eq, and, sql, inArray, isNull, or, gte } from 'drizzle-orm';
+import { parsePeriodFilters, LEGISLATURE_DATES } from '$lib/server/api/helpers';
 
-// Composition officielle de l'Assemblée Nationale - 16ème législature (approximative)
-const OFFICIAL_COMPOSITION: Record<string, number> = {
-	'PO_GP_REN': 170,    // Renaissance
-	'PO_GP_RN': 88,      // Rassemblement National
-	'PO_GP_LFI': 75,     // La France Insoumise
-	'PO_GP_LR': 62,      // Les Républicains
-	'PO_GP_MODEM': 51,   // MoDem
-	'PO_GP_SOC': 31,     // Socialistes
-	'PO_GP_HOR': 30,     // Horizons
-	'PO_GP_ECO': 23,     // Écologistes
-	'PO_GP_GDR': 22,     // Gauche Démocrate et Républicaine
-	'PO_GP_LIOT': 21,    // LIOT
-	'PO_GP_NI': 4        // Non Inscrits
-};
+export const load: PageServerLoad = async ({ url }) => {
+	const periodFilters = parsePeriodFilters(url);
 
-export const load: PageServerLoad = async () => {
-	// Get groups from database
-	const groups = await db
+	// Cette page nécessite une législature spécifique (défaut: 17e)
+	const legislature = periodFilters.legislature || '17';
+	const legislatureInfo = LEGISLATURE_DATES[legislature];
+
+	// Date de référence : aujourd'hui pour législature en cours, date de fin pour les passées
+	const referenceDate = legislatureInfo?.end || new Date().toISOString().split('T')[0];
+
+	// Trouver les groupes parlementaires (GP) avec leurs membres ACTIFS dans cette législature
+	// Un mandat est actif à la date de référence si endDate est null ou >= referenceDate
+	const groupMandateCounts = await db
 		.select({
-			groupId: organs.id,
-			groupName: organs.name,
-			groupShortName: organs.shortName,
-			groupColor: organs.color
+			organId: mandates.organId,
+			deputyCount: sql<number>`count(distinct case when ${mandates.endDate} is null or ${mandates.endDate} >= ${referenceDate} then ${mandates.actorId} end)`
 		})
-		.from(organs)
-		.where(eq(organs.type, 'GP'));
+		.from(mandates)
+		.innerJoin(organs, eq(organs.id, mandates.organId))
+		.where(and(
+			eq(mandates.legislature, legislature),
+			eq(organs.type, 'GP')
+		))
+		.groupBy(mandates.organId);
 
-	// Build group distribution with official composition
-	const groupDistribution = groups
-		.map(g => ({
-			...g,
-			deputyCount: OFFICIAL_COMPOSITION[g.groupId] || 0
-		}))
+	const organIds = groupMandateCounts.map(g => g.organId);
+
+	// Récupérer les infos des groupes
+	const groups = organIds.length > 0
+		? await db
+			.select({
+				groupId: organs.id,
+				groupName: organs.name,
+				groupShortName: organs.shortName,
+				groupColor: organs.color
+			})
+			.from(organs)
+			.where(inArray(organs.id, organIds))
+		: [];
+
+	const countByGroup = new Map(groupMandateCounts.map(c => [c.organId, Number(c.deputyCount)]));
+	const groupInfoById = new Map(groups.map(g => [g.groupId, g]));
+
+	// Build group distribution with actual counts
+	const groupDistribution = groupMandateCounts
+		.map(c => {
+			const info = groupInfoById.get(c.organId);
+			return {
+				groupId: c.organId,
+				groupName: info?.groupName || c.organId,
+				groupShortName: info?.groupShortName || c.organId,
+				groupColor: info?.groupColor || '#888',
+				deputyCount: Number(c.deputyCount)
+			};
+		})
 		.filter(g => g.deputyCount > 0)
 		.sort((a, b) => b.deputyCount - a.deputyCount);
 
-	// Get total deputies
-	const [totalDeputies] = await db.select({ value: count() }).from(actors);
+	// Get total deputies for the legislature
+	const totalDeputies = groupDistribution.reduce((sum, g) => sum + g.deputyCount, 0);
 
-	// Get sample deputies (top voters overall since we don't have group affiliation in votes)
-	const topDeputies = await db
-		.select({
-			id: actors.id,
-			name: actors.fullName,
-			photoUrl: actors.photoUrl
-		})
-		.from(actors)
-		.orderBy(actors.lastName)
-		.limit(50);
-
-	// Distribute sample deputies to groups for display (temporary until ETL is fixed)
+	// Get sample deputies per group (members active at reference date)
 	const deputiesByGroup: Record<string, Array<{ id: string; name: string; photoUrl: string | null }>> = {};
-	let deputyIndex = 0;
 
 	for (const group of groupDistribution) {
-		const count = Math.min(5, Math.floor(topDeputies.length * (group.deputyCount / 577)));
-		deputiesByGroup[group.groupId] = topDeputies.slice(deputyIndex, deputyIndex + Math.max(count, 3));
-		deputyIndex += Math.max(count, 3);
-		if (deputyIndex >= topDeputies.length) deputyIndex = 0;
+		const groupMembers = await db
+			.select({
+				id: actors.id,
+				name: actors.fullName,
+				photoUrl: actors.photoUrl
+			})
+			.from(actors)
+			.innerJoin(mandates, eq(mandates.actorId, actors.id))
+			.where(and(
+				eq(mandates.organId, group.groupId),
+				eq(mandates.legislature, legislature),
+				or(isNull(mandates.endDate), gte(mandates.endDate, referenceDate))
+			))
+			.orderBy(actors.lastName)
+			.limit(5);
+
+		deputiesByGroup[group.groupId] = groupMembers;
 	}
+
+	// Legislature label for display
+	const legislatureLabel = `${legislature}ème législature`;
 
 	return {
 		groupDistribution,
-		totalDeputies: 577, // Official count
-		deputiesByGroup
+		totalDeputies,
+		deputiesByGroup,
+		legislature,
+		legislatureLabel,
+		legislatureStart: legislatureInfo?.start || null,
+		legislatureEnd: legislatureInfo?.end || null
 	};
 };

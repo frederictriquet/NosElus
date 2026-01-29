@@ -1,24 +1,46 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, mandates, organs } from '$lib/server/db';
-import { eq, and, count, sql, inArray } from 'drizzle-orm';
+import { eq, and, count, sql, inArray, gte, lte, type SQL } from 'drizzle-orm';
+import { parsePeriodFilters } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const deputy1Id = url.searchParams.get('d1');
 	const deputy2Id = url.searchParams.get('d2');
+	const periodFilters = parsePeriodFilters(url);
 
-	// Get all deputies for selection
-	const allDeputies = await db
-		.select({
-			id: actors.id,
-			name: actors.fullName
-		})
-		.from(actors)
-		.orderBy(actors.lastName);
+	// Build deputy filter conditions based on legislature
+	let deputyIds: string[] | null = null;
+	if (periodFilters.legislature) {
+		const mandatesInLeg = await db
+			.selectDistinct({ actorId: mandates.actorId })
+			.from(mandates)
+			.where(eq(mandates.legislature, periodFilters.legislature));
+		deputyIds = mandatesInLeg.map((m) => m.actorId);
+	}
+
+	// Get all deputies for selection (filtered by legislature if specified)
+	const allDeputies = deputyIds && deputyIds.length > 0
+		? await db
+			.select({ id: actors.id, name: actors.fullName })
+			.from(actors)
+			.where(inArray(actors.id, deputyIds))
+			.orderBy(actors.lastName)
+		: deputyIds === null
+			? await db
+				.select({ id: actors.id, name: actors.fullName })
+				.from(actors)
+				.orderBy(actors.lastName)
+			: [];
 
 	if (!deputy1Id || !deputy2Id) {
 		return {
 			deputies: allDeputies,
-			comparison: null
+			comparison: null,
+			filters: {
+				legislature: periodFilters.legislature,
+				dateFrom: periodFilters.dateFrom,
+				dateTo: periodFilters.dateTo
+			}
 		};
 	}
 
@@ -30,8 +52,35 @@ export const load: PageServerLoad = async ({ url }) => {
 		return {
 			deputies: allDeputies,
 			comparison: null,
-			error: 'Député non trouvé'
+			error: 'Député non trouvé',
+			filters: {
+				legislature: periodFilters.legislature,
+				dateFrom: periodFilters.dateFrom,
+				dateTo: periodFilters.dateTo
+			}
 		};
+	}
+
+	// Build scrutin filter conditions for period
+	const scrutinConditions: SQL[] = [];
+	if (periodFilters.legislature) {
+		scrutinConditions.push(eq(scrutins.legislature, periodFilters.legislature));
+	}
+	if (periodFilters.dateFrom) {
+		scrutinConditions.push(gte(scrutins.date, periodFilters.dateFrom));
+	}
+	if (periodFilters.dateTo) {
+		scrutinConditions.push(lte(scrutins.date, periodFilters.dateTo));
+	}
+
+	// Get scrutin IDs matching period filter
+	let filteredScrutinIds: string[] | null = null;
+	if (scrutinConditions.length > 0) {
+		const filteredScrutins = await db
+			.select({ id: scrutins.id })
+			.from(scrutins)
+			.where(and(...scrutinConditions));
+		filteredScrutinIds = filteredScrutins.map((s) => s.id);
 	}
 
 	// Get groups for both deputies
@@ -53,26 +102,43 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	}
 
-	// Get vote counts for each deputy
-	const [votes1Count] = await db
-		.select({ value: count() })
-		.from(votes)
-		.where(eq(votes.actorId, deputy1Id));
+	// Build vote filter conditions
+	const buildVoteConditions = (actorId: string): SQL => {
+		const conditions: SQL[] = [eq(votes.actorId, actorId)];
+		if (filteredScrutinIds !== null && filteredScrutinIds.length > 0) {
+			conditions.push(inArray(votes.scrutinId, filteredScrutinIds));
+		}
+		return conditions.length === 1 ? conditions[0] : and(...conditions)!;
+	};
 
-	const [votes2Count] = await db
-		.select({ value: count() })
-		.from(votes)
-		.where(eq(votes.actorId, deputy2Id));
+	// Get vote counts for each deputy (filtered by period)
+	const [votes1Count] = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? [{ value: 0 }]
+		: await db
+			.select({ value: count() })
+			.from(votes)
+			.where(buildVoteConditions(deputy1Id));
+
+	const [votes2Count] = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? [{ value: 0 }]
+		: await db
+			.select({ value: count() })
+			.from(votes)
+			.where(buildVoteConditions(deputy2Id));
 
 	// Get vote distribution for each
 	const getDistribution = async (actorId: string) => {
+		if (filteredScrutinIds !== null && filteredScrutinIds.length === 0) {
+			return { pour: 0, contre: 0, abstention: 0 };
+		}
+
 		const result = await db
 			.select({
 				position: votes.position,
 				count: count()
 			})
 			.from(votes)
-			.where(eq(votes.actorId, actorId))
+			.where(buildVoteConditions(actorId))
 			.groupBy(votes.position);
 
 		const dist = { pour: 0, contre: 0, abstention: 0 };
@@ -87,17 +153,25 @@ export const load: PageServerLoad = async ({ url }) => {
 	const dist1 = await getDistribution(deputy1Id);
 	const dist2 = await getDistribution(deputy2Id);
 
+	// Build common votes filter
+	const commonVotesConditions: SQL[] = [inArray(votes.actorId, [deputy1Id, deputy2Id])];
+	if (filteredScrutinIds !== null && filteredScrutinIds.length > 0) {
+		commonVotesConditions.push(inArray(votes.scrutinId, filteredScrutinIds));
+	}
+
 	// Find common scrutins where both voted
-	const commonVotes = await db
-		.select({
-			scrutinId: votes.scrutinId,
-			position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
-			position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
-		})
-		.from(votes)
-		.where(inArray(votes.actorId, [deputy1Id, deputy2Id]))
-		.groupBy(votes.scrutinId)
-		.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`);
+	const commonVotes = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: await db
+			.select({
+				scrutinId: votes.scrutinId,
+				position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
+				position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+			})
+			.from(votes)
+			.where(and(...commonVotesConditions))
+			.groupBy(votes.scrutinId)
+			.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`);
 
 	// Calculate agreement rate and political distance
 	let sameVotes = 0;
@@ -129,22 +203,30 @@ export const load: PageServerLoad = async ({ url }) => {
 	const maxDistance = commonVotes.length * 2;
 	const politicalDistance = maxDistance > 0 ? (totalDistance / maxDistance) * 100 : 0;
 
+	// Build disagreements filter conditions
+	const disagreementsConditions: SQL[] = [inArray(votes.actorId, [deputy1Id, deputy2Id])];
+	if (scrutinConditions.length > 0) {
+		disagreementsConditions.push(...scrutinConditions);
+	}
+
 	// Get sample of disagreements
-	const disagreements = await db
-		.select({
-			scrutinId: scrutins.id,
-			scrutinTitle: scrutins.title,
-			scrutinDate: scrutins.date,
-			position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
-			position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
-		})
-		.from(votes)
-		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-		.where(inArray(votes.actorId, [deputy1Id, deputy2Id]))
-		.groupBy(scrutins.id, scrutins.title, scrutins.date)
-		.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2 AND MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END) != MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`)
-		.orderBy(sql`${scrutins.date} DESC`)
-		.limit(10);
+	const disagreements = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: await db
+			.select({
+				scrutinId: scrutins.id,
+				scrutinTitle: scrutins.title,
+				scrutinDate: scrutins.date,
+				position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
+				position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+			})
+			.from(votes)
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(and(...disagreementsConditions))
+			.groupBy(scrutins.id, scrutins.title, scrutins.date)
+			.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2 AND MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END) != MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`)
+			.orderBy(sql`${scrutins.date} DESC`)
+			.limit(10);
 
 	return {
 		deputies: allDeputies,
@@ -167,6 +249,11 @@ export const load: PageServerLoad = async ({ url }) => {
 			agreementRate,
 			politicalDistance,
 			disagreements
+		},
+		filters: {
+			legislature: periodFilters.legislature,
+			dateFrom: periodFilters.dateFrom,
+			dateTo: periodFilters.dateTo
 		}
 	};
 };

@@ -1,5 +1,44 @@
 import { error } from '@sveltejs/kit';
 
+// ===== Period Filters =====
+
+export interface PeriodFilters {
+	legislature: string | null;
+	dateFrom: string | null;
+	dateTo: string | null;
+}
+
+export const LEGISLATURE_DATES: Record<string, { start: string; end: string | null }> = {
+	'17': { start: '2024-07-18', end: null },
+	'16': { start: '2022-06-28', end: '2024-06-09' },
+	'15': { start: '2017-06-27', end: '2022-06-21' },
+	'14': { start: '2012-06-20', end: '2017-06-20' },
+	'13': { start: '2007-06-20', end: '2012-06-19' },
+	'12': { start: '2002-06-25', end: '2007-06-19' }
+};
+
+export function parsePeriodFilters(url: URL): PeriodFilters {
+	const legislature = url.searchParams.get('legislature') || null;
+	const dateFrom = url.searchParams.get('dateFrom') || null;
+	const dateTo = url.searchParams.get('dateTo') || null;
+
+	// Validate legislature if provided
+	const validLegislature = legislature && LEGISLATURE_DATES[legislature] ? legislature : null;
+
+	// Validate dates (basic ISO format check)
+	const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+	const validDateFrom = dateFrom && dateRegex.test(dateFrom) ? dateFrom : null;
+	const validDateTo = dateTo && dateRegex.test(dateTo) ? dateTo : null;
+
+	return {
+		legislature: validLegislature,
+		dateFrom: validDateFrom,
+		dateTo: validDateTo
+	};
+}
+
+// ===== Pagination =====
+
 export interface PaginationParams {
 	page: number;
 	limit: number;

@@ -1,21 +1,76 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins, organs } from '$lib/server/db';
-import { count, eq, sql, desc, inArray } from 'drizzle-orm';
+import { db, actors, votes, scrutins, organs, mandates } from '$lib/server/db';
+import { count, eq, sql, desc, inArray, and, gte, lte, type SQL } from 'drizzle-orm';
+import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async () => {
-	// Total counts
-	const [totalActors] = await db.select({ value: count() }).from(actors);
-	const [totalVotes] = await db.select({ value: count() }).from(votes);
-	const [totalScrutins] = await db.select({ value: count() }).from(scrutins);
+export const load: PageServerLoad = async ({ url }) => {
+	const periodFilters = parsePeriodFilters(url);
 
-	// Vote distribution
-	const voteDistribution = await db
-		.select({
-			position: votes.position,
-			count: count()
-		})
-		.from(votes)
-		.groupBy(votes.position);
+	// Build scrutin filter conditions
+	const scrutinConditions: SQL[] = [];
+	if (periodFilters.legislature) {
+		scrutinConditions.push(eq(scrutins.legislature, periodFilters.legislature));
+	}
+	if (periodFilters.dateFrom) {
+		scrutinConditions.push(gte(scrutins.date, periodFilters.dateFrom));
+	}
+	if (periodFilters.dateTo) {
+		scrutinConditions.push(lte(scrutins.date, periodFilters.dateTo));
+	}
+
+	const scrutinWhereClause = scrutinConditions.length > 0 ? and(...scrutinConditions) : undefined;
+
+	// Get filtered scrutin IDs for vote filtering
+	let filteredScrutinIds: string[] | null = null;
+	if (scrutinConditions.length > 0) {
+		const filteredScrutins = await db
+			.select({ id: scrutins.id })
+			.from(scrutins)
+			.where(scrutinWhereClause);
+		filteredScrutinIds = filteredScrutins.map((s) => s.id);
+	}
+
+	// Vote filter clause
+	const voteWhereClause = filteredScrutinIds !== null && filteredScrutinIds.length > 0
+		? inArray(votes.scrutinId, filteredScrutinIds)
+		: filteredScrutinIds !== null
+			? sql`1 = 0` // No scrutins match = no votes
+			: undefined;
+
+	// Get actors in legislature (for filtered count)
+	let actorIdsInLegislature: string[] | null = null;
+	if (periodFilters.legislature) {
+		const mandatesInLeg = await db
+			.selectDistinct({ actorId: mandates.actorId })
+			.from(mandates)
+			.where(eq(mandates.legislature, periodFilters.legislature));
+		actorIdsInLegislature = mandatesInLeg.map((m) => m.actorId);
+	}
+
+	// Total counts (filtered)
+	const [totalActors] = actorIdsInLegislature !== null
+		? actorIdsInLegislature.length > 0
+			? await db.select({ value: count() }).from(actors).where(inArray(actors.id, actorIdsInLegislature))
+			: [{ value: 0 }]
+		: await db.select({ value: count() }).from(actors);
+
+	const [totalVotes] = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? [{ value: 0 }]
+		: await db.select({ value: count() }).from(votes).where(voteWhereClause);
+
+	const [totalScrutins] = await db.select({ value: count() }).from(scrutins).where(scrutinWhereClause);
+
+	// Vote distribution (filtered)
+	const voteDistribution = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: await db
+			.select({
+				position: votes.position,
+				count: count()
+			})
+			.from(votes)
+			.where(voteWhereClause)
+			.groupBy(votes.position);
 
 	const distribution = {
 		pour: 0,
@@ -30,26 +85,45 @@ export const load: PageServerLoad = async () => {
 	}
 
 	// Top deputies by participation (most votes cast)
-	const topParticipation = await db
-		.select({
-			id: actors.id,
-			name: actors.fullName,
-			photoUrl: actors.photoUrl,
-			voteCount: count(votes.id)
-		})
-		.from(actors)
-		.leftJoin(votes, eq(votes.actorId, actors.id))
-		.groupBy(actors.id, actors.fullName, actors.photoUrl)
-		.orderBy(desc(count(votes.id)))
-		.limit(10);
+	// When filtered, only consider votes in filtered scrutins
+	const topParticipationQuery = filteredScrutinIds !== null
+		? filteredScrutinIds.length > 0
+			? db
+				.select({
+					id: actors.id,
+					name: actors.fullName,
+					photoUrl: actors.photoUrl,
+					voteCount: count(votes.id)
+				})
+				.from(actors)
+				.leftJoin(votes, and(eq(votes.actorId, actors.id), inArray(votes.scrutinId, filteredScrutinIds)))
+				.groupBy(actors.id, actors.fullName, actors.photoUrl)
+				.orderBy(desc(count(votes.id)))
+				.limit(10)
+			: Promise.resolve([])
+		: db
+			.select({
+				id: actors.id,
+				name: actors.fullName,
+				photoUrl: actors.photoUrl,
+				voteCount: count(votes.id)
+			})
+			.from(actors)
+			.leftJoin(votes, eq(votes.actorId, actors.id))
+			.groupBy(actors.id, actors.fullName, actors.photoUrl)
+			.orderBy(desc(count(votes.id)))
+			.limit(10);
 
-	// Scrutins by result
+	const topParticipation = await topParticipationQuery;
+
+	// Scrutins by result (filtered)
 	const scrutinsByResult = await db
 		.select({
 			result: scrutins.result,
 			count: count()
 		})
 		.from(scrutins)
+		.where(scrutinWhereClause)
 		.groupBy(scrutins.result);
 
 	const results = { adopté: 0, rejeté: 0 };
@@ -60,30 +134,65 @@ export const load: PageServerLoad = async () => {
 
 	// Group cohesion (percentage of votes aligned with group majority)
 	// This is a simplified version - we calculate % of "pour" votes per group
-	const groupStats = await db
-		.select({
-			groupId: organs.id,
-			groupName: organs.name,
-			groupShortName: organs.shortName,
-			groupColor: organs.color,
-			totalVotes: count(votes.id),
-			pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
-			contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-			abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
-		})
-		.from(organs)
-		.leftJoin(votes, eq(votes.groupId, organs.id))
-		.where(eq(organs.type, 'GP'))
-		.groupBy(organs.id, organs.name, organs.shortName, organs.color)
-		.orderBy(desc(count(votes.id)));
+	const groupStatsQuery = filteredScrutinIds !== null
+		? filteredScrutinIds.length > 0
+			? db
+				.select({
+					groupId: organs.id,
+					groupName: organs.name,
+					groupShortName: organs.shortName,
+					groupColor: organs.color,
+					totalVotes: count(votes.id),
+					pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+					contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+					abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+				})
+				.from(organs)
+				.leftJoin(votes, and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds)))
+				.where(eq(organs.type, 'GP'))
+				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+				.orderBy(desc(count(votes.id)))
+			: db
+				.select({
+					groupId: organs.id,
+					groupName: organs.name,
+					groupShortName: organs.shortName,
+					groupColor: organs.color,
+					totalVotes: sql<number>`0`,
+					pourVotes: sql<number>`0`,
+					contreVotes: sql<number>`0`,
+					abstentionVotes: sql<number>`0`
+				})
+				.from(organs)
+				.where(eq(organs.type, 'GP'))
+				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+		: db
+			.select({
+				groupId: organs.id,
+				groupName: organs.name,
+				groupShortName: organs.shortName,
+				groupColor: organs.color,
+				totalVotes: count(votes.id),
+				pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+				contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+				abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+			})
+			.from(organs)
+			.leftJoin(votes, eq(votes.groupId, organs.id))
+			.where(eq(organs.type, 'GP'))
+			.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+			.orderBy(desc(count(votes.id)));
 
-	// Monthly vote activity
+	const groupStats = await groupStatsQuery;
+
+	// Monthly vote activity (filtered)
 	const monthlyActivity = await db
 		.select({
 			month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
 			count: count()
 		})
 		.from(scrutins)
+		.where(scrutinWhereClause)
 		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
 		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 
@@ -91,7 +200,7 @@ export const load: PageServerLoad = async () => {
 	const activeGroups = groupStats.filter((g) => g.totalVotes > 0);
 	const groupIds = activeGroups.map((g) => g.groupId);
 
-	// Heatmap: Get recent scrutins with group votes
+	// Heatmap: Get recent scrutins with group votes (filtered)
 	const recentScrutins = await db
 		.select({
 			id: scrutins.id,
@@ -100,6 +209,7 @@ export const load: PageServerLoad = async () => {
 			result: scrutins.result
 		})
 		.from(scrutins)
+		.where(scrutinWhereClause)
 		.orderBy(desc(scrutins.date))
 		.limit(15);
 
@@ -188,15 +298,22 @@ export const load: PageServerLoad = async () => {
 	const majorityGroupIds = ['PO_GP_REN', 'PO_GP_MODEM', 'PO_GP_HOR'];
 
 	// For each scrutin, determine majority position (what did majority vote for)
-	const majorityVotes = await db
-		.select({
-			scrutinId: votes.scrutinId,
-			position: votes.position,
-			count: count()
-		})
-		.from(votes)
-		.where(inArray(votes.groupId, majorityGroupIds))
-		.groupBy(votes.scrutinId, votes.position);
+	const majorityVotesConditions: SQL[] = [inArray(votes.groupId, majorityGroupIds)];
+	if (filteredScrutinIds !== null && filteredScrutinIds.length > 0) {
+		majorityVotesConditions.push(inArray(votes.scrutinId, filteredScrutinIds));
+	}
+
+	const majorityVotes = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: await db
+			.select({
+				scrutinId: votes.scrutinId,
+				position: votes.position,
+				count: count()
+			})
+			.from(votes)
+			.where(and(...majorityVotesConditions))
+			.groupBy(votes.scrutinId, votes.position);
 
 	// Build majority position per scrutin
 	const majorityPosition: Record<string, string> = {};
@@ -222,15 +339,28 @@ export const load: PageServerLoad = async () => {
 	}
 
 	// Calculate alignment per group (how often they vote with majority)
-	const groupAlignmentData = await db
-		.select({
-			groupId: votes.groupId,
-			scrutinId: votes.scrutinId,
-			position: votes.position,
-			count: count()
-		})
-		.from(votes)
-		.groupBy(votes.groupId, votes.scrutinId, votes.position);
+	const groupAlignmentData = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: filteredScrutinIds !== null
+			? await db
+				.select({
+					groupId: votes.groupId,
+					scrutinId: votes.scrutinId,
+					position: votes.position,
+					count: count()
+				})
+				.from(votes)
+				.where(inArray(votes.scrutinId, filteredScrutinIds))
+				.groupBy(votes.groupId, votes.scrutinId, votes.position)
+			: await db
+				.select({
+					groupId: votes.groupId,
+					scrutinId: votes.scrutinId,
+					position: votes.position,
+					count: count()
+				})
+				.from(votes)
+				.groupBy(votes.groupId, votes.scrutinId, votes.position);
 
 	// Build group majority position per scrutin
 	const groupScrutinPosition: Record<string, Record<string, string>> = {};
@@ -295,19 +425,27 @@ export const load: PageServerLoad = async () => {
 	governmentAlignment.sort((a, b) => b.alignmentRate - a.alignmentRate);
 
 	// ===== POSITION EVOLUTION OVER TIME =====
-	// Calculate monthly ratio of pour vs contre votes globally
-	const positionEvolution = await db
-		.select({
-			month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
-			pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
-			contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-			abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
-			total: count()
-		})
-		.from(votes)
-		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
-		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
+	// Calculate monthly ratio of pour vs contre votes globally (filtered)
+	const positionEvolutionConditions: SQL[] = [];
+	if (scrutinConditions.length > 0) {
+		positionEvolutionConditions.push(...scrutinConditions);
+	}
+
+	const positionEvolution = filteredScrutinIds !== null && filteredScrutinIds.length === 0
+		? []
+		: await db
+			.select({
+				month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
+				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+				total: count()
+			})
+			.from(votes)
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(positionEvolutionConditions.length > 0 ? and(...positionEvolutionConditions) : undefined)
+			.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
+			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 
 	return {
 		totals: {
@@ -339,6 +477,11 @@ export const load: PageServerLoad = async () => {
 			matrix: proximityMatrix
 		},
 		governmentAlignment,
-		positionEvolution
+		positionEvolution,
+		filters: {
+			legislature: periodFilters.legislature,
+			dateFrom: periodFilters.dateFrom,
+			dateTo: periodFilters.dateTo
+		}
 	};
 };

@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
+	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
 
 	let { data } = $props();
 
@@ -10,7 +11,10 @@
 
 	function compare() {
 		if (deputy1 && deputy2 && deputy1 !== deputy2) {
-			goto(`/compare?d1=${deputy1}&d2=${deputy2}`);
+			const params = new URLSearchParams($page.url.searchParams);
+			params.set('d1', deputy1);
+			params.set('d2', deputy2);
+			goto(`/compare?${params.toString()}`);
 		}
 	}
 
@@ -34,6 +38,15 @@
 <div class="page-header">
 	<h1 class="page-title">Comparateur de députés</h1>
 	<p class="page-subtitle">Comparez les votes de deux députés</p>
+</div>
+
+<div class="filters" style="margin-bottom: 1.5rem;">
+	<PeriodFilter
+		legislature={data.filters?.legislature}
+		dateFrom={data.filters?.dateFrom}
+		dateTo={data.filters?.dateTo}
+		showDateRange={true}
+	/>
 </div>
 
 <div class="card" style="margin-bottom: 2rem;">

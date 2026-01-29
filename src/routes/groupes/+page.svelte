@@ -1,10 +1,16 @@
 <script lang="ts">
+	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
+
 	let { data } = $props();
 </script>
 
 <div class="page-header">
 	<h1 class="page-title">Groupes parlementaires</h1>
 	<p class="page-subtitle">{data.groups.length} groupes à l'Assemblée nationale</p>
+</div>
+
+<div class="filters">
+	<PeriodFilter legislature={data.filters.legislature} />
 </div>
 
 <div class="card-grid">

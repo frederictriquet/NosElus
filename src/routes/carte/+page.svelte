@@ -1,17 +1,49 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
 
-	// Calculate total for percentages
-	const totalDeputies = data.groupDistribution.reduce((sum, g) => sum + g.deputyCount, 0);
+	// Political spectrum order (left to right) - includes both old and new group IDs
+	const spectrumOrder = [
+		'PO_GP_LFI', 'PO845413', 'LFI-NFP',
+		'PO_GP_GDR', 'PO845514', 'GDR',
+		'PO_GP_ECO', 'PO845439', 'EcoS',
+		'PO_GP_SOC', 'PO845419', 'SOC',
+		'PO_GP_LIOT', 'PO845485', 'LIOT',
+		'PO_GP_MODEM', 'PO845454', 'Dem',
+		'PO_GP_REN', 'PO845407', 'EPR',
+		'PO_GP_HOR', 'PO845470', 'HOR',
+		'PO_GP_LR', 'PO845425', 'DR',
+		'PO845520', 'AD',
+		'PO847173', 'PO872880', 'UDR',
+		'PO_GP_RN', 'PO845401', 'RN',
+		'PO_GP_NI', 'PO840056', 'NI'
+	];
 
-	// Political spectrum order (left to right)
-	const spectrumOrder = ['PO_GP_LFI', 'PO_GP_GDR', 'PO_GP_ECO', 'PO_GP_SOC', 'PO_GP_LIOT', 'PO_GP_MODEM', 'PO_GP_REN', 'PO_GP_HOR', 'PO_GP_LR', 'PO_GP_RN', 'PO_GP_NI'];
+	// Reactive computed values
+	const totalDeputies = $derived(data.totalDeputies);
 
-	const sortedGroups = [...data.groupDistribution].sort((a, b) => {
-		return spectrumOrder.indexOf(a.groupId) - spectrumOrder.indexOf(b.groupId);
-	});
+	const sortedGroups = $derived([...data.groupDistribution].sort((a, b) => {
+		const aIndex = spectrumOrder.findIndex(id => a.groupId.includes(id) || a.groupShortName === id);
+		const bIndex = spectrumOrder.findIndex(id => b.groupId.includes(id) || b.groupShortName === id);
+		return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+	}));
+
+	// Législatures disponibles
+	const LEGISLATURES = [
+		{ value: '17', label: '17e (2024-)' },
+		{ value: '16', label: '16e (2022-2024)' },
+		{ value: '15', label: '15e (2017-2022)' },
+		{ value: '14', label: '14e (2012-2017)' },
+		{ value: '13', label: '13e (2007-2012)' },
+		{ value: '12', label: '12e (2002-2007)' }
+	];
+
+	function handleLegislatureChange(e: Event) {
+		const value = (e.currentTarget as HTMLSelectElement).value;
+		goto(`/carte?legislature=${value}`);
+	}
 </script>
 
 <svelte:head>
@@ -23,10 +55,26 @@
 	<p class="page-subtitle">Répartition des forces politiques à l'Assemblée nationale</p>
 </div>
 
+<div class="filters" style="margin-bottom: 1.5rem;">
+	<div class="filter-group">
+		<label for="legislature-select" class="filter-label">Législature</label>
+		<select
+			id="legislature-select"
+			class="input"
+			value={data.legislature}
+			onchange={handleLegislatureChange}
+		>
+			{#each LEGISLATURES as leg}
+				<option value={leg.value}>{leg.label}</option>
+			{/each}
+		</select>
+	</div>
+</div>
+
 <div class="card" style="margin-bottom: 1.5rem;">
 	<h2>Hémicycle de l'Assemblée nationale</h2>
 	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
-		Répartition des {totalDeputies} députés par groupe parlementaire (16ème législature)
+		Répartition des {totalDeputies} députés par groupe parlementaire ({data.legislatureLabel})
 	</p>
 
 	<div class="hemicycle-container">
@@ -90,9 +138,10 @@
 						class="bar-fill"
 						style="width: {widthPct * 2}%; background: {group.groupColor || '#888'};"
 					></div>
-					{#if group === sortedGroups[sortedGroups.length - 1]}
-						<div class="majority-marker" style="left: {(289 / totalDeputies) * 200}%;">
-							<span class="majority-label">Majorité (289)</span>
+					{#if group === sortedGroups[sortedGroups.length - 1] && totalDeputies > 0}
+						{@const majorityThreshold = Math.floor(totalDeputies / 2) + 1}
+						<div class="majority-marker" style="left: {(majorityThreshold / totalDeputies) * 200}%;">
+							<span class="majority-label">Majorité ({majorityThreshold})</span>
 						</div>
 					{/if}
 				</div>
@@ -138,6 +187,18 @@
 		font-size: 1.25rem;
 		font-weight: 600;
 		margin-bottom: 0.5rem;
+	}
+
+	.filter-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.filter-label {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
 	}
 
 	/* Hemicycle SVG */

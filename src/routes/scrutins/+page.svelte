@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import PeriodFilter from '$lib/components/PeriodFilter.svelte';
 
 	let { data } = $props();
 
@@ -55,6 +56,12 @@
 		<option value="adopté" selected={data.filters.result === 'adopté'}>Adoptés</option>
 		<option value="rejeté" selected={data.filters.result === 'rejeté'}>Rejetés</option>
 	</select>
+	<PeriodFilter
+		legislature={data.filters.legislature}
+		dateFrom={data.filters.dateFrom}
+		dateTo={data.filters.dateTo}
+		showDateRange={true}
+	/>
 </div>
 
 {#if data.scrutins.length === 0}

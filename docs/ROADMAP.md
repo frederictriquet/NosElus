@@ -18,8 +18,8 @@
 - [x] ETL Assemblée Nationale - Scrutins détaillés (17 872 scrutins, 15e-17e législatures)
 - [x] ETL Assemblée Nationale - Votes nominatifs (1 993 587 votes)
 - [x] ETL Assemblée Nationale - Amendements (15e-17e législatures)
-- [ ] ETL Sénat (data.senat.fr) - Sénateurs *(Phase 2)*
-- [ ] ETL Sénat - Travaux législatifs (DOSLEG) *(Phase 2)*
+- [x] ETL Sénat (API senat.fr) - Sénateurs (348 sénateurs, 9 groupes)
+- [x] ETL Sénat (data.senat.fr) - Travaux législatifs (DOSLEG) - 12 171 dossiers
 
 ### 1.3 API de base (backend)
 - [x] Endpoint REST `/api/v1/actors` - Liste des députés (618 importés)
@@ -57,7 +57,7 @@
 ### 3.1 Pages principales
 - [x] Page d'accueil avec statistiques clés
 - [x] Liste des députés avec filtres et recherche
-- [ ] Liste des sénateurs avec filtres *(Phase 2 - données non disponibles)*
+- [x] Liste des sénateurs avec filtres et recherche (348 sénateurs)
 - [x] Fiche détaillée d'un élu (profil + votes)
 - [x] Liste des scrutins avec filtres (date, résultat)
 - [x] Détail d'un scrutin (votes par position, par député)
@@ -148,7 +148,7 @@
 |--------|------|--------|---------------|
 | NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
-| Sénat | CSV/SQL | À faire | [data.senat.fr](https://data.senat.fr/) |
+| Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 
 ---

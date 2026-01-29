@@ -114,6 +114,10 @@ etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
 	@echo "$(CYAN)Import des dossiers législatifs du Sénat...$(RESET)"
 	npm run etl:senat-laws
 
+etl-senat-senators: ## Import des sénateurs (API Sénat)
+	@echo "$(CYAN)Import des sénateurs...$(RESET)"
+	npm run etl:senat-senators
+
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes
 

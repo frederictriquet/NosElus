@@ -36,6 +36,7 @@
 		"etl:scrutins": "node --import tsx scripts/etl/import-scrutins.ts",
 		"etl:laws": "node --import tsx scripts/etl/import-laws.ts",
 		"etl:senat-laws": "node --import tsx scripts/etl/import-senat-laws.ts",
+		"etl:senat-senators": "node --import tsx scripts/etl/import-senat-senators.ts",
 		"etl:all": "node --import tsx scripts/etl/import-all.ts",
 		"etl:nosdeputes": "node --import tsx scripts/etl/import-nosdeputes.ts",
 		"etl:download": "node --import tsx scripts/etl/download-data.ts",

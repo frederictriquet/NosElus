@@ -46,6 +46,7 @@
 		<nav class="nav">
 			<a href={navLink('/')} class:active={$page.url.pathname === '/'}>Accueil</a>
 			<a href={navLink('/deputes')} class:active={$page.url.pathname.startsWith('/deputes')}>Députés</a>
+			<a href={navLink('/senateurs')} class:active={$page.url.pathname.startsWith('/senateurs')}>Sénateurs</a>
 			<a href={navLink('/scrutins')} class:active={$page.url.pathname.startsWith('/scrutins')}>Scrutins</a>
 			<a href={navLink('/groupes')} class:active={$page.url.pathname.startsWith('/groupes')}>Groupes</a>
 			<a href={navLink('/stats')} class:active={$page.url.pathname.startsWith('/stats')}>Stats</a>

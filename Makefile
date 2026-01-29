@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-nosdeputes etl-colors \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -107,8 +107,12 @@ etl-actors: ## Import des acteurs uniquement
 etl-scrutins: ## Import des scrutins et votes
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:scrutins
 
-etl-laws: ## Import des dossiers législatifs
+etl-laws: ## Import des dossiers législatifs AN
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:laws
+
+etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
+	@echo "$(CYAN)Import des dossiers législatifs du Sénat...$(RESET)"
+	npm run etl:senat-laws
 
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes

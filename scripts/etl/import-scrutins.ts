@@ -56,22 +56,30 @@ async function main() {
 		const scrutinsStats = await importScrutins(config);
 		console.log(`Scrutins: ${scrutinsStats.inserted} imported, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`);
 
-		// Update sync metadata for scrutins
-		await updateSyncMetadata(SOURCE, 'scrutins', scrutinsStats, {
-			legislature: config.legislature,
-			status: scrutinsStats.errors > 0 ? 'partial' : 'success'
-		});
+		// Update sync metadata for scrutins (ignore errors if table doesn't exist)
+		try {
+			await updateSyncMetadata(SOURCE, 'scrutins', scrutinsStats, {
+				legislature: config.legislature,
+				status: scrutinsStats.errors > 0 ? 'partial' : 'success'
+			});
+		} catch (syncError) {
+			console.warn('[Warning] Could not update sync_metadata for scrutins');
+		}
 
 		// Import votes
 		console.log('\n--- Importing Votes ---');
 		const votesStats = await importVotes(config);
 		console.log(`Votes: ${votesStats.inserted} imported, ${votesStats.updated} updated, ${votesStats.errors} errors`);
 
-		// Update sync metadata for votes
-		await updateSyncMetadata(SOURCE, 'votes', votesStats, {
-			legislature: config.legislature,
-			status: votesStats.errors > 0 ? 'partial' : 'success'
-		});
+		// Update sync metadata for votes (ignore errors if table doesn't exist)
+		try {
+			await updateSyncMetadata(SOURCE, 'votes', votesStats, {
+				legislature: config.legislature,
+				status: votesStats.errors > 0 ? 'partial' : 'success'
+			});
+		} catch (syncError) {
+			console.warn('[Warning] Could not update sync_metadata for votes');
+		}
 
 		console.log('\n='.repeat(60));
 		console.log('Import completed successfully!');
@@ -79,13 +87,17 @@ async function main() {
 	} catch (error) {
 		console.error('Import failed:', error);
 
-		// Log failed sync
-		await updateSyncMetadata(
-			SOURCE,
-			'scrutins',
-			{ total: 0, inserted: 0, updated: 0, skipped: 0, errors: 1 },
-			{ legislature: config.legislature, status: 'failed' }
-		);
+		// Log failed sync (ignore errors if table doesn't exist)
+		try {
+			await updateSyncMetadata(
+				SOURCE,
+				'scrutins',
+				{ total: 0, inserted: 0, updated: 0, skipped: 0, errors: 1 },
+				{ legislature: config.legislature, status: 'failed' }
+			);
+		} catch {
+			// Ignore
+		}
 
 		process.exit(1);
 	}

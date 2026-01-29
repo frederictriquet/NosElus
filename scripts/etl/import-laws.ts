@@ -43,11 +43,15 @@ async function main() {
 			`Dossiers: ${lawsStats.inserted} imported, ${lawsStats.updated} updated, ${lawsStats.errors} errors`
 		);
 
-		// Update sync metadata for laws
-		await updateSyncMetadata(SOURCE, 'laws', lawsStats, {
-			legislature: config.legislature,
-			status: lawsStats.errors > 0 ? 'partial' : 'success'
-		});
+		// Update sync metadata for laws (ignore errors if table doesn't exist)
+		try {
+			await updateSyncMetadata(SOURCE, 'laws', lawsStats, {
+				legislature: config.legislature,
+				status: lawsStats.errors > 0 ? 'partial' : 'success'
+			});
+		} catch (syncError) {
+			console.warn('[Warning] Could not update sync_metadata:', (syncError as Error).message);
+		}
 
 		// Link scrutins to laws
 		console.log('\n--- Linking Scrutins to Laws ---');

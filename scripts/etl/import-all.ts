@@ -6,6 +6,19 @@ import { parseArgs, getLastSync, updateSyncMetadata } from '../../src/lib/server
 
 const SOURCE = 'assemblee';
 
+// Helper to safely update sync metadata (ignore errors if table doesn't exist)
+async function safeUpdateSyncMetadata(
+	entityType: string,
+	stats: ImportStats,
+	options: { legislature: string; status: string }
+) {
+	try {
+		await updateSyncMetadata(SOURCE, entityType, stats, options);
+	} catch {
+		// Ignore sync_metadata errors
+	}
+}
+
 function printUsage() {
 	console.log('Usage: npm run etl:all [options]');
 	console.log('');
@@ -82,7 +95,7 @@ async function main() {
 		const organsStats = await importOrgans(config);
 		allStats.organs = organsStats;
 		console.log(`✓ Organs: ${organsStats.inserted} inserted, ${organsStats.updated} updated, ${organsStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'organs', organsStats, {
+		await safeUpdateSyncMetadata('organs', organsStats, {
 			legislature: config.legislature,
 			status: organsStats.errors > 0 ? 'partial' : 'success'
 		});
@@ -94,7 +107,7 @@ async function main() {
 		const actorsStats = await importActors(config);
 		allStats.actors = actorsStats;
 		console.log(`✓ Actors: ${actorsStats.inserted} inserted, ${actorsStats.updated} updated, ${actorsStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'actors', actorsStats, {
+		await safeUpdateSyncMetadata('actors', actorsStats, {
 			legislature: config.legislature,
 			status: actorsStats.errors > 0 ? 'partial' : 'success'
 		});
@@ -106,7 +119,7 @@ async function main() {
 		const mandatesStats = await importMandates(config);
 		allStats.mandates = mandatesStats;
 		console.log(`✓ Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated, ${mandatesStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'mandates', mandatesStats, {
+		await safeUpdateSyncMetadata('mandates', mandatesStats, {
 			legislature: config.legislature,
 			status: mandatesStats.errors > 0 ? 'partial' : 'success'
 		});
@@ -118,7 +131,7 @@ async function main() {
 		const scrutinsStats = await importScrutins(config);
 		allStats.scrutins = scrutinsStats;
 		console.log(`✓ Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'scrutins', scrutinsStats, {
+		await safeUpdateSyncMetadata('scrutins', scrutinsStats, {
 			legislature: config.legislature,
 			status: scrutinsStats.errors > 0 ? 'partial' : 'success'
 		});
@@ -130,7 +143,7 @@ async function main() {
 		const votesStats = await importVotes(config);
 		allStats.votes = votesStats;
 		console.log(`✓ Votes: ${votesStats.inserted} inserted, ${votesStats.updated} updated, ${votesStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'votes', votesStats, {
+		await safeUpdateSyncMetadata('votes', votesStats, {
 			legislature: config.legislature,
 			status: votesStats.errors > 0 ? 'partial' : 'success'
 		});
@@ -142,7 +155,7 @@ async function main() {
 		const lawsStats = await importLaws(config);
 		allStats.laws = lawsStats;
 		console.log(`✓ Laws: ${lawsStats.inserted} inserted, ${lawsStats.updated} updated, ${lawsStats.errors} errors`);
-		await updateSyncMetadata(SOURCE, 'laws', lawsStats, {
+		await safeUpdateSyncMetadata('laws', lawsStats, {
 			legislature: config.legislature,
 			status: lawsStats.errors > 0 ? 'partial' : 'success'
 		});

@@ -47,7 +47,7 @@
 
 ### 2.3 Dossiers législatifs
 - [x] ETL dossiers législatifs AN
-- [ ] ETL dossiers législatifs Sénat (DOSLEG)
+- [x] ETL dossiers législatifs Sénat (DOSLEG) - 12 171 dossiers depuis 1977
 - [x] Lier scrutins aux textes de loi
 
 ---

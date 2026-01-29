@@ -58,7 +58,7 @@
 		<img src={photoUrl || placeholder} alt={name} class="elected-photo-sm" />
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
-			<span class="elected-group-tag">{group.shortName}</span>
+			<span class="elected-group-tag" title={group.name || group.shortName}>{group.shortName}</span>
 		{/if}
 		{#if stat}
 			<span class="elected-stat">{stat}</span>
@@ -73,7 +73,7 @@
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
 			{#if group?.shortName}
-				<span class="elected-group-inline">{group.shortName}</span>
+				<span class="elected-group-inline" title={group.name || group.shortName}>{group.shortName}</span>
 			{/if}
 		</div>
 	</a>
@@ -83,7 +83,7 @@
 		<div class="elected-info">
 			<div class="elected-name">{name}</div>
 			{#if group}
-				<div class="elected-group">
+				<div class="elected-group" title={group.name || ''}>
 					<span class="group-dot" style="background: {group.color || '#888'}"></span>
 					<span>{group.shortName || group.name}</span>
 				</div>

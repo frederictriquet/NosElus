@@ -71,6 +71,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.select({
 			actorId: mandates.actorId,
 			groupId: organs.id,
+			groupName: organs.name,
 			groupShortName: organs.shortName,
 			groupColor: organs.color
 		})
@@ -80,10 +81,10 @@ export const load: PageServerLoad = async ({ url }) => {
 		: [];
 
 	// Build lookup map
-	const groupByActor = new Map<string, { id: string; shortName: string | null; color: string | null }>();
+	const groupByActor = new Map<string, { id: string; name: string | null; shortName: string | null; color: string | null }>();
 	for (const g of groupsData) {
 		if (!groupByActor.has(g.actorId) && g.groupId) {
-			groupByActor.set(g.actorId, { id: g.groupId, shortName: g.groupShortName, color: g.groupColor });
+			groupByActor.set(g.actorId, { id: g.groupId, name: g.groupName, shortName: g.groupShortName, color: g.groupColor });
 		}
 	}
 

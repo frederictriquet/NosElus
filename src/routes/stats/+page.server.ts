@@ -114,7 +114,44 @@ export const load: PageServerLoad = async ({ url }) => {
 			.orderBy(desc(count(votes.id)))
 			.limit(10);
 
-	const topParticipation = await topParticipationQuery;
+	const topParticipationRaw = await topParticipationQuery;
+
+	// Get group info for top deputies
+	const topDeputyIds = topParticipationRaw.map(d => d.id);
+	const topDeputyGroups = topDeputyIds.length > 0 ? await db
+		.select({
+			actorId: mandates.actorId,
+			groupId: organs.id,
+			groupName: organs.name,
+			groupShortName: organs.shortName,
+			groupColor: organs.color
+		})
+		.from(mandates)
+		.innerJoin(organs, eq(mandates.organId, organs.id))
+		.where(and(
+			inArray(mandates.actorId, topDeputyIds),
+			eq(organs.type, 'GP'),
+			notLike(organs.id, 'PO_GP_%')
+		))
+		: [];
+
+	// Build lookup map (take first group found for each deputy)
+	const groupByDeputy = new Map<string, { id: string; name: string | null; shortName: string | null; color: string | null }>();
+	for (const g of topDeputyGroups) {
+		if (!groupByDeputy.has(g.actorId) && g.groupId) {
+			groupByDeputy.set(g.actorId, {
+				id: g.groupId,
+				name: g.groupName,
+				shortName: g.groupShortName,
+				color: g.groupColor
+			});
+		}
+	}
+
+	const topParticipation = topParticipationRaw.map(d => ({
+		...d,
+		group: groupByDeputy.get(d.id) || null
+	}));
 
 	// Scrutins by result (filtered)
 	const scrutinsByResult = await db

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
+
 	let { data } = $props();
 
 	const totalDistribution = data.distribution.pour + data.distribution.contre + data.distribution.abstention;
@@ -96,12 +98,15 @@
 	<h2>Top 10 - Participation aux votes</h2>
 	<div class="ranking-list">
 		{#each data.topParticipation as deputy, i}
-			<a href="/deputes/{deputy.id}" class="ranking-item">
-				<span class="ranking-position">{i + 1}</span>
-				<img src={deputy.photoUrl || '/placeholder.png'} alt={deputy.name} class="ranking-photo" />
-				<span class="ranking-name">{deputy.name}</span>
-				<span class="ranking-value">{deputy.voteCount} votes</span>
-			</a>
+			<ElectedCard
+				id={deputy.id}
+				name={deputy.name}
+				photoUrl={deputy.photoUrl}
+				variant="inline"
+				rank={i + 1}
+				stat="{deputy.voteCount} votes"
+				group={deputy.group}
+			/>
 		{/each}
 	</div>
 </section>
@@ -378,48 +383,7 @@
 	.ranking-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.ranking-item {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 0.75rem;
-		border-radius: var(--radius);
-		text-decoration: none;
-		color: inherit;
-		transition: background 0.2s;
-	}
-
-	.ranking-item:hover {
-		background: var(--color-bg);
-		text-decoration: none;
-	}
-
-	.ranking-position {
-		width: 24px;
-		text-align: center;
-		font-weight: 700;
-		color: var(--color-text-muted);
-	}
-
-	.ranking-photo {
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		object-fit: cover;
-		background: var(--color-border);
-	}
-
-	.ranking-name {
-		flex: 1;
-		font-weight: 500;
-	}
-
-	.ranking-value {
-		color: var(--color-primary);
-		font-weight: 600;
+		gap: 0.25rem;
 	}
 
 	/* Proximity Matrix */

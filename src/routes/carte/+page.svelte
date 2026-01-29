@@ -30,6 +30,11 @@
 		return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
 	}));
 
+	// Calculs pour le graphique en barres
+	const majorityThreshold = $derived(Math.floor(totalDeputies / 2) + 1);
+	const maxGroupSize = $derived(Math.max(...sortedGroups.map(g => g.deputyCount), 0));
+	const barScaleMax = $derived(Math.max(maxGroupSize, majorityThreshold) * 1.05);
+
 	// Législatures disponibles
 	const LEGISLATURES = [
 		{ value: '17', label: '17e (2024-)' },
@@ -128,26 +133,27 @@
 
 <div class="card" style="margin-bottom: 1.5rem;">
 	<h2>Répartition politique</h2>
-	<div class="bar-chart">
-		{#each sortedGroups as group}
-			{@const widthPct = (group.deputyCount / totalDeputies) * 100}
-			<div class="bar-row">
-				<a href="/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
-				<div class="bar-track">
-					<div
-						class="bar-fill"
-						style="width: {widthPct * 2}%; background: {group.groupColor || '#888'};"
-					></div>
-					{#if group === sortedGroups[sortedGroups.length - 1] && totalDeputies > 0}
-						{@const majorityThreshold = Math.floor(totalDeputies / 2) + 1}
-						<div class="majority-marker" style="left: {(majorityThreshold / totalDeputies) * 200}%;">
-							<span class="majority-label">Majorité ({majorityThreshold})</span>
-						</div>
-					{/if}
+	<div class="bar-chart-container">
+		<div class="bar-chart">
+			{#each sortedGroups as group}
+				{@const widthPct = (group.deputyCount / barScaleMax) * 100}
+				<div class="bar-row">
+					<a href="/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
+					<div class="bar-track">
+						<div
+							class="bar-fill"
+							style="width: {widthPct}%; background: {group.groupColor || '#888'};"
+						></div>
+					</div>
+					<span class="bar-value">{group.deputyCount}</span>
 				</div>
-				<span class="bar-value">{group.deputyCount}</span>
+			{/each}
+		</div>
+		{#if totalDeputies > 0}
+			<div class="majority-line" style="left: calc(50px + 0.75rem + (100% - 50px - 0.75rem - 40px - 0.75rem) * {(majorityThreshold / barScaleMax)});">
+				<span class="majority-label">Majorité ({majorityThreshold})</span>
 			</div>
-		{/each}
+		{/if}
 	</div>
 </div>
 
@@ -277,11 +283,15 @@
 	}
 
 	/* Bar Chart */
+	.bar-chart-container {
+		position: relative;
+		margin-top: 1rem;
+	}
+
 	.bar-chart {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		margin-top: 1rem;
 	}
 
 	.bar-row {
@@ -325,25 +335,25 @@
 		text-align: right;
 	}
 
-	.majority-marker {
+	.majority-line {
 		position: absolute;
-		top: -300px;
-		height: 340px;
+		top: 0;
+		bottom: 0;
 		width: 2px;
 		background: var(--color-danger);
 		transform: translateX(-50%);
 		z-index: 10;
+		pointer-events: none;
 	}
 
 	.majority-label {
 		position: absolute;
-		top: 100%;
+		bottom: -20px;
 		left: 50%;
 		transform: translateX(-50%);
 		font-size: 0.65rem;
 		color: var(--color-danger);
 		white-space: nowrap;
-		margin-top: 4px;
 	}
 
 	.groups-grid {

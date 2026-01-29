@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins } from '$lib/server/db';
+import { db, actors, votes, scrutins, mandates, organs } from '$lib/server/db';
 import { eq, and, count, sql, inArray } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -32,6 +32,25 @@ export const load: PageServerLoad = async ({ url }) => {
 			comparison: null,
 			error: 'Député non trouvé'
 		};
+	}
+
+	// Get groups for both deputies
+	const groupsData = await db
+		.select({
+			actorId: mandates.actorId,
+			groupId: organs.id,
+			groupShortName: organs.shortName,
+			groupColor: organs.color
+		})
+		.from(mandates)
+		.innerJoin(organs, eq(mandates.organId, organs.id))
+		.where(sql`${mandates.actorId} IN ${[deputy1Id, deputy2Id]} AND ${organs.type} = 'GP'`);
+
+	const groupByActor = new Map<string, { id: string; shortName: string | null; color: string | null }>();
+	for (const g of groupsData) {
+		if (!groupByActor.has(g.actorId) && g.groupId) {
+			groupByActor.set(g.actorId, { id: g.groupId, shortName: g.groupShortName, color: g.groupColor });
+		}
 	}
 
 	// Get vote counts for each deputy
@@ -132,11 +151,13 @@ export const load: PageServerLoad = async ({ url }) => {
 		comparison: {
 			deputy1: {
 				...deputy1,
+				group: groupByActor.get(deputy1Id) || null,
 				voteCount: votes1Count.value,
 				distribution: dist1
 			},
 			deputy2: {
 				...deputy2,
+				group: groupByActor.get(deputy2Id) || null,
 				voteCount: votes2Count.value,
 				distribution: dist2
 			},

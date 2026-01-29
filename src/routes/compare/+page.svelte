@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
 
@@ -98,16 +99,21 @@
 
 	<div class="comparison-grid">
 		<div class="comparison-deputy">
-			<a href="/deputes/{data.comparison.deputy1.id}">
-				<img src={data.comparison.deputy1.photoUrl || '/placeholder.png'} alt={data.comparison.deputy1.fullName} class="comparison-photo" />
-			</a>
-			<h3><a href="/deputes/{data.comparison.deputy1.id}">{data.comparison.deputy1.fullName}</a></h3>
-			<p class="comparison-votes">{data.comparison.deputy1.voteCount} votes</p>
-			<div class="comparison-dist">
-				<div class="dist-item pour">{getPercent(data.comparison.deputy1.distribution.pour, data.comparison.deputy1.distribution)}% pour</div>
-				<div class="dist-item contre">{getPercent(data.comparison.deputy1.distribution.contre, data.comparison.deputy1.distribution)}% contre</div>
-				<div class="dist-item abstention">{getPercent(data.comparison.deputy1.distribution.abstention, data.comparison.deputy1.distribution)}% abs.</div>
-			</div>
+			<ElectedCard
+				id={data.comparison.deputy1.id}
+				name={data.comparison.deputy1.fullName}
+				photoUrl={data.comparison.deputy1.photoUrl}
+				group={data.comparison.deputy1.group}
+				subtitle="{data.comparison.deputy1.voteCount} votes"
+			>
+				{#snippet children()}
+					<div class="comparison-dist">
+						<div class="dist-item pour">{getPercent(data.comparison.deputy1.distribution.pour, data.comparison.deputy1.distribution)}% pour</div>
+						<div class="dist-item contre">{getPercent(data.comparison.deputy1.distribution.contre, data.comparison.deputy1.distribution)}% contre</div>
+						<div class="dist-item abstention">{getPercent(data.comparison.deputy1.distribution.abstention, data.comparison.deputy1.distribution)}% abs.</div>
+					</div>
+				{/snippet}
+			</ElectedCard>
 		</div>
 
 		<div class="comparison-stats">
@@ -122,16 +128,21 @@
 		</div>
 
 		<div class="comparison-deputy">
-			<a href="/deputes/{data.comparison.deputy2.id}">
-				<img src={data.comparison.deputy2.photoUrl || '/placeholder.png'} alt={data.comparison.deputy2.fullName} class="comparison-photo" />
-			</a>
-			<h3><a href="/deputes/{data.comparison.deputy2.id}">{data.comparison.deputy2.fullName}</a></h3>
-			<p class="comparison-votes">{data.comparison.deputy2.voteCount} votes</p>
-			<div class="comparison-dist">
-				<div class="dist-item pour">{getPercent(data.comparison.deputy2.distribution.pour, data.comparison.deputy2.distribution)}% pour</div>
-				<div class="dist-item contre">{getPercent(data.comparison.deputy2.distribution.contre, data.comparison.deputy2.distribution)}% contre</div>
-				<div class="dist-item abstention">{getPercent(data.comparison.deputy2.distribution.abstention, data.comparison.deputy2.distribution)}% abs.</div>
-			</div>
+			<ElectedCard
+				id={data.comparison.deputy2.id}
+				name={data.comparison.deputy2.fullName}
+				photoUrl={data.comparison.deputy2.photoUrl}
+				group={data.comparison.deputy2.group}
+				subtitle="{data.comparison.deputy2.voteCount} votes"
+			>
+				{#snippet children()}
+					<div class="comparison-dist">
+						<div class="dist-item pour">{getPercent(data.comparison.deputy2.distribution.pour, data.comparison.deputy2.distribution)}% pour</div>
+						<div class="dist-item contre">{getPercent(data.comparison.deputy2.distribution.contre, data.comparison.deputy2.distribution)}% contre</div>
+						<div class="dist-item abstention">{getPercent(data.comparison.deputy2.distribution.abstention, data.comparison.deputy2.distribution)}% abs.</div>
+					</div>
+				{/snippet}
+			</ElectedCard>
 		</div>
 	</div>
 
@@ -266,41 +277,13 @@
 	}
 
 	.comparison-deputy {
-		text-align: center;
-		background: var(--color-surface);
-		border-radius: var(--radius-lg);
-		padding: 1.5rem;
-		box-shadow: var(--shadow-sm);
-	}
-
-	.comparison-photo {
-		width: 120px;
-		height: 120px;
-		border-radius: 50%;
-		object-fit: cover;
-		background: var(--color-border);
-		margin-bottom: 1rem;
-	}
-
-	.comparison-deputy h3 {
-		font-size: 1.125rem;
-		margin-bottom: 0.25rem;
-	}
-
-	.comparison-deputy h3 a {
-		color: inherit;
-	}
-
-	.comparison-votes {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		flex: 1;
 	}
 
 	.comparison-dist {
 		display: flex;
-		justify-content: center;
 		gap: 0.5rem;
-		margin-top: 1rem;
+		margin-top: 0.5rem;
 		flex-wrap: wrap;
 	}
 

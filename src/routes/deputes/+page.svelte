@@ -6,23 +6,99 @@
 	let { data } = $props();
 
 	let searchInput = $state(data.filters.search);
+	let deputies = $state(data.deputies);
+	let currentPage = $state(data.pagination.page);
+	let loading = $state(false);
+	let hasMore = $derived(currentPage < data.pagination.totalPages);
 
-	function handleSearch(e: Event) {
-		e.preventDefault();
+	let sentinel: HTMLDivElement | null = $state(null);
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Reset quand les données initiales changent (nouvelle recherche, nouveau filtre)
+	$effect(() => {
+		deputies = data.deputies;
+		currentPage = data.pagination.page;
+	});
+
+	// Sync searchInput with URL when data changes (e.g., back/forward navigation)
+	$effect(() => {
+		searchInput = data.filters.search;
+	});
+
+	// Debounced search
+	$effect(() => {
+		const query = searchInput;
+		const currentQuery = data.filters.search;
+
+		// Ne rien faire si la valeur est identique
+		if (query === currentQuery) return;
+
+		if (debounceTimer) clearTimeout(debounceTimer);
+
+		debounceTimer = setTimeout(() => {
+			doSearch(query);
+		}, 300);
+
+		return () => {
+			if (debounceTimer) clearTimeout(debounceTimer);
+		};
+	});
+
+	// IntersectionObserver pour charger plus
+	$effect(() => {
+		if (!sentinel) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && hasMore && !loading) {
+					loadMore();
+				}
+			},
+			{ rootMargin: '200px' }
+		);
+
+		observer.observe(sentinel);
+
+		return () => observer.disconnect();
+	});
+
+	function doSearch(query: string) {
 		const params = new URLSearchParams($page.url.searchParams);
-		if (searchInput) {
-			params.set('q', searchInput);
+		if (query) {
+			params.set('q', query);
 		} else {
 			params.delete('q');
 		}
-		params.set('page', '1');
-		goto(`?${params.toString()}`);
+		params.delete('page');
+		goto(`?${params.toString()}`, { keepFocus: true });
 	}
 
-	function goToPage(p: number) {
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+
 		const params = new URLSearchParams($page.url.searchParams);
-		params.set('page', p.toString());
-		goto(`?${params.toString()}`);
+		params.set('page', (currentPage + 1).toString());
+
+		try {
+			const response = await fetch(`/deputes?${params.toString()}`, {
+				headers: { Accept: 'application/json' }
+			});
+			const newData = await response.json();
+
+			deputies = [...deputies, ...newData.deputies];
+			currentPage = newData.pagination.page;
+		} catch (e) {
+			console.error('Erreur chargement:', e);
+		} finally {
+			loading = false;
+		}
+	}
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		if (debounceTimer) clearTimeout(debounceTimer);
+		doSearch(searchInput);
 	}
 </script>
 
@@ -42,13 +118,13 @@
 	</form>
 </div>
 
-{#if data.deputies.length === 0}
+{#if deputies.length === 0}
 	<div class="empty-state">
 		<p>Aucun député trouvé</p>
 	</div>
 {:else}
 	<div class="card-grid">
-		{#each data.deputies as deputy}
+		{#each deputies as deputy (deputy.id)}
 			<ElectedCard
 				id={deputy.id}
 				name={deputy.fullName}
@@ -59,16 +135,38 @@
 		{/each}
 	</div>
 
-	<div class="pagination">
-		<button onclick={() => goToPage(data.pagination.page - 1)} disabled={data.pagination.page <= 1}>
-			Précédent
-		</button>
-		<span class="pagination-info">
-			Page {data.pagination.page} sur {data.pagination.totalPages}
-		</span>
-		<button onclick={() => goToPage(data.pagination.page + 1)} disabled={data.pagination.page >= data.pagination.totalPages}>
-			Suivant
-		</button>
-	</div>
+	{#if hasMore}
+		<div bind:this={sentinel} class="load-more-sentinel">
+			{#if loading}
+				<span class="loading-spinner"></span>
+				<span>Chargement...</span>
+			{/if}
+		</div>
+	{/if}
 {/if}
 
+<style>
+	.load-more-sentinel {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem;
+		color: var(--color-text-muted);
+	}
+
+	.loading-spinner {
+		width: 20px;
+		height: 20px;
+		border: 2px solid var(--color-border);
+		border-top-color: var(--color-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+</style>

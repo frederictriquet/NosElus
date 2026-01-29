@@ -1,4 +1,6 @@
 import type { ImportStats } from './types';
+import { db, syncMetadata, type SyncMetadata, type NewSyncMetadata } from '../db';
+import { eq } from 'drizzle-orm';
 
 export function formatDate(date: Date | string | undefined | null): string | null {
 	if (!date) return null;
@@ -41,4 +43,97 @@ export async function processBatch<T, R>(
 
 export function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// --- Sync Metadata Utils ---
+
+export function buildSyncId(source: string, entityType: string, legislature?: string): string {
+	return legislature ? `${source}:${entityType}:${legislature}` : `${source}:${entityType}`;
+}
+
+export async function getLastSync(
+	source: string,
+	entityType: string,
+	legislature?: string
+): Promise<SyncMetadata | null> {
+	const id = buildSyncId(source, entityType, legislature);
+	const result = await db.select().from(syncMetadata).where(eq(syncMetadata.id, id)).limit(1);
+	return result[0] || null;
+}
+
+export async function updateSyncMetadata(
+	source: string,
+	entityType: string,
+	stats: ImportStats,
+	options: {
+		legislature?: string;
+		status?: 'success' | 'partial' | 'failed';
+		lastModifiedFilter?: Date;
+		lastCursor?: string;
+		metadata?: Record<string, unknown>;
+	} = {}
+): Promise<void> {
+	const id = buildSyncId(source, entityType, options.legislature);
+	const now = new Date();
+
+	const data: NewSyncMetadata = {
+		id,
+		source,
+		entityType,
+		legislature: options.legislature || null,
+		lastSyncAt: now,
+		lastSyncStatus: options.status || 'success',
+		recordsProcessed: stats.total,
+		recordsInserted: stats.inserted,
+		recordsUpdated: stats.updated,
+		recordsSkipped: stats.skipped,
+		recordsErrored: stats.errors,
+		lastModifiedFilter: options.lastModifiedFilter || null,
+		lastCursor: options.lastCursor || null,
+		metadata: options.metadata || null,
+		updatedAt: now
+	};
+
+	await db
+		.insert(syncMetadata)
+		.values(data)
+		.onConflictDoUpdate({
+			target: syncMetadata.id,
+			set: {
+				lastSyncAt: data.lastSyncAt,
+				lastSyncStatus: data.lastSyncStatus,
+				recordsProcessed: data.recordsProcessed,
+				recordsInserted: data.recordsInserted,
+				recordsUpdated: data.recordsUpdated,
+				recordsSkipped: data.recordsSkipped,
+				recordsErrored: data.recordsErrored,
+				lastModifiedFilter: data.lastModifiedFilter,
+				lastCursor: data.lastCursor,
+				metadata: data.metadata,
+				updatedAt: data.updatedAt
+			}
+		});
+}
+
+export function parseArgs(args: string[]): {
+	incremental: boolean;
+	legislature?: string;
+	since?: Date;
+} {
+	const result: { incremental: boolean; legislature?: string; since?: Date } = {
+		incremental: false
+	};
+
+	for (let i = 0; i < args.length; i++) {
+		const arg = args[i];
+		if (arg === '--incremental' || arg === '-i') {
+			result.incremental = true;
+		} else if (arg === '--legislature' || arg === '-l') {
+			result.legislature = args[++i];
+		} else if (arg === '--since' || arg === '-s') {
+			result.since = new Date(args[++i]);
+		}
+	}
+
+	return result;
 }

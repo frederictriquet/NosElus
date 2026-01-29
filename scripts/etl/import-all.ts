@@ -1,17 +1,63 @@
 import { importActors, importOrgans, importMandates } from '../../src/lib/server/etl/sources/assemblee/actors.js';
 import { importScrutins, importVotes } from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
-import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { getETLConfig, type ImportStats } from '../../src/lib/server/etl/types.js';
+import { parseArgs, getLastSync, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+
+const SOURCE = 'assemblee';
+
+function printUsage() {
+	console.log('Usage: npm run etl:all [options]');
+	console.log('');
+	console.log('Options:');
+	console.log('  --incremental, -i    Only import records modified since last sync');
+	console.log('  --legislature, -l    Legislature to import (default: from ETL_ASSEMBLEE_LEGISLATURE or 16)');
+	console.log('  --since, -s          Import records modified since this date (ISO format)');
+	console.log('');
+	console.log('Examples:');
+	console.log('  npm run etl:all                     # Full import');
+	console.log('  npm run etl:all -- --incremental    # Incremental import');
+	console.log('  npm run etl:all -- -i -l 17         # Incremental import for legislature 17');
+	console.log('');
+}
 
 async function main() {
+	const args = parseArgs(process.argv.slice(2));
+
+	if (process.argv.includes('--help') || process.argv.includes('-h')) {
+		printUsage();
+		process.exit(0);
+	}
+
 	console.log('='.repeat(60));
 	console.log('NosElus ETL - Full Import');
 	console.log('='.repeat(60));
 
-	const config = getETLConfig();
+	const baseConfig = getETLConfig();
+	const config = {
+		...baseConfig,
+		legislature: args.legislature || baseConfig.legislature,
+		incremental: args.incremental,
+		since: args.since
+	};
+
 	console.log(`Configuration:`);
 	console.log(`  Legislature: ${config.legislature}`);
 	console.log(`  Batch size: ${config.batchSize}`);
 	console.log(`  Data dir: ${config.dataDir || 'NOT SET'}`);
+	console.log(`  Mode: ${config.incremental ? 'INCREMENTAL' : 'FULL'}`);
+
+	if (config.incremental) {
+		// Get last sync time for the most recent entity type
+		const lastSync = await getLastSync(SOURCE, 'actors', config.legislature);
+		if (lastSync) {
+			console.log(`  Last sync: ${lastSync.lastSyncAt.toISOString()}`);
+			if (!config.since) {
+				config.since = lastSync.lastSyncAt;
+			}
+		} else {
+			console.log(`  Last sync: Never (first run will be full import)`);
+		}
+	}
 	console.log('');
 
 	if (!config.dataDir) {
@@ -25,6 +71,7 @@ async function main() {
 	}
 
 	const startTime = Date.now();
+	const allStats: Record<string, ImportStats> = {};
 
 	try {
 		// Step 1: Import organs (needed for foreign keys)
@@ -32,48 +79,74 @@ async function main() {
 		console.log('Step 1/5: Importing Organs');
 		console.log('='.repeat(40));
 		const organsStats = await importOrgans(config);
-		console.log(`✓ Organs: ${organsStats.inserted} imported, ${organsStats.errors} errors`);
+		allStats.organs = organsStats;
+		console.log(`✓ Organs: ${organsStats.inserted} inserted, ${organsStats.updated} updated, ${organsStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'organs', organsStats, {
+			legislature: config.legislature,
+			status: organsStats.errors > 0 ? 'partial' : 'success'
+		});
 
 		// Step 2: Import actors
 		console.log('\n' + '='.repeat(40));
 		console.log('Step 2/5: Importing Actors');
 		console.log('='.repeat(40));
 		const actorsStats = await importActors(config);
-		console.log(`✓ Actors: ${actorsStats.inserted} imported, ${actorsStats.errors} errors`);
+		allStats.actors = actorsStats;
+		console.log(`✓ Actors: ${actorsStats.inserted} inserted, ${actorsStats.updated} updated, ${actorsStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'actors', actorsStats, {
+			legislature: config.legislature,
+			status: actorsStats.errors > 0 ? 'partial' : 'success'
+		});
 
 		// Step 3: Import mandates
 		console.log('\n' + '='.repeat(40));
 		console.log('Step 3/5: Importing Mandates');
 		console.log('='.repeat(40));
 		const mandatesStats = await importMandates(config);
-		console.log(`✓ Mandates: ${mandatesStats.inserted} imported, ${mandatesStats.errors} errors`);
+		allStats.mandates = mandatesStats;
+		console.log(`✓ Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated, ${mandatesStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'mandates', mandatesStats, {
+			legislature: config.legislature,
+			status: mandatesStats.errors > 0 ? 'partial' : 'success'
+		});
 
 		// Step 4: Import scrutins
 		console.log('\n' + '='.repeat(40));
 		console.log('Step 4/5: Importing Scrutins');
 		console.log('='.repeat(40));
 		const scrutinsStats = await importScrutins(config);
-		console.log(`✓ Scrutins: ${scrutinsStats.inserted} imported, ${scrutinsStats.errors} errors`);
+		allStats.scrutins = scrutinsStats;
+		console.log(`✓ Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'scrutins', scrutinsStats, {
+			legislature: config.legislature,
+			status: scrutinsStats.errors > 0 ? 'partial' : 'success'
+		});
 
 		// Step 5: Import votes
 		console.log('\n' + '='.repeat(40));
 		console.log('Step 5/5: Importing Votes');
 		console.log('='.repeat(40));
 		const votesStats = await importVotes(config);
-		console.log(`✓ Votes: ${votesStats.inserted} imported, ${votesStats.errors} errors`);
+		allStats.votes = votesStats;
+		console.log(`✓ Votes: ${votesStats.inserted} inserted, ${votesStats.updated} updated, ${votesStats.errors} errors`);
+		await updateSyncMetadata(SOURCE, 'votes', votesStats, {
+			legislature: config.legislature,
+			status: votesStats.errors > 0 ? 'partial' : 'success'
+		});
 
 		const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
 		console.log('\n' + '='.repeat(60));
 		console.log('IMPORT SUMMARY');
 		console.log('='.repeat(60));
-		console.log(`  Organs:   ${organsStats.inserted} (${organsStats.errors} errors)`);
-		console.log(`  Actors:   ${actorsStats.inserted} (${actorsStats.errors} errors)`);
-		console.log(`  Mandates: ${mandatesStats.inserted} (${mandatesStats.errors} errors)`);
-		console.log(`  Scrutins: ${scrutinsStats.inserted} (${scrutinsStats.errors} errors)`);
-		console.log(`  Votes:    ${votesStats.inserted} (${votesStats.errors} errors)`);
+		console.log(`  Organs:   ${organsStats.inserted} inserted, ${organsStats.updated} updated (${organsStats.errors} errors)`);
+		console.log(`  Actors:   ${actorsStats.inserted} inserted, ${actorsStats.updated} updated (${actorsStats.errors} errors)`);
+		console.log(`  Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated (${mandatesStats.errors} errors)`);
+		console.log(`  Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated (${scrutinsStats.errors} errors)`);
+		console.log(`  Votes:    ${votesStats.inserted} inserted, ${votesStats.updated} updated (${votesStats.errors} errors)`);
 		console.log('');
 		console.log(`Total time: ${duration}s`);
+		console.log(`Mode: ${config.incremental ? 'INCREMENTAL' : 'FULL'}`);
 		console.log('='.repeat(60));
 	} catch (error) {
 		console.error('Import failed:', error);

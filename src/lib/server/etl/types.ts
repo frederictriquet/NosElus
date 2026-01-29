@@ -9,6 +9,8 @@ export interface ETLConfig {
 	legislature: string;
 	batchSize: number;
 	dataDir?: string;
+	incremental?: boolean;
+	since?: Date;
 }
 
 export interface ImportStats {

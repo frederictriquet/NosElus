@@ -22,6 +22,13 @@
       "when": 1769683882579,
       "tag": "0002_majestic_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769707786037,
+      "tag": "0003_petite_chameleon",
+      "breakpoints": true
     }
   ]
 }

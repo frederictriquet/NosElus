@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.limit(limit)
 		.offset(offset);
 
-	// Get current group for these deputies (from mandates - GP = groupe parlementaire)
+	// Get group for these deputies (from mandates - GP = groupe parlementaire)
 	const deputyIds = deputiesRaw.map(d => d.id);
 	const groupsData = deputyIds.length > 0 ? await db
 		.select({
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(sql`${mandates.actorId} IN ${deputyIds} AND ${organs.type} = 'GP' AND ${mandates.endDate} IS NULL`)
+		.where(sql`${mandates.actorId} IN ${deputyIds} AND ${organs.type} = 'GP'`)
 		: [];
 
 	// Build lookup map

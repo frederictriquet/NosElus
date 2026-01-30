@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins, organs, amendments } from '$lib/server/db';
+import { db, actors, votes, scrutins, organs, amendments, mandates } from '$lib/server/db';
 import { eq, count, desc, sql, asc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
@@ -191,6 +191,28 @@ export const load: PageServerLoad = async ({ params }) => {
 			.limit(10);
 	};
 
+	// Loader for mandates (group memberships, committees, delegations)
+	const loadMandates = async () => {
+		return await db
+			.select({
+				id: mandates.id,
+				organId: mandates.organId,
+				organName: organs.name,
+				organShortName: organs.shortName,
+				organType: organs.type,
+				organColor: organs.color,
+				startDate: mandates.startDate,
+				endDate: mandates.endDate,
+				quality: mandates.quality,
+				legislature: mandates.legislature,
+				constituency: mandates.constituency
+			})
+			.from(mandates)
+			.innerJoin(organs, eq(mandates.organId, organs.id))
+			.where(eq(mandates.actorId, params.id))
+			.orderBy(desc(mandates.startDate));
+	};
+
 	return {
 		// Synchronous data
 		actor,
@@ -201,6 +223,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		monthlyEvolution: loadMonthlyEvolution(),
 		careerMilestones: loadCareerMilestones(),
 		amendmentStats: loadAmendmentStats(),
-		recentAmendments: loadRecentAmendments()
+		recentAmendments: loadRecentAmendments(),
+		mandates: loadMandates()
 	};
 };

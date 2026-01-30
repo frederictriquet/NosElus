@@ -3,6 +3,27 @@
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
 
 	let { data } = $props();
+
+	// Separate mandates by type
+	const groupMandates = $derived.by(() => {
+		return data.mandates.then((m) => m.filter((mandate) => mandate.organType === 'GP'));
+	});
+	const committeeMandates = $derived.by(() => {
+		return data.mandates.then((m) => m.filter((mandate) => mandate.organType === 'COM'));
+	});
+	const delegationMandates = $derived.by(() => {
+		return data.mandates.then((m) => m.filter((mandate) => mandate.organType === 'DEL'));
+	});
+	const otherMandates = $derived.by(() => {
+		return data.mandates.then((m) =>
+			m.filter((mandate) => !['GP', 'COM', 'DEL'].includes(mandate.organType || ''))
+		);
+	});
+
+	function formatDateShort(date: string | null): string {
+		if (!date) return '';
+		return new Date(date).toLocaleDateString('fr-FR');
+	}
 </script>
 
 <svelte:head>
@@ -149,6 +170,149 @@
 		{/snippet}
 	</AsyncCard>
 </div>
+
+<!-- Mandate sections -->
+{#await groupMandates then mandates}
+	{#if mandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Groupe politique</h2>
+			<p class="section-subtitle">Historique des appartenances aux groupes parlementaires</p>
+			<div class="mandates-list">
+				{#each mandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-color" style="background: {mandate.organColor || '#888'}"></div>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+{/await}
+
+{#await committeeMandates then mandates}
+	{#if mandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Commissions</h2>
+			<div class="mandates-list">
+				{#each mandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+{/await}
+
+{#await delegationMandates then mandates}
+	{#if mandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Délégations</h2>
+			<div class="mandates-list">
+				{#each mandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+{/await}
+
+{#await otherMandates then mandates}
+	{#if mandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Autres fonctions</h2>
+			<div class="mandates-list">
+				{#each mandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+{/await}
 
 {#await data.amendmentStats then amendmentStats}
 	{#if amendmentStats.total > 0}
@@ -429,5 +593,87 @@
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
+	}
+
+	/* Card and mandates styles */
+	.card {
+		background: var(--color-surface);
+		border-radius: var(--radius-lg);
+		padding: 1.5rem;
+		box-shadow: var(--shadow-sm);
+	}
+
+	.mandates-section {
+		margin-top: 1.5rem;
+	}
+
+	.section-subtitle {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		margin: 0 0 1rem 0;
+	}
+
+	.mandates-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.mandate-item {
+		display: flex;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		background: var(--color-bg);
+		border-radius: var(--radius);
+		transition: background 0.15s;
+	}
+
+	.mandate-item.current {
+		background: var(--color-primary-bg, rgba(59, 130, 246, 0.08));
+		border-left: 3px solid var(--color-primary);
+	}
+
+	.mandate-color {
+		width: 4px;
+		border-radius: 2px;
+		flex-shrink: 0;
+	}
+
+	.mandate-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.mandate-info {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: baseline;
+	}
+
+	.mandate-name {
+		font-weight: 500;
+	}
+
+	.mandate-short {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
+
+	.mandate-quality {
+		font-size: 0.875rem;
+		color: var(--color-primary);
+		margin-top: 0.25rem;
+	}
+
+	.mandate-dates {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
+	}
+
+	.current-badge {
+		color: var(--color-success);
+		font-weight: 500;
 	}
 </style>

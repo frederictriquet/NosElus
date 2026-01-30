@@ -35,86 +35,86 @@
 	/>
 {/await}
 
-<div class="card-grid">
-	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
-		{#snippet children(voteStats)}
-			{#if voteStats.voteCount === 0}
-				<p class="empty-state">Aucun vote enregistré</p>
-				<p class="coming-soon">
-					Les votes seront disponibles après import via <code>make etl-europarl-votes</code>
-				</p>
-			{:else}
-				<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
-					{voteStats.voteCount} votes enregistrés
-				</p>
+<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
+	{#snippet children(voteStats)}
+		{#if voteStats.voteCount === 0}
+			<p class="empty-state">Aucun vote enregistré</p>
+			<p class="coming-soon">
+				Les votes seront disponibles après import via <code>make etl-europarl-votes</code>
+			</p>
+		{:else}
+			<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+				{voteStats.voteCount} votes enregistrés
+			</p>
 
-				{@const totalVotes =
-					voteStats.distribution.pour +
-					voteStats.distribution.contre +
-					voteStats.distribution.abstention +
-					voteStats.distribution['non-votant']}
-				{#if totalVotes > 0}
-					<div class="vote-bar" style="height: 24px; border-radius: 12px;">
-						<div
-							class="vote-bar-for"
-							style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"
-						></div>
-						<div
-							class="vote-bar-against"
-							style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"
-						></div>
-						<div
-							class="vote-bar-abstention"
-							style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"
-						></div>
-						{#if voteStats.distribution['non-votant'] > 0}
-							<div
-								class="vote-bar-nonvotant"
-								style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"
-							></div>
-						{/if}
-					</div>
+			{@const totalVotes =
+				voteStats.distribution.pour +
+				voteStats.distribution.contre +
+				voteStats.distribution.abstention +
+				voteStats.distribution['non-votant']}
+			{#if totalVotes > 0}
+				<div class="vote-bar" style="height: 24px; border-radius: 12px;">
 					<div
-						style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
-					>
-						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
-								{voteStats.distribution.pour}
-							</div>
-							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
+						class="vote-bar-for"
+						style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"
+					></div>
+					<div
+						class="vote-bar-against"
+						style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"
+					></div>
+					<div
+						class="vote-bar-abstention"
+						style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"
+					></div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div
+							class="vote-bar-nonvotant"
+							style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"
+						></div>
+					{/if}
+				</div>
+				<div
+					style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
+				>
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+							{voteStats.distribution.pour}
 						</div>
-						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
-								{voteStats.distribution.contre}
-							</div>
-							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
-						</div>
-						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
-								{voteStats.distribution.abstention}
-							</div>
-							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
-						</div>
-						{#if voteStats.distribution['non-votant'] > 0}
-							<div>
-								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
-									{voteStats.distribution['non-votant']}
-								</div>
-								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
-							</div>
-						{/if}
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
 					</div>
-				{/if}
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+							{voteStats.distribution.contre}
+						</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
+					</div>
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+							{voteStats.distribution.abstention}
+						</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
+					</div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+								{voteStats.distribution['non-votant']}
+							</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
+						</div>
+					{/if}
+				</div>
 			{/if}
-		{/snippet}
-	</AsyncCard>
+		{/if}
+	{/snippet}
+</AsyncCard>
 
+<div style="margin-top: 1.5rem;">
 	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
 		{#snippet children(recentVotes)}
 			{#if recentVotes.length === 0}
 				<p class="empty-state">Aucun vote enregistré</p>
 			{:else}
-				<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+				<div class="votes-list">
 					{#each recentVotes as vote}
 						<div class="vote-item">
 							<span
@@ -330,6 +330,14 @@
 		font-size: 0.8125rem;
 	}
 
+	/* Vote list grid */
+	.votes-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+		gap: 0.75rem;
+		margin-top: 1rem;
+	}
+
 	/* Vote items */
 	.vote-item {
 		display: flex;
@@ -337,6 +345,7 @@
 		gap: 0.75rem;
 		padding: 0.5rem;
 		border-radius: var(--radius);
+		background: var(--color-bg);
 	}
 
 	.vote-info {

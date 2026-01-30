@@ -49,60 +49,60 @@
 	/>
 {/await}
 
-<div class="card-grid">
-	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
-		{#snippet children(voteStats)}
-			<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{voteStats.voteCount} votes enregistrés</p>
+<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
+	{#snippet children(voteStats)}
+		<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{voteStats.voteCount} votes enregistrés</p>
 
-			{@const totalVotes = voteStats.distribution.pour + voteStats.distribution.contre + voteStats.distribution.abstention + voteStats.distribution['non-votant']}
-			{#if totalVotes > 0}
-				<div class="vote-bar" style="height: 24px; border-radius: 12px;">
-					<div class="vote-bar-for" style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"></div>
-					<div class="vote-bar-against" style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"></div>
-					<div class="vote-bar-abstention" style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"></div>
-					{#if voteStats.distribution['non-votant'] > 0}
-						<div class="vote-bar-nonvotant" style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"></div>
-					{/if}
+		{@const totalVotes = voteStats.distribution.pour + voteStats.distribution.contre + voteStats.distribution.abstention + voteStats.distribution['non-votant']}
+		{#if totalVotes > 0}
+			<div class="vote-bar" style="height: 24px; border-radius: 12px;">
+				<div class="vote-bar-for" style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"></div>
+				<div class="vote-bar-against" style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"></div>
+				<div class="vote-bar-abstention" style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"></div>
+				{#if voteStats.distribution['non-votant'] > 0}
+					<div class="vote-bar-nonvotant" style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"></div>
+				{/if}
+			</div>
+			<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;">
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{voteStats.distribution.pour}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
 				</div>
-				<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;">
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{voteStats.distribution.pour}</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
-					</div>
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{voteStats.distribution.contre}</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
-					</div>
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{voteStats.distribution.abstention}</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
-					</div>
-					{#if voteStats.distribution['non-votant'] > 0}
-						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{voteStats.distribution['non-votant']}</div>
-							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
-						</div>
-					{/if}
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{voteStats.distribution.contre}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
 				</div>
-			{:else}
-				<p class="empty-state">Aucun vote enregistré</p>
-			{/if}
-		{/snippet}
-	</AsyncCard>
+				<div>
+					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{voteStats.distribution.abstention}</div>
+					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
+				</div>
+				{#if voteStats.distribution['non-votant'] > 0}
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{voteStats.distribution['non-votant']}</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
+					</div>
+				{/if}
+			</div>
+		{:else}
+			<p class="empty-state">Aucun vote enregistré</p>
+		{/if}
+	{/snippet}
+</AsyncCard>
 
+<div style="margin-top: 1.5rem;">
 	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
 		{#snippet children(recentVotes)}
 			{#if recentVotes.length === 0}
 				<p class="empty-state">Aucun vote enregistré</p>
 			{:else}
-				<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+				<div class="votes-list">
 					{#each recentVotes as vote}
 						<a href="/an/scrutins/{vote.scrutinId}" class="vote-item">
 							<span class="vote-position" class:pour={vote.position === 'pour'} class:contre={vote.position === 'contre'} class:abstention={vote.position === 'abstention'}>
 								{vote.position}
 							</span>
 							<div class="vote-info">
-								<div class="vote-title">{vote.scrutinTitle?.slice(0, 80)}{(vote.scrutinTitle?.length || 0) > 80 ? '...' : ''}</div>
+								<div class="vote-title">{vote.scrutinTitle?.slice(0, 120)}{(vote.scrutinTitle?.length || 0) > 120 ? '...' : ''}</div>
 								<div class="vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</div>
 							</div>
 						</a>
@@ -477,20 +477,29 @@
 		margin-top: 0.25rem;
 	}
 
+	.votes-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+		gap: 0.75rem;
+		margin-top: 1rem;
+	}
+
 	.vote-item {
 		display: flex;
 		align-items: flex-start;
 		gap: 0.75rem;
 		text-decoration: none;
 		color: inherit;
-		padding: 0.5rem;
+		padding: 0.75rem;
 		border-radius: var(--radius);
-		transition: background 0.2s;
+		background: var(--color-bg);
+		transition: background 0.2s, box-shadow 0.2s;
 	}
 
 	.vote-item:hover {
-		background: var(--color-bg);
+		background: var(--color-border);
 		text-decoration: none;
+		box-shadow: var(--shadow-sm);
 	}
 
 	.vote-info {
@@ -507,6 +516,12 @@
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
+	}
+
+	@media (max-width: 768px) {
+		.votes-list {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	/* Override evolution chart height for this page */

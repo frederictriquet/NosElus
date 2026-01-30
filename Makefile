@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-europarl-meps etl-nosdeputes etl-colors \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -117,6 +117,10 @@ etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
 etl-senat-senators: ## Import des sénateurs (API Sénat)
 	@echo "$(CYAN)Import des sénateurs...$(RESET)"
 	npm run etl:senat-senators
+
+etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
+	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
+	npm run etl:europarl-meps
 
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes

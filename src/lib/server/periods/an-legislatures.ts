@@ -4,7 +4,7 @@
  */
 
 import { db, scrutins } from '$lib/server/db';
-import { sql, desc } from 'drizzle-orm';
+import { sql, desc, notLike } from 'drizzle-orm';
 
 export interface Legislature {
 	value: string;
@@ -33,6 +33,8 @@ export async function getLegislatures(): Promise<Legislature[]> {
 			maxDate: sql<string>`max(${scrutins.date})`
 		})
 		.from(scrutins)
+		// Exclure les scrutins PE (legislature commence par "PE-")
+		.where(notLike(scrutins.legislature, 'PE-%'))
 		.groupBy(scrutins.legislature)
 		.orderBy(desc(scrutins.legislature));
 

@@ -20,122 +20,272 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	const scrutinWhereClause = scrutinConditions.length > 0 ? and(...scrutinConditions) : undefined;
 
-	// Get filtered scrutin IDs for vote filtering
-	let filteredScrutinIds: string[] | null = null;
-	if (scrutinConditions.length > 0) {
-		const filteredScrutins = await db
-			.select({ id: scrutins.id })
-			.from(scrutins)
-			.where(scrutinWhereClause);
-		filteredScrutinIds = filteredScrutins.map((s) => s.id);
-	}
+	// ===== PHASE 1: Get base filter data (must run first) =====
+	const [filteredScrutinsResult, actorIdsResult] = await Promise.all([
+		// Get filtered scrutin IDs
+		scrutinConditions.length > 0
+			? db.select({ id: scrutins.id }).from(scrutins).where(scrutinWhereClause)
+			: Promise.resolve(null),
+		// Get actors in legislature
+		periodFilters.legislature
+			? db.selectDistinct({ actorId: mandates.actorId }).from(mandates)
+				.where(eq(mandates.legislature, periodFilters.legislature))
+			: Promise.resolve(null)
+	]);
+
+	const filteredScrutinIds = filteredScrutinsResult?.map((s) => s.id) ?? null;
+	const actorIdsInLegislature = actorIdsResult?.map((m) => m.actorId) ?? null;
 
 	// Vote filter clause
 	const voteWhereClause = filteredScrutinIds !== null && filteredScrutinIds.length > 0
 		? inArray(votes.scrutinId, filteredScrutinIds)
 		: filteredScrutinIds !== null
-			? sql`1 = 0` // No scrutins match = no votes
+			? sql`1 = 0`
 			: undefined;
 
-	// Get actors in legislature (for filtered count)
-	let actorIdsInLegislature: string[] | null = null;
-	if (periodFilters.legislature) {
-		const mandatesInLeg = await db
-			.selectDistinct({ actorId: mandates.actorId })
-			.from(mandates)
-			.where(eq(mandates.legislature, periodFilters.legislature));
-		actorIdsInLegislature = mandatesInLeg.map((m) => m.actorId);
-	}
+	// Group filter condition
+	const today = new Date().toISOString().split('T')[0];
+	const groupCondition = and(
+		eq(organs.type, 'GP'),
+		notLike(organs.id, 'PO_GP_%'),
+		or(isNull(organs.endDate), gte(organs.endDate, today))
+	);
 
-	// Total counts (filtered)
-	const [totalActors] = actorIdsInLegislature !== null
-		? actorIdsInLegislature.length > 0
-			? await db.select({ value: count() }).from(actors).where(inArray(actors.id, actorIdsInLegislature))
-			: [{ value: 0 }]
-		: await db.select({ value: count() }).from(actors);
+	// ===== PHASE 2: Run all independent queries in parallel =====
+	const [
+		totalActorsResult,
+		totalVotesResult,
+		totalScrutinsResult,
+		voteDistribution,
+		topParticipationRaw,
+		scrutinsByResult,
+		groupStats,
+		monthlyActivity,
+		recentScrutins,
+		majorityGroups
+	] = await Promise.all([
+		// Total actors
+		actorIdsInLegislature !== null
+			? actorIdsInLegislature.length > 0
+				? db.select({ value: count() }).from(actors).where(inArray(actors.id, actorIdsInLegislature))
+				: Promise.resolve([{ value: 0 }])
+			: db.select({ value: count() }).from(actors),
 
-	const [totalVotes] = filteredScrutinIds !== null && filteredScrutinIds.length === 0
-		? [{ value: 0 }]
-		: await db.select({ value: count() }).from(votes).where(voteWhereClause);
+		// Total votes
+		filteredScrutinIds !== null && filteredScrutinIds.length === 0
+			? Promise.resolve([{ value: 0 }])
+			: db.select({ value: count() }).from(votes).where(voteWhereClause),
 
-	const [totalScrutins] = await db.select({ value: count() }).from(scrutins).where(scrutinWhereClause);
+		// Total scrutins
+		db.select({ value: count() }).from(scrutins).where(scrutinWhereClause),
 
-	// Vote distribution (filtered)
-	const voteDistribution = filteredScrutinIds !== null && filteredScrutinIds.length === 0
-		? []
-		: await db
-			.select({
-				position: votes.position,
-				count: count()
-			})
-			.from(votes)
-			.where(voteWhereClause)
-			.groupBy(votes.position);
+		// Vote distribution
+		filteredScrutinIds !== null && filteredScrutinIds.length === 0
+			? Promise.resolve([])
+			: db.select({ position: votes.position, count: count() })
+				.from(votes).where(voteWhereClause).groupBy(votes.position),
 
-	const distribution = {
-		pour: 0,
-		contre: 0,
-		abstention: 0,
-		'non-votant': 0
-	};
+		// Top participation (simplified - using inner join for speed)
+		filteredScrutinIds !== null
+			? filteredScrutinIds.length > 0
+				? db.select({
+						id: actors.id,
+						name: actors.fullName,
+						photoUrl: actors.photoUrl,
+						voteCount: count(votes.id)
+					})
+					.from(votes)
+					.innerJoin(actors, eq(votes.actorId, actors.id))
+					.where(inArray(votes.scrutinId, filteredScrutinIds))
+					.groupBy(actors.id, actors.fullName, actors.photoUrl)
+					.orderBy(desc(count(votes.id)))
+					.limit(10)
+				: Promise.resolve([])
+			: db.select({
+					id: actors.id,
+					name: actors.fullName,
+					photoUrl: actors.photoUrl,
+					voteCount: count(votes.id)
+				})
+				.from(votes)
+				.innerJoin(actors, eq(votes.actorId, actors.id))
+				.groupBy(actors.id, actors.fullName, actors.photoUrl)
+				.orderBy(desc(count(votes.id)))
+				.limit(10),
+
+		// Scrutins by result
+		db.select({ result: scrutins.result, count: count() })
+			.from(scrutins).where(scrutinWhereClause).groupBy(scrutins.result),
+
+		// Group stats
+		filteredScrutinIds !== null
+			? filteredScrutinIds.length > 0
+				? db.select({
+						groupId: organs.id,
+						groupName: organs.name,
+						groupShortName: organs.shortName,
+						groupColor: organs.color,
+						totalVotes: count(votes.id),
+						pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+						contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+						abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+					})
+					.from(organs)
+					.leftJoin(votes, and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds)))
+					.where(groupCondition)
+					.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+					.orderBy(desc(count(votes.id)))
+				: db.select({
+						groupId: organs.id,
+						groupName: organs.name,
+						groupShortName: organs.shortName,
+						groupColor: organs.color,
+						totalVotes: sql<number>`0`,
+						pourVotes: sql<number>`0`,
+						contreVotes: sql<number>`0`,
+						abstentionVotes: sql<number>`0`
+					})
+					.from(organs)
+					.where(groupCondition)
+					.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+			: db.select({
+					groupId: organs.id,
+					groupName: organs.name,
+					groupShortName: organs.shortName,
+					groupColor: organs.color,
+					totalVotes: count(votes.id),
+					pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+					contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+					abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+				})
+				.from(organs)
+				.leftJoin(votes, eq(votes.groupId, organs.id))
+				.where(groupCondition)
+				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
+				.orderBy(desc(count(votes.id))),
+
+		// Monthly activity
+		db.select({
+			month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
+			count: count()
+		})
+			.from(scrutins)
+			.where(scrutinWhereClause)
+			.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
+			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`),
+
+		// Recent scrutins for heatmap
+		db.select({
+			id: scrutins.id,
+			title: scrutins.title,
+			date: scrutins.date,
+			result: scrutins.result
+		})
+			.from(scrutins)
+			.where(scrutinWhereClause)
+			.orderBy(desc(scrutins.date))
+			.limit(15),
+
+		// Majority groups
+		db.select({ id: organs.id })
+			.from(organs)
+			.where(and(
+				eq(organs.type, 'GP'),
+				inArray(organs.shortName, ['EPR', 'RE', 'REN', 'Dem', 'HOR'])
+			))
+	]);
+
+	// Process results
+	const totalActors = totalActorsResult[0];
+	const totalVotes = totalVotesResult[0];
+	const totalScrutins = totalScrutinsResult[0];
+
+	const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
 	for (const v of voteDistribution) {
 		if (v.position in distribution) {
 			distribution[v.position as keyof typeof distribution] = v.count;
 		}
 	}
 
-	// Top deputies by participation (most votes cast)
-	// When filtered, only consider votes in filtered scrutins
-	const topParticipationQuery = filteredScrutinIds !== null
-		? filteredScrutinIds.length > 0
-			? db
-				.select({
-					id: actors.id,
-					name: actors.fullName,
-					photoUrl: actors.photoUrl,
-					voteCount: count(votes.id)
-				})
-				.from(actors)
-				.leftJoin(votes, and(eq(votes.actorId, actors.id), inArray(votes.scrutinId, filteredScrutinIds)))
-				.groupBy(actors.id, actors.fullName, actors.photoUrl)
-				.orderBy(desc(count(votes.id)))
-				.limit(10)
-			: Promise.resolve([])
-		: db
-			.select({
-				id: actors.id,
-				name: actors.fullName,
-				photoUrl: actors.photoUrl,
-				voteCount: count(votes.id)
-			})
-			.from(actors)
-			.leftJoin(votes, eq(votes.actorId, actors.id))
-			.groupBy(actors.id, actors.fullName, actors.photoUrl)
-			.orderBy(desc(count(votes.id)))
-			.limit(10);
+	const results = { adopté: 0, rejeté: 0 };
+	for (const s of scrutinsByResult) {
+		if (s.result === 'adopté') results.adopté = s.count;
+		if (s.result === 'rejeté') results.rejeté = s.count;
+	}
 
-	const topParticipationRaw = await topParticipationQuery;
-
-	// Get group info for top deputies
+	// ===== PHASE 3: Get group info for top deputies and heatmap data =====
 	const topDeputyIds = topParticipationRaw.map(d => d.id);
-	const topDeputyGroups = topDeputyIds.length > 0 ? await db
-		.select({
-			actorId: mandates.actorId,
-			groupId: organs.id,
-			groupName: organs.name,
-			groupShortName: organs.shortName,
-			groupColor: organs.color
-		})
-		.from(mandates)
-		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(and(
-			inArray(mandates.actorId, topDeputyIds),
-			eq(organs.type, 'GP'),
-			notLike(organs.id, 'PO_GP_%')
-		))
-		: [];
+	const activeGroups = groupStats.filter((g) => g.totalVotes > 0);
+	const groupIds = activeGroups.map((g) => g.groupId);
+	const scrutinIds = recentScrutins.map((s) => s.id);
+	const majorityGroupIds = majorityGroups.map(g => g.id);
 
-	// Build lookup map (take first group found for each deputy)
+	const [topDeputyGroups, heatmapData, majorityVotes, positionEvolution] = await Promise.all([
+		// Get group info for top deputies
+		topDeputyIds.length > 0
+			? db.select({
+					actorId: mandates.actorId,
+					groupId: organs.id,
+					groupName: organs.name,
+					groupShortName: organs.shortName,
+					groupColor: organs.color
+				})
+				.from(mandates)
+				.innerJoin(organs, eq(mandates.organId, organs.id))
+				.where(and(
+					inArray(mandates.actorId, topDeputyIds),
+					eq(organs.type, 'GP'),
+					notLike(organs.id, 'PO_GP_%')
+				))
+			: Promise.resolve([]),
+
+		// Heatmap data
+		scrutinIds.length > 0 && groupIds.length > 0
+			? db.select({
+					scrutinId: votes.scrutinId,
+					groupId: votes.groupId,
+					position: votes.position,
+					count: count()
+				})
+				.from(votes)
+				.where(inArray(votes.scrutinId, scrutinIds))
+				.groupBy(votes.scrutinId, votes.groupId, votes.position)
+			: Promise.resolve([]),
+
+		// Majority votes for alignment calculation
+		filteredScrutinIds !== null && filteredScrutinIds.length === 0
+			? Promise.resolve([])
+			: majorityGroupIds.length > 0
+				? db.select({
+						scrutinId: votes.scrutinId,
+						position: votes.position,
+						count: count()
+					})
+					.from(votes)
+					.where(filteredScrutinIds !== null && filteredScrutinIds.length > 0
+						? and(inArray(votes.groupId, majorityGroupIds), inArray(votes.scrutinId, filteredScrutinIds))
+						: inArray(votes.groupId, majorityGroupIds))
+					.groupBy(votes.scrutinId, votes.position)
+				: Promise.resolve([]),
+
+		// Position evolution
+		filteredScrutinIds !== null && filteredScrutinIds.length === 0
+			? Promise.resolve([])
+			: db.select({
+					month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
+					pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+					contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+					abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+					total: count()
+				})
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(scrutinConditions.length > 0 ? and(...scrutinConditions) : undefined)
+				.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
+				.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
+	]);
+
+	// Build group lookup for top deputies
 	const groupByDeputy = new Map<string, { id: string; name: string | null; shortName: string | null; color: string | null }>();
 	for (const g of topDeputyGroups) {
 		if (!groupByDeputy.has(g.actorId) && g.groupId) {
@@ -153,130 +303,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		group: groupByDeputy.get(d.id) || null
 	}));
 
-	// Scrutins by result (filtered)
-	const scrutinsByResult = await db
-		.select({
-			result: scrutins.result,
-			count: count()
-		})
-		.from(scrutins)
-		.where(scrutinWhereClause)
-		.groupBy(scrutins.result);
-
-	const results = { adopté: 0, rejeté: 0 };
-	for (const s of scrutinsByResult) {
-		if (s.result === 'adopté') results.adopté = s.count;
-		if (s.result === 'rejeté') results.rejeté = s.count;
-	}
-
-	// Group cohesion (percentage of votes aligned with group majority)
-	// This is a simplified version - we calculate % of "pour" votes per group
-	// Exclude PO_GP_* groups (imported from NosDéputés) to avoid duplicates
-	// Exclude groups that have ended (endDate in the past) to avoid showing old versions
-	const today = new Date().toISOString().split('T')[0];
-	const groupCondition = and(
-		eq(organs.type, 'GP'),
-		notLike(organs.id, 'PO_GP_%'),
-		or(isNull(organs.endDate), gte(organs.endDate, today))
-	);
-
-	const groupStatsQuery = filteredScrutinIds !== null
-		? filteredScrutinIds.length > 0
-			? db
-				.select({
-					groupId: organs.id,
-					groupName: organs.name,
-					groupShortName: organs.shortName,
-					groupColor: organs.color,
-					totalVotes: count(votes.id),
-					pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
-					contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-					abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
-				})
-				.from(organs)
-				.leftJoin(votes, and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds)))
-				.where(groupCondition)
-				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
-				.orderBy(desc(count(votes.id)))
-			: db
-				.select({
-					groupId: organs.id,
-					groupName: organs.name,
-					groupShortName: organs.shortName,
-					groupColor: organs.color,
-					totalVotes: sql<number>`0`,
-					pourVotes: sql<number>`0`,
-					contreVotes: sql<number>`0`,
-					abstentionVotes: sql<number>`0`
-				})
-				.from(organs)
-				.where(groupCondition)
-				.groupBy(organs.id, organs.name, organs.shortName, organs.color)
-		: db
-			.select({
-				groupId: organs.id,
-				groupName: organs.name,
-				groupShortName: organs.shortName,
-				groupColor: organs.color,
-				totalVotes: count(votes.id),
-				pourVotes: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
-				contreVotes: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-				abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
-			})
-			.from(organs)
-			.leftJoin(votes, eq(votes.groupId, organs.id))
-			.where(groupCondition)
-			.groupBy(organs.id, organs.name, organs.shortName, organs.color)
-			.orderBy(desc(count(votes.id)));
-
-	const groupStats = await groupStatsQuery;
-
-	// Monthly vote activity (filtered)
-	const monthlyActivity = await db
-		.select({
-			month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
-			count: count()
-		})
-		.from(scrutins)
-		.where(scrutinWhereClause)
-		.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
-		.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
-
-	// Get groups with votes for proximity matrix
-	const activeGroups = groupStats.filter((g) => g.totalVotes > 0);
-	const groupIds = activeGroups.map((g) => g.groupId);
-
-	// Heatmap: Get recent scrutins with group votes (filtered)
-	const recentScrutins = await db
-		.select({
-			id: scrutins.id,
-			title: scrutins.title,
-			date: scrutins.date,
-			result: scrutins.result
-		})
-		.from(scrutins)
-		.where(scrutinWhereClause)
-		.orderBy(desc(scrutins.date))
-		.limit(15);
-
-	const scrutinIds = recentScrutins.map((s) => s.id);
-
-	// Get votes for heatmap (group positions per scrutin)
-	const heatmapData =
-		scrutinIds.length > 0 && groupIds.length > 0
-			? await db
-					.select({
-						scrutinId: votes.scrutinId,
-						groupId: votes.groupId,
-						position: votes.position,
-						count: count()
-					})
-					.from(votes)
-					.where(inArray(votes.scrutinId, scrutinIds))
-					.groupBy(votes.scrutinId, votes.groupId, votes.position)
-			: [];
-
-	// Build heatmap matrix: for each scrutin and group, determine majority position
+	// Build heatmap matrix
 	const heatmapMatrix: Record<string, Record<string, { position: string; count: number }>> = {};
 	for (const row of heatmapData) {
 		if (!row.groupId) continue;
@@ -292,11 +319,10 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	}
 
-	// Calculate group proximity matrix (how often groups vote the same way)
+	// Calculate proximity matrix
 	const proximityMatrix: Record<string, Record<string, number>> = {};
 	const pairCounts: Record<string, Record<string, { same: number; total: number }>> = {};
 
-	// Initialize
 	for (const g1 of groupIds) {
 		proximityMatrix[g1] = {};
 		pairCounts[g1] = {};
@@ -305,7 +331,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	}
 
-	// Count agreements per scrutin
 	for (const scrutinId of Object.keys(heatmapMatrix)) {
 		const scrutinVotes = heatmapMatrix[scrutinId];
 		const votingGroups = Object.keys(scrutinVotes);
@@ -314,22 +339,23 @@ export const load: PageServerLoad = async ({ url }) => {
 			for (let j = i + 1; j < votingGroups.length; j++) {
 				const g1 = votingGroups[i];
 				const g2 = votingGroups[j];
-				pairCounts[g1][g2].total++;
-				pairCounts[g2][g1].total++;
-				if (scrutinVotes[g1].position === scrutinVotes[g2].position) {
-					pairCounts[g1][g2].same++;
-					pairCounts[g2][g1].same++;
+				if (pairCounts[g1]?.[g2]) {
+					pairCounts[g1][g2].total++;
+					pairCounts[g2][g1].total++;
+					if (scrutinVotes[g1].position === scrutinVotes[g2].position) {
+						pairCounts[g1][g2].same++;
+						pairCounts[g2][g1].same++;
+					}
 				}
 			}
 		}
 	}
 
-	// Calculate percentages
 	for (const g1 of groupIds) {
 		for (const g2 of groupIds) {
 			if (g1 === g2) {
 				proximityMatrix[g1][g2] = 100;
-			} else if (pairCounts[g1][g2].total > 0) {
+			} else if (pairCounts[g1]?.[g2]?.total > 0) {
 				proximityMatrix[g1][g2] = Math.round(
 					(pairCounts[g1][g2].same / pairCounts[g1][g2].total) * 100
 				);
@@ -339,40 +365,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	}
 
-	// ===== GOVERNMENT ALIGNMENT =====
-	// Presidential majority groups: Renaissance/EPR, MoDem/Dem, Horizons/HOR
-	// Find these groups dynamically by their shortName
-	const majorityShortNames = ['EPR', 'RE', 'REN', 'Dem', 'HOR'];
-	const majorityGroups = await db
-		.select({ id: organs.id })
-		.from(organs)
-		.where(and(
-			eq(organs.type, 'GP'),
-			inArray(organs.shortName, majorityShortNames)
-		));
-	const majorityGroupIds = majorityGroups.map(g => g.id);
-
-	// For each scrutin, determine majority position (what did majority vote for)
-	const majorityVotesConditions: SQL[] = majorityGroupIds.length > 0
-		? [inArray(votes.groupId, majorityGroupIds)]
-		: [sql`1 = 0`]; // No majority groups found
-	if (filteredScrutinIds !== null && filteredScrutinIds.length > 0) {
-		majorityVotesConditions.push(inArray(votes.scrutinId, filteredScrutinIds));
-	}
-
-	const majorityVotes = filteredScrutinIds !== null && filteredScrutinIds.length === 0
-		? []
-		: await db
-			.select({
-				scrutinId: votes.scrutinId,
-				position: votes.position,
-				count: count()
-			})
-			.from(votes)
-			.where(and(...majorityVotesConditions))
-			.groupBy(votes.scrutinId, votes.position);
-
-	// Build majority position per scrutin
+	// Calculate government alignment
 	const majorityPosition: Record<string, string> = {};
 	const scrutinMajorityCounts: Record<string, Record<string, number>> = {};
 
@@ -395,57 +388,26 @@ export const load: PageServerLoad = async ({ url }) => {
 		majorityPosition[scrutinId] = maxPos;
 	}
 
-	// Calculate alignment per group (how often they vote with majority)
-	const groupAlignmentData = filteredScrutinIds !== null && filteredScrutinIds.length === 0
-		? []
-		: filteredScrutinIds !== null
-			? await db
-				.select({
-					groupId: votes.groupId,
-					scrutinId: votes.scrutinId,
-					position: votes.position,
-					count: count()
-				})
-				.from(votes)
-				.where(inArray(votes.scrutinId, filteredScrutinIds))
-				.groupBy(votes.groupId, votes.scrutinId, votes.position)
-			: await db
-				.select({
-					groupId: votes.groupId,
-					scrutinId: votes.scrutinId,
-					position: votes.position,
-					count: count()
-				})
-				.from(votes)
-				.groupBy(votes.groupId, votes.scrutinId, votes.position);
-
-	// Build group majority position per scrutin
+	// Use heatmap data for group alignment (already grouped by group/scrutin/position)
 	const groupScrutinPosition: Record<string, Record<string, string>> = {};
-	const tempCounts: Record<string, Record<string, Record<string, number>>> = {};
-
-	for (const row of groupAlignmentData) {
+	for (const row of heatmapData) {
 		if (!row.groupId) continue;
-		if (!tempCounts[row.groupId]) tempCounts[row.groupId] = {};
-		if (!tempCounts[row.groupId][row.scrutinId]) tempCounts[row.groupId][row.scrutinId] = {};
-		tempCounts[row.groupId][row.scrutinId][row.position] = row.count;
-	}
-
-	for (const [gId, scrutins] of Object.entries(tempCounts)) {
-		groupScrutinPosition[gId] = {};
-		for (const [sId, positions] of Object.entries(scrutins)) {
-			let maxPos = 'pour';
-			let maxCount = 0;
-			for (const [pos, cnt] of Object.entries(positions)) {
-				if (cnt > maxCount) {
-					maxCount = cnt;
-					maxPos = pos;
-				}
-			}
-			groupScrutinPosition[gId][sId] = maxPos;
+		if (!groupScrutinPosition[row.groupId]) groupScrutinPosition[row.groupId] = {};
+		const current = groupScrutinPosition[row.groupId][row.scrutinId];
+		// Keep the position with highest count
+		if (!current) {
+			groupScrutinPosition[row.groupId][row.scrutinId] = row.position;
 		}
 	}
 
-	// Calculate alignment rate per group
+	// Recalculate with all votes for accuracy (use heatmapMatrix which has majority positions)
+	for (const [scrutinId, groups] of Object.entries(heatmapMatrix)) {
+		for (const [groupId, data] of Object.entries(groups)) {
+			if (!groupScrutinPosition[groupId]) groupScrutinPosition[groupId] = {};
+			groupScrutinPosition[groupId][scrutinId] = data.position;
+		}
+	}
+
 	const governmentAlignment: Array<{
 		groupId: string;
 		groupName: string;
@@ -481,29 +443,6 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	governmentAlignment.sort((a, b) => b.alignmentRate - a.alignmentRate);
 
-	// ===== POSITION EVOLUTION OVER TIME =====
-	// Calculate monthly ratio of pour vs contre votes globally (filtered)
-	const positionEvolutionConditions: SQL[] = [];
-	if (scrutinConditions.length > 0) {
-		positionEvolutionConditions.push(...scrutinConditions);
-	}
-
-	const positionEvolution = filteredScrutinIds !== null && filteredScrutinIds.length === 0
-		? []
-		: await db
-			.select({
-				month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
-				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
-				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
-				total: count()
-			})
-			.from(votes)
-			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(positionEvolutionConditions.length > 0 ? and(...positionEvolutionConditions) : undefined)
-			.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
-			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
-
 	return {
 		totals: {
 			actors: totalActors.value,
@@ -515,7 +454,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		scrutinResults: results,
 		groupStats,
 		monthlyActivity,
-		// Phase 4 additions
 		heatmap: {
 			scrutins: recentScrutins,
 			groups: activeGroups.map((g) => ({

@@ -34,3 +34,8 @@ reports/
 
 # Docker & Traefik
 traefik/acme.json
+
+
+data/
+data/cache/
+.cache/

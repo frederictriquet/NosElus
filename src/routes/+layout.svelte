@@ -1,166 +1,94 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { updated } from '$app/stores';
-	import { dev } from '$app/environment';
-	import favicon from '$lib/assets/favicon.svg';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import '../app.css';
+	import LegislatureSelector from '$lib/components/LegislatureSelector.svelte';
+	import { legislatureStore } from '$lib/stores/legislature';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
-	// Build timestamp from Vite
-	const buildTimestamp = __BUILD_TIMESTAMP__;
-	const buildDate = new Date(buildTimestamp);
-
-	// Format the build timestamp
-	const formattedDate = buildDate.toLocaleDateString('en-US', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
-	});
-	const formattedTime = buildDate.toLocaleTimeString('en-US', {
-		hour: '2-digit',
-		minute: '2-digit'
+	// Initialiser le store avec la législature courante au premier chargement
+	$effect(() => {
+		if (browser && data.currentLegislature) {
+			legislatureStore.initialize(data.currentLegislature);
+		}
 	});
 
-	// Check for updates periodically (only in production)
-	onMount(() => {
-		if (dev) return; // Skip in development mode
-
-		const interval = setInterval(() => {
-			updated.check();
-		}, 30000); // Check every 30 seconds
-
-		return () => clearInterval(interval);
+	// Synchroniser l'URL vers le store quand on navigue
+	$effect(() => {
+		if (browser) {
+			const urlLegislature = $page.url.searchParams.get('legislature');
+			if (urlLegislature !== null) {
+				// Vérifier que c'est une législature valide
+				const isValid = data.legislatures.some((l: { value: string }) => l.value === urlLegislature);
+				if (isValid) {
+					legislatureStore.set(urlLegislature);
+				}
+			}
+		}
 	});
 
-	function reload() {
-		location.reload();
+	// Fonction pour générer les liens avec le paramètre legislature
+	function navLink(path: string): string {
+		if (!$legislatureStore) return path;
+		return `${path}?legislature=${$legislatureStore}`;
 	}
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<title>NosElus - Suivi de l'activité parlementaire</title>
+	<meta name="description" content="Suivez l'activité des députés et sénateurs français" />
 </svelte:head>
 
-<div class="layout-wrapper">
-	{#if $updated}
-		<div class="update-banner">
-			<div class="update-content">
-				<p>A new version is available!</p>
-				<button onclick={reload}>Reload to update</button>
-			</div>
-		</div>
-	{/if}
+<header class="header">
+	<div class="container header-content">
+		<a href={navLink('/')} class="logo">NosElus</a>
+		<nav class="nav">
+			<a href={navLink('/')} class:active={$page.url.pathname === '/'}>Accueil</a>
+			<a href={navLink('/deputes')} class:active={$page.url.pathname.startsWith('/deputes')}>Députés</a>
+			<a href={navLink('/senateurs')} class:active={$page.url.pathname.startsWith('/senateurs')}>Sénateurs</a>
+			<a href={navLink('/scrutins')} class:active={$page.url.pathname.startsWith('/scrutins')}>Scrutins</a>
+			<a href={navLink('/groupes')} class:active={$page.url.pathname.startsWith('/groupes')}>Groupes</a>
+			<a href={navLink('/stats')} class:active={$page.url.pathname.startsWith('/stats')}>Stats</a>
+			<a href={navLink('/carte')} class:active={$page.url.pathname.startsWith('/carte')}>Carte</a>
+			<a href={navLink('/compare')} class:active={$page.url.pathname.startsWith('/compare')}>Comparer</a>
+		</nav>
+		<LegislatureSelector legislatures={data.legislatures} />
+	</div>
+</header>
 
-	<div class="main-content">
+<main class="main">
+	<div class="container">
 		{@render children()}
 	</div>
+</main>
 
-	<footer class="footer">
-		<div class="footer-content">
-			<p class="build-info">
-				Built on {formattedDate} at {formattedTime}
-			</p>
-		</div>
-	</footer>
-</div>
+<footer class="footer">
+	<div class="container" style="text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
+		<p>NosElus - Données issues de <a href="https://nosdeputes.fr" target="_blank">NosDéputés.fr</a></p>
+	</div>
+</footer>
 
 <style>
-	.layout-wrapper {
+	:global(html, body) {
+		height: 100%;
+		margin: 0;
+	}
+
+	:global(body) {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
 	}
 
-	.update-banner {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		padding: 1rem;
-		z-index: 9999;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-		animation: slideDown 0.3s ease-out;
-	}
-
-	.update-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		flex-wrap: wrap;
-	}
-
-	.update-content p {
-		margin: 0;
-		font-weight: 500;
-		font-size: 0.95rem;
-	}
-
-	.update-content button {
-		background: white;
-		color: #667eea;
-		border: none;
-		padding: 0.5rem 1.5rem;
-		border-radius: 0.375rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: transform 0.2s, box-shadow 0.2s;
-		font-size: 0.9rem;
-	}
-
-	.update-content button:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-	}
-
-	.update-content button:active {
-		transform: translateY(0);
-	}
-
-	@keyframes slideDown {
-		from {
-			transform: translateY(-100%);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
-
-	@media (max-width: 640px) {
-		.update-content {
-			flex-direction: column;
-			text-align: center;
-		}
-	}
-
-	.main-content {
-		flex: 1;
-		padding: 2rem 1rem;
+	.main {
+		flex: 1 0 auto;
+		padding-bottom: 2rem;
 	}
 
 	.footer {
-		background: #f8f9fa;
-		border-top: 1px solid #e9ecef;
-		padding: 1.5rem 1rem;
-		margin-top: auto;
-	}
-
-	.footer-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		text-align: center;
-	}
-
-	.build-info {
-		margin: 0;
-		font-size: 0.875rem;
-		color: #6c757d;
-		font-family: 'Courier New', monospace;
+		flex-shrink: 0;
+		background: var(--color-surface);
+		border-top: 1px solid var(--color-border);
+		padding: 1.5rem 0;
 	}
 </style>

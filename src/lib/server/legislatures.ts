@@ -1,0 +1,86 @@
+/**
+ * Gestion des législatures - données récupérées depuis la base de données
+ */
+
+import { db, scrutins } from './db';
+import { sql, desc } from 'drizzle-orm';
+
+export interface Legislature {
+	value: string;
+	label: string;
+	startDate: string;
+	endDate: string | null;
+}
+
+// Cache pour éviter de requêter la DB à chaque requête
+let cachedLegislatures: Legislature[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 heure
+
+/**
+ * Récupère les législatures disponibles depuis la base de données
+ */
+export async function getLegislatures(): Promise<Legislature[]> {
+	// Utiliser le cache si disponible et pas expiré
+	if (cachedLegislatures && Date.now() - cacheTimestamp < CACHE_DURATION) {
+		return cachedLegislatures;
+	}
+
+	const result = await db
+		.select({
+			legislature: scrutins.legislature,
+			minDate: sql<string>`min(${scrutins.date})`,
+			maxDate: sql<string>`max(${scrutins.date})`
+		})
+		.from(scrutins)
+		.groupBy(scrutins.legislature)
+		.orderBy(desc(scrutins.legislature));
+
+	cachedLegislatures = result.map((r) => {
+		const num = parseInt(r.legislature, 10);
+		const startYear = new Date(r.minDate).getFullYear();
+		const endYear = r.maxDate ? new Date(r.maxDate).getFullYear() : null;
+
+		// La législature en cours n'a pas de date de fin
+		const isCurrentLegislature = result[0]?.legislature === r.legislature;
+
+		return {
+			value: r.legislature,
+			label: `${num}e (${startYear}${isCurrentLegislature ? '-' : `-${endYear}`})`,
+			startDate: r.minDate,
+			endDate: isCurrentLegislature ? null : r.maxDate
+		};
+	});
+
+	cacheTimestamp = Date.now();
+	return cachedLegislatures;
+}
+
+/**
+ * Récupère la législature actuelle (la plus récente)
+ */
+export async function getCurrentLegislature(): Promise<string> {
+	const legislatures = await getLegislatures();
+	return legislatures[0]?.value || '17';
+}
+
+/**
+ * Vérifie si une valeur est une législature valide
+ */
+export async function isValidLegislature(value: string | null): Promise<boolean> {
+	if (value === null) return true;
+	const legislatures = await getLegislatures();
+	return legislatures.some((l) => l.value === value);
+}
+
+/**
+ * Récupère les dates d'une législature
+ */
+export async function getLegislatureDates(
+	legislature: string
+): Promise<{ start: string; end: string | null } | null> {
+	const legislatures = await getLegislatures();
+	const leg = legislatures.find((l) => l.value === legislature);
+	if (!leg) return null;
+	return { start: leg.startDate, end: leg.endDate };
+}

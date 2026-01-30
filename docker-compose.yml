@@ -1,6 +1,23 @@
-version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: noselus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: noselus
+      POSTGRES_PASSWORD: noselus
+      POSTGRES_DB: noselus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noselus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   traefik:
     image: traefik:v3.2
     container_name: noselus-traefik
@@ -73,3 +90,6 @@ services:
 networks:
   web:
     external: true
+
+volumes:
+  postgres_data:

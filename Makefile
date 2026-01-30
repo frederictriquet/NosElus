@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-external-colors etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-external-colors etl-nosdeputes etl-colors \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -125,6 +125,10 @@ etl-senat-mandates-history: ## Import historique des mandats sénatoriaux (data.
 etl-nossenateurs-stats: ## Import statistiques d'assiduité sénateurs (NosSénateurs.fr)
 	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
 	npm run etl:nossenateurs-stats
+
+etl-senat-activity-stats: ## Import statistiques d'activité sénateurs (senat.fr officiel)
+	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
+	npm run etl:senat-activity-stats
 
 etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
 	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"

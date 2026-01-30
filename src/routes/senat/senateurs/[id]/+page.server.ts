@@ -63,11 +63,18 @@ export const load: PageServerLoad = async ({ params }) => {
 		.orderBy(desc(mandates.startDate))
 		.limit(1);
 
-	// Get activity stats from NosSénateurs.fr
-	const [stats] = await db
+	// Get activity stats (try nossenateurs first, then senat official source)
+	let [stats] = await db
 		.select()
 		.from(actorStats)
 		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'nossenateurs')));
+
+	if (!stats) {
+		[stats] = await db
+			.select()
+			.from(actorStats)
+			.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'senat')));
+	}
 
 	return {
 		actor,

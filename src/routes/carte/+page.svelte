@@ -1,7 +1,17 @@
 <script lang="ts">
+	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
+
+	// Type for group distribution
+	type GroupDistribution = {
+		groupId: string;
+		groupName: string;
+		groupShortName: string;
+		groupColor: string;
+		deputyCount: number;
+	};
 
 	// Political spectrum order (left to right) - includes both old and new group IDs
 	const spectrumOrder = [
@@ -20,19 +30,13 @@
 		'PO_GP_NI', 'PO840056', 'NI'
 	];
 
-	// Reactive computed values
-	const totalDeputies = $derived(data.totalDeputies);
-
-	const sortedGroups = $derived([...data.groupDistribution].sort((a, b) => {
-		const aIndex = spectrumOrder.findIndex(id => a.groupId.includes(id) || a.groupShortName === id);
-		const bIndex = spectrumOrder.findIndex(id => b.groupId.includes(id) || b.groupShortName === id);
-		return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-	}));
-
-	// Calculs pour le graphique en barres
-	const majorityThreshold = $derived(Math.floor(totalDeputies / 2) + 1);
-	const maxGroupSize = $derived(Math.max(...sortedGroups.map(g => g.deputyCount), 0));
-	const barScaleMax = $derived(Math.max(maxGroupSize, majorityThreshold) * 1.05);
+	function sortBySpectrum(groups: GroupDistribution[]): GroupDistribution[] {
+		return [...groups].sort((a, b) => {
+			const aIndex = spectrumOrder.findIndex(id => a.groupId.includes(id) || a.groupShortName === id);
+			const bIndex = spectrumOrder.findIndex(id => b.groupId.includes(id) || b.groupShortName === id);
+			return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+		});
+	}
 </script>
 
 <svelte:head>
@@ -44,117 +48,142 @@
 	<p class="page-subtitle">Répartition des forces politiques à l'Assemblée nationale</p>
 </div>
 
-<div class="card" style="margin-bottom: 1.5rem;">
-	<h2>Hémicycle de l'Assemblée nationale</h2>
-	<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
-		Répartition des {totalDeputies} députés par groupe parlementaire ({data.legislatureLabel})
-	</p>
+{#await data.groupData}
+	<div class="card" style="margin-bottom: 1.5rem;">
+		<h2>Hémicycle de l'Assemblée nationale</h2>
+		<div class="loading-container" style="min-height: 300px;">
+			<div class="spinner"></div>
+			<span class="loading-text">Chargement...</span>
+		</div>
+	</div>
 
-	<div class="hemicycle-container">
-		<svg viewBox="0 0 400 220" class="hemicycle-svg">
-			{#each sortedGroups as group, i}
-				{@const startAngle = sortedGroups.slice(0, i).reduce((sum, g) => sum + (g.deputyCount / totalDeputies) * 180, 0)}
-				{@const angle = (group.deputyCount / totalDeputies) * 180}
-				{@const startRad = (180 + startAngle) * Math.PI / 180}
-				{@const endRad = (180 + startAngle + angle) * Math.PI / 180}
-				{@const outerRadius = 180}
-				{@const innerRadius = 100}
-				{@const cx = 200}
-				{@const cy = 200}
-				{@const x1 = cx + outerRadius * Math.cos(startRad)}
-				{@const y1 = cy + outerRadius * Math.sin(startRad)}
-				{@const x2 = cx + outerRadius * Math.cos(endRad)}
-				{@const y2 = cy + outerRadius * Math.sin(endRad)}
-				{@const x3 = cx + innerRadius * Math.cos(endRad)}
-				{@const y3 = cy + innerRadius * Math.sin(endRad)}
-				{@const x4 = cx + innerRadius * Math.cos(startRad)}
-				{@const y4 = cy + innerRadius * Math.sin(startRad)}
-				{@const largeArc = angle > 180 ? 1 : 0}
-				<a href="/groupes/{group.groupId}">
-					<path
-						d="M {x1} {y1} A {outerRadius} {outerRadius} 0 {largeArc} 1 {x2} {y2} L {x3} {y3} A {innerRadius} {innerRadius} 0 {largeArc} 0 {x4} {y4} Z"
-						fill={group.groupColor || '#888'}
-						class="hemicycle-arc"
-					>
-						<title>{group.groupShortName || group.groupName}: {group.deputyCount} députés</title>
-					</path>
+	<div class="card" style="margin-bottom: 1.5rem;">
+		<h2>Répartition politique</h2>
+		<div class="loading-container" style="min-height: 200px;">
+			<div class="spinner"></div>
+			<span class="loading-text">Chargement...</span>
+		</div>
+	</div>
+{:then groupData}
+	{@const sortedGroups = sortBySpectrum(groupData.groupDistribution)}
+	{@const totalDeputies = groupData.totalDeputies}
+	{@const majorityThreshold = Math.floor(totalDeputies / 2) + 1}
+	{@const maxGroupSize = Math.max(...sortedGroups.map(g => g.deputyCount), 0)}
+	{@const barScaleMax = Math.max(maxGroupSize, majorityThreshold) * 1.05}
+
+	<div class="card" style="margin-bottom: 1.5rem;">
+		<h2>Hémicycle de l'Assemblée nationale</h2>
+		<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+			Répartition des {totalDeputies} députés par groupe parlementaire ({data.legislatureLabel})
+		</p>
+
+		<div class="hemicycle-container">
+			<svg viewBox="0 0 400 220" class="hemicycle-svg">
+				{#each sortedGroups as group, i}
+					{@const startAngle = sortedGroups.slice(0, i).reduce((sum, g) => sum + (g.deputyCount / totalDeputies) * 180, 0)}
+					{@const angle = (group.deputyCount / totalDeputies) * 180}
+					{@const startRad = (180 + startAngle) * Math.PI / 180}
+					{@const endRad = (180 + startAngle + angle) * Math.PI / 180}
+					{@const outerRadius = 180}
+					{@const innerRadius = 100}
+					{@const cx = 200}
+					{@const cy = 200}
+					{@const x1 = cx + outerRadius * Math.cos(startRad)}
+					{@const y1 = cy + outerRadius * Math.sin(startRad)}
+					{@const x2 = cx + outerRadius * Math.cos(endRad)}
+					{@const y2 = cy + outerRadius * Math.sin(endRad)}
+					{@const x3 = cx + innerRadius * Math.cos(endRad)}
+					{@const y3 = cy + innerRadius * Math.sin(endRad)}
+					{@const x4 = cx + innerRadius * Math.cos(startRad)}
+					{@const y4 = cy + innerRadius * Math.sin(startRad)}
+					{@const largeArc = angle > 180 ? 1 : 0}
+					<a href="/groupes/{group.groupId}">
+						<path
+							d="M {x1} {y1} A {outerRadius} {outerRadius} 0 {largeArc} 1 {x2} {y2} L {x3} {y3} A {innerRadius} {innerRadius} 0 {largeArc} 0 {x4} {y4} Z"
+							fill={group.groupColor || '#888'}
+							class="hemicycle-arc"
+						>
+							<title>{group.groupShortName || group.groupName}: {group.deputyCount} députés</title>
+						</path>
+					</a>
+				{/each}
+				<text x="200" y="195" text-anchor="middle" class="hemicycle-center-text">Perchoir</text>
+			</svg>
+			<div class="spectrum-labels">
+				<span class="spectrum-left">← Gauche</span>
+				<span class="spectrum-right">Droite →</span>
+			</div>
+		</div>
+
+		<div class="hemicycle-legend">
+			{#each sortedGroups as group}
+				<a href="/groupes/{group.groupId}" class="legend-item">
+					<span class="legend-color" style="background: {group.groupColor || '#888'}"></span>
+					<span class="legend-name">{group.groupShortName || group.groupName}</span>
+					<span class="legend-count">{group.deputyCount}</span>
 				</a>
 			{/each}
-			<text x="200" y="195" text-anchor="middle" class="hemicycle-center-text">Perchoir</text>
-		</svg>
-		<div class="spectrum-labels">
-			<span class="spectrum-left">← Gauche</span>
-			<span class="spectrum-right">Droite →</span>
 		</div>
 	</div>
 
-	<div class="hemicycle-legend">
-		{#each sortedGroups as group}
-			<a href="/groupes/{group.groupId}" class="legend-item">
-				<span class="legend-color" style="background: {group.groupColor || '#888'}"></span>
-				<span class="legend-name">{group.groupShortName || group.groupName}</span>
-				<span class="legend-count">{group.deputyCount}</span>
-			</a>
-		{/each}
-	</div>
-</div>
-
-<div class="card" style="margin-bottom: 1.5rem;">
-	<h2>Répartition politique</h2>
-	<div class="bar-chart-container">
-		<div class="bar-chart">
-			{#each sortedGroups as group}
-				{@const widthPct = (group.deputyCount / barScaleMax) * 100}
-				<div class="bar-row">
-					<a href="/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
-					<div class="bar-track">
-						<div
-							class="bar-fill"
-							style="width: {widthPct}%; background: {group.groupColor || '#888'};"
-						></div>
+	<div class="card" style="margin-bottom: 1.5rem;">
+		<h2>Répartition politique</h2>
+		<div class="bar-chart-container">
+			<div class="bar-chart">
+				{#each sortedGroups as group}
+					{@const widthPct = (group.deputyCount / barScaleMax) * 100}
+					<div class="bar-row">
+						<a href="/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
+						<div class="bar-track">
+							<div
+								class="bar-fill"
+								style="width: {widthPct}%; background: {group.groupColor || '#888'};"
+							></div>
+						</div>
+						<span class="bar-value">{group.deputyCount}</span>
 					</div>
-					<span class="bar-value">{group.deputyCount}</span>
-				</div>
-			{/each}
-		</div>
-		{#if totalDeputies > 0}
-			<div class="majority-line" style="left: calc(50px + 0.75rem + (100% - 50px - 0.75rem - 40px - 0.75rem) * {(majorityThreshold / barScaleMax)});">
-				<span class="majority-label">Majorité ({majorityThreshold})</span>
+				{/each}
 			</div>
-		{/if}
-	</div>
-</div>
-
-<section class="card">
-	<h2>Députés par groupe</h2>
-	<div class="groups-grid">
-		{#each data.groupDistribution as group}
-			<div class="group-card">
-				<div class="group-header">
-					<span class="group-color" style="background: {group.groupColor || '#888'}"></span>
-					<a href="/groupes/{group.groupId}" class="group-name">{group.groupShortName || group.groupName}</a>
-					<span class="group-count">{group.deputyCount} députés</span>
+			{#if totalDeputies > 0}
+				<div class="majority-line" style="left: calc(50px + 0.75rem + (100% - 50px - 0.75rem - 40px - 0.75rem) * {(majorityThreshold / barScaleMax)});">
+					<span class="majority-label">Majorité ({majorityThreshold})</span>
 				</div>
-				{#if data.deputiesByGroup[group.groupId]?.length > 0}
-					<div class="group-deputies">
-						{#each data.deputiesByGroup[group.groupId] as deputy}
-							<ElectedCard
-								id={deputy.id}
-								name={deputy.name}
-								photoUrl={deputy.photoUrl}
-								variant="thumbnail"
-								group={{ id: group.groupId, shortName: group.groupShortName, color: group.groupColor }}
-							/>
-						{/each}
-						{#if group.deputyCount > 5}
-							<a href="/deputes?groupe={group.groupId}" class="deputy-more">+{group.deputyCount - 5}</a>
+			{/if}
+		</div>
+	</div>
+
+	<AsyncCard title="Députés par groupe" promise={data.deputiesByGroup} minHeight="300px">
+		{#snippet children(deputiesByGroup)}
+			<div class="groups-grid">
+				{#each groupData.groupDistribution as group}
+					<div class="group-card">
+						<div class="group-header">
+							<span class="group-color" style="background: {group.groupColor || '#888'}"></span>
+							<a href="/groupes/{group.groupId}" class="group-name">{group.groupShortName || group.groupName}</a>
+							<span class="group-count">{group.deputyCount} députés</span>
+						</div>
+						{#if deputiesByGroup[group.groupId]?.length > 0}
+							<div class="group-deputies">
+								{#each deputiesByGroup[group.groupId] as deputy}
+									<ElectedCard
+										id={deputy.id}
+										name={deputy.name}
+										photoUrl={deputy.photoUrl}
+										variant="thumbnail"
+										group={{ id: group.groupId, shortName: group.groupShortName, color: group.groupColor }}
+									/>
+								{/each}
+								{#if group.deputyCount > 5}
+									<a href="/deputes?groupe={group.groupId}" class="deputy-more">+{group.deputyCount - 5}</a>
+								{/if}
+							</div>
 						{/if}
 					</div>
-				{/if}
+				{/each}
 			</div>
-		{/each}
-	</div>
-</section>
+		{/snippet}
+	</AsyncCard>
+{/await}
 
 <style>
 	h2 {
@@ -163,16 +192,33 @@
 		margin-bottom: 0.5rem;
 	}
 
-	.filter-group {
+	/* Loading */
+	.loading-container {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		color: var(--color-text-muted);
 	}
 
-	.filter-label {
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: var(--color-text-muted);
+	.spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--color-border);
+		border-top-color: var(--color-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.loading-text {
+		font-size: 0.875rem;
 	}
 
 	/* Hemicycle SVG */

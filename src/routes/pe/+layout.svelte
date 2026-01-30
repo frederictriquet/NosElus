@@ -18,6 +18,7 @@
 		{ href: '/pe/groupes', label: 'Groupes', match: '/pe/groupes' },
 		{ href: '/pe/scrutins', label: 'Scrutins', match: '/pe/scrutins' },
 		{ href: '/pe/stats', label: 'Statistiques', match: '/pe/stats' },
+		{ href: '/pe/carte', label: 'Carte', match: '/pe/carte' },
 		{ href: '/pe/eurodeputes/compare', label: 'Comparer', match: '/pe/eurodeputes/compare' }
 	];
 </script>

@@ -212,7 +212,7 @@
 | Liste scrutins | `/an/scrutins` | 🔜 | ❌ | PE: données HowTheyVote, Sénat: pas de données |
 | Détail scrutin | `/an/scrutins/[id]` | 🔜 | ❌ | PE: votes disponibles, Sénat: bloqué |
 | Statistiques | `/an/stats` | 🔜 | ❌ | PE: calculable, Sénat: pas de votes |
-| Carte/Hémicycle | `/an/carte` | 🔜 | ❌ | PE: possible, Sénat: pas de positionnement |
+| Carte/Hémicycle | `/an/carte` | ✅ | ❌ | PE: implémenté, Sénat: pas de positionnement |
 | Comparateur élus | `/an/compare` | ✅ | ❌ | PE: déjà fait, Sénat: nécessite votes |
 
 **Légende**: ✅ Fait | 🔜 À faire | ❌ Bloqué (données manquantes)
@@ -225,7 +225,7 @@ Pages implémentées :
 - [x] `/pe/scrutins` - Liste des scrutins PE (données HowTheyVote.eu)
 - [x] `/pe/scrutins/[id]` - Détail scrutin avec votes par eurodéputé
 - [x] `/pe/stats` - Statistiques de vote PE (participation, cohésion groupes)
-- [ ] `/pe/carte` - Visualisation hémicycle européen (optionnel)
+- [x] `/pe/carte` - Visualisation hémicycle européen (spectre gauche-droite)
 
 Données disponibles :
 - ✅ Eurodéputés français (84 actuels, 303 historiques depuis 2004)

@@ -16,6 +16,18 @@ const CACHE_OPTIONS: CacheOptions = { ttlHours: 24 };
 // Current parliamentary term (2024-2029)
 const CURRENT_TERM = 10;
 
+// Historical import starts from term 6 (2004-2009)
+const HISTORICAL_MIN_TERM = 6;
+
+// Term dates for reference
+const TERM_DATES: Record<number, { start: string; end: string | null }> = {
+	6: { start: '2004-07-20', end: '2009-07-13' },
+	7: { start: '2009-07-14', end: '2014-06-30' },
+	8: { start: '2014-07-01', end: '2019-07-01' },
+	9: { start: '2019-07-02', end: '2024-07-15' },
+	10: { start: '2024-07-16', end: null }
+};
+
 interface ParlTrackGroup {
 	role: string;
 	Organization: string;
@@ -281,8 +293,327 @@ function createGroupMandate(mep: ParlTrackMEP): NewMandate | null {
 		quality: currentGroup.role || 'Member',
 		startDate,
 		endDate: null,
-		constituency: constituency?.party || null
+		constituency: constituency?.party?.slice(0, 100) || null
 	};
+}
+
+// ============================================================================
+// HISTORICAL IMPORT FUNCTIONS (since 2004)
+// ============================================================================
+
+/**
+ * Check if MEP has any French mandate since 2004
+ */
+function isFrenchMepHistorical(mep: ParlTrackMEP): boolean {
+	if (!mep.Constituencies) return false;
+
+	return mep.Constituencies.some(c =>
+		c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM
+	);
+}
+
+/**
+ * Get all terms where MEP was French representative
+ */
+function getFrenchTerms(mep: ParlTrackMEP): number[] {
+	if (!mep.Constituencies) return [];
+
+	return [...new Set(
+		mep.Constituencies
+			.filter(c => c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM)
+			.map(c => c.term)
+	)].sort();
+}
+
+/**
+ * Extract all historical groups from MEPs
+ */
+function extractAllGroups(meps: ParlTrackMEP[]): NewOrgan[] {
+	const groupMap = new Map<string, NewOrgan>();
+
+	for (const mep of meps) {
+		if (!mep.Groups) continue;
+
+		// Get terms this MEP was French representative
+		const frenchTerms = getFrenchTerms(mep);
+		if (frenchTerms.length === 0) continue;
+
+		for (const group of mep.Groups) {
+			if (!group || !group.groupid) continue;
+
+			// Parse group dates
+			const groupStart = group.start ? new Date(group.start) : null;
+			const groupEnd = group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
+
+			// Check which terms this group membership covers
+			for (const term of frenchTerms) {
+				const termDates = TERM_DATES[term];
+				if (!termDates) continue;
+
+				const termStart = new Date(termDates.start);
+				const termEnd = termDates.end ? new Date(termDates.end) : new Date();
+
+				// Check if group membership overlaps with term
+				const overlaps = (
+					(!groupStart || groupStart <= termEnd) &&
+					(!groupEnd || groupEnd >= termStart)
+				);
+
+				if (!overlaps) continue;
+
+				// Create unique ID per group per term
+				const id = generateGroupId(`${group.groupid}-${term}`);
+				if (groupMap.has(id)) continue;
+
+				groupMap.set(id, {
+					id,
+					uid: `EUROPARL-${group.groupid}-T${term}`,
+					type: 'GP',
+					name: group.Organization,
+					shortName: group.groupid,
+					legislature: String(term),
+					chamber: 'PE',
+					startDate: termDates.start,
+					endDate: termDates.end,
+					color: null
+				});
+			}
+		}
+	}
+
+	return Array.from(groupMap.values());
+}
+
+/**
+ * Create all historical mandates for a MEP
+ */
+function createAllGroupMandates(mep: ParlTrackMEP): NewMandate[] {
+	const mandatesList: NewMandate[] = [];
+	if (!mep.Groups) return mandatesList;
+
+	const actorId = generateMepId(mep.UserID);
+	const frenchTerms = getFrenchTerms(mep);
+
+	for (const group of mep.Groups) {
+		if (!group || !group.groupid) continue;
+
+		// Parse group dates
+		const groupStart = group.start ? new Date(group.start) : null;
+		const groupEndRaw = group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
+
+		// Check which terms this group membership covers
+		for (const term of frenchTerms) {
+			const termDates = TERM_DATES[term];
+			if (!termDates) continue;
+
+			const termStart = new Date(termDates.start);
+			const termEnd = termDates.end ? new Date(termDates.end) : new Date();
+
+			// Check if group membership overlaps with term
+			const overlaps = (
+				(!groupStart || groupStart <= termEnd) &&
+				(!groupEndRaw || groupEndRaw >= termStart)
+			);
+
+			if (!overlaps) continue;
+
+			// Calculate effective dates within the term
+			const effectiveStart = groupStart && groupStart > termStart ? groupStart : termStart;
+			const effectiveEnd = groupEndRaw && groupEndRaw < termEnd ? groupEndRaw : termEnd;
+
+			const organId = generateGroupId(`${group.groupid}-${term}`);
+
+			// Find constituency for this term
+			const constituency = mep.Constituencies?.find(c =>
+				c && c.country === 'France' && c.term === term
+			);
+
+			// Generate mandate ID (must fit in 50 chars)
+			const startDateStr = effectiveStart.toISOString().split('T')[0];
+			const mandateId = `${actorId}-${organId.slice(0, 15)}-${startDateStr}`.slice(0, 50);
+
+			// Truncate constituency to 100 chars
+			const constituencyValue = constituency?.party?.slice(0, 100) || null;
+
+			mandatesList.push({
+				id: mandateId,
+				actorId,
+				organId,
+				legislature: String(term),
+				type: 'membre',
+				quality: group.role || 'Member',
+				startDate: startDateStr,
+				endDate: term === CURRENT_TERM ? null : effectiveEnd.toISOString().split('T')[0],
+				constituency: constituencyValue
+			});
+		}
+	}
+
+	return mandatesList;
+}
+
+/**
+ * Map a historical MEP to Actor (includes all terms info)
+ */
+function mapHistoricalMepToActor(mep: ParlTrackMEP): NewActor {
+	const id = generateMepId(mep.UserID);
+
+	// Parse birth date
+	let birthDate: string | null = null;
+	if (mep.Birth?.date) {
+		const d = new Date(mep.Birth.date);
+		if (!isNaN(d.getTime())) {
+			birthDate = d.toISOString().split('T')[0];
+		}
+	}
+
+	// Get most recent party
+	const frenchConstituencies = mep.Constituencies?.filter(c => c && c.country === 'France') || [];
+	const mostRecent = frenchConstituencies.sort((a, b) => b.term - a.term)[0];
+
+	return {
+		id,
+		uid: String(mep.UserID),
+		civility: mep.Gender === 'F' ? 'Mme' : mep.Gender === 'M' ? 'M.' : null,
+		firstName: mep.Name.sur || '',
+		lastName: mep.Name.family || '',
+		fullName: mep.Name.full,
+		birthDate,
+		birthPlace: mep.Birth?.place || null,
+		profession: mostRecent?.party || null,
+		photoUrl: mep.Photo || null,
+		chamber: 'PE'
+	};
+}
+
+/**
+ * Import historical French MEPs from ParlTrack (since 2004)
+ */
+export async function importEuroparlHistoricalMeps(config: ETLConfig): Promise<ImportStats> {
+	const stats = createImportStats();
+
+	console.log('[EuroParl Historical] Starting import since 2004 (term 6)...');
+
+	// Download and parse data
+	const allMeps = await downloadMepsDump();
+	console.log(`[EuroParl Historical] Total MEPs in dump: ${allMeps.length}`);
+
+	// Filter French MEPs from any term since 2004
+	const frenchMeps = allMeps.filter(isFrenchMepHistorical);
+	console.log(`[EuroParl Historical] French MEPs since 2004: ${frenchMeps.length}`);
+	stats.total = frenchMeps.length;
+
+	if (frenchMeps.length === 0) {
+		console.log('[EuroParl Historical] No French MEPs found');
+		return stats;
+	}
+
+	// Extract and insert all historical groups
+	const groups = extractAllGroups(frenchMeps);
+	console.log(`[EuroParl Historical] Found ${groups.length} historical EU political groups`);
+
+	if (groups.length > 0) {
+		try {
+			// Clean old PE mandates first (votes must be cleaned separately if needed)
+			await db.delete(mandates).where(like(mandates.organId, 'GPEU-%'));
+			console.log('[EuroParl Historical] Cleaned old PE mandates');
+
+			// Upsert groups (don't delete to preserve vote foreign keys)
+			for (let i = 0; i < groups.length; i += config.batchSize) {
+				const batch = groups.slice(i, i + config.batchSize);
+				await db
+					.insert(organs)
+					.values(batch)
+					.onConflictDoUpdate({
+						target: organs.id,
+						set: {
+							name: sql`excluded.name`,
+							shortName: sql`excluded.short_name`,
+							legislature: sql`excluded.legislature`,
+							startDate: sql`excluded.start_date`,
+							endDate: sql`excluded.end_date`,
+							updatedAt: sql`now()`
+						}
+					});
+			}
+			console.log(`[EuroParl Historical] Upserted ${groups.length} groups`);
+		} catch (error) {
+			console.error('[EuroParl Historical] Error inserting groups:', error);
+		}
+	}
+
+	// Insert MEPs
+	const actorsList = frenchMeps.map(mapHistoricalMepToActor);
+	const batchSize = config.batchSize;
+
+	for (let i = 0; i < actorsList.length; i += batchSize) {
+		const batch = actorsList.slice(i, i + batchSize);
+
+		try {
+			await db
+				.insert(actors)
+				.values(batch)
+				.onConflictDoUpdate({
+					target: actors.id,
+					set: {
+						firstName: sql`excluded.first_name`,
+						lastName: sql`excluded.last_name`,
+						fullName: sql`excluded.full_name`,
+						civility: sql`excluded.civility`,
+						birthDate: sql`excluded.birth_date`,
+						birthPlace: sql`excluded.birth_place`,
+						profession: sql`excluded.profession`,
+						photoUrl: sql`excluded.photo_url`,
+						updatedAt: sql`now()`
+					}
+				});
+
+			stats.inserted += batch.length;
+		} catch (error) {
+			console.error(`[EuroParl Historical] Error inserting batch:`, error);
+			stats.errors += batch.length;
+		}
+
+		if ((i + batchSize) % 100 === 0 || i + batchSize >= actorsList.length) {
+			logProgress(stats, 'EuroParl Historical');
+		}
+	}
+
+	// Create all historical mandates
+	const mandatesList: NewMandate[] = [];
+	for (const mep of frenchMeps) {
+		mandatesList.push(...createAllGroupMandates(mep));
+	}
+
+	console.log(`[EuroParl Historical] Creating ${mandatesList.length} mandates...`);
+
+	for (let i = 0; i < mandatesList.length; i += batchSize) {
+		const batch = mandatesList.slice(i, i + batchSize);
+
+		try {
+			await db
+				.insert(mandates)
+				.values(batch)
+				.onConflictDoUpdate({
+					target: mandates.id,
+					set: {
+						quality: sql`excluded.quality`,
+						constituency: sql`excluded.constituency`,
+						startDate: sql`excluded.start_date`,
+						endDate: sql`excluded.end_date`,
+						updatedAt: sql`now()`
+					}
+				});
+		} catch (error) {
+			console.error(`[EuroParl Historical] Error inserting mandates:`, error);
+		}
+	}
+
+	console.log(
+		`[EuroParl Historical] Import complete: ${stats.inserted} MEPs, ${mandatesList.length} mandates, ${stats.errors} errors`
+	);
+
+	return stats;
 }
 
 /**

@@ -150,7 +150,7 @@
 - [x] ETL couleurs groupes PE depuis results.elections.europa.eu
 - [x] ETL couleurs groupes Sénat depuis senat.fr
 - [x] ETL votes en session plénière (via HowTheyVote.eu API)
-- [ ] Historique des mandats européens (depuis 2004)
+- [x] Historique des mandats européens (depuis 2004) - 303 MEPs, 554 mandats, termes 6-10
 
 ### 7.2 Interface eurodéputés
 - [x] Page `/eurodeputes` - Liste des eurodéputés français avec filtres (84 MEPs, infinite scroll)

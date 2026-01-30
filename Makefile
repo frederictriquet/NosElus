@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-europarl-meps etl-europarl-votes etl-external-colors etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-external-colors etl-nosdeputes etl-colors \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -121,6 +121,10 @@ etl-senat-senators: ## Import des sénateurs (API Sénat)
 etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
 	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
 	npm run etl:europarl-meps
+
+etl-europarl-historical: ## Import historique des eurodéputés (depuis 2004)
+	@echo "$(CYAN)Import historique des eurodéputés français (2004-présent)...$(RESET)"
+	npm run etl:europarl-historical
 
 etl-europarl-votes: ## Import des votes PE (HowTheyVote.eu)
 	@echo "$(CYAN)Import des votes du Parlement Européen...$(RESET)"

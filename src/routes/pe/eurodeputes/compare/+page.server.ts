@@ -1,23 +1,57 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, mandates, organs } from '$lib/server/db';
 import { eq, and, count, sql, inArray, like, type SQL } from 'drizzle-orm';
+import { getTermDates } from '$lib/server/periods/pe-terms';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
 	const mep1Id = url.searchParams.get('m1');
 	const mep2Id = url.searchParams.get('m2');
+	const terme = locals.periods.pe;
 
-	// Get all French MEPs for selection
-	const allMeps = await db
-		.select({ id: actors.id, name: actors.fullName })
-		.from(actors)
-		.where(eq(actors.chamber, 'PE'))
-		.orderBy(actors.lastName);
+	// Get term dates if specified
+	const termDates = terme && terme !== 'all' ? await getTermDates(terme) : null;
+
+	// Get French MEPs for selection, filtered by term if specified
+	let allMeps;
+	if (termDates && terme && terme !== 'all') {
+		const { start, end } = termDates;
+		// Get MEPs who had an active mandate during this term
+		const activeMandates = await db
+			.selectDistinct({ actorId: mandates.actorId })
+			.from(mandates)
+			.innerJoin(actors, eq(mandates.actorId, actors.id))
+			.where(
+				and(
+					eq(actors.chamber, 'PE'),
+					like(mandates.organId, 'GPEU-%'),
+					eq(mandates.legislature, terme),
+					end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`,
+					sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
+				)
+			);
+		const mepIds = activeMandates.map((m) => m.actorId);
+
+		allMeps = mepIds.length > 0
+			? await db
+				.select({ id: actors.id, name: actors.fullName })
+				.from(actors)
+				.where(and(eq(actors.chamber, 'PE'), inArray(actors.id, mepIds)))
+				.orderBy(actors.lastName)
+			: [];
+	} else {
+		allMeps = await db
+			.select({ id: actors.id, name: actors.fullName })
+			.from(actors)
+			.where(eq(actors.chamber, 'PE'))
+			.orderBy(actors.lastName);
+	}
 
 	// If no MEPs selected, return early
 	if (!mep1Id || !mep2Id) {
 		return {
 			meps: allMeps,
-			comparison: null
+			comparison: null,
+			filters: { terme }
 		};
 	}
 
@@ -39,11 +73,16 @@ export const load: PageServerLoad = async ({ url }) => {
 			return null;
 		}
 
-		// Get PE scrutins only
-		const peScrutins = await db
-			.select({ id: scrutins.id })
-			.from(scrutins)
-			.where(like(scrutins.legislature, 'PE-%'));
+		// Get PE scrutins, filtered by term if specified
+		const peScrutins = terme && terme !== 'all'
+			? await db
+				.select({ id: scrutins.id })
+				.from(scrutins)
+				.where(eq(scrutins.legislature, `PE-${terme}`))
+			: await db
+				.select({ id: scrutins.id })
+				.from(scrutins)
+				.where(like(scrutins.legislature, 'PE-%'));
 
 		const peScrutinIds = peScrutins.map((s) => s.id);
 
@@ -211,6 +250,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	return {
 		meps: allMeps,
-		comparison: loadComparison()
+		comparison: loadComparison(),
+		filters: { terme }
 	};
 };

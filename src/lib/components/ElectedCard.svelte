@@ -50,20 +50,32 @@
 	};
 	const href = hrefProp || `${typeRoutes[type]}/${id}`;
 	const placeholder = '/placeholder.svg';
-	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 
-	// Handle image load errors by falling back to placeholder
-	function handleImageError(event: Event) {
-		const img = event.target as HTMLImageElement;
-		if (img.src !== placeholder) {
-			img.src = placeholder;
+	// État pour la photo chargée - commence toujours par le placeholder
+	let loadedSrc = $state(placeholder);
+
+	// Charger la vraie photo en arrière-plan
+	$effect(() => {
+		const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
+		if (!proxiedPhoto) {
+			loadedSrc = placeholder;
+			return;
 		}
-	}
+
+		const img = new Image();
+		img.onload = () => {
+			loadedSrc = proxiedPhoto;
+		};
+		img.onerror = () => {
+			loadedSrc = placeholder;
+		};
+		img.src = proxiedPhoto;
+	});
 </script>
 
 {#if variant === 'thumbnail'}
 	<a {href} class="elected-thumbnail" style={group?.color ? `border-color: ${group.color}` : ''} title="{name}{group?.shortName ? ` (${group.shortName})` : ''}">
-		<img src={proxiedPhoto || placeholder} alt={name} width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<img src={loadedSrc} alt={name} width="32" height="32" loading="lazy" decoding="async" />
 	</a>
 {:else if variant === 'inline'}
 	<a {href} class="elected-inline">
@@ -73,7 +85,7 @@
 		{#if group?.color}
 			<span class="group-dot" style="background: {group.color}"></span>
 		{/if}
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
 			<span class="elected-group-tag group-name-hover">
@@ -92,7 +104,7 @@
 		{#if group?.color}
 			<span class="group-dot" style="background: {group.color}"></span>
 		{/if}
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
 			{#if group?.shortName}
@@ -107,7 +119,7 @@
 	</a>
 {:else}
 	<a {href} class="elected-card">
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" onerror={handleImageError} />
+		<img src={loadedSrc} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" />
 		<div class="elected-info">
 			<div class="elected-name">{name}</div>
 			{#if group}

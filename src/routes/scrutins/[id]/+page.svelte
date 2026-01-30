@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 
 	let { data } = $props();
@@ -52,43 +53,43 @@
 	</div>
 </div>
 
-{#if data.totalVotes > 0}
-	<div class="card">
-		<h2>Détail des votes ({data.totalVotes} votes enregistrés)</h2>
+<AsyncCard title="Détail des votes" promise={data.voteDetails} minHeight="300px">
+	{#snippet children(voteDetails)}
+		{#if voteDetails.totalVotes > 0}
+			<p style="color: var(--color-text-muted); margin-bottom: 1rem;">{voteDetails.totalVotes} votes enregistrés</p>
 
-		<div class="tabs">
-			<button class="tab" class:active={activeTab === 'pour'} onclick={() => activeTab = 'pour'}>
-				Pour ({data.votesByPosition.pour.length})
-			</button>
-			<button class="tab" class:active={activeTab === 'contre'} onclick={() => activeTab = 'contre'}>
-				Contre ({data.votesByPosition.contre.length})
-			</button>
-			<button class="tab" class:active={activeTab === 'abstention'} onclick={() => activeTab = 'abstention'}>
-				Abstention ({data.votesByPosition.abstention.length})
-			</button>
-		</div>
+			<div class="tabs">
+				<button class="tab" class:active={activeTab === 'pour'} onclick={() => activeTab = 'pour'}>
+					Pour ({voteDetails.votesByPosition.pour.length})
+				</button>
+				<button class="tab" class:active={activeTab === 'contre'} onclick={() => activeTab = 'contre'}>
+					Contre ({voteDetails.votesByPosition.contre.length})
+				</button>
+				<button class="tab" class:active={activeTab === 'abstention'} onclick={() => activeTab = 'abstention'}>
+					Abstention ({voteDetails.votesByPosition.abstention.length})
+				</button>
+			</div>
 
-		<div class="voters-grid">
-			{#each data.votesByPosition[activeTab] as vote}
-				<ElectedCard
-					id={vote.actorId}
-					name={vote.actorName}
-					photoUrl={vote.actorPhoto}
-					variant="compact"
-					group={vote.groupId ? { id: vote.groupId, shortName: vote.groupShortName, color: vote.groupColor } : null}
-				/>
-			{/each}
-		</div>
+			<div class="voters-grid">
+				{#each voteDetails.votesByPosition[activeTab] as vote}
+					<ElectedCard
+						id={vote.actorId}
+						name={vote.actorName}
+						photoUrl={vote.actorPhoto}
+						variant="compact"
+						group={vote.groupId ? { id: vote.groupId, shortName: vote.groupShortName, color: vote.groupColor } : null}
+					/>
+				{/each}
+			</div>
 
-		{#if data.votesByPosition[activeTab].length === 0}
-			<p class="empty-state">Aucun vote dans cette catégorie</p>
+			{#if voteDetails.votesByPosition[activeTab].length === 0}
+				<p class="empty-state">Aucun vote dans cette catégorie</p>
+			{/if}
+		{:else}
+			<p class="empty-state">Les votes individuels ne sont pas encore disponibles pour ce scrutin</p>
 		{/if}
-	</div>
-{:else}
-	<div class="card">
-		<p class="empty-state">Les votes individuels ne sont pas encore disponibles pour ce scrutin</p>
-	</div>
-{/if}
+	{/snippet}
+</AsyncCard>
 
 <style>
 	h2 {

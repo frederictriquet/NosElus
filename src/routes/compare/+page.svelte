@@ -70,106 +70,145 @@
 </div>
 
 {#if data.comparison}
-	<div class="metrics-row">
-		<div class="agreement-card">
-			<div class="agreement-value" class:high={data.comparison.agreementRate >= 70} class:medium={data.comparison.agreementRate >= 40 && data.comparison.agreementRate < 70} class:low={data.comparison.agreementRate < 40}>
-				{data.comparison.agreementRate.toFixed(1)}%
+	{#await data.comparison}
+		<div class="loading-state">
+			<div class="metrics-row">
+				<div class="agreement-card loading">
+					<div class="skeleton-value"></div>
+					<div class="skeleton-label"></div>
+				</div>
+				<div class="agreement-card loading">
+					<div class="skeleton-value"></div>
+					<div class="skeleton-label"></div>
+				</div>
 			</div>
-			<div class="agreement-label">de votes identiques</div>
-			<div class="agreement-detail">
-				sur {data.comparison.commonVotes} votes en commun
-			</div>
-		</div>
-		<div class="agreement-card distance-card">
-			<div class="distance-value" class:close={data.comparison.politicalDistance < 20} class:moderate={data.comparison.politicalDistance >= 20 && data.comparison.politicalDistance < 50} class:far={data.comparison.politicalDistance >= 50}>
-				{data.comparison.politicalDistance.toFixed(1)}
-			</div>
-			<div class="agreement-label">distance politique</div>
-			<div class="agreement-detail">
-				{#if data.comparison.politicalDistance < 20}
-					Très proches
-				{:else if data.comparison.politicalDistance < 35}
-					Proches
-				{:else if data.comparison.politicalDistance < 50}
-					Modérément éloignés
-				{:else if data.comparison.politicalDistance < 70}
-					Éloignés
-				{:else}
-					Très éloignés
-				{/if}
-			</div>
-		</div>
-	</div>
-
-	<div class="comparison-grid">
-		<div class="comparison-deputy">
-			<ElectedCard
-				id={data.comparison.deputy1.id}
-				name={data.comparison.deputy1.fullName}
-				photoUrl={data.comparison.deputy1.photoUrl}
-				group={data.comparison.deputy1.group}
-				subtitle="{data.comparison.deputy1.voteCount} votes"
-			>
-				{#snippet children()}
-					<div class="comparison-dist">
-						<div class="dist-item pour">{getPercent(data.comparison.deputy1.distribution.pour, data.comparison.deputy1.distribution)}% pour</div>
-						<div class="dist-item contre">{getPercent(data.comparison.deputy1.distribution.contre, data.comparison.deputy1.distribution)}% contre</div>
-						<div class="dist-item abstention">{getPercent(data.comparison.deputy1.distribution.abstention, data.comparison.deputy1.distribution)}% abs.</div>
+			<div class="comparison-grid" style="margin-top: 2rem;">
+				<div class="skeleton-card"></div>
+				<div class="comparison-stats">
+					<div class="stat-row">
+						<div class="skeleton-label"></div>
+						<div class="skeleton-value-small"></div>
 					</div>
-				{/snippet}
-			</ElectedCard>
-		</div>
-
-		<div class="comparison-stats">
-			<div class="stat-row">
-				<span class="stat-label">Votes identiques</span>
-				<span class="stat-value success">{data.comparison.sameVotes}</span>
-			</div>
-			<div class="stat-row">
-				<span class="stat-label">Votes différents</span>
-				<span class="stat-value danger">{data.comparison.differentVotes}</span>
-			</div>
-		</div>
-
-		<div class="comparison-deputy">
-			<ElectedCard
-				id={data.comparison.deputy2.id}
-				name={data.comparison.deputy2.fullName}
-				photoUrl={data.comparison.deputy2.photoUrl}
-				group={data.comparison.deputy2.group}
-				subtitle="{data.comparison.deputy2.voteCount} votes"
-			>
-				{#snippet children()}
-					<div class="comparison-dist">
-						<div class="dist-item pour">{getPercent(data.comparison.deputy2.distribution.pour, data.comparison.deputy2.distribution)}% pour</div>
-						<div class="dist-item contre">{getPercent(data.comparison.deputy2.distribution.contre, data.comparison.deputy2.distribution)}% contre</div>
-						<div class="dist-item abstention">{getPercent(data.comparison.deputy2.distribution.abstention, data.comparison.deputy2.distribution)}% abs.</div>
+					<div class="stat-row">
+						<div class="skeleton-label"></div>
+						<div class="skeleton-value-small"></div>
 					</div>
-				{/snippet}
-			</ElectedCard>
-		</div>
-	</div>
-
-	{#if data.comparison.disagreements.length > 0}
-		<section class="card" style="margin-top: 2rem;">
-			<h2>Votes divergents récents</h2>
-			<div class="disagreements-list">
-				{#each data.comparison.disagreements as d}
-					<a href="/scrutins/{d.scrutinId}" class="disagreement-item">
-						<div class="disagreement-votes">
-							<span class="vote-badge {getPositionClass(d.position1)}">{d.position1}</span>
-							<span class="vote-separator">≠</span>
-							<span class="vote-badge {getPositionClass(d.position2)}">{d.position2}</span>
-						</div>
-						<div class="disagreement-info">
-							<div class="disagreement-title">{d.scrutinTitle?.slice(0, 100)}{(d.scrutinTitle?.length || 0) > 100 ? '...' : ''}</div>
-							<div class="disagreement-date">{new Date(d.scrutinDate).toLocaleDateString('fr-FR')}</div>
-						</div>
-					</a>
-				{/each}
+				</div>
+				<div class="skeleton-card"></div>
 			</div>
-		</section>
-	{/if}
+		</div>
+	{:then comparison}
+		{#if comparison}
+			<div class="metrics-row">
+				<div class="agreement-card">
+					<div class="agreement-value" class:high={comparison.agreementRate >= 70} class:medium={comparison.agreementRate >= 40 && comparison.agreementRate < 70} class:low={comparison.agreementRate < 40}>
+						{comparison.agreementRate.toFixed(1)}%
+					</div>
+					<div class="agreement-label">de votes identiques</div>
+					<div class="agreement-detail">
+						sur {comparison.commonVotes} votes en commun
+					</div>
+				</div>
+				<div class="agreement-card distance-card">
+					<div class="distance-value" class:close={comparison.politicalDistance < 20} class:moderate={comparison.politicalDistance >= 20 && comparison.politicalDistance < 50} class:far={comparison.politicalDistance >= 50}>
+						{comparison.politicalDistance.toFixed(1)}
+					</div>
+					<div class="agreement-label">distance politique</div>
+					<div class="agreement-detail">
+						{#if comparison.politicalDistance < 20}
+							Très proches
+						{:else if comparison.politicalDistance < 35}
+							Proches
+						{:else if comparison.politicalDistance < 50}
+							Modérément éloignés
+						{:else if comparison.politicalDistance < 70}
+							Éloignés
+						{:else}
+							Très éloignés
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			<div class="comparison-grid">
+				<div class="comparison-deputy">
+					<ElectedCard
+						id={comparison.deputy1.id}
+						name={comparison.deputy1.fullName}
+						photoUrl={comparison.deputy1.photoUrl}
+						group={comparison.deputy1.group}
+						subtitle="{comparison.deputy1.voteCount} votes"
+					>
+						{#snippet children()}
+							<div class="comparison-dist">
+								<div class="dist-item pour">{getPercent(comparison.deputy1.distribution.pour, comparison.deputy1.distribution)}% pour</div>
+								<div class="dist-item contre">{getPercent(comparison.deputy1.distribution.contre, comparison.deputy1.distribution)}% contre</div>
+								<div class="dist-item abstention">{getPercent(comparison.deputy1.distribution.abstention, comparison.deputy1.distribution)}% abs.</div>
+							</div>
+						{/snippet}
+					</ElectedCard>
+				</div>
+
+				<div class="comparison-stats">
+					<div class="stat-row">
+						<span class="stat-label">Votes identiques</span>
+						<span class="stat-value success">{comparison.sameVotes}</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Votes différents</span>
+						<span class="stat-value danger">{comparison.differentVotes}</span>
+					</div>
+				</div>
+
+				<div class="comparison-deputy">
+					<ElectedCard
+						id={comparison.deputy2.id}
+						name={comparison.deputy2.fullName}
+						photoUrl={comparison.deputy2.photoUrl}
+						group={comparison.deputy2.group}
+						subtitle="{comparison.deputy2.voteCount} votes"
+					>
+						{#snippet children()}
+							<div class="comparison-dist">
+								<div class="dist-item pour">{getPercent(comparison.deputy2.distribution.pour, comparison.deputy2.distribution)}% pour</div>
+								<div class="dist-item contre">{getPercent(comparison.deputy2.distribution.contre, comparison.deputy2.distribution)}% contre</div>
+								<div class="dist-item abstention">{getPercent(comparison.deputy2.distribution.abstention, comparison.deputy2.distribution)}% abs.</div>
+							</div>
+						{/snippet}
+					</ElectedCard>
+				</div>
+			</div>
+
+			{#if comparison.disagreements.length > 0}
+				<section class="card" style="margin-top: 2rem;">
+					<h2>Votes divergents récents</h2>
+					<div class="disagreements-list">
+						{#each comparison.disagreements as d}
+							<a href="/scrutins/{d.scrutinId}" class="disagreement-item">
+								<div class="disagreement-votes">
+									<span class="vote-badge {getPositionClass(d.position1)}">{d.position1}</span>
+									<span class="vote-separator">≠</span>
+									<span class="vote-badge {getPositionClass(d.position2)}">{d.position2}</span>
+								</div>
+								<div class="disagreement-info">
+									<div class="disagreement-title">{d.scrutinTitle?.slice(0, 100)}{(d.scrutinTitle?.length || 0) > 100 ? '...' : ''}</div>
+									<div class="disagreement-date">{new Date(d.scrutinDate).toLocaleDateString('fr-FR')}</div>
+								</div>
+							</a>
+						{/each}
+					</div>
+				</section>
+			{/if}
+		{:else}
+			<div class="empty-state error">
+				<p>Député non trouvé</p>
+			</div>
+		{/if}
+	{:catch}
+		<div class="empty-state error">
+			<p>Erreur lors du chargement de la comparaison</p>
+		</div>
+	{/await}
 {:else if !deputy1 || !deputy2}
 	<div class="empty-state">
 		<p>Sélectionnez deux députés pour les comparer</p>
@@ -181,6 +220,63 @@
 		font-size: 1.25rem;
 		font-weight: 600;
 		margin-bottom: 1rem;
+	}
+
+	/* Skeleton loading */
+	.agreement-card.loading {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.skeleton-value {
+		width: 120px;
+		height: 48px;
+		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius);
+	}
+
+	.skeleton-value-small {
+		width: 60px;
+		height: 32px;
+		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius);
+	}
+
+	.skeleton-label {
+		width: 100px;
+		height: 20px;
+		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius);
+	}
+
+	.skeleton-card {
+		width: 100%;
+		height: 200px;
+		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: var(--radius-lg);
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	.empty-state.error {
+		color: var(--color-danger);
 	}
 
 	.compare-selectors {

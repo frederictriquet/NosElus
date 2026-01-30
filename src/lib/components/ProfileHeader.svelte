@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { getProxiedPhotoUrl } from '$lib/utils/photo';
 
 	interface Props {
 		name: string;
@@ -46,18 +47,31 @@
 	}: Props = $props();
 
 	const placeholder = '/placeholder.png';
+	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 	const typeLabels = {
 		depute: 'Député',
 		senateur: 'Sénateur',
 		eurodepute: 'Eurodéputé'
 	};
+
+	// Handle image load errors by falling back to placeholder
+	function handleImageError(event: Event) {
+		const img = event.target as HTMLImageElement;
+		if (img.src !== placeholder) {
+			img.src = placeholder;
+		}
+	}
 </script>
 
 <div class="profile-header">
 	<img
-		src={photoUrl || placeholder}
+		src={proxiedPhoto || placeholder}
 		alt={name}
 		class="profile-photo"
+		width="120"
+		height="120"
+		decoding="async"
+		onerror={handleImageError}
 	/>
 	<div class="profile-info">
 		<h1>{civility ? `${civility} ` : ''}{name}</h1>

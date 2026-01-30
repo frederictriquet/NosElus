@@ -6,8 +6,10 @@
 		id: string;
 		name: string;
 		photoUrl?: string | null;
-		/** Type d'élu pour construire le lien */
-		type?: 'depute' | 'senateur';
+		/** Type d'élu pour construire le lien (ignoré si href est fourni) */
+		type?: 'depute' | 'senateur' | 'eurodepute';
+		/** Lien personnalisé (prioritaire sur type) */
+		href?: string;
 		/** Variante d'affichage */
 		variant?: 'full' | 'compact' | 'thumbnail' | 'inline';
 		/** Groupe politique */
@@ -32,6 +34,7 @@
 		name,
 		photoUrl = null,
 		type = 'depute',
+		href: hrefProp,
 		variant = 'full',
 		group = null,
 		subtitle = '',
@@ -40,7 +43,12 @@
 		stat
 	}: Props = $props();
 
-	const href = type === 'depute' ? `/deputes/${id}` : `/senateurs/${id}`;
+	const typeRoutes = {
+		depute: 'deputes',
+		senateur: 'senateurs',
+		eurodepute: 'eurodeputes'
+	};
+	const href = hrefProp || `/${typeRoutes[type]}/${id}`;
 	const placeholder = '/placeholder.svg';
 	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 

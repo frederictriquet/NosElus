@@ -14,6 +14,39 @@
 	<p class="page-subtitle">Analyse de l'activité parlementaire</p>
 </div>
 
+{#await data.chamberStats}
+	<div class="chamber-grid">
+		{#each Array(3) as _}
+			<div class="chamber-card loading">
+				<div class="skeleton-value"></div>
+				<div class="skeleton-label"></div>
+			</div>
+		{/each}
+	</div>
+{:then chamberStats}
+	<div class="chamber-grid">
+		{#each chamberStats as chamber}
+			<a href={chamber.id === 'AN' ? '/deputes' : chamber.id === 'SENAT' ? '/senateurs' : '/eurodeputes'} class="chamber-card">
+				<div class="chamber-label">{chamber.label}</div>
+				<div class="chamber-stats">
+					<div class="chamber-stat">
+						<span class="chamber-value">{chamber.actors.toLocaleString('fr-FR')}</span>
+						<span class="chamber-name">élus</span>
+					</div>
+					<div class="chamber-stat">
+						<span class="chamber-value">{chamber.scrutins.toLocaleString('fr-FR')}</span>
+						<span class="chamber-name">scrutins</span>
+					</div>
+					<div class="chamber-stat">
+						<span class="chamber-value">{chamber.votes.toLocaleString('fr-FR')}</span>
+						<span class="chamber-name">votes</span>
+					</div>
+				</div>
+			</a>
+		{/each}
+	</div>
+{/await}
+
 {#await data.totals}
 	<div class="stats-grid">
 		{#each Array(4) as _}
@@ -28,7 +61,7 @@
 		<div class="stats-grid">
 			<div class="stat-card">
 				<div class="stat-value">{totals.actors}</div>
-				<div class="stat-label">Députés</div>
+				<div class="stat-label">Élus (filtrés)</div>
 			</div>
 			<div class="stat-card">
 				<div class="stat-value">{totals.scrutins.toLocaleString('fr-FR')}</div>
@@ -745,5 +778,70 @@
 		bottom: -1.25rem;
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
+	}
+
+	/* Chamber comparison cards */
+	.chamber-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.chamber-card {
+		background: var(--color-surface);
+		border-radius: var(--radius-lg);
+		padding: 1.25rem;
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow 0.2s, transform 0.2s;
+		border: 1px solid var(--color-border);
+	}
+
+	.chamber-card:hover {
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+		text-decoration: none;
+	}
+
+	.chamber-card.loading {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.chamber-label {
+		font-weight: 600;
+		font-size: 1rem;
+		margin-bottom: 0.75rem;
+		color: var(--color-text);
+	}
+
+	.chamber-stats {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.chamber-stat {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.chamber-value {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--color-primary);
+	}
+
+	.chamber-name {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	@media (max-width: 768px) {
+		.chamber-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

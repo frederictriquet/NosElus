@@ -149,19 +149,19 @@
 - [x] ETL Parlement européen - Groupes politiques européens (9 groupes avec couleurs officielles)
 - [x] ETL couleurs groupes PE depuis results.elections.europa.eu
 - [x] ETL couleurs groupes Sénat depuis senat.fr
-- [ ] ETL votes en session plénière (via HowTheyVote.eu ou VoteWatch.eu)
+- [x] ETL votes en session plénière (via HowTheyVote.eu API)
 - [ ] Historique des mandats européens (depuis 2004)
 
 ### 7.2 Interface eurodéputés
-- [ ] Page `/eurodeputes` - Liste des eurodéputés français avec filtres
-- [ ] Fiche détaillée eurodéputé (profil + votes européens)
-- [ ] Statistiques de vote au Parlement européen
-- [ ] Comparaison entre eurodéputés
+- [x] Page `/eurodeputes` - Liste des eurodéputés français avec filtres (84 MEPs, infinite scroll)
+- [x] Fiche détaillée eurodéputé (profil + groupe + mandats)
+- [x] Statistiques de vote au Parlement européen (via ETL HowTheyVote.eu)
+- [x] Comparaison entre eurodéputés (`/eurodeputes/compare`)
 
 ### 7.3 Intégration multi-chambres
-- [ ] Navigation unifiée AN / Sénat / PE
-- [ ] Recherche globale tous élus français
-- [ ] Statistiques comparées entre chambres
+- [x] Navigation unifiée AN / Sénat / PE (liens dans header)
+- [x] Recherche globale tous élus français (`/recherche`)
+- [x] Statistiques comparées entre chambres (page `/stats`)
 
 ---
 
@@ -174,7 +174,7 @@
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
 | ParlTrack | JSON dump | ✅ Fait | [parltrack.org](https://parltrack.org/dumps/) |
 | EU Election Results | HTML/CSS | ✅ Fait | [results.elections.europa.eu](https://results.elections.europa.eu) |
-| HowTheyVote.eu | API JSON | Planifié | [howtheyvote.eu](https://howtheyvote.eu) |
+| HowTheyVote.eu | API JSON | ✅ Fait | [howtheyvote.eu](https://howtheyvote.eu) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 
 ---

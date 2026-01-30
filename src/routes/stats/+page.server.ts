@@ -523,10 +523,86 @@ export const load: PageServerLoad = async ({ url }) => {
 				.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
 
+	// Chamber comparison stats (multi-chamber integration)
+	const loadChamberStats = async () => {
+		const [chamberActors, chamberVotes, chamberScrutins] = await Promise.all([
+			// Count actors by chamber
+			db
+				.select({
+					chamber: actors.chamber,
+					count: count()
+				})
+				.from(actors)
+				.groupBy(actors.chamber),
+
+			// Count votes by chamber (via scrutins)
+			db
+				.select({
+					legislature: scrutins.legislature,
+					count: count()
+				})
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.groupBy(scrutins.legislature),
+
+			// Count scrutins by legislature type
+			db
+				.select({
+					legislature: scrutins.legislature,
+					count: count()
+				})
+				.from(scrutins)
+				.groupBy(scrutins.legislature)
+		]);
+
+		// Aggregate by chamber
+		const chambers: Record<
+			string,
+			{ actors: number; votes: number; scrutins: number; label: string }
+		> = {
+			AN: { actors: 0, votes: 0, scrutins: 0, label: 'Assemblée nationale' },
+			SENAT: { actors: 0, votes: 0, scrutins: 0, label: 'Sénat' },
+			PE: { actors: 0, votes: 0, scrutins: 0, label: 'Parlement européen' }
+		};
+
+		// Actors
+		for (const row of chamberActors) {
+			if (row.chamber && chambers[row.chamber]) {
+				chambers[row.chamber].actors = row.count;
+			}
+		}
+
+		// Votes and scrutins - map legislature to chamber
+		for (const row of chamberVotes) {
+			if (!row.legislature) continue;
+			if (row.legislature.startsWith('PE-')) {
+				chambers.PE.votes += row.count;
+			} else if (/^\d+$/.test(row.legislature)) {
+				chambers.AN.votes += row.count;
+			}
+			// SENAT: when we have senate scrutins
+		}
+
+		for (const row of chamberScrutins) {
+			if (!row.legislature) continue;
+			if (row.legislature.startsWith('PE-')) {
+				chambers.PE.scrutins += row.count;
+			} else if (/^\d+$/.test(row.legislature)) {
+				chambers.AN.scrutins += row.count;
+			}
+		}
+
+		return Object.entries(chambers).map(([key, data]) => ({
+			id: key,
+			...data
+		}));
+	};
+
 	// Return sync data immediately, async data as promises (streamed)
 	return {
 		filters,
 		// These are streamed - page renders immediately with loading states
+		chamberStats: loadChamberStats(),
 		totals: loadTotals(),
 		distribution: loadDistribution(),
 		scrutinResults: loadScrutinResults(),

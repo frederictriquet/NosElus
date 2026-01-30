@@ -47,11 +47,13 @@
 			<a href={navLink('/')} class:active={$page.url.pathname === '/'}>Accueil</a>
 			<a href={navLink('/deputes')} class:active={$page.url.pathname.startsWith('/deputes')}>Députés</a>
 			<a href={navLink('/senateurs')} class:active={$page.url.pathname.startsWith('/senateurs')}>Sénateurs</a>
+			<a href="/eurodeputes" class:active={$page.url.pathname.startsWith('/eurodeputes')}>Eurodéputés</a>
 			<a href={navLink('/scrutins')} class:active={$page.url.pathname.startsWith('/scrutins')}>Scrutins</a>
 			<a href={navLink('/groupes')} class:active={$page.url.pathname.startsWith('/groupes')}>Groupes</a>
 			<a href={navLink('/stats')} class:active={$page.url.pathname.startsWith('/stats')}>Stats</a>
 			<a href={navLink('/carte')} class:active={$page.url.pathname.startsWith('/carte')}>Carte</a>
 			<a href={navLink('/compare')} class:active={$page.url.pathname.startsWith('/compare')}>Comparer</a>
+			<a href="/recherche" class:active={$page.url.pathname.startsWith('/recherche')}>Recherche</a>
 		</nav>
 		<LegislatureSelector legislatures={data.legislatures} />
 	</div>

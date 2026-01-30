@@ -1,7 +1,13 @@
 /**
  * Gestion des renouvellements du Sénat
  * Le Sénat se renouvelle par moitié tous les 3 ans (séries 1 et 2)
+ *
+ * Les renouvellements sont extraits dynamiquement depuis les mandats des sénateurs
+ * pour éviter tout hardcoding et permettre l'ajout automatique de nouveaux renouvellements.
  */
+
+import { db, mandates, actors } from '$lib/server/db';
+import { sql, eq, and, desc } from 'drizzle-orm';
 
 export interface Renouvellement {
 	value: string;
@@ -10,56 +16,79 @@ export interface Renouvellement {
 	endDate: string | null;
 }
 
-// Années de renouvellement avec leurs périodes
-// Les sénateurs sont élus pour 6 ans
-const RENOUVELLEMENTS: Array<{ year: number; start: string; end: string | null }> = [
-	{ year: 2023, start: '2023-10-01', end: null },
-	{ year: 2020, start: '2020-09-27', end: '2026-09-30' },
-	{ year: 2017, start: '2017-09-24', end: '2023-09-30' },
-	{ year: 2014, start: '2014-09-28', end: '2020-09-26' },
-	{ year: 2011, start: '2011-09-25', end: '2017-09-23' }
-];
+// Cache pour éviter de requêter la DB à chaque requête
+let cachedRenouvellements: Renouvellement[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 heure
 
 /**
- * Récupère les renouvellements disponibles
+ * Récupère les renouvellements disponibles depuis la base de données
+ * Les renouvellements sont détectés en analysant les années de début des mandats de sénateur
  */
-export function getRenouvellements(): Renouvellement[] {
-	return RENOUVELLEMENTS.map(({ year, start, end }) => {
-		const isCurrent = end === null;
+export async function getRenouvellements(): Promise<Renouvellement[]> {
+	if (cachedRenouvellements && Date.now() - cacheTimestamp < CACHE_DURATION) {
+		return cachedRenouvellements;
+	}
+
+	// Extraire les années de début des mandats de sénateur
+	// Regrouper par année pour identifier les renouvellements
+	const result = await db
+		.select({
+			year: sql<number>`EXTRACT(YEAR FROM ${mandates.startDate})::int`,
+			minDate: sql<string>`MIN(${mandates.startDate})`,
+			maxEndDate: sql<string>`MAX(${mandates.endDate})`
+		})
+		.from(mandates)
+		.innerJoin(actors, eq(mandates.actorId, actors.id))
+		.where(and(eq(actors.chamber, 'SENAT'), eq(mandates.type, 'senateur')))
+		.groupBy(sql`EXTRACT(YEAR FROM ${mandates.startDate})`)
+		.having(sql`COUNT(*) >= 70`) // Au moins 70 mandats pour être considéré comme un renouvellement (environ 1/4 des sénateurs)
+		.orderBy(desc(sql`EXTRACT(YEAR FROM ${mandates.startDate})`));
+
+	// Déterminer l'année courante pour marquer le renouvellement actuel
+	const currentYear = new Date().getFullYear();
+
+	cachedRenouvellements = result.map((r, index) => {
+		const isCurrentRenouvellement = index === 0;
+		const endDate = isCurrentRenouvellement ? null : r.maxEndDate;
 
 		return {
-			value: String(year),
-			label: `${year}${isCurrent ? ' (en cours)' : ''}`,
-			startDate: start,
-			endDate: end
+			value: String(r.year),
+			label: `${r.year}${isCurrentRenouvellement ? ' (en cours)' : ''}`,
+			startDate: r.minDate,
+			endDate
 		};
 	});
+
+	cacheTimestamp = Date.now();
+	return cachedRenouvellements;
 }
 
 /**
  * Récupère le renouvellement actuel (le plus récent)
  */
-export function getCurrentRenouvellement(): string {
-	const renouvellements = getRenouvellements();
-	return renouvellements[0]?.value || '2023';
+export async function getCurrentRenouvellement(): Promise<string> {
+	const renouvellements = await getRenouvellements();
+	return renouvellements[0]?.value || String(new Date().getFullYear());
 }
 
 /**
  * Vérifie si une valeur est un renouvellement valide
  */
-export function isValidRenouvellement(value: string | null): boolean {
+export async function isValidRenouvellement(value: string | null): Promise<boolean> {
 	if (value === null) return true;
-	const renouvellements = getRenouvellements();
+	const renouvellements = await getRenouvellements();
 	return renouvellements.some((r) => r.value === value);
 }
 
 /**
  * Récupère les dates d'un renouvellement
  */
-export function getRenouvellementDates(
+export async function getRenouvellementDates(
 	renouvellement: string
-): { start: string; end: string | null } | null {
-	const r = RENOUVELLEMENTS.find((r) => String(r.year) === renouvellement);
+): Promise<{ start: string; end: string | null } | null> {
+	const renouvellements = await getRenouvellements();
+	const r = renouvellements.find((r) => r.value === renouvellement);
 	if (!r) return null;
-	return { start: r.start, end: r.end };
+	return { start: r.startDate, end: r.endDate };
 }

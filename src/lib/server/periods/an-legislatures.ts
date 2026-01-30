@@ -61,7 +61,11 @@ export async function getLegislatures(): Promise<Legislature[]> {
  */
 export async function getCurrentLegislature(): Promise<string> {
 	const legislatures = await getLegislatures();
-	return legislatures[0]?.value || '17';
+	// Fallback dynamique basé sur l'année courante si aucune législature trouvée
+	// Approximation : une législature dure ~5 ans, la 17e a commencé en 2024
+	if (legislatures[0]?.value) return legislatures[0].value;
+	const currentYear = new Date().getFullYear();
+	return String(Math.floor((currentYear - 2002) / 5) + 12);
 }
 
 /**

@@ -5,8 +5,8 @@ import {
 } from '$lib/server/periods/senat-renouvellements';
 
 export const load: LayoutServerLoad = async () => {
-	const renouvellements = getRenouvellements();
-	const currentRenouvellement = getCurrentRenouvellement();
+	const renouvellements = await getRenouvellements();
+	const currentRenouvellement = await getCurrentRenouvellement();
 
 	return {
 		renouvellements,

@@ -37,6 +37,7 @@
 		"etl:laws": "node --import tsx scripts/etl/import-laws.ts",
 		"etl:senat-laws": "node --import tsx scripts/etl/import-senat-laws.ts",
 		"etl:senat-senators": "node --import tsx scripts/etl/import-senat-senators.ts",
+		"etl:senat-mandates-history": "node --import tsx scripts/etl/import-senat-mandates-history.ts",
 		"etl:europarl-meps": "node --import tsx scripts/etl/import-europarl-meps.ts",
 		"etl:europarl-historical": "node --import tsx scripts/etl/import-europarl-historical.ts",
 		"etl:europarl-votes": "node --import tsx scripts/etl/import-europarl-votes.ts",

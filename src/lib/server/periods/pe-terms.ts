@@ -1,7 +1,13 @@
 /**
  * Gestion des termes du Parlement européen
  * Les termes PE correspondent aux mandatures (5 ans)
+ *
+ * Les termes sont extraits dynamiquement depuis les mandats des eurodéputés
+ * pour éviter tout hardcoding et permettre l'ajout automatique de nouveaux termes.
  */
+
+import { db, mandates, actors } from '$lib/server/db';
+import { sql, eq, and, desc, like } from 'drizzle-orm';
 
 export interface Term {
 	value: string;
@@ -10,58 +16,86 @@ export interface Term {
 	endDate: string | null;
 }
 
-// Données statiques des termes PE depuis 2004
-const TERM_DATA: Record<number, { start: string; end: string | null }> = {
-	6: { start: '2004-07-20', end: '2009-07-13' },
-	7: { start: '2009-07-14', end: '2014-06-30' },
-	8: { start: '2014-07-01', end: '2019-07-01' },
-	9: { start: '2019-07-02', end: '2024-07-15' },
-	10: { start: '2024-07-16', end: null }
-};
+// Cache pour éviter de requêter la DB à chaque requête
+let cachedTerms: Term[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 heure
 
 /**
- * Récupère les termes PE disponibles
+ * Récupère les termes PE disponibles depuis la base de données
+ * Les termes sont détectés en analysant les législatures des mandats PE
  */
-export function getTerms(): Term[] {
-	return Object.entries(TERM_DATA)
-		.sort(([a], [b]) => Number(b) - Number(a)) // Tri décroissant
-		.map(([num, dates]) => {
-			const startYear = new Date(dates.start).getFullYear();
-			const endYear = dates.end ? new Date(dates.end).getFullYear() : null;
-			const isCurrent = dates.end === null;
+export async function getTerms(): Promise<Term[]> {
+	if (cachedTerms && Date.now() - cacheTimestamp < CACHE_DURATION) {
+		return cachedTerms;
+	}
+
+	// Extraire les termes depuis les mandats PE (groupes GPEU-*)
+	// Le champ legislature contient le numéro du terme pour les mandats PE
+	const result = await db
+		.select({
+			term: mandates.legislature,
+			minDate: sql<string>`MIN(${mandates.startDate})`,
+			maxEndDate: sql<string>`MAX(${mandates.endDate})`
+		})
+		.from(mandates)
+		.innerJoin(actors, eq(mandates.actorId, actors.id))
+		.where(
+			and(
+				eq(actors.chamber, 'PE'),
+				like(mandates.organId, 'GPEU-%'), // Groupes PE uniquement
+				sql`${mandates.legislature} IS NOT NULL`
+			)
+		)
+		.groupBy(mandates.legislature)
+		.having(sql`COUNT(*) >= 30`) // Au moins 30 mandats pour être considéré comme un terme valide
+		.orderBy(desc(mandates.legislature));
+
+	const terms: Term[] = result
+		.filter((r): r is typeof r & { term: string } => r.term !== null)
+		.map((r, index) => {
+			const num = parseInt(r.term, 10);
+			const startYear = new Date(r.minDate).getFullYear();
+			const endYear = r.maxEndDate ? new Date(r.maxEndDate).getFullYear() : null;
+			const isCurrentTerm = index === 0;
 
 			return {
-				value: num,
-				label: `${num}e (${startYear}${isCurrent ? '-' : `-${endYear}`})`,
-				startDate: dates.start,
-				endDate: dates.end
+				value: r.term,
+				label: `${num}e (${startYear}${isCurrentTerm ? '-' : `-${endYear}`})`,
+				startDate: r.minDate,
+				endDate: isCurrentTerm ? null : r.maxEndDate
 			};
 		});
+
+	cachedTerms = terms;
+	cacheTimestamp = Date.now();
+	return terms;
 }
 
 /**
  * Récupère le terme actuel (le plus récent)
  */
-export function getCurrentTerm(): string {
-	const terms = getTerms();
-	return terms[0]?.value || '10';
+export async function getCurrentTerm(): Promise<string> {
+	const terms = await getTerms();
+	// Fallback dynamique : année courante si aucun terme trouvé
+	return terms[0]?.value || String(Math.floor(new Date().getFullYear() / 5) + 2);
 }
 
 /**
  * Vérifie si une valeur est un terme valide
  */
-export function isValidTerm(value: string | null): boolean {
+export async function isValidTerm(value: string | null): Promise<boolean> {
 	if (value === null) return true;
-	const terms = getTerms();
+	const terms = await getTerms();
 	return terms.some((t) => t.value === value);
 }
 
 /**
  * Récupère les dates d'un terme
  */
-export function getTermDates(term: string): { start: string; end: string | null } | null {
-	const numTerm = parseInt(term, 10);
-	const dates = TERM_DATA[numTerm];
-	if (!dates) return null;
-	return { start: dates.start, end: dates.end };
+export async function getTermDates(term: string): Promise<{ start: string; end: string | null } | null> {
+	const terms = await getTerms();
+	const t = terms.find((t) => t.value === term);
+	if (!t) return null;
+	return { start: t.startDate, end: t.endDate };
 }

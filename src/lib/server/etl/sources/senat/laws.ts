@@ -1,46 +1,86 @@
-import { db, laws } from '../../../db';
+import { db, laws, scrutins } from '../../../db';
 import { createImportStats, type ImportStats, type ETLConfig } from '../../types';
 import { formatDate, logProgress } from '../../utils';
-import { sql } from 'drizzle-orm';
+import { sql, desc, notLike } from 'drizzle-orm';
 import type { NewLaw } from '../../../db';
 
 const DOSLEG_CSV_URL = 'https://data.senat.fr/data/dosleg/dossiers-legislatifs.csv';
 
 /**
- * Mapping des législatures par dates
- * Les législatures correspondent aux mandats de l'Assemblée Nationale
+ * Cache pour les législatures
  */
-const LEGISLATURES: { start: Date; end: Date | null; number: string }[] = [
-	{ start: new Date('1958-12-09'), end: new Date('1962-10-09'), number: '1' },
-	{ start: new Date('1962-11-25'), end: new Date('1967-04-03'), number: '2' },
-	{ start: new Date('1967-04-03'), end: new Date('1968-05-30'), number: '3' },
-	{ start: new Date('1968-07-11'), end: new Date('1973-04-02'), number: '4' },
-	{ start: new Date('1973-04-02'), end: new Date('1978-04-02'), number: '5' },
-	{ start: new Date('1978-04-02'), end: new Date('1981-05-22'), number: '6' },
-	{ start: new Date('1981-07-02'), end: new Date('1986-04-02'), number: '7' },
-	{ start: new Date('1986-04-02'), end: new Date('1988-05-14'), number: '8' },
-	{ start: new Date('1988-06-13'), end: new Date('1993-04-02'), number: '9' },
-	{ start: new Date('1993-04-02'), end: new Date('1997-04-21'), number: '10' },
-	{ start: new Date('1997-06-01'), end: new Date('2002-06-19'), number: '11' },
-	{ start: new Date('2002-06-19'), end: new Date('2007-06-20'), number: '12' },
-	{ start: new Date('2007-06-20'), end: new Date('2012-06-20'), number: '13' },
-	{ start: new Date('2012-06-20'), end: new Date('2017-06-21'), number: '14' },
-	{ start: new Date('2017-06-21'), end: new Date('2022-06-22'), number: '15' },
-	{ start: new Date('2022-06-22'), end: new Date('2024-07-18'), number: '16' },
-	{ start: new Date('2024-07-18'), end: null, number: '17' }
-];
+interface LegislatureDates {
+	number: string;
+	start: Date;
+	end: Date | null;
+}
+
+let cachedLegislatures: LegislatureDates[] | null = null;
+
+/**
+ * Récupère les dates des législatures depuis la base de données
+ * Utilise les scrutins AN pour déterminer les dates de début/fin
+ */
+async function getLegislatureDatesFromDb(): Promise<LegislatureDates[]> {
+	if (cachedLegislatures) {
+		return cachedLegislatures;
+	}
+
+	const result = await db
+		.select({
+			legislature: scrutins.legislature,
+			minDate: sql<string>`min(${scrutins.date})`,
+			maxDate: sql<string>`max(${scrutins.date})`
+		})
+		.from(scrutins)
+		.where(notLike(scrutins.legislature, 'PE-%'))
+		.groupBy(scrutins.legislature)
+		.orderBy(desc(scrutins.legislature));
+
+	cachedLegislatures = result.map((r, index) => ({
+		number: r.legislature,
+		start: new Date(r.minDate),
+		end: index === 0 ? null : new Date(r.maxDate)
+	}));
+
+	return cachedLegislatures;
+}
 
 /**
  * Détermine la législature à partir d'une date
+ * Utilise les données de la DB, avec fallback sur calcul approximatif
  */
-function getLegislatureFromDate(date: Date): string {
-	for (const leg of LEGISLATURES) {
-		if (date >= leg.start && (leg.end === null || date < leg.end)) {
+async function getLegislatureFromDate(date: Date): Promise<string> {
+	const legislatures = await getLegislatureDatesFromDb();
+
+	// Chercher dans les données connues
+	for (const leg of legislatures) {
+		if (date >= leg.start && (leg.end === null || date <= leg.end)) {
 			return leg.number;
 		}
 	}
-	// Par défaut, retourner la dernière législature connue
-	return '17';
+
+	// Si la date est antérieure à nos données, calculer approximativement
+	// Les législatures durent ~5 ans, la 12e a commencé en 2002
+	const year = date.getFullYear();
+	if (year < 2002) {
+		// Approximation pour les anciennes législatures
+		const approxLeg = Math.max(1, Math.floor((year - 1958) / 5) + 1);
+		return String(approxLeg);
+	}
+
+	// Si la date est postérieure à nos données, utiliser la dernière législature connue
+	// ou calculer approximativement
+	if (legislatures.length > 0) {
+		const latestLeg = parseInt(legislatures[0].number, 10);
+		const latestYear = legislatures[0].start.getFullYear();
+		const yearsAfter = year - latestYear;
+		const additionalLegs = Math.floor(yearsAfter / 5);
+		return String(latestLeg + additionalLegs);
+	}
+
+	// Fallback ultime basé sur l'année
+	return String(Math.floor((year - 2002) / 5) + 12);
 }
 
 /**
@@ -149,8 +189,10 @@ async function fetchAndParseCsv(): Promise<NewLaw[]> {
 		const depositDate = parseFrenchDate(dateInitiale);
 		const promulgationDate = parseFrenchDate(datePromulgation);
 
-		// Déterminer la législature depuis la date de dépôt
-		const legislature = depositDate ? getLegislatureFromDate(depositDate) : '17';
+		// Déterminer la législature depuis la date de dépôt (async)
+		const legislature = depositDate
+			? await getLegislatureFromDate(depositDate)
+			: String(Math.floor((new Date().getFullYear() - 2002) / 5) + 12);
 
 		const id = extractIdFromUrl(urlDossier);
 

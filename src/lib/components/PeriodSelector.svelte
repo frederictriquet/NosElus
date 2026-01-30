@@ -27,14 +27,8 @@
 
 	let isOpen = $state(false);
 
-	// Valeur actuelle depuis le store
-	let currentValue = $derived.by(() => {
-		let value: PeriodValue = null;
-		chamberPeriodStore.subscribe((state) => {
-			value = state[chamber];
-		})();
-		return value;
-	});
+	// Valeur actuelle depuis l'URL (réactif via $page)
+	let currentValue = $derived<PeriodValue>($page.url.searchParams.get(urlParam));
 
 	function handleSelect(value: PeriodValue) {
 		chamberPeriodStore.set(chamber, value);

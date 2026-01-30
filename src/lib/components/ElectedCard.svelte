@@ -41,7 +41,7 @@
 	}: Props = $props();
 
 	const href = type === 'depute' ? `/deputes/${id}` : `/senateurs/${id}`;
-	const placeholder = '/placeholder.png';
+	const placeholder = '/placeholder.svg';
 	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 
 	// Handle image load errors by falling back to placeholder

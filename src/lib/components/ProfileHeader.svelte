@@ -46,7 +46,7 @@
 		children
 	}: Props = $props();
 
-	const placeholder = '/placeholder.png';
+	const placeholder = '/placeholder.svg';
 	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 	const typeLabels = {
 		depute: 'Député',

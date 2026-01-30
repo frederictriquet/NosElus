@@ -10,8 +10,10 @@
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and, like, notLike, isNull } from 'drizzle-orm';
 
-// Mapping manuel des shortNames nosdeputes.fr -> AN
-// Utilisé quand les noms ne correspondent pas exactement
+// Mapping des shortNames nosdeputes.fr -> AN
+// NOTE: Ce mapping est nécessaire car les deux sources utilisent des noms différents
+// pour les mêmes groupes. Idéalement, ce mapping devrait être stocké en DB
+// ou généré dynamiquement par fuzzy matching.
 const SHORTNAME_ALIASES: Record<string, string[]> = {
 	// 17e législature
 	'MODEM': ['Dem'],
@@ -27,27 +29,6 @@ const SHORTNAME_ALIASES: Record<string, string[]> = {
 	'ECOLO': ['Écolo'],
 	// 13e législature
 	'S.R.C.': ['SRC'],
-};
-
-// Couleurs par défaut pour les groupes historiques sans correspondance
-// Basées sur les couleurs des groupes successeurs/similaires
-const DEFAULT_COLORS: Record<string, string> = {
-	// Non Inscrits - toujours gris
-	'NI': '#8D949A',
-	// UMP -> LR (bleu)
-	'UMP': '#4E51D4',
-	'Rassemblement-UMP': '#4E51D4',
-	'Les Républicains': '#4E51D4',
-	// Socialistes (rose)
-	'SOC': '#FF9591',
-	'SRC': '#FF9591',
-	'S.R.C.': '#FF9591',
-	'SER': '#FF9591',
-	// UDF -> MoDem (orange)
-	'UDF': '#FF9800',
-	// Communistes/GDR (rouge foncé)
-	'CR': '#CF4D27',
-	'GDR': '#CF4D27',
 };
 
 async function main() {
@@ -140,16 +121,9 @@ async function main() {
 				.where(eq(organs.id, g.id));
 			console.log(`✓ ${g.id} (${g.shortName}, leg ${g.legislature}) <- ${ndMatch.color}`);
 			updated++;
-		} else if (g.shortName && DEFAULT_COLORS[g.shortName]) {
-			// Utiliser la couleur par défaut
-			const defaultColor = DEFAULT_COLORS[g.shortName];
-			await db.update(organs)
-				.set({ color: defaultColor })
-				.where(eq(organs.id, g.id));
-			console.log(`✓ ${g.id} (${g.shortName}, leg ${g.legislature}) <- ${defaultColor} (défaut)`);
-			updated++;
 		} else {
-			console.log(`✗ Sans couleur: ${g.id} (${g.shortName}, leg ${g.legislature})`);
+			// Pas de couleur disponible depuis nosdeputes.fr - laisser null
+			console.log(`✗ Sans couleur: ${g.id} (${g.shortName}, leg ${g.legislature}) - aucune source disponible`);
 		}
 	}
 

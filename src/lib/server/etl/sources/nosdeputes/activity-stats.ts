@@ -83,8 +83,8 @@ export async function importNosDeputesActivityStats(config: ETLConfig): Promise<
 		for (const item of data.deputes) {
 			const d = item.depute;
 
-			// Try to find the actor in our database using uid (PA + id_an)
-			const uid = `PA${d.id_an}`;
+			// Try to find the actor in our database using uid (id_an directly)
+			const uid = d.id_an;
 			const actorId = uidToActorId.get(uid);
 
 			if (!actorId) {

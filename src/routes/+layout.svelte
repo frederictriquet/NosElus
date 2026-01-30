@@ -1,38 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { browser } from '$app/environment';
 	import '../app.css';
-	import LegislatureSelector from '$lib/components/LegislatureSelector.svelte';
-	import { legislatureStore } from '$lib/stores/legislature';
 
-	let { children, data } = $props();
+	let { children } = $props();
 
-	// Initialiser le store avec la législature courante au premier chargement
-	$effect(() => {
-		if (browser && data.currentLegislature) {
-			legislatureStore.initialize(data.currentLegislature);
-		}
+	// Déterminer quelle chambre est active
+	const activeChamber = $derived(() => {
+		const path = $page.url.pathname;
+		if (path.startsWith('/an')) return 'an';
+		if (path.startsWith('/senat')) return 'senat';
+		if (path.startsWith('/pe')) return 'pe';
+		return null;
 	});
 
-	// Synchroniser l'URL vers le store quand on navigue
-	$effect(() => {
-		if (browser) {
-			const urlLegislature = $page.url.searchParams.get('legislature');
-			if (urlLegislature !== null) {
-				// Vérifier que c'est une législature valide
-				const isValid = data.legislatures.some((l: { value: string }) => l.value === urlLegislature);
-				if (isValid) {
-					legislatureStore.set(urlLegislature);
-				}
-			}
-		}
-	});
-
-	// Fonction pour générer les liens avec le paramètre legislature
-	function navLink(path: string): string {
-		if (!$legislatureStore) return path;
-		return `${path}?legislature=${$legislatureStore}`;
-	}
+	const chamberTabs = [
+		{ href: '/an', label: 'Assemblée nationale', key: 'an' },
+		{ href: '/senat', label: 'Sénat', key: 'senat' },
+		{ href: '/pe', label: 'Parlement européen', key: 'pe' }
+	];
 </script>
 
 <svelte:head>
@@ -42,20 +27,21 @@
 
 <header class="header">
 	<div class="container header-content">
-		<a href={navLink('/')} class="logo">NosElus</a>
-		<nav class="nav">
-			<a href={navLink('/')} class:active={$page.url.pathname === '/'}>Accueil</a>
-			<a href={navLink('/deputes')} class:active={$page.url.pathname.startsWith('/deputes')}>Députés</a>
-			<a href={navLink('/senateurs')} class:active={$page.url.pathname.startsWith('/senateurs')}>Sénateurs</a>
-			<a href="/eurodeputes" class:active={$page.url.pathname.startsWith('/eurodeputes')}>Eurodéputés</a>
-			<a href={navLink('/scrutins')} class:active={$page.url.pathname.startsWith('/scrutins')}>Scrutins</a>
-			<a href={navLink('/groupes')} class:active={$page.url.pathname.startsWith('/groupes')}>Groupes</a>
-			<a href={navLink('/stats')} class:active={$page.url.pathname.startsWith('/stats')}>Stats</a>
-			<a href={navLink('/carte')} class:active={$page.url.pathname.startsWith('/carte')}>Carte</a>
-			<a href={navLink('/compare')} class:active={$page.url.pathname.startsWith('/compare')}>Comparer</a>
-			<a href="/recherche" class:active={$page.url.pathname.startsWith('/recherche')}>Recherche</a>
+		<a href="/" class="logo">NosElus</a>
+		<nav class="nav chamber-nav">
+			{#each chamberTabs as tab}
+				<a href={tab.href} class:active={activeChamber() === tab.key}>
+					{tab.label}
+				</a>
+			{/each}
 		</nav>
-		<LegislatureSelector legislatures={data.legislatures} />
+		<a href="/recherche" class="search-link" class:active={$page.url.pathname.startsWith('/recherche')}>
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="11" cy="11" r="8"></circle>
+				<path d="m21 21-4.3-4.3"></path>
+			</svg>
+			<span class="search-label">Recherche</span>
+		</a>
 	</div>
 </header>
 
@@ -67,7 +53,7 @@
 
 <footer class="footer">
 	<div class="container" style="text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
-		<p>NosElus - Données issues de <a href="https://nosdeputes.fr" target="_blank">NosDéputés.fr</a></p>
+		<p>NosElus - Données issues de <a href="https://data.assemblee-nationale.fr" target="_blank">data.assemblee-nationale.fr</a>, <a href="https://data.senat.fr" target="_blank">data.senat.fr</a> et <a href="https://europarl.europa.eu" target="_blank">europarl.europa.eu</a></p>
 	</div>
 </footer>
 
@@ -92,5 +78,86 @@
 		background: var(--color-surface);
 		border-top: 1px solid var(--color-border);
 		padding: 1.5rem 0;
+	}
+
+	.header-content {
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+	}
+
+	.chamber-nav {
+		display: flex;
+		gap: 0.25rem;
+		flex: 1;
+	}
+
+	.chamber-nav a {
+		padding: 0.5rem 1rem;
+		border-radius: var(--radius);
+		font-size: 0.9375rem;
+		color: var(--color-text-muted);
+		text-decoration: none;
+		transition: all 0.15s;
+		white-space: nowrap;
+	}
+
+	.chamber-nav a:hover {
+		color: var(--color-text);
+		background: var(--color-bg);
+	}
+
+	.chamber-nav a.active {
+		color: var(--color-primary);
+		background: var(--color-primary-bg, rgba(59, 130, 246, 0.1));
+		font-weight: 500;
+	}
+
+	.search-link {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius);
+		color: var(--color-text-muted);
+		text-decoration: none;
+		transition: all 0.15s;
+	}
+
+	.search-link:hover {
+		color: var(--color-text);
+		background: var(--color-bg);
+	}
+
+	.search-link.active {
+		color: var(--color-primary);
+	}
+
+	.search-label {
+		font-size: 0.875rem;
+	}
+
+	@media (max-width: 768px) {
+		.header-content {
+			flex-wrap: wrap;
+			gap: 0.75rem;
+		}
+
+		.chamber-nav {
+			order: 1;
+			width: 100%;
+			overflow-x: auto;
+			padding-bottom: 0.25rem;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.chamber-nav a {
+			padding: 0.375rem 0.75rem;
+			font-size: 0.875rem;
+		}
+
+		.search-label {
+			display: none;
+		}
 	}
 </style>

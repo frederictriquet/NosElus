@@ -44,11 +44,11 @@
 	}: Props = $props();
 
 	const typeRoutes = {
-		depute: 'deputes',
-		senateur: 'senateurs',
-		eurodepute: 'eurodeputes'
+		depute: '/an/deputes',
+		senateur: '/senat/senateurs',
+		eurodepute: '/pe/eurodeputes'
 	};
-	const href = hrefProp || `/${typeRoutes[type]}/${id}`;
+	const href = hrefProp || `${typeRoutes[type]}/${id}`;
 	const placeholder = '/placeholder.svg';
 	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 

@@ -145,9 +145,11 @@
 ## Phase 7 - Parlement européen (31-38 semaines)
 
 ### 7.1 Données eurodéputés
-- [ ] ETL Parlement européen - Eurodéputés français (81 MEPs, législature 2024-2029)
-- [ ] ETL Parlement européen - Groupes politiques européens
-- [ ] ETL votes en session plénière (via data.europarl.europa.eu ou itsyourparliament.eu)
+- [x] ETL Parlement européen - Eurodéputés français (84 MEPs via ParlTrack, mandat 10 2024-2029)
+- [x] ETL Parlement européen - Groupes politiques européens (9 groupes avec couleurs officielles)
+- [x] ETL couleurs groupes PE depuis results.elections.europa.eu
+- [x] ETL couleurs groupes Sénat depuis senat.fr
+- [ ] ETL votes en session plénière (via HowTheyVote.eu ou VoteWatch.eu)
 - [ ] Historique des mandats européens (depuis 2004)
 
 ### 7.2 Interface eurodéputés
@@ -170,8 +172,9 @@
 | NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
-| Parlement européen | API RDF/JSON | Planifié | [data.europarl.europa.eu](https://data.europarl.europa.eu) |
-| It's Your Parliament | API XML | Planifié | [itsyourparliament.eu/api](http://www.itsyourparliament.eu/api/) |
+| ParlTrack | JSON dump | ✅ Fait | [parltrack.org](https://parltrack.org/dumps/) |
+| EU Election Results | HTML/CSS | ✅ Fait | [results.elections.europa.eu](https://results.elections.europa.eu) |
+| HowTheyVote.eu | API JSON | Planifié | [howtheyvote.eu](https://howtheyvote.eu) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 
 ---
@@ -180,6 +183,9 @@
 
 - **Stack**: SvelteKit + TypeScript + PostgreSQL + Drizzle ORM
 - **Législatures supportées**: 14, 15, 16, 17 (via @tricoteuses/assemblee)
-- **Import**: `make etl-all-legislatures` pour importer toutes les législatures
+- **Import AN**: `make etl-all-legislatures` pour importer toutes les législatures
+- **Import PE**: `make etl-europarl-meps` pour importer les eurodéputés français (ParlTrack)
+- **Import couleurs**: `make etl-external-colors` pour les couleurs PE/Sénat depuis sources officielles
 - **Mode incrémental**: `make etl-incremental` avec tracking dans table `sync_metadata`
+- **Cache ETL**: Fichiers JSON dans `data/cache/` avec TTL configurable
 - **Fréquence ETL**: À définir (quotidien/hebdomadaire)

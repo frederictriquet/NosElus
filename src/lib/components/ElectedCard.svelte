@@ -82,10 +82,9 @@
 		{#if rank !== undefined}
 			<span class="elected-rank">{rank}</span>
 		{/if}
-		{#if group?.color}
-			<span class="group-dot" style="background: {group.color}"></span>
-		{/if}
-		<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		</span>
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
 			<span class="elected-group-tag group-name-hover">
@@ -101,10 +100,9 @@
 	</a>
 {:else if variant === 'compact'}
 	<a {href} class="elected-compact">
-		{#if group?.color}
-			<span class="group-dot" style="background: {group.color}"></span>
-		{/if}
-		<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		</span>
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
 			{#if group?.shortName}
@@ -119,7 +117,9 @@
 	</a>
 {:else}
 	<a {href} class="elected-card">
-		<img src={loadedSrc} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" />
+		<span class="photo-ring photo-ring-lg" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" />
+		</span>
 		<div class="elected-info">
 			<div class="elected-name">{name}</div>
 			{#if group}
@@ -288,6 +288,29 @@
 		object-fit: cover;
 		background: var(--color-border);
 		flex-shrink: 0;
+	}
+
+	/* Anneau coloré autour de la photo */
+	.photo-ring {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		padding: 2px;
+		background: var(--ring-color, transparent);
+		flex-shrink: 0;
+	}
+
+	.photo-ring .elected-photo-sm {
+		border: 2px solid var(--color-surface);
+	}
+
+	.photo-ring-lg {
+		padding: 3px;
+	}
+
+	.photo-ring-lg .elected-photo {
+		border: 3px solid var(--color-surface);
 	}
 
 	/* Full - carte complète */

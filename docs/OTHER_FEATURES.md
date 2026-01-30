@@ -14,5 +14,3 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 3. Long terme : Télécharger les photos localement pendant l'ETL
 
 
-
-sur la fiche détaillée d'un sénateur, afficher la liste des mandats

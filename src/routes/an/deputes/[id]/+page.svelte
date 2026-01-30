@@ -60,6 +60,9 @@
 					<div class="vote-bar-for" style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"></div>
 					<div class="vote-bar-against" style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"></div>
 					<div class="vote-bar-abstention" style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"></div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div class="vote-bar-nonvotant" style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"></div>
+					{/if}
 				</div>
 				<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;">
 					<div>
@@ -74,6 +77,12 @@
 						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{voteStats.distribution.abstention}</div>
 						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
 					</div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{voteStats.distribution['non-votant']}</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
+						</div>
+					{/if}
 				</div>
 			{:else}
 				<p class="empty-state">Aucun vote enregistré</p>

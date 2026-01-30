@@ -213,6 +213,10 @@ main {
 	background: var(--color-warning);
 }
 
+.vote-bar-nonvotant {
+	background: var(--color-text-muted);
+}
+
 /* Buttons */
 .btn {
 	display: inline-flex;

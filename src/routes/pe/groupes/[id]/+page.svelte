@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.group.name} - NosElus</title>
+	<title>{data.group.name} - Parlement européen - NosElus</title>
 </svelte:head>
 
 <div class="page-header">
@@ -20,57 +20,25 @@
 	</div>
 </div>
 
-{#await data.distributionData}
-	<div class="stats-grid" style="margin-bottom: 1.5rem;">
-		{#each Array(3) as _}
-			<div class="stat-card loading">
-				<div class="skeleton-value"></div>
-				<div class="skeleton-label"></div>
-			</div>
-		{/each}
-	</div>
-{:then distributionData}
-	{@const totalVotes = distributionData.distribution.pour + distributionData.distribution.contre + distributionData.distribution.abstention}
-	<div class="stats-grid" style="margin-bottom: 1.5rem;">
-		<div class="stat-card">
-			<div class="stat-value">{distributionData.totalVotes.toLocaleString('fr-FR')}</div>
-			<div class="stat-label">Votes enregistrés</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value" style="color: var(--color-success);">
-				{totalVotes > 0 ? ((distributionData.distribution.pour / totalVotes) * 100).toFixed(0) : 0}%
-			</div>
-			<div class="stat-label">Votes pour</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value" style="color: var(--color-danger);">
-				{totalVotes > 0 ? ((distributionData.distribution.contre / totalVotes) * 100).toFixed(0) : 0}%
-			</div>
-			<div class="stat-label">Votes contre</div>
-		</div>
-	</div>
-{/await}
-
 {#await data.members}
 	<section class="card">
-		<h2>Députés les plus actifs</h2>
+		<h2>Eurodéputés français du groupe</h2>
 		<div class="loading-state">Chargement...</div>
 	</section>
 {:then members}
 	<section class="card">
-		<h2>Députés les plus actifs ({members.length})</h2>
+		<h2>Eurodéputés français du groupe ({members.length})</h2>
 		{#if members.length === 0}
-			<p class="empty-state">Aucun député trouvé</p>
+			<p class="empty-state">Aucun eurodéputé français trouvé</p>
 		{:else}
-			<div class="members-list">
-				{#each members as member, i}
+			<div class="members-grid">
+				{#each members as member}
 					<ElectedCard
 						id={member.id}
 						name={member.name}
 						photoUrl={member.photoUrl}
-						variant="inline"
-						rank={i + 1}
-						stat="{member.voteCount} votes"
+						variant="compact"
+						type="eurodepute"
 					/>
 				{/each}
 			</div>
@@ -78,7 +46,7 @@
 	</section>
 {:catch}
 	<section class="card">
-		<h2>Députés les plus actifs</h2>
+		<h2>Eurodéputés français du groupe</h2>
 		<p class="empty-state">Erreur de chargement</p>
 	</section>
 {/await}
@@ -130,12 +98,8 @@
 			<dd>{data.group.shortName || '-'}</dd>
 		</div>
 		<div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
-			<dt style="color: var(--color-text-muted); width: 120px;">Législature</dt>
-			<dd>{data.group.legislature || '-'}</dd>
-		</div>
-		<div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
 			<dt style="color: var(--color-text-muted); width: 120px;">Chambre</dt>
-			<dd>{data.group.chamber === 'AN' ? 'Assemblée nationale' : data.group.chamber || '-'}</dd>
+			<dd>Parlement européen</dd>
 		</div>
 	</dl>
 </section>
@@ -161,46 +125,11 @@
 		margin: 0;
 	}
 
-	/* Skeleton loading */
-	.stat-card.loading {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.skeleton-value {
-		width: 80px;
-		height: 32px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: 4px;
-	}
-
-	.skeleton-label {
-		width: 60px;
-		height: 16px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: 4px;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 200% 0;
-		}
-		100% {
-			background-position: -200% 0;
-		}
-	}
-
-	/* Members list */
-	.members-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
+	/* Members grid */
+	.members-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 0.75rem;
 		margin-top: 1rem;
 	}
 

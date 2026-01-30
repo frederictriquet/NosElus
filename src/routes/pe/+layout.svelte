@@ -15,6 +15,9 @@
 
 	const subNavItems = [
 		{ href: '/pe/eurodeputes', label: 'Eurodéputés', match: '/pe/eurodeputes' },
+		{ href: '/pe/groupes', label: 'Groupes', match: '/pe/groupes' },
+		{ href: '/pe/scrutins', label: 'Scrutins', match: '/pe/scrutins' },
+		{ href: '/pe/stats', label: 'Statistiques', match: '/pe/stats' },
 		{ href: '/pe/eurodeputes/compare', label: 'Comparer', match: '/pe/eurodeputes/compare' }
 	];
 </script>

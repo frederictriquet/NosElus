@@ -24,8 +24,8 @@
 		return '';
 	}
 
-	function getPercent(value: number, dist: { pour: number; contre: number; abstention: number }) {
-		const total = dist.pour + dist.contre + dist.abstention || 1;
+	function getPercent(value: number, dist: { pour: number; contre: number; abstention: number; 'non-votant'?: number }) {
+		const total = dist.pour + dist.contre + dist.abstention + (dist['non-votant'] || 0) || 1;
 		return ((value / total) * 100).toFixed(0);
 	}
 </script>
@@ -144,6 +144,9 @@
 								<div class="dist-item pour">{getPercent(comparison.deputy1.distribution.pour, comparison.deputy1.distribution)}% pour</div>
 								<div class="dist-item contre">{getPercent(comparison.deputy1.distribution.contre, comparison.deputy1.distribution)}% contre</div>
 								<div class="dist-item abstention">{getPercent(comparison.deputy1.distribution.abstention, comparison.deputy1.distribution)}% abs.</div>
+								{#if comparison.deputy1.distribution['non-votant'] > 0}
+									<div class="dist-item nonvotant">{getPercent(comparison.deputy1.distribution['non-votant'], comparison.deputy1.distribution)}% n.v.</div>
+								{/if}
 							</div>
 						{/snippet}
 					</ElectedCard>
@@ -173,6 +176,9 @@
 								<div class="dist-item pour">{getPercent(comparison.deputy2.distribution.pour, comparison.deputy2.distribution)}% pour</div>
 								<div class="dist-item contre">{getPercent(comparison.deputy2.distribution.contre, comparison.deputy2.distribution)}% contre</div>
 								<div class="dist-item abstention">{getPercent(comparison.deputy2.distribution.abstention, comparison.deputy2.distribution)}% abs.</div>
+								{#if comparison.deputy2.distribution['non-votant'] > 0}
+									<div class="dist-item nonvotant">{getPercent(comparison.deputy2.distribution['non-votant'], comparison.deputy2.distribution)}% n.v.</div>
+								{/if}
 							</div>
 						{/snippet}
 					</ElectedCard>
@@ -391,6 +397,11 @@
 		font-size: 0.75rem;
 		padding: 0.25rem 0.5rem;
 		border-radius: 4px;
+	}
+
+	.dist-item.nonvotant {
+		color: var(--color-text-muted);
+		background: var(--color-border);
 	}
 
 	.comparison-stats {

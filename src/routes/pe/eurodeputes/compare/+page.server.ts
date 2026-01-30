@@ -89,8 +89,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		if (peScrutinIds.length === 0) {
 			// No PE votes yet
 			return {
-				mep1: { ...mep1, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0 } },
-				mep2: { ...mep2, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0 } },
+				mep1: { ...mep1, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 } },
+				mep2: { ...mep2, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 } },
 				commonVotes: 0,
 				sameVotes: 0,
 				differentVotes: 0,
@@ -116,7 +116,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 				.where(buildVoteConditions(actorId))
 				.groupBy(votes.position);
 
-			const dist = { pour: 0, contre: 0, abstention: 0 };
+			const dist = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
 			for (const r of result) {
 				if (r.position in dist) {
 					dist[r.position as keyof typeof dist] = r.count;

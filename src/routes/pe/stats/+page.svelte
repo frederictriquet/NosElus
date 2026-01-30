@@ -6,12 +6,12 @@
 </script>
 
 <svelte:head>
-	<title>Statistiques AN - NosElus</title>
+	<title>Statistiques PE - NosElus</title>
 </svelte:head>
 
 <div class="page-header">
 	<h1 class="page-title">Statistiques</h1>
-	<p class="page-subtitle">Analyse de l'activité à l'Assemblée nationale</p>
+	<p class="page-subtitle">Analyse de l'activité au Parlement européen (eurodéputés français)</p>
 </div>
 
 {#await data.totals}
@@ -28,7 +28,7 @@
 		<div class="stats-grid">
 			<div class="stat-card">
 				<div class="stat-value">{totals.actors}</div>
-				<div class="stat-label">Élus (filtrés)</div>
+				<div class="stat-label">Eurodéputés français</div>
 			</div>
 			<div class="stat-card">
 				<div class="stat-value">{totals.scrutins.toLocaleString('fr-FR')}</div>
@@ -39,7 +39,7 @@
 				<div class="stat-label">Votes enregistrés</div>
 			</div>
 			<div class="stat-card">
-				<div class="stat-value">{((scrutinResults.adopté / (scrutinResults.adopté + scrutinResults.rejeté)) * 100).toFixed(0)}%</div>
+				<div class="stat-value">{scrutinResults.adopté + scrutinResults.rejeté > 0 ? ((scrutinResults.adopté / (scrutinResults.adopté + scrutinResults.rejeté)) * 100).toFixed(0) : 0}%</div>
 				<div class="stat-label">Taux d'adoption</div>
 			</div>
 		</div>
@@ -134,15 +134,16 @@
 		{#snippet children(topParticipation)}
 			{#if topParticipation.length > 0}
 				<div class="ranking-list">
-					{#each topParticipation as deputy, i}
+					{#each topParticipation as mep, i}
 						<ElectedCard
-							id={deputy.id}
-							name={deputy.name}
-							photoUrl={deputy.photoUrl}
+							id={mep.id}
+							name={mep.name}
+							photoUrl={mep.photoUrl}
 							variant="inline"
+							type="eurodepute"
 							rank={i + 1}
-							stat="{deputy.voteCount} votes"
-							group={deputy.group}
+							stat="{mep.voteCount} votes"
+							group={mep.group}
 						/>
 					{/each}
 				</div>
@@ -154,7 +155,7 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Votes par groupe parlementaire" promise={data.groupStats} minHeight="300px">
+	<AsyncCard title="Votes par groupe politique" promise={data.groupStats} minHeight="300px">
 		{#snippet children(groupStats)}
 			{@const filteredGroups = groupStats.filter(g => g.totalVotes > 0)}
 			{#if filteredGroups.length > 0}
@@ -173,10 +174,10 @@
 							{#each filteredGroups as group}
 								<tr>
 									<td>
-										<div style="display: flex; align-items: center; gap: 0.5rem;">
+										<a href="/pe/groupes/{group.groupId}" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
 											<span style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor || '#ccc'}"></span>
 											<span>{group.groupShortName || group.groupName}</span>
-										</div>
+										</a>
 									</td>
 									<td style="text-align: right; color: var(--color-success);">{group.pourVotes.toLocaleString('fr-FR')}</td>
 									<td style="text-align: right; color: var(--color-danger);">{group.contreVotes.toLocaleString('fr-FR')}</td>
@@ -195,7 +196,7 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Proximité politique entre groupes" subtitle="Pourcentage de votes identiques entre les groupes parlementaires (sur les 15 derniers scrutins)" promise={data.heatmapAndProximity} minHeight="250px">
+	<AsyncCard title="Proximité politique entre groupes" subtitle="Pourcentage de votes identiques entre les groupes européens (sur les 15 derniers scrutins)" promise={data.heatmapAndProximity} minHeight="250px">
 		{#snippet children(heatmapAndProximity)}
 			{@const proximityMatrix = heatmapAndProximity.proximityMatrix}
 			{#if proximityMatrix.groups.length > 1}
@@ -264,7 +265,7 @@
 							{#each heatmap.scrutins as scrutin}
 								<tr>
 									<td class="heatmap-scrutin-cell">
-										<a href="/an/scrutins/{scrutin.id}" title={scrutin.title}>
+										<a href="/pe/scrutins/{scrutin.id}" title={scrutin.title}>
 											{scrutin.title?.slice(0, 40)}{(scrutin.title?.length || 0) > 40 ? '...' : ''}
 										</a>
 										<span class="scrutin-date">{new Date(scrutin.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
@@ -303,39 +304,6 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Alignement avec le gouvernement" subtitle="Taux d'alignement avec la majorité présidentielle (Renaissance, MoDem, Horizons)" promise={data.governmentAlignment} minHeight="250px">
-		{#snippet children(governmentAlignment)}
-			{#if governmentAlignment.length > 0}
-				<div class="alignment-list">
-					{#each governmentAlignment as group}
-						<div class="alignment-item">
-							<div class="alignment-group">
-								<span class="group-dot" style="background: {group.groupColor || '#888'}"></span>
-								<span class="alignment-name">{group.groupShortName || group.groupName}</span>
-							</div>
-							<div class="alignment-bar-container">
-								<div
-									class="alignment-bar"
-									class:high={group.alignmentRate >= 70}
-									class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70}
-									class:low={group.alignmentRate < 40}
-									style="width: {group.alignmentRate}%"
-								></div>
-							</div>
-							<span class="alignment-value" class:high={group.alignmentRate >= 70} class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70} class:low={group.alignmentRate < 40}>
-								{group.alignmentRate.toFixed(0)}%
-							</span>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="empty-state">Aucune donnée d'alignement</p>
-			{/if}
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div style="margin-top: 1.5rem;">
 	<AsyncCard title="Évolution des positions dans le temps" subtitle="Répartition des votes par mois" promise={data.positionEvolution} minHeight="250px">
 		{#snippet children(positionEvolution)}
 			{#if positionEvolution.length > 0}
@@ -367,12 +335,6 @@
 </div>
 
 <style>
-	h2 {
-		font-size: 1.25rem;
-		font-weight: 600;
-		margin-bottom: 1rem;
-	}
-
 	/* Skeleton loading */
 	.stat-card.loading {
 		display: flex;
@@ -400,12 +362,8 @@
 	}
 
 	@keyframes shimmer {
-		0% {
-			background-position: 200% 0;
-		}
-		100% {
-			background-position: -200% 0;
-		}
+		0% { background-position: 200% 0; }
+		100% { background-position: -200% 0; }
 	}
 
 	.results-chart {
@@ -426,13 +384,8 @@
 		min-width: 60px;
 	}
 
-	.result-bar.adopted {
-		background: var(--color-success);
-	}
-
-	.result-bar.rejected {
-		background: var(--color-danger);
-	}
+	.result-bar.adopted { background: var(--color-success); }
+	.result-bar.rejected { background: var(--color-danger); }
 
 	.activity-chart {
 		display: flex;
@@ -482,9 +435,7 @@
 	}
 
 	/* Proximity Matrix */
-	.proximity-matrix {
-		overflow-x: auto;
-	}
+	.proximity-matrix { overflow-x: auto; }
 
 	.matrix-table {
 		border-collapse: collapse;
@@ -524,30 +475,13 @@
 		min-width: 50px;
 	}
 
-	.matrix-cell.diagonal {
-		background: var(--color-border);
-		color: var(--color-text-muted);
-	}
-
-	.matrix-cell.high {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.matrix-cell.medium {
-		background: #fef3c7;
-		color: #92400e;
-	}
-
-	.matrix-cell.low {
-		background: #fee2e2;
-		color: #991b1b;
-	}
+	.matrix-cell.diagonal { background: var(--color-border); color: var(--color-text-muted); }
+	.matrix-cell.high { background: #dcfce7; color: #166534; }
+	.matrix-cell.medium { background: #fef3c7; color: #92400e; }
+	.matrix-cell.low { background: #fee2e2; color: #991b1b; }
 
 	/* Heatmap */
-	.heatmap-container {
-		overflow-x: auto;
-	}
+	.heatmap-container { overflow-x: auto; }
 
 	.heatmap-table {
 		border-collapse: collapse;
@@ -555,33 +489,12 @@
 		font-size: 0.8rem;
 	}
 
-	.heatmap-scrutin-header {
-		text-align: left;
-		padding: 0.5rem;
-		min-width: 200px;
-	}
+	.heatmap-scrutin-header { text-align: left; padding: 0.5rem; min-width: 200px; }
+	.heatmap-group-header { padding: 0.5rem; text-align: center; }
 
-	.heatmap-group-header {
-		padding: 0.5rem;
-		text-align: center;
-	}
-
-	.heatmap-scrutin-cell {
-		padding: 0.5rem;
-		max-width: 250px;
-	}
-
-	.heatmap-scrutin-cell a {
-		font-size: 0.75rem;
-		line-height: 1.3;
-		display: block;
-		color: inherit;
-	}
-
-	.scrutin-date {
-		font-size: 0.65rem;
-		color: var(--color-text-muted);
-	}
+	.heatmap-scrutin-cell { padding: 0.5rem; max-width: 250px; }
+	.heatmap-scrutin-cell a { font-size: 0.75rem; line-height: 1.3; display: block; color: inherit; }
+	.scrutin-date { font-size: 0.65rem; color: var(--color-text-muted); }
 
 	.heatmap-cell {
 		text-align: center;
@@ -590,25 +503,10 @@
 		min-width: 40px;
 	}
 
-	.heatmap-cell.pour {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.heatmap-cell.contre {
-		background: #fee2e2;
-		color: #991b1b;
-	}
-
-	.heatmap-cell.abstention {
-		background: #fef3c7;
-		color: #92400e;
-	}
-
-	.heatmap-cell.empty {
-		background: var(--color-bg);
-		color: var(--color-text-muted);
-	}
+	.heatmap-cell.pour { background: #dcfce7; color: #166534; }
+	.heatmap-cell.contre { background: #fee2e2; color: #991b1b; }
+	.heatmap-cell.abstention { background: #fef3c7; color: #92400e; }
+	.heatmap-cell.empty { background: var(--color-bg); color: var(--color-text-muted); }
 
 	.heatmap-legend {
 		display: flex;
@@ -617,94 +515,10 @@
 		font-size: 0.75rem;
 	}
 
-	/* Override legend-box size for heatmap */
-	.heatmap-legend .legend-box {
-		width: 16px;
-		height: 16px;
-		border-radius: 4px;
-	}
-
-	.heatmap-legend .legend-box.pour {
-		background: #dcfce7;
-	}
-
-	.heatmap-legend .legend-box.contre {
-		background: #fee2e2;
-	}
-
-	.heatmap-legend .legend-box.abstention {
-		background: #fef3c7;
-	}
-
-	/* Government Alignment */
-	.alignment-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.alignment-item {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.alignment-group {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		min-width: 80px;
-	}
-
-	.alignment-name {
-		font-size: 0.875rem;
-		font-weight: 500;
-	}
-
-	.alignment-bar-container {
-		flex: 1;
-		height: 20px;
-		background: var(--color-bg);
-		border-radius: 10px;
-		overflow: hidden;
-	}
-
-	.alignment-bar {
-		height: 100%;
-		border-radius: 10px;
-		transition: width 0.3s ease;
-	}
-
-	.alignment-bar.high {
-		background: var(--color-success);
-	}
-
-	.alignment-bar.medium {
-		background: var(--color-warning);
-	}
-
-	.alignment-bar.low {
-		background: var(--color-danger);
-	}
-
-	.alignment-value {
-		min-width: 45px;
-		text-align: right;
-		font-weight: 700;
-		font-size: 0.875rem;
-	}
-
-	.alignment-value.high {
-		color: var(--color-success);
-	}
-
-	.alignment-value.medium {
-		color: var(--color-warning);
-	}
-
-	.alignment-value.low {
-		color: var(--color-danger);
-	}
+	.heatmap-legend .legend-box { width: 16px; height: 16px; border-radius: 4px; }
+	.heatmap-legend .legend-box.pour { background: #dcfce7; }
+	.heatmap-legend .legend-box.contre { background: #fee2e2; }
+	.heatmap-legend .legend-box.abstention { background: #fef3c7; }
 
 	/* Evolution Timeline */
 	.evolution-timeline {
@@ -733,91 +547,15 @@
 		overflow: hidden;
 	}
 
-	.timeline-segment {
-		width: 100%;
-	}
-
-	.timeline-segment.pour {
-		background: var(--color-success);
-	}
-
-	.timeline-segment.contre {
-		background: var(--color-danger);
-	}
-
-	.timeline-segment.abstention {
-		background: var(--color-warning);
-	}
+	.timeline-segment { width: 100%; }
+	.timeline-segment.pour { background: var(--color-success); }
+	.timeline-segment.contre { background: var(--color-danger); }
+	.timeline-segment.abstention { background: var(--color-warning); }
 
 	.timeline-label {
 		position: absolute;
 		bottom: -1.25rem;
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
-	}
-
-	/* Chamber comparison cards */
-	.chamber-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 1rem;
-		margin-bottom: 2rem;
-	}
-
-	.chamber-card {
-		background: var(--color-surface);
-		border-radius: var(--radius-lg);
-		padding: 1.25rem;
-		text-decoration: none;
-		color: inherit;
-		transition: box-shadow 0.2s, transform 0.2s;
-		border: 1px solid var(--color-border);
-	}
-
-	.chamber-card:hover {
-		box-shadow: var(--shadow-md);
-		transform: translateY(-2px);
-		text-decoration: none;
-	}
-
-	.chamber-card.loading {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.chamber-label {
-		font-weight: 600;
-		font-size: 1rem;
-		margin-bottom: 0.75rem;
-		color: var(--color-text);
-	}
-
-	.chamber-stats {
-		display: flex;
-		gap: 1rem;
-	}
-
-	.chamber-stat {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-	}
-
-	.chamber-value {
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-primary);
-	}
-
-	.chamber-name {
-		font-size: 0.75rem;
-		color: var(--color-text-muted);
-	}
-
-	@media (max-width: 768px) {
-		.chamber-grid {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

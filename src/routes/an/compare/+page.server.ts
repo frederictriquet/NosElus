@@ -94,7 +94,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		// Get vote distribution for each
 		const getDistribution = async (actorId: string) => {
 			if (filteredScrutinIds !== null && filteredScrutinIds.length === 0) {
-				return { pour: 0, contre: 0, abstention: 0 };
+				return { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
 			}
 
 			const result = await db
@@ -106,7 +106,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 				.where(buildVoteConditions(actorId))
 				.groupBy(votes.position);
 
-			const dist = { pour: 0, contre: 0, abstention: 0 };
+			const dist = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
 			for (const r of result) {
 				if (r.position in dist) {
 					dist[r.position as keyof typeof dist] = r.count;

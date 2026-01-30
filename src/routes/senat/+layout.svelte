@@ -13,7 +13,10 @@
 		}
 	});
 
-	const subNavItems = [{ href: '/senat/senateurs', label: 'Sénateurs', match: '/senat/senateurs' }];
+	const subNavItems = [
+		{ href: '/senat/senateurs', label: 'Sénateurs', match: '/senat/senateurs' },
+		{ href: '/senat/groupes', label: 'Groupes', match: '/senat/groupes' }
+	];
 </script>
 
 <div class="chamber-layout">

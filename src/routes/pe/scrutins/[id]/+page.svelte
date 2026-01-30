@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>Scrutin n°{data.scrutin.number} - NosElus</title>
+	<title>Scrutin n°{data.scrutin.number} - Parlement européen - NosElus</title>
 </svelte:head>
 
 <div class="page-header">
@@ -27,7 +27,7 @@
 </div>
 
 <div class="card" style="margin-bottom: 2rem;">
-	<h2>Résultats du vote</h2>
+	<h2>Résultats du vote (tous les eurodéputés)</h2>
 	<div class="vote-bar" style="height: 32px; border-radius: 16px; margin: 1rem 0;">
 		<div class="vote-bar-for" style="width: {(data.scrutin.totalFor / totalVotes) * 100}%"></div>
 		<div class="vote-bar-against" style="width: {(data.scrutin.totalAgainst / totalVotes) * 100}%"></div>
@@ -53,10 +53,10 @@
 	</div>
 </div>
 
-<AsyncCard title="Détail des votes" promise={data.voteDetails} minHeight="300px">
+<AsyncCard title="Votes des eurodéputés français" promise={data.voteDetails} minHeight="300px">
 	{#snippet children(voteDetails)}
 		{#if voteDetails.totalVotes > 0}
-			<p style="color: var(--color-text-muted); margin-bottom: 1rem;">{voteDetails.totalVotes} votes enregistrés</p>
+			<p style="color: var(--color-text-muted); margin-bottom: 1rem;">{voteDetails.totalVotes} votes enregistrés (eurodéputés français)</p>
 
 			<div class="tabs">
 				<button class="tab" class:active={activeTab === 'pour'} onclick={() => activeTab = 'pour'}>
@@ -82,6 +82,7 @@
 						name={vote.actorName}
 						photoUrl={vote.actorPhoto}
 						variant="compact"
+						type="eurodepute"
 						group={vote.groupId ? { id: vote.groupId, shortName: vote.groupShortName, color: vote.groupColor } : null}
 					/>
 				{/each}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
+	import GroupAlignmentCard from '$lib/components/GroupAlignmentCard.svelte';
 
 	let { data } = $props();
 
@@ -83,6 +84,10 @@
 					</div>
 				{/if}
 			</div>
+
+			{#await data.groupAlignment then groupAlignment}
+				<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
+			{/await}
 		{:else}
 			<p class="empty-state">Aucun vote enregistré</p>
 		{/if}

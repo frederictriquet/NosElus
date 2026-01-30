@@ -95,6 +95,74 @@ export const load: PageServerLoad = async ({ params }) => {
 			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
 
+	// Loader for group alignment rate
+	const loadGroupAlignment = async () => {
+		// Get all votes for this deputy with scrutin group results
+		const deputyVotes = await db
+			.select({
+				position: votes.position,
+				groupId: votes.groupId,
+				groupResults: scrutins.groupResults
+			})
+			.from(votes)
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(eq(votes.actorId, params.id));
+
+		if (deputyVotes.length === 0) {
+			return null;
+		}
+
+		let aligned = 0;
+		let total = 0;
+
+		for (const vote of deputyVotes) {
+			if (!vote.groupId || !vote.groupResults) continue;
+
+			const groupData = (
+				vote.groupResults as Record<
+					string,
+					{ position?: string; pour?: number; contre?: number; abstention?: number; for?: number; against?: number }
+				>
+			)[vote.groupId];
+			if (!groupData) continue;
+
+			// Get group's majority position - either from pre-computed field or calculate from counts
+			let groupPos: string;
+			if (groupData.position) {
+				groupPos = groupData.position.toLowerCase();
+			} else {
+				// Calculate from vote counts (handle both field naming conventions)
+				const pour = groupData.pour ?? groupData.for ?? 0;
+				const contre = groupData.contre ?? groupData.against ?? 0;
+				const abstention = groupData.abstention ?? 0;
+
+				if (pour >= contre && pour >= abstention) {
+					groupPos = 'pour';
+				} else if (contre >= pour && contre >= abstention) {
+					groupPos = 'contre';
+				} else {
+					groupPos = 'abstention';
+				}
+			}
+
+			total++;
+			const deputyPos = vote.position?.toLowerCase();
+
+			if (deputyPos === groupPos) {
+				aligned++;
+			}
+		}
+
+		if (total === 0) return null;
+
+		return {
+			alignmentRate: Math.round((aligned / total) * 100),
+			alignedVotes: aligned,
+			totalVotes: total,
+			dissidentVotes: total - aligned
+		};
+	};
+
 	// Loader for career milestones
 	const loadCareerMilestones = async () => {
 		const voteStats = await loadVoteStats();
@@ -221,6 +289,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		voteStats: loadVoteStats(),
 		recentVotes: loadRecentVotes(),
 		monthlyEvolution: loadMonthlyEvolution(),
+		groupAlignment: loadGroupAlignment(),
 		careerMilestones: loadCareerMilestones(),
 		amendmentStats: loadAmendmentStats(),
 		recentAmendments: loadRecentAmendments(),

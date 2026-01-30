@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
+	import GroupAlignmentCard from '$lib/components/GroupAlignmentCard.svelte';
 
 	let { data } = $props();
 
@@ -48,6 +49,19 @@
 	birthDate={data.actor.birthDate}
 	birthPlace={data.actor.birthPlace}
 />
+
+{#await data.groupAlignment then groupAlignment}
+	<section class="card alignment-card">
+		<h2>Alignement avec le groupe</h2>
+		{#if groupAlignment}
+			<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
+		{:else}
+			<p class="no-data">
+				Les données de votes du Sénat ne sont pas encore disponibles.
+			</p>
+		{/if}
+	</section>
+{/await}
 
 {#if data.activityStats}
 	<section class="card activity-card">
@@ -527,6 +541,21 @@
 		padding: 0.125rem 0.375rem;
 		border-radius: 4px;
 		font-size: 0.8125rem;
+	}
+
+	/* Alignment card */
+	.alignment-card {
+		margin-bottom: 1.5rem;
+	}
+
+	.alignment-card h2 {
+		margin-bottom: 0.75rem;
+	}
+
+	.no-data {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		margin: 0;
 	}
 
 	/* Activity stats */

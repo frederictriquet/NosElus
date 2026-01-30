@@ -243,17 +243,20 @@ function extractGroups(meps: ParlTrackMEP[]): NewOrgan[] {
 		const id = generateGroupId(currentGroup.groupid);
 		if (groupMap.has(id)) continue;
 
+		// Use ParlTrack Organization field, fallback to groupid
+		const fullName = currentGroup.Organization || currentGroup.groupid;
+
 		groupMap.set(id, {
 			id,
 			uid: `EUROPARL-${currentGroup.groupid}`,
 			type: 'GP',
-			name: currentGroup.Organization,
+			name: fullName,
 			shortName: currentGroup.groupid,
 			legislature: String(CURRENT_TERM),
 			chamber: 'PE',
 			startDate: '2024-07-16', // Start of 10th term
 			endDate: null,
-			color: null  // Colors should be set via etl-colors or manually
+			color: null // Colors should be set via etl-colors or manually
 		});
 	}
 

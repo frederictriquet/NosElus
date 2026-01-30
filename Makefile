@@ -146,6 +146,10 @@ etl-europarl-activity-stats: ## Import statistiques d'activité MEPs (HowTheyVot
 	@echo "$(CYAN)Import statistiques d'activité des eurodéputés...$(RESET)"
 	npm run etl:europarl-activity-stats
 
+etl-pe-enrich-groups: ## Enrichit les noms des groupes PE (HowTheyVote.eu)
+	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
+	npm run etl:pe-enrich-groups
+
 etl-external-colors: ## Import des couleurs PE/Sénat depuis sources externes
 	@echo "$(CYAN)Import des couleurs depuis sources externes...$(RESET)"
 	npm run etl:external-colors

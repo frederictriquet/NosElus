@@ -42,6 +42,7 @@
 		"etl:europarl-historical": "node --import tsx scripts/etl/import-europarl-historical.ts",
 		"etl:europarl-votes": "node --import tsx scripts/etl/import-europarl-votes.ts",
 		"etl:europarl-activity-stats": "node --import tsx scripts/etl/import-europarl-activity-stats.ts",
+		"etl:pe-enrich-groups": "node --import tsx scripts/etl/enrich-pe-group-names.ts",
 		"etl:external-colors": "node --import tsx scripts/etl/import-external-colors.ts",
 		"etl:all": "node --import tsx scripts/etl/import-all.ts",
 		"etl:nosdeputes": "node --import tsx scripts/etl/import-nosdeputes.ts",

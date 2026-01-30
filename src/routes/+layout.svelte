@@ -35,13 +35,23 @@
 				</a>
 			{/each}
 		</nav>
-		<a href="/recherche" class="search-link" class:active={$page.url.pathname.startsWith('/recherche')}>
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="11" cy="11" r="8"></circle>
-				<path d="m21 21-4.3-4.3"></path>
-			</svg>
-			<span class="search-label">Recherche</span>
-		</a>
+		<div class="header-links">
+			<a href="/sources" class="header-link" class:active={$page.url.pathname === '/sources'}>
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+					<path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+					<path d="M3 12A9 3 0 0 0 21 12"></path>
+				</svg>
+				<span class="link-label">Sources</span>
+			</a>
+			<a href="/recherche" class="header-link" class:active={$page.url.pathname.startsWith('/recherche')}>
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="11" cy="11" r="8"></circle>
+					<path d="m21 21-4.3-4.3"></path>
+				</svg>
+				<span class="link-label">Recherche</span>
+			</a>
+		</div>
 	</div>
 </header>
 
@@ -113,7 +123,13 @@
 		font-weight: 500;
 	}
 
-	.search-link {
+	.header-links {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.header-link {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -124,16 +140,16 @@
 		transition: all 0.15s;
 	}
 
-	.search-link:hover {
+	.header-link:hover {
 		color: var(--color-text);
 		background: var(--color-bg);
 	}
 
-	.search-link.active {
+	.header-link.active {
 		color: var(--color-primary);
 	}
 
-	.search-label {
+	.link-label {
 		font-size: 0.875rem;
 	}
 
@@ -156,7 +172,7 @@
 			font-size: 0.875rem;
 		}
 
-		.search-label {
+		.link-label {
 			display: none;
 		}
 	}

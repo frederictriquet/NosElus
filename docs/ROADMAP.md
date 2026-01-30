@@ -169,7 +169,7 @@
 
 | Source | Type | Statut | Documentation |
 |--------|------|--------|---------------|
-| NosDéputés.fr | API JSON | ⚠️ Inaccessible | [API](https://www.nosdeputes.fr/api) |
+| NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
 | NosSénateurs.fr | API JSON | ⚠️ Inaccessible | Site archivé |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
@@ -180,16 +180,19 @@
 
 ### Limitations des sources
 
-**NosDéputés.fr / NosSénateurs.fr (Regards Citoyens)**
-- Ces sites sont actuellement inaccessibles (timeout)
-- Ils fournissaient des statistiques d'activité parlementaire précieuses :
+**NosDéputés.fr (Regards Citoyens)** ✅
+- Site de nouveau accessible (janvier 2026)
+- Statistiques d'activité parlementaire importées (586 députés) :
   - Semaines de présence, présences en commission
   - Interventions en hémicycle et commission
   - Amendements signés/adoptés, rapports
   - Questions écrites/orales
-- **ETL prêts** : `make etl-nosdeputes-stats` et `make etl-nossenateurs-stats`
-- **Alternative utilisée** : Pour les sénateurs, les données d'activité sont récupérées via senat.fr officiel
-- **Action** : Surveiller la remise en ligne de ces sites pour compléter les données
+- **ETL** : `make etl-nosdeputes-stats`
+
+**NosSénateurs.fr (Regards Citoyens)** ⚠️
+- Site toujours inaccessible
+- **ETL prêt** : `make etl-nossenateurs-stats`
+- **Alternative utilisée** : Données d'activité récupérées via senat.fr officiel
 
 **Sénat - Votes nominatifs**
 - Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable

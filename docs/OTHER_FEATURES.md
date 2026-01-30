@@ -15,3 +15,4 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 
 
 
+sur la fiche détaillée d'un sénateur, afficher la liste des mandats

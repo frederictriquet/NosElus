@@ -85,7 +85,10 @@
 			});
 			const newData = await response.json();
 
-			meps = [...meps, ...newData.meps];
+			// Deduplicate by ID to avoid Svelte each_key_duplicate error
+			const existingIds = new Set(meps.map((m) => m.id));
+			const newMeps = newData.meps.filter((m: { id: string }) => !existingIds.has(m.id));
+			meps = [...meps, ...newMeps];
 			currentPage = newData.pagination.page;
 		} catch (e) {
 			console.error('Erreur chargement:', e);

@@ -36,7 +36,7 @@ export async function getLegislatures(): Promise<Legislature[]> {
 		// Exclure les scrutins PE (legislature commence par "PE-")
 		.where(notLike(scrutins.legislature, 'PE-%'))
 		.groupBy(scrutins.legislature)
-		.orderBy(desc(scrutins.legislature));
+		.orderBy(sql`${scrutins.legislature}::int DESC`); // Tri numérique décroissant
 
 	cachedLegislatures = result.map((r) => {
 		const num = parseInt(r.legislature, 10);
@@ -44,9 +44,17 @@ export async function getLegislatures(): Promise<Legislature[]> {
 		const endYear = r.maxDate ? new Date(r.maxDate).getFullYear() : null;
 		const isCurrentLegislature = result[0]?.legislature === r.legislature;
 
+		// Format label: "17e (2024-)" for current legislature, "16e (2022-2024)" for past
+		let labelYears = `${startYear}`;
+		if (isCurrentLegislature) {
+			labelYears += '-';
+		} else if (endYear) {
+			labelYears += `-${endYear}`;
+		}
+
 		return {
 			value: r.legislature,
-			label: `${num}e (${startYear}${isCurrentLegislature ? '-' : `-${endYear}`})`,
+			label: `${num}e (${labelYears})`,
 			startDate: r.minDate,
 			endDate: isCurrentLegislature ? null : r.maxDate
 		};

@@ -48,8 +48,8 @@ export async function getTerms(): Promise<Term[]> {
 			)
 		)
 		.groupBy(mandates.legislature)
-		.having(sql`COUNT(*) >= 30`) // Au moins 30 mandats pour être considéré comme un terme valide
-		.orderBy(desc(mandates.legislature));
+		.having(sql`COUNT(*) >= 5`) // Au moins 5 mandats pour être considéré comme un terme valide (France ~79 MEPs)
+		.orderBy(sql`${mandates.legislature}::int DESC`); // Tri numérique décroissant
 
 	const terms: Term[] = result
 		.filter((r): r is typeof r & { term: string } => r.term !== null)
@@ -59,9 +59,17 @@ export async function getTerms(): Promise<Term[]> {
 			const endYear = r.maxEndDate ? new Date(r.maxEndDate).getFullYear() : null;
 			const isCurrentTerm = index === 0;
 
+			// Format label: "10e (2024-)" for current term, "9e (2019-2024)" for past terms
+			let labelYears = `${startYear}`;
+			if (isCurrentTerm) {
+				labelYears += '-';
+			} else if (endYear) {
+				labelYears += `-${endYear}`;
+			}
+
 			return {
 				value: r.term,
-				label: `${num}e (${startYear}${isCurrentTerm ? '-' : `-${endYear}`})`,
+				label: `${num}e (${labelYears})`,
 				startDate: r.minDate,
 				endDate: isCurrentTerm ? null : r.maxEndDate
 			};

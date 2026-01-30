@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db, actors, mandates, organs } from '$lib/server/db';
-import { count, ilike, or, asc, desc, eq, sql, and, type SQL } from 'drizzle-orm';
+import { count, ilike, or, asc, desc, eq, sql, and, like, type SQL } from 'drizzle-orm';
+import { getTermDates } from '$lib/server/periods/pe-terms';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -10,6 +11,10 @@ export const GET: RequestHandler = async ({ url }) => {
 	const search = url.searchParams.get('q') || '';
 	const sort = url.searchParams.get('sort') || 'lastName';
 	const order = url.searchParams.get('order') || 'asc';
+	const terme = url.searchParams.get('terme');
+
+	// Get term dates if specified
+	const termDates = terme ? await getTermDates(terme) : null;
 
 	// Build base conditions - filter by chamber PE
 	const conditions: SQL[] = [eq(actors.chamber, 'PE')];
@@ -18,6 +23,36 @@ export const GET: RequestHandler = async ({ url }) => {
 		conditions.push(
 			or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!
 		);
+	}
+
+	// If term is specified, filter MEPs who had an active mandate during that period
+	let filteredActorIds: string[] | null = null;
+	if (termDates && terme) {
+		const { start, end } = termDates;
+		const activeMandates = await db
+			.selectDistinct({ actorId: mandates.actorId })
+			.from(mandates)
+			.innerJoin(actors, eq(mandates.actorId, actors.id))
+			.where(
+				and(
+					eq(actors.chamber, 'PE'),
+					like(mandates.organId, 'GPEU-%'),
+					eq(mandates.legislature, terme),
+					end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`,
+					sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
+				)
+			);
+		filteredActorIds = activeMandates.map((m) => m.actorId);
+
+		if (filteredActorIds.length === 0) {
+			return json({
+				meps: [],
+				pagination: { page, limit, total: 0, totalPages: 0 },
+				filters: { search, sort, order, terme }
+			});
+		}
+
+		conditions.push(sql`${actors.id} IN ${filteredActorIds}`);
 	}
 
 	const whereClause = and(...conditions);
@@ -94,7 +129,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		filters: {
 			search,
 			sort,
-			order
+			order,
+			terme
 		}
 	});
 };

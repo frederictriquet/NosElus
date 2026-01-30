@@ -14,3 +14,7 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 3. Long terme : Télécharger les photos localement pendant l'ETL
 
 
+il faut régulièrement que je te rappelle de demander à SERENA pour savoir comment te connecter à la base Postgresql, comment faire pour que tu le fasses tout seul automatiquement
+
+
+le site https://www.nosdeputes.fr/ était inaccessible

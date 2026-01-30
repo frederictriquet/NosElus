@@ -2,6 +2,7 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
 	import GroupAlignmentCard from '$lib/components/GroupAlignmentCard.svelte';
+	import ActivityStatsCard from '$lib/components/ActivityStatsCard.svelte';
 
 	let { data } = $props();
 
@@ -35,6 +36,8 @@
 		timeline={voteStats.voteCount > 0 ? voteStats.timeline : null}
 	/>
 {/await}
+
+<ActivityStatsCard stats={data.activityStats} source="HowTheyVote.eu" chamberType="pe" />
 
 <AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
 	{#snippet children(voteStats)}

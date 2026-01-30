@@ -169,13 +169,121 @@
 
 | Source | Type | Statut | Documentation |
 |--------|------|--------|---------------|
-| NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
+| NosDéputés.fr | API JSON | ⚠️ Inaccessible | [API](https://www.nosdeputes.fr/api) |
+| NosSénateurs.fr | API JSON | ⚠️ Inaccessible | Site archivé |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
 | ParlTrack | JSON dump | ✅ Fait | [parltrack.org](https://parltrack.org/dumps/) |
 | EU Election Results | HTML/CSS | ✅ Fait | [results.elections.europa.eu](https://results.elections.europa.eu) |
 | HowTheyVote.eu | API JSON | ✅ Fait | [howtheyvote.eu](https://howtheyvote.eu) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
+
+### Limitations des sources
+
+**NosDéputés.fr / NosSénateurs.fr (Regards Citoyens)**
+- Ces sites sont actuellement inaccessibles (timeout)
+- Ils fournissaient des statistiques d'activité parlementaire précieuses :
+  - Semaines de présence, présences en commission
+  - Interventions en hémicycle et commission
+  - Amendements signés/adoptés, rapports
+  - Questions écrites/orales
+- **ETL prêts** : `make etl-nosdeputes-stats` et `make etl-nossenateurs-stats`
+- **Alternative utilisée** : Pour les sénateurs, les données d'activité sont récupérées via senat.fr officiel
+- **Action** : Surveiller la remise en ligne de ces sites pour compléter les données
+
+**Sénat - Votes nominatifs**
+- Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable
+- Seuls les résultats agrégés des scrutins sont disponibles
+- Impact : pas de statistiques de vote ni de comparaison pour les sénateurs
+
+---
+
+## Phase 8 - Parité fonctionnelle multi-chambres (39-46 semaines)
+
+### 8.1 Analyse des fonctionnalités AN existantes
+
+| Fonctionnalité AN | Page | PE | Sénat | Notes |
+|------------------|------|:---:|:-----:|-------|
+| Liste élus avec filtres | `/an/deputes` | ✅ | ✅ | Déjà implémenté |
+| Fiche détaillée élu | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
+| Historique mandats | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
+| Liste groupes | `/an/groupes` | 🔜 | 🔜 | À implémenter |
+| Détail groupe | `/an/groupes/[id]` | 🔜 | 🔜 | À implémenter |
+| Liste scrutins | `/an/scrutins` | 🔜 | ❌ | PE: données HowTheyVote, Sénat: pas de données |
+| Détail scrutin | `/an/scrutins/[id]` | 🔜 | ❌ | PE: votes disponibles, Sénat: bloqué |
+| Statistiques | `/an/stats` | 🔜 | ❌ | PE: calculable, Sénat: pas de votes |
+| Carte/Hémicycle | `/an/carte` | 🔜 | ❌ | PE: possible, Sénat: pas de positionnement |
+| Comparateur élus | `/an/compare` | ✅ | ❌ | PE: déjà fait, Sénat: nécessite votes |
+
+**Légende**: ✅ Fait | 🔜 À faire | ❌ Bloqué (données manquantes)
+
+### 8.2 Parlement européen (PE) - 89% faisable
+
+Pages implémentées :
+- [x] `/pe/groupes` - Liste des 9 groupes politiques européens
+- [x] `/pe/groupes/[id]` - Détail groupe avec membres français
+- [x] `/pe/scrutins` - Liste des scrutins PE (données HowTheyVote.eu)
+- [x] `/pe/scrutins/[id]` - Détail scrutin avec votes par eurodéputé
+- [x] `/pe/stats` - Statistiques de vote PE (participation, cohésion groupes)
+- [ ] `/pe/carte` - Visualisation hémicycle européen (optionnel)
+
+Données disponibles :
+- ✅ Eurodéputés français (84 actuels, 303 historiques depuis 2004)
+- ✅ Groupes politiques européens avec couleurs
+- ✅ Votes en session plénière (via HowTheyVote.eu API)
+- ✅ Mandats historiques termes 6-10
+
+### 8.3 Sénat - 33% faisable (bloqué)
+
+Pages implémentées :
+- [x] `/senat/senateurs` - Liste des sénateurs (348)
+- [x] `/senat/senateurs/[id]` - Fiche détaillée sénateur
+- [x] `/senat/groupes` - Liste des groupes sénatoriaux
+- [x] `/senat/groupes/[id]` - Détail groupe avec membres
+
+Pages bloquées (absence de données) :
+- ❌ `/senat/scrutins` - Pas de données de scrutins publics
+- ❌ `/senat/scrutins/[id]` - Pas de votes individuels
+- ❌ `/senat/stats` - Nécessite votes pour calculer statistiques
+- ❌ `/senat/compare` - Comparaison nécessite votes
+
+**Problème**: Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable.
+Sources explorées sans succès :
+- data.senat.fr : dossiers législatifs uniquement
+- API senat.fr : liste sénateurs et commissions uniquement
+- NosSénateurs.fr : site fermé
+
+**Piste potentielle**: Scraping des comptes-rendus de séance (complexe, non fiable)
+
+### 8.4 Infrastructure commune
+
+Améliorations déjà implémentées :
+- [x] Store unifié `chamber-period.ts` (cookies pour persistance)
+- [x] Hooks server pour lecture périodes depuis cookies
+- [x] Sélecteurs de période contextuels par chambre
+- [x] Valeur par défaut : mandature en cours (plus "toutes")
+- [x] Filtrage dropdowns comparateur par période sélectionnée
+
+### 8.5 Ordre d'implémentation recommandé
+
+1. **PE Groupes** (1-2 jours)
+   - `/pe/groupes` - Liste groupes européens
+   - `/pe/groupes/[id]` - Détail avec membres
+
+2. **PE Scrutins** (2-3 jours)
+   - `/pe/scrutins` - Liste scrutins avec filtres
+   - `/pe/scrutins/[id]` - Détail scrutin + votes
+
+3. **PE Stats** (1-2 jours)
+   - `/pe/stats` - Dashboard statistiques PE
+
+4. **Sénat Groupes** (1 jour)
+   - `/senat/groupes` - Liste groupes sénatoriaux
+   - `/senat/groupes/[id]` - Détail avec membres
+
+5. **Investigation Sénat votes** (exploration)
+   - Rechercher sources alternatives pour votes nominatifs
+   - Évaluer faisabilité scraping comptes-rendus
 
 ---
 

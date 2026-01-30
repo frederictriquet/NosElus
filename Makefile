@@ -157,6 +157,10 @@ etl-external-colors: ## Import des couleurs PE/Sénat depuis sources externes
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes
 
+etl-nosdeputes-stats: ## Import statistiques d'activité députés (NosDéputés.fr)
+	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
+	npm run etl:nosdeputes-stats
+
 etl-colors: ## Synchronise les couleurs des groupes
 	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"
 	node --import tsx scripts/etl/sync-group-colors.ts

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
 	import GroupAlignmentCard from '$lib/components/GroupAlignmentCard.svelte';
+	import ActivityStatsCard from '$lib/components/ActivityStatsCard.svelte';
 
 	let { data } = $props();
 
@@ -63,70 +64,7 @@
 	</section>
 {/await}
 
-{#if data.activityStats}
-	<section class="card activity-card">
-		<h2>Activite parlementaire</h2>
-		<p class="section-subtitle">Donnees issues de NosSenateurs.fr (archive)</p>
-		<div class="activity-stats">
-			<div class="stat-group">
-				<h3>Presence</h3>
-				<div class="stat-items">
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.weeksPresent ?? 0}</span>
-						<span class="stat-label">semaines de presence</span>
-					</div>
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.commissionPresences ?? 0}</span>
-						<span class="stat-label">presences en commission</span>
-					</div>
-				</div>
-			</div>
-			<div class="stat-group">
-				<h3>Interventions</h3>
-				<div class="stat-items">
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.hemicycleInterventions ?? 0}</span>
-						<span class="stat-label">interventions en hemicycle</span>
-					</div>
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.commissionInterventions ?? 0}</span>
-						<span class="stat-label">interventions en commission</span>
-					</div>
-				</div>
-			</div>
-			<div class="stat-group">
-				<h3>Travail legislatif</h3>
-				<div class="stat-items">
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.amendmentsSigned ?? 0}</span>
-						<span class="stat-label">amendements signes</span>
-					</div>
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.amendmentsAdopted ?? 0}</span>
-						<span class="stat-label">amendements adoptes</span>
-					</div>
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.reports ?? 0}</span>
-						<span class="stat-label">rapports</span>
-					</div>
-				</div>
-			</div>
-			<div class="stat-group">
-				<h3>Questions</h3>
-				<div class="stat-items">
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.writtenQuestions ?? 0}</span>
-						<span class="stat-label">questions ecrites</span>
-					</div>
-					<div class="stat-item">
-						<span class="stat-value">{data.activityStats.oralQuestions ?? 0}</span>
-						<span class="stat-label">questions orales</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-{/if}
+<ActivityStatsCard stats={data.activityStats} source="senat.fr" chamberType="senat" />
 
 <div class="info-cards">
 	<section class="card">

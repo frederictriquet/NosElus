@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, votes, scrutins, organs, amendments, mandates } from '$lib/server/db';
-import { eq, count, desc, sql, asc } from 'drizzle-orm';
+import { db, actors, votes, scrutins, organs, amendments, mandates, actorStats } from '$lib/server/db';
+import { eq, and, count, desc, sql, asc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -281,10 +281,17 @@ export const load: PageServerLoad = async ({ params }) => {
 			.orderBy(desc(mandates.startDate));
 	};
 
+	// Get activity stats from NosDéputés.fr (if available)
+	const [stats] = await db
+		.select()
+		.from(actorStats)
+		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'nosdeputes')));
+
 	return {
 		// Synchronous data
 		actor,
 		group: deputyGroup || null,
+		activityStats: stats || null,
 		// Streamed data
 		voteStats: loadVoteStats(),
 		recentVotes: loadRecentVotes(),

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, mandates, organs, votes, scrutins } from '$lib/server/db';
+import { db, actors, mandates, organs, votes, scrutins, actorStats } from '$lib/server/db';
 import { eq, and, count, desc, asc, sql, inArray } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
@@ -208,10 +208,17 @@ export const load: PageServerLoad = async ({ params }) => {
 		};
 	};
 
+	// Get activity stats from HowTheyVote
+	const [stats] = await db
+		.select()
+		.from(actorStats)
+		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'howtheyvote')));
+
 	return {
 		actor,
 		group: mepGroup || null,
 		mandates: mepMandates,
+		activityStats: stats || null,
 		// Streamed data
 		voteStats: loadVoteStats(),
 		recentVotes: loadRecentVotes(),

@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-external-colors etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -141,6 +141,10 @@ etl-europarl-historical: ## Import historique des eurodéputés (depuis 2004)
 etl-europarl-votes: ## Import des votes PE (HowTheyVote.eu)
 	@echo "$(CYAN)Import des votes du Parlement Européen...$(RESET)"
 	npm run etl:europarl-votes
+
+etl-europarl-activity-stats: ## Import statistiques d'activité MEPs (HowTheyVote.eu)
+	@echo "$(CYAN)Import statistiques d'activité des eurodéputés...$(RESET)"
+	npm run etl:europarl-activity-stats
 
 etl-external-colors: ## Import des couleurs PE/Sénat depuis sources externes
 	@echo "$(CYAN)Import des couleurs depuis sources externes...$(RESET)"

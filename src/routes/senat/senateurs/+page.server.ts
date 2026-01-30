@@ -3,14 +3,14 @@ import { db, actors, mandates, organs } from '$lib/server/db';
 import { count, ilike, or, asc, desc, eq, sql, and, type SQL } from 'drizzle-orm';
 import { getRenouvellementDates } from '$lib/server/periods/senat-renouvellements';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = 24;
 	const offset = (page - 1) * limit;
 	const search = url.searchParams.get('q') || '';
 	const sort = url.searchParams.get('sort') || 'lastName';
 	const order = url.searchParams.get('order') || 'asc';
-	const renouvellement = url.searchParams.get('renouvellement');
+	const renouvellement = locals.periods.senat;
 
 	// Get renouvellement dates if specified
 	const renouvellementDates = renouvellement ? await getRenouvellementDates(renouvellement) : null;
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	// If renouvellement is specified, filter senators who had an active mandate during that period
 	let filteredActorIds: string[] | null = null;
-	if (renouvellementDates) {
+	if (renouvellementDates && renouvellement !== 'all') {
 		const { start, end } = renouvellementDates;
 		// A mandate is active during a period if:
 		// - mandate.startDate <= period.end (or period.end is null = current)

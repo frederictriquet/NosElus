@@ -6,37 +6,12 @@
 
 	let { children, data } = $props();
 
-	// Initialiser le store avec le renouvellement courant au premier chargement
+	// Initialiser le store avec le renouvellement courant au premier chargement (si pas de cookie)
 	$effect(() => {
 		if (browser && data.currentRenouvellement) {
 			chamberPeriodStore.initialize('senat', data.currentRenouvellement);
 		}
 	});
-
-	// Synchroniser l'URL vers le store quand on navigue
-	$effect(() => {
-		if (browser) {
-			const urlRenouvellement = $page.url.searchParams.get('renouvellement');
-			if (urlRenouvellement !== null) {
-				const isValid = data.renouvellements.some(
-					(r: { value: string }) => r.value === urlRenouvellement
-				);
-				if (isValid) {
-					chamberPeriodStore.set('senat', urlRenouvellement);
-				}
-			}
-		}
-	});
-
-	// Fonction pour générer les liens avec le paramètre renouvellement
-	function navLink(path: string): string {
-		let renouvellement: string | null = null;
-		chamberPeriodStore.subscribe((state) => {
-			renouvellement = state.senat;
-		})();
-		if (!renouvellement) return path;
-		return `${path}?renouvellement=${renouvellement}`;
-	}
 
 	const subNavItems = [{ href: '/senat/senateurs', label: 'Sénateurs', match: '/senat/senateurs' }];
 </script>
@@ -45,7 +20,7 @@
 	<div class="chamber-header">
 		<nav class="sub-nav">
 			{#each subNavItems as item}
-				<a href={navLink(item.href)} class:active={$page.url.pathname.startsWith(item.match)}>
+				<a href={item.href} class:active={$page.url.pathname.startsWith(item.match)}>
 					{item.label}
 				</a>
 			{/each}
@@ -55,7 +30,7 @@
 			chamber="senat"
 			label="Renouvellement"
 			allLabel="Tous les renouvellements"
-			urlParam="renouvellement"
+			currentValue={data.selectedRenouvellement}
 		/>
 	</div>
 	{@render children()}

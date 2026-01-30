@@ -2,16 +2,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db, actors, mandates, organs } from '$lib/server/db';
 import { count, ilike, or, asc, desc, eq, sql, and, inArray, type SQL } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = 24;
 	const offset = (page - 1) * limit;
 	const search = url.searchParams.get('q') || '';
 	const sort = url.searchParams.get('sort') || 'lastName';
 	const order = url.searchParams.get('order') || 'asc';
-	const periodFilters = parsePeriodFilters(url);
+	const legislature = locals.periods.an;
 
 	// Build base conditions
 	const conditions: SQL[] = [];
@@ -22,11 +21,11 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	// If legislature filter, only show deputies with mandate in that legislature
 	let actorIdsInLegislature: string[] | null = null;
-	if (periodFilters.legislature) {
+	if (legislature && legislature !== 'all') {
 		const mandatesInLeg = await db
 			.selectDistinct({ actorId: mandates.actorId })
 			.from(mandates)
-			.where(eq(mandates.legislature, periodFilters.legislature));
+			.where(eq(mandates.legislature, legislature));
 		actorIdsInLegislature = mandatesInLeg.map((m) => m.actorId);
 
 		if (actorIdsInLegislature.length > 0) {
@@ -35,7 +34,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({
 				deputies: [],
 				pagination: { page, limit, total: 0, totalPages: 0 },
-				filters: { search, sort, order, legislature: periodFilters.legislature }
+				filters: { search, sort, order, legislature: legislature }
 			});
 		}
 	}
@@ -105,7 +104,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			search,
 			sort,
 			order,
-			legislature: periodFilters.legislature
+			legislature: legislature
 		}
 	});
 };

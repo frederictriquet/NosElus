@@ -1,16 +1,15 @@
 import type { PageServerLoad } from './$types';
 import { db, organs } from '$lib/server/db';
 import { eq, and, type SQL } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async ({ url }) => {
-	const periodFilters = parsePeriodFilters(url);
+export const load: PageServerLoad = async ({ locals }) => {
+	const legislature = locals.periods.an;
 
 	// Build conditions
 	const conditions: SQL[] = [eq(organs.type, 'GP')];
 
-	if (periodFilters.legislature) {
-		conditions.push(eq(organs.legislature, periodFilters.legislature));
+	if (legislature && legislature !== 'all') {
+		conditions.push(eq(organs.legislature, legislature));
 	}
 
 	const groups = await db
@@ -28,7 +27,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	return {
 		groups,
 		filters: {
-			legislature: periodFilters.legislature
+			legislature: legislature
 		}
 	};
 };

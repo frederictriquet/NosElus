@@ -1,15 +1,13 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, mandates } from '$lib/server/db';
 import { eq, and, sql, inArray, isNull, or, gte, notLike } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 import { getLegislatureDates, getCurrentLegislature } from '$lib/server/periods/an-legislatures';
 
-export const load: PageServerLoad = async ({ url }) => {
-	const periodFilters = parsePeriodFilters(url);
-
+export const load: PageServerLoad = async ({ locals }) => {
 	// Cette page nécessite une législature spécifique (défaut: législature courante)
+	// "all" n'est pas supporté sur cette page, on utilise la période courante
 	const currentLeg = await getCurrentLegislature();
-	const legislature = periodFilters.legislature || currentLeg;
+	const legislature = (locals.periods.an && locals.periods.an !== 'all') ? locals.periods.an : currentLeg;
 	const legislatureInfo = await getLegislatureDates(legislature);
 
 	// Date de référence : aujourd'hui pour législature en cours, date de fin pour les passées

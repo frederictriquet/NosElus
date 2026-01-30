@@ -1,6 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
+// Noms des cookies pour les périodes par chambre
+const PERIOD_COOKIES = {
+	an: 'noselus-period-an',
+	senat: 'noselus-period-senat',
+	pe: 'noselus-period-pe'
+} as const;
+
 // Redirections des anciennes URLs vers les nouvelles
 const REDIRECTS: Record<string, string> = {
 	'/deputes': '/an/deputes',
@@ -14,6 +21,13 @@ const REDIRECTS: Record<string, string> = {
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Lire les cookies de périodes et les exposer dans locals
+	event.locals.periods = {
+		an: event.cookies.get(PERIOD_COOKIES.an) || null,
+		senat: event.cookies.get(PERIOD_COOKIES.senat) || null,
+		pe: event.cookies.get(PERIOD_COOKIES.pe) || null
+	};
+
 	const pathname = event.url.pathname;
 
 	// Vérifier les redirections exactes

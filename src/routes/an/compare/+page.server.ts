@@ -1,20 +1,21 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, mandates, organs } from '$lib/server/db';
 import { eq, and, count, sql, inArray, gte, lte, type SQL } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
 	const deputy1Id = url.searchParams.get('d1');
 	const deputy2Id = url.searchParams.get('d2');
-	const periodFilters = parsePeriodFilters(url);
+	const legislature = locals.periods.an;
+	const dateFrom = url.searchParams.get('dateFrom') || null;
+	const dateTo = url.searchParams.get('dateTo') || null;
 
 	// Build deputy filter conditions based on legislature
 	let deputyIds: string[] | null = null;
-	if (periodFilters.legislature) {
+	if (legislature && legislature !== 'all') {
 		const mandatesInLeg = await db
 			.selectDistinct({ actorId: mandates.actorId })
 			.from(mandates)
-			.where(eq(mandates.legislature, periodFilters.legislature));
+			.where(eq(mandates.legislature, legislature));
 		deputyIds = mandatesInLeg.map((m) => m.actorId);
 	}
 
@@ -33,9 +34,9 @@ export const load: PageServerLoad = async ({ url }) => {
 			: [];
 
 	const filters = {
-		legislature: periodFilters.legislature,
-		dateFrom: periodFilters.dateFrom,
-		dateTo: periodFilters.dateTo
+		legislature,
+		dateFrom,
+		dateTo
 	};
 
 	// If no deputies selected, return early (no comparison to stream)
@@ -61,14 +62,14 @@ export const load: PageServerLoad = async ({ url }) => {
 
 		// Build scrutin filter conditions for period
 		const scrutinConditions: SQL[] = [];
-		if (periodFilters.legislature) {
-			scrutinConditions.push(eq(scrutins.legislature, periodFilters.legislature));
+		if (legislature && legislature !== 'all') {
+			scrutinConditions.push(eq(scrutins.legislature, legislature));
 		}
-		if (periodFilters.dateFrom) {
-			scrutinConditions.push(gte(scrutins.date, periodFilters.dateFrom));
+		if (dateFrom) {
+			scrutinConditions.push(gte(scrutins.date, dateFrom));
 		}
-		if (periodFilters.dateTo) {
-			scrutinConditions.push(lte(scrutins.date, periodFilters.dateTo));
+		if (dateTo) {
+			scrutinConditions.push(lte(scrutins.date, dateTo));
 		}
 
 		// Get scrutin IDs matching period filter

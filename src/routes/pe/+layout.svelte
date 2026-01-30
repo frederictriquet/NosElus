@@ -6,35 +6,12 @@
 
 	let { children, data } = $props();
 
-	// Initialiser le store avec le terme courant au premier chargement
+	// Initialiser le store avec le terme courant au premier chargement (si pas de cookie)
 	$effect(() => {
 		if (browser && data.currentTerm) {
 			chamberPeriodStore.initialize('pe', data.currentTerm);
 		}
 	});
-
-	// Synchroniser l'URL vers le store quand on navigue
-	$effect(() => {
-		if (browser) {
-			const urlTerm = $page.url.searchParams.get('terme');
-			if (urlTerm !== null) {
-				const isValid = data.terms.some((t: { value: string }) => t.value === urlTerm);
-				if (isValid) {
-					chamberPeriodStore.set('pe', urlTerm);
-				}
-			}
-		}
-	});
-
-	// Fonction pour générer les liens avec le paramètre terme
-	function navLink(path: string): string {
-		let terme: string | null = null;
-		chamberPeriodStore.subscribe((state) => {
-			terme = state.pe;
-		})();
-		if (!terme) return path;
-		return `${path}?terme=${terme}`;
-	}
 
 	const subNavItems = [
 		{ href: '/pe/eurodeputes', label: 'Eurodéputés', match: '/pe/eurodeputes' },
@@ -47,7 +24,7 @@
 		<nav class="sub-nav">
 			{#each subNavItems as item}
 				<a
-					href={navLink(item.href)}
+					href={item.href}
 					class:active={$page.url.pathname === item.match ||
 						(item.match !== '/pe/eurodeputes/compare' &&
 							$page.url.pathname.startsWith(item.match) &&
@@ -62,7 +39,7 @@
 			chamber="pe"
 			label="Terme"
 			allLabel="Tous les termes"
-			urlParam="terme"
+			currentValue={data.selectedTerm}
 		/>
 	</div>
 	{@render children()}

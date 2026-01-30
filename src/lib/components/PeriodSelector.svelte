@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import {
 		chamberPeriodStore,
 		getPeriodShortLabel,
@@ -20,31 +18,18 @@
 		chamber: Chamber;
 		label: string; // "Législature", "Terme", "Renouvellement"
 		allLabel: string; // "Toutes les législatures", "Tous les termes", etc.
-		urlParam: string; // "legislature", "terme", "renouvellement"
+		currentValue: PeriodValue; // Valeur actuelle depuis le serveur
 	}
 
-	let { periods, chamber, label, allLabel, urlParam }: Props = $props();
+	let { periods, chamber, label, allLabel, currentValue }: Props = $props();
 
 	let isOpen = $state(false);
 
-	// Valeur actuelle depuis l'URL (réactif via $page)
-	let currentValue = $derived<PeriodValue>($page.url.searchParams.get(urlParam));
-
 	function handleSelect(value: PeriodValue) {
+		// "all" représente "toutes les périodes"
+		// Met à jour le cookie et invalide les données (rechargement automatique)
 		chamberPeriodStore.set(chamber, value);
 		isOpen = false;
-
-		// Mettre à jour l'URL
-		const currentPath = $page.url.pathname;
-		const urlParams = new URLSearchParams($page.url.searchParams);
-		if (value) {
-			urlParams.set(urlParam, value);
-		} else {
-			urlParams.delete(urlParam);
-		}
-		// Reset pagination
-		urlParams.delete('page');
-		goto(`${currentPath}?${urlParams.toString()}`, { replaceState: true });
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -74,8 +59,8 @@
 		<div class="selector-dropdown">
 			<button
 				class="dropdown-item"
-				class:active={currentValue === null}
-				onclick={() => handleSelect(null)}
+				class:active={currentValue === 'all'}
+				onclick={() => handleSelect('all')}
 			>
 				{allLabel}
 			</button>

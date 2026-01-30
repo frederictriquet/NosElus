@@ -2,10 +2,9 @@ import type { PageServerLoad } from './$types';
 import { db, organs, votes, actors, scrutins } from '$lib/server/db';
 import { eq, count, sql, desc, and, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async ({ params, url }) => {
-	const periodFilters = parsePeriodFilters(url);
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const legislature = locals.periods.an;
 
 	// Get group info (synchronous - needed for 404 and page structure)
 	const [group] = await db
@@ -34,8 +33,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	// Build vote conditions helper
 	const buildVoteConditions = (): SQL[] => {
 		const conditions: SQL[] = [inArray(votes.groupId, relatedGroupIds)];
-		if (periodFilters.legislature) {
-			conditions.push(eq(scrutins.legislature, periodFilters.legislature));
+		if (legislature && legislature !== 'all') {
+			conditions.push(eq(scrutins.legislature, legislature));
 		}
 		return conditions;
 	};
@@ -108,7 +107,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		// Synchronous data
 		group,
 		filters: {
-			legislature: periodFilters.legislature
+			legislature: legislature
 		},
 		// Streamed data
 		distributionData: loadDistribution(),

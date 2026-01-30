@@ -1,15 +1,16 @@
 import type { PageServerLoad } from './$types';
 import { db, scrutins } from '$lib/server/db';
 import { count, ilike, eq, desc, and, gte, lte, type SQL } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = 20;
 	const offset = (page - 1) * limit;
 	const search = url.searchParams.get('q') || '';
 	const result = url.searchParams.get('result') || '';
-	const periodFilters = parsePeriodFilters(url);
+	const legislature = locals.periods.an;
+	const dateFrom = url.searchParams.get('dateFrom') || null;
+	const dateTo = url.searchParams.get('dateTo') || null;
 
 	// Build where conditions
 	const conditions: SQL[] = [];
@@ -22,16 +23,16 @@ export const load: PageServerLoad = async ({ url }) => {
 		conditions.push(eq(scrutins.result, result));
 	}
 
-	if (periodFilters.legislature) {
-		conditions.push(eq(scrutins.legislature, periodFilters.legislature));
+	if (legislature && legislature !== 'all') {
+		conditions.push(eq(scrutins.legislature, legislature));
 	}
 
-	if (periodFilters.dateFrom) {
-		conditions.push(gte(scrutins.date, periodFilters.dateFrom));
+	if (dateFrom) {
+		conditions.push(gte(scrutins.date, dateFrom));
 	}
 
-	if (periodFilters.dateTo) {
-		conditions.push(lte(scrutins.date, periodFilters.dateTo));
+	if (dateTo) {
+		conditions.push(lte(scrutins.date, dateTo));
 	}
 
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -70,9 +71,9 @@ export const load: PageServerLoad = async ({ url }) => {
 		filters: {
 			search,
 			result,
-			legislature: periodFilters.legislature,
-			dateFrom: periodFilters.dateFrom,
-			dateTo: periodFilters.dateTo
+			legislature: legislature,
+			dateFrom: dateFrom,
+			dateTo: dateTo
 		}
 	};
 };

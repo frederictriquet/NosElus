@@ -4,14 +4,14 @@ import { db, actors, mandates, organs } from '$lib/server/db';
 import { count, ilike, or, asc, desc, eq, sql, and, like, type SQL } from 'drizzle-orm';
 import { getTermDates } from '$lib/server/periods/pe-terms';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = 24;
 	const offset = (page - 1) * limit;
 	const search = url.searchParams.get('q') || '';
 	const sort = url.searchParams.get('sort') || 'lastName';
 	const order = url.searchParams.get('order') || 'asc';
-	const terme = url.searchParams.get('terme');
+	const terme = locals.periods.pe;
 
 	// Get term dates if specified
 	const termDates = terme ? await getTermDates(terme) : null;
@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	// If term is specified, filter MEPs who had an active mandate during that period
 	let filteredActorIds: string[] | null = null;
-	if (termDates && terme) {
+	if (termDates && terme && terme !== 'all') {
 		const { start, end } = termDates;
 		const activeMandates = await db
 			.selectDistinct({ actorId: mandates.actorId })

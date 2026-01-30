@@ -6,37 +6,12 @@
 
 	let { children, data } = $props();
 
-	// Initialiser le store avec la législature courante au premier chargement
+	// Initialiser le store avec la législature courante au premier chargement (si pas de cookie)
 	$effect(() => {
 		if (browser && data.currentLegislature) {
 			chamberPeriodStore.initialize('an', data.currentLegislature);
 		}
 	});
-
-	// Synchroniser l'URL vers le store quand on navigue
-	$effect(() => {
-		if (browser) {
-			const urlLegislature = $page.url.searchParams.get('legislature');
-			if (urlLegislature !== null) {
-				const isValid = data.legislatures.some(
-					(l: { value: string }) => l.value === urlLegislature
-				);
-				if (isValid) {
-					chamberPeriodStore.set('an', urlLegislature);
-				}
-			}
-		}
-	});
-
-	// Fonction pour générer les liens avec le paramètre legislature
-	function navLink(path: string): string {
-		let legislature: string | null = null;
-		chamberPeriodStore.subscribe((state) => {
-			legislature = state.an;
-		})();
-		if (!legislature) return path;
-		return `${path}?legislature=${legislature}`;
-	}
 
 	const subNavItems = [
 		{ href: '/an/deputes', label: 'Députés', match: '/an/deputes' },
@@ -52,10 +27,7 @@
 	<div class="chamber-header">
 		<nav class="sub-nav">
 			{#each subNavItems as item}
-				<a
-					href={navLink(item.href)}
-					class:active={$page.url.pathname.startsWith(item.match)}
-				>
+				<a href={item.href} class:active={$page.url.pathname.startsWith(item.match)}>
 					{item.label}
 				</a>
 			{/each}
@@ -65,7 +37,7 @@
 			chamber="an"
 			label="Législature"
 			allLabel="Toutes les législatures"
-			urlParam="legislature"
+			currentValue={data.selectedLegislature}
 		/>
 	</div>
 	{@render children()}

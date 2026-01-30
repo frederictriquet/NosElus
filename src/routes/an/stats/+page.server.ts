@@ -1,21 +1,22 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs, mandates } from '$lib/server/db';
 import { count, eq, sql, desc, inArray, and, gte, lte, notLike, isNull, or, type SQL } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
 
-export const load: PageServerLoad = async ({ url }) => {
-	const periodFilters = parsePeriodFilters(url);
+export const load: PageServerLoad = async ({ url, locals }) => {
+	const legislature = locals.periods.an;
+	const dateFrom = url.searchParams.get('dateFrom') || null;
+	const dateTo = url.searchParams.get('dateTo') || null;
 
 	// Build scrutin filter conditions
 	const scrutinConditions: SQL[] = [];
-	if (periodFilters.legislature) {
-		scrutinConditions.push(eq(scrutins.legislature, periodFilters.legislature));
+	if (legislature && legislature !== 'all') {
+		scrutinConditions.push(eq(scrutins.legislature, legislature));
 	}
-	if (periodFilters.dateFrom) {
-		scrutinConditions.push(gte(scrutins.date, periodFilters.dateFrom));
+	if (dateFrom) {
+		scrutinConditions.push(gte(scrutins.date, dateFrom));
 	}
-	if (periodFilters.dateTo) {
-		scrutinConditions.push(lte(scrutins.date, periodFilters.dateTo));
+	if (dateTo) {
+		scrutinConditions.push(lte(scrutins.date, dateTo));
 	}
 
 	const scrutinWhereClause = scrutinConditions.length > 0 ? and(...scrutinConditions) : undefined;
@@ -30,9 +31,9 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	// ===== Synchronous data (needed immediately for page structure) =====
 	const filters = {
-		legislature: periodFilters.legislature,
-		dateFrom: periodFilters.dateFrom,
-		dateTo: periodFilters.dateTo
+		legislature,
+		dateFrom,
+		dateTo
 	};
 
 	// ===== Async loaders - each returns a promise that will be streamed =====
@@ -43,9 +44,9 @@ export const load: PageServerLoad = async ({ url }) => {
 			scrutinConditions.length > 0
 				? db.select({ id: scrutins.id }).from(scrutins).where(scrutinWhereClause)
 				: Promise.resolve(null),
-			periodFilters.legislature
+			legislature
 				? db.selectDistinct({ actorId: mandates.actorId }).from(mandates)
-					.where(eq(mandates.legislature, periodFilters.legislature))
+					.where(eq(mandates.legislature, legislature))
 				: Promise.resolve(null)
 		]);
 

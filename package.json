@@ -44,6 +44,7 @@
 		"etl:external-colors": "node --import tsx scripts/etl/import-external-colors.ts",
 		"etl:all": "node --import tsx scripts/etl/import-all.ts",
 		"etl:nosdeputes": "node --import tsx scripts/etl/import-nosdeputes.ts",
+		"etl:nossenateurs-stats": "node --import tsx scripts/etl/import-nossenateurs-stats.ts",
 		"etl:download": "node --import tsx scripts/etl/download-data.ts",
 		"lint-staged": "lint-staged",
 		"commitlint": "commitlint"

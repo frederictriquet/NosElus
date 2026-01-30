@@ -7,6 +7,7 @@ export { votes, type Vote, type NewVote } from './votes';
 export { laws, type Law, type NewLaw } from './laws';
 export { amendments, type Amendment, type NewAmendment } from './amendments';
 export { syncMetadata, type SyncMetadata, type NewSyncMetadata } from './sync-metadata';
+export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
 
 // Relations
 export {

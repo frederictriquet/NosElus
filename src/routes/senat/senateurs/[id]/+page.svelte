@@ -49,6 +49,71 @@
 	birthPlace={data.actor.birthPlace}
 />
 
+{#if data.activityStats}
+	<section class="card activity-card">
+		<h2>Activite parlementaire</h2>
+		<p class="section-subtitle">Donnees issues de NosSenateurs.fr (archive)</p>
+		<div class="activity-stats">
+			<div class="stat-group">
+				<h3>Presence</h3>
+				<div class="stat-items">
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.weeksPresent ?? 0}</span>
+						<span class="stat-label">semaines de presence</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.commissionPresences ?? 0}</span>
+						<span class="stat-label">presences en commission</span>
+					</div>
+				</div>
+			</div>
+			<div class="stat-group">
+				<h3>Interventions</h3>
+				<div class="stat-items">
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.hemicycleInterventions ?? 0}</span>
+						<span class="stat-label">interventions en hemicycle</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.commissionInterventions ?? 0}</span>
+						<span class="stat-label">interventions en commission</span>
+					</div>
+				</div>
+			</div>
+			<div class="stat-group">
+				<h3>Travail legislatif</h3>
+				<div class="stat-items">
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.amendmentsSigned ?? 0}</span>
+						<span class="stat-label">amendements signes</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.amendmentsAdopted ?? 0}</span>
+						<span class="stat-label">amendements adoptes</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.reports ?? 0}</span>
+						<span class="stat-label">rapports</span>
+					</div>
+				</div>
+			</div>
+			<div class="stat-group">
+				<h3>Questions</h3>
+				<div class="stat-items">
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.writtenQuestions ?? 0}</span>
+						<span class="stat-label">questions ecrites</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{data.activityStats.oralQuestions ?? 0}</span>
+						<span class="stat-label">questions orales</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+{/if}
+
 <div class="info-cards">
 	<section class="card">
 		<h2>Informations</h2>
@@ -464,6 +529,49 @@
 		font-size: 0.8125rem;
 	}
 
+	/* Activity stats */
+	.activity-card {
+		margin-bottom: 1.5rem;
+	}
+
+	.activity-stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.stat-group h3 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
+		margin-bottom: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.stat-items {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.stat-item {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.stat-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--color-primary);
+	}
+
+	.stat-label {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
 	@media (max-width: 640px) {
 		.info-item {
 			flex-direction: column;
@@ -472,6 +580,10 @@
 
 		.info-item dd {
 			text-align: left;
+		}
+
+		.activity-stats {
+			grid-template-columns: 1fr 1fr;
 		}
 	}
 </style>

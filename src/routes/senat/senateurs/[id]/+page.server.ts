@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, mandates, organs } from '$lib/server/db';
+import { db, actors, mandates, organs, actorStats } from '$lib/server/db';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
@@ -63,10 +63,17 @@ export const load: PageServerLoad = async ({ params }) => {
 		.orderBy(desc(mandates.startDate))
 		.limit(1);
 
+	// Get activity stats from NosSénateurs.fr
+	const [stats] = await db
+		.select()
+		.from(actorStats)
+		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'nossenateurs')));
+
 	return {
 		actor,
 		group: senatorGroup || null,
 		mandates: senatorMandates,
-		senatorMandate: senatorMandate[0] || null
+		senatorMandate: senatorMandate[0] || null,
+		activityStats: stats || null
 	};
 };

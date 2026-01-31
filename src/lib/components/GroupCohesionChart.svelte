@@ -1,4 +1,12 @@
 <script lang="ts">
+	import { LayerCake, Svg } from 'layercake';
+	import { scalePoint } from 'd3-scale';
+	import Line from './charts/Line.svelte';
+	import AxisX from './charts/AxisX.svelte';
+	import AxisY from './charts/AxisY.svelte';
+	import HorizontalLine from './charts/HorizontalLine.svelte';
+	import Scatter from './charts/Scatter.svelte';
+
 	interface CohesionData {
 		month: string;
 		cohesion: number;
@@ -14,7 +22,21 @@
 
 	let { data, periodStart, periodEnd, height = 200 }: Props = $props();
 
-	const monthNames = ['', 'jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc'];
+	const monthNames = [
+		'',
+		'jan',
+		'fév',
+		'mar',
+		'avr',
+		'mai',
+		'jun',
+		'jul',
+		'aoû',
+		'sep',
+		'oct',
+		'nov',
+		'déc'
+	];
 
 	function formatLabel(monthStr: string): string {
 		const monthNum = parseInt(monthStr.slice(5, 7));
@@ -22,7 +44,6 @@
 		return `${monthNames[monthNum]} ${year}`;
 	}
 
-	// Generate all months between two dates (inclusive)
 	function generateMonthRange(startMonth: string, endMonth: string): string[] {
 		const result: string[] = [];
 		let [year, month] = startMonth.split('-').map(Number);
@@ -49,8 +70,11 @@
 		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 	}
 
-	// Process data to fill gaps
-	function processData(data: CohesionData[], periodStart?: string | null, periodEnd?: string | null): CohesionData[] {
+	function processData(
+		data: CohesionData[],
+		periodStart?: string | null,
+		periodEnd?: string | null
+	): CohesionData[] {
 		const dataMap = new Map((data || []).map((d) => [d.month, d]));
 
 		let startMonth: string;
@@ -81,42 +105,42 @@
 
 	const chartData = $derived.by(() => {
 		const processed = processData(data, periodStart, periodEnd);
-		if (processed.length === 0) return { points: [], hasData: false };
+		if (processed.length === 0) return { allMonths: [], pointsWithData: [], hasData: false };
 
-		// Filter months with actual data for the line
 		const pointsWithData = processed.filter((d) => d.scrutinCount > 0);
-		if (pointsWithData.length === 0) return { points: [], hasData: false };
+		if (pointsWithData.length === 0)
+			return { allMonths: processed, pointsWithData: [], hasData: false };
 
-		// Calculate average cohesion
 		const avgCohesion =
 			pointsWithData.reduce((sum, d) => sum + d.cohesion, 0) / pointsWithData.length;
 
 		return {
-			processed,
+			allMonths: processed,
 			pointsWithData,
 			avgCohesion,
 			hasData: true
 		};
 	});
 
-	// SVG path for the line
-	const linePath = $derived.by(() => {
-		if (!chartData.hasData || !chartData.pointsWithData) return '';
+	// X domain: all month strings
+	const xDomain = $derived(chartData.allMonths.map((d) => d.month));
 
-		const points = chartData.pointsWithData;
-		const processed = chartData.processed!;
-
-		// Map month to x position
-		const monthToX = new Map(processed.map((d, i) => [d.month, (i + 0.5) / processed.length * 100]));
-
-		return points
-			.map((point, i) => {
-				const x = monthToX.get(point.month) || 0;
-				const y = 100 - point.cohesion; // Invert Y (0 at top)
-				return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-			})
-			.join(' ');
+	// Filter ticks to show max ~12 labels
+	const xTicks = $derived.by(() => {
+		const months = chartData.allMonths;
+		if (months.length <= 12) return months.map((d) => d.month);
+		const step = Math.ceil(months.length / 12);
+		return months.filter((_, i) => i % step === 0).map((d) => d.month);
 	});
+
+	function formatXLabel(d: unknown): string {
+		return formatLabel(d as string);
+	}
+
+	function formatTooltip(d: unknown): string {
+		const item = d as CohesionData;
+		return `${formatLabel(item.month)}: ${item.cohesion.toFixed(0)}% (${item.scrutinCount} scrutins)`;
+	}
 </script>
 
 <div class="chart-wrapper" style="--chart-height: {height}px;">
@@ -127,76 +151,23 @@
 			</span>
 		</div>
 		<div class="chart-container">
-			<div class="axis-y">
-				{#each [100, 75, 50] as tick}
-					<span class="y-tick" style="bottom: {tick * 0.95}%">{tick}%</span>
-				{/each}
-			</div>
-			<div class="chart-area">
-				<!-- viewBox with 5% top padding for circles at 100% cohesion -->
-				<svg viewBox="0 -5 100 105" preserveAspectRatio="none" class="chart-svg">
-					<!-- Grid lines -->
-					{#each [100, 75, 50] as tick}
-						{@const y = 100 - tick}
-						<line
-							x1="0"
-							y1="{y}%"
-							x2="100"
-							y2="{y}%"
-							stroke="var(--color-border, #e5e7eb)"
-							stroke-width="0.5"
-							vector-effect="non-scaling-stroke"
-						/>
-					{/each}
-					<!-- Average line -->
-					<line
-						x1="0"
-						y1="{100 - (chartData.avgCohesion || 0)}%"
-						x2="100"
-						y2="{100 - (chartData.avgCohesion || 0)}%"
-						stroke="var(--color-primary, #3b82f6)"
-						stroke-width="1"
-						stroke-dasharray="4 2"
-						vector-effect="non-scaling-stroke"
-						opacity="0.5"
-					/>
-					<!-- Cohesion line -->
-					<path
-						d={linePath}
-						fill="none"
-						stroke="var(--color-primary, #3b82f6)"
-						stroke-width="2"
-						vector-effect="non-scaling-stroke"
-						stroke-linejoin="round"
-						stroke-linecap="round"
-					/>
-				</svg>
-				<!-- Data points as positioned divs to maintain aspect ratio -->
-				{#each chartData.pointsWithData || [] as point}
-					{@const processed = chartData.processed || []}
-					{@const monthIndex = processed.findIndex((d) => d.month === point.month)}
-					{@const x = (monthIndex + 0.5) / processed.length * 100}
-					{@const y = (100 - point.cohesion) * 0.95 + 2.5}
-					<div
-						class="data-point"
-						style="left: {x}%; top: {y}%;"
-						title="{formatLabel(point.month)}: {point.cohesion.toFixed(0)}% ({point.scrutinCount} scrutins)"
-					></div>
-				{/each}
-			</div>
-		</div>
-
-		<div class="axis-x">
-			{#each chartData.processed || [] as month, i}
-				{#if i % Math.ceil((chartData.processed?.length || 1) / 12) === 0}
-					<span
-						class="axis-label"
-						style="left: {((i + 0.5) / (chartData.processed?.length || 1)) * 100}%"
-					>
-						{formatLabel(month.month)}
-					</span>
-				{/if}
-			{/each}
+			<LayerCake
+				padding={{ top: 10, right: 10, bottom: 40, left: 35 }}
+				x="month"
+				y="cohesion"
+				xScale={scalePoint().padding(0.5)}
+				{xDomain}
+				yDomain={[0, 100]}
+				data={chartData.pointsWithData}
+			>
+				<Svg>
+					<AxisY ticks={[100, 75, 50, 25, 0]} />
+					<AxisX ticks={xTicks} format={formatXLabel} gridlines />
+					<HorizontalLine y={chartData.avgCohesion || 0} />
+					<Line />
+					<Scatter r={4} formatTitle={formatTooltip} />
+				</Svg>
+			</LayerCake>
 		</div>
 
 		<p class="chart-description">
@@ -231,49 +202,8 @@
 	}
 
 	.chart-container {
-		display: flex;
-		height: var(--chart-height, 200px);
-	}
-
-	.axis-y {
-		width: 3rem;
-		position: relative;
-		flex-shrink: 0;
-	}
-
-	.y-tick {
-		position: absolute;
-		right: 0.5rem;
-		transform: translateY(50%);
-		font-size: 0.65rem;
-		color: var(--color-text-muted);
-		text-align: right;
-	}
-
-	.chart-area {
-		flex: 1;
-		position: relative;
-	}
-
-	.chart-svg {
 		width: 100%;
-		height: 100%;
-	}
-
-	.axis-x {
-		position: relative;
-		height: 2.5rem;
-		margin-left: 3rem;
-	}
-
-	.axis-label {
-		position: absolute;
-		transform: translateX(-50%) rotate(-45deg);
-		transform-origin: top center;
-		font-size: 0.65rem;
-		color: var(--color-text-muted);
-		white-space: nowrap;
-		text-align: right;
+		height: var(--chart-height, 200px);
 	}
 
 	.chart-description {
@@ -287,15 +217,5 @@
 		color: var(--color-text-muted);
 		text-align: center;
 		padding: 2rem;
-	}
-
-	.data-point {
-		position: absolute;
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--color-primary, #3b82f6);
-		transform: translate(-50%, -50%);
-		cursor: help;
 	}
 </style>

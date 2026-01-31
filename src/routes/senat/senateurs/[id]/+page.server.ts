@@ -1,9 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, mandates, organs, actorStats, votes, scrutins } from '$lib/server/db';
-import { eq, and, sql, desc, count, inArray } from 'drizzle-orm';
+import { eq, and, sql, desc, count, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getRenouvellementDates } from '$lib/server/periods/senat-renouvellements';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const renouvellement = locals.periods.senat;
+
 	// Get actor
 	const [actor] = await db
 		.select()
@@ -14,7 +17,63 @@ export const load: PageServerLoad = async ({ params }) => {
 		throw error(404, { message: 'Sénateur non trouvé' });
 	}
 
-	// Get senator's current group (most recent GP mandate)
+	// Get renouvellement dates for filtering
+	const renouvellementDates = renouvellement && renouvellement !== 'all'
+		? await getRenouvellementDates(renouvellement)
+		: null;
+
+	// Check if senator had an active mandate during this renouvellement period
+	const checkMandate = async (): Promise<boolean> => {
+		if (!renouvellement || renouvellement === 'all' || !renouvellementDates) return true;
+
+		const { start, end } = renouvellementDates;
+		const [mandate] = await db
+			.select({ id: mandates.id })
+			.from(mandates)
+			.where(and(
+				eq(mandates.actorId, params.id),
+				eq(mandates.type, 'senateur'),
+				end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`,
+				sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
+			))
+			.limit(1);
+
+		return !!mandate;
+	};
+
+	const hadMandateDuringPeriod = await checkMandate();
+
+	// Build vote conditions helper (filter by date range if renouvellement specified)
+	const buildVoteConditions = (): SQL[] => {
+		const conditions: SQL[] = [eq(votes.actorId, params.id)];
+		if (renouvellementDates && renouvellement !== 'all') {
+			const { start, end } = renouvellementDates;
+			conditions.push(sql`${scrutins.date} >= ${start}`);
+			if (end) {
+				conditions.push(sql`${scrutins.date} <= ${end}`);
+			}
+		}
+		return conditions;
+	};
+
+	// Build mandate filter conditions
+	const buildMandateConditions = (): SQL[] => {
+		const conditions: SQL[] = [eq(mandates.actorId, params.id)];
+		if (renouvellementDates && renouvellement !== 'all') {
+			const { start, end } = renouvellementDates;
+			// A mandate is active during a period if it overlaps with the period
+			conditions.push(
+				end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`
+			);
+			conditions.push(
+				sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
+			);
+		}
+		return conditions;
+	};
+
+	// Get senator's current group (most recent GP mandate, filtered by period)
+	const groupConditions = buildMandateConditions();
 	const [senatorGroup] = await db
 		.select({
 			groupId: organs.id,
@@ -26,12 +85,16 @@ export const load: PageServerLoad = async ({ params }) => {
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
 		.where(
-			sql`${mandates.actorId} = ${params.id} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'SENAT'`
+			and(
+				...groupConditions,
+				eq(organs.type, 'GP'),
+				eq(organs.chamber, 'SENAT')
+			)
 		)
 		.orderBy(desc(mandates.startDate))
 		.limit(1);
 
-	// Get all mandates for this senator
+	// Get all mandates for this senator (filtered by period)
 	const senatorMandates = await db
 		.select({
 			id: mandates.id,
@@ -48,10 +111,12 @@ export const load: PageServerLoad = async ({ params }) => {
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(eq(mandates.actorId, params.id))
+		.where(and(...buildMandateConditions()))
 		.orderBy(desc(mandates.startDate));
 
-	// Get senator mandate (type 'senateur') for mandate dates
+	// Get senator mandate (type 'senateur') for mandate dates (filtered by period)
+	const senateurMandateConditions = buildMandateConditions();
+	senateurMandateConditions.push(eq(mandates.type, 'senateur'));
 	const senatorMandate = await db
 		.select({
 			startDate: mandates.startDate,
@@ -59,7 +124,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			constituency: mandates.constituency
 		})
 		.from(mandates)
-		.where(and(eq(mandates.actorId, params.id), eq(mandates.type, 'senateur')))
+		.where(and(...senateurMandateConditions))
 		.orderBy(desc(mandates.startDate))
 		.limit(1);
 
@@ -78,7 +143,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	// Loader for group alignment rate
 	const loadGroupAlignment = async () => {
-		// Get all votes for this senator with their group at time of vote
+		// Get all votes for this senator with their group at time of vote (filtered by period)
 		const senatorVotes = await db
 			.select({
 				scrutinId: votes.scrutinId,
@@ -86,7 +151,8 @@ export const load: PageServerLoad = async ({ params }) => {
 				groupId: votes.groupId
 			})
 			.from(votes)
-			.where(eq(votes.actorId, params.id));
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(and(...buildVoteConditions()));
 
 		if (senatorVotes.length === 0) return null;
 
@@ -169,6 +235,11 @@ export const load: PageServerLoad = async ({ params }) => {
 		mandates: senatorMandates,
 		senatorMandate: senatorMandate[0] || null,
 		activityStats: stats || null,
+		hadMandateDuringPeriod,
+		periodDates: renouvellementDates,
+		filters: {
+			renouvellement
+		},
 		groupAlignment: loadGroupAlignment()
 	};
 };

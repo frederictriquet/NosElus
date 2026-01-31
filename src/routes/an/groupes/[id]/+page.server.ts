@@ -96,7 +96,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				total: count(),
 				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
 				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+				nonVotant: sql<number>`count(case when ${votes.position} = 'non-votant' then 1 end)`
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))

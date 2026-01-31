@@ -32,12 +32,21 @@
 	<title>{data.actor.fullName} - Sénateur - NosElus</title>
 </svelte:head>
 
+{#if !data.hadMandateDuringPeriod && data.filters.renouvellement && data.filters.renouvellement !== 'all'}
+	<div class="period-warning">
+		<p>
+			<strong>{data.actor.fullName}</strong> n'était pas sénateur·rice lors du renouvellement de {data.filters.renouvellement}.
+		</p>
+		<p class="warning-hint">Changez de période pour voir son activité parlementaire.</p>
+	</div>
+{/if}
+
 <ProfileHeader
 	name={data.actor.fullName}
 	civility={data.actor.civility}
 	photoUrl={data.actor.photoUrl}
 	type="senateur"
-	group={data.group
+	group={data.hadMandateDuringPeriod && data.group
 		? {
 				id: data.group.groupId,
 				name: data.group.groupName,
@@ -46,25 +55,26 @@
 			}
 		: null}
 	profession={data.actor.profession}
-	constituency={data.group?.constituency}
+	constituency={data.hadMandateDuringPeriod ? data.group?.constituency : null}
 	birthDate={data.actor.birthDate}
 	birthPlace={data.actor.birthPlace}
 />
 
-{#await data.groupAlignment then groupAlignment}
-	<section class="card alignment-card">
-		<h2>Alignement avec le groupe</h2>
-		{#if groupAlignment}
-			<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
-		{:else}
-			<p class="no-data">
-				Les données de votes du Sénat ne sont pas encore disponibles.
-			</p>
-		{/if}
-	</section>
-{/await}
+{#if data.hadMandateDuringPeriod}
+	{#await data.groupAlignment then groupAlignment}
+		<section class="card alignment-card">
+			<h2>Alignement avec le groupe</h2>
+			{#if groupAlignment}
+				<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
+			{:else}
+				<p class="no-data">
+					Les données de votes du Sénat ne sont pas encore disponibles.
+				</p>
+			{/if}
+		</section>
+	{/await}
 
-<ActivityStatsCard stats={data.activityStats} source="senat.fr" chamberType="senat" />
+	<ActivityStatsCard stats={data.activityStats} source="senat.fr" chamberType="senat" />
 
 <div class="info-cards">
 	<section class="card">
@@ -277,17 +287,28 @@
 		</div>
 	</section>
 {/if}
-
-{#if data.mandates.length === 0}
-	<div class="notice">
-		<p>
-			<strong>Note :</strong> Les données de mandats ne sont pas encore disponibles pour ce sénateur.
-			Exécutez <code>make etl-senat-mandates-history</code> pour importer l'historique.
-		</p>
-	</div>
 {/if}
 
 <style>
+	.period-warning {
+		background: var(--color-warning-bg, #fef3c7);
+		border: 1px solid var(--color-warning, #f59e0b);
+		border-radius: var(--radius-lg);
+		padding: 1rem 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.period-warning p {
+		margin: 0;
+		color: var(--color-text);
+	}
+
+	.period-warning .warning-hint {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin-top: 0.5rem;
+	}
+
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;

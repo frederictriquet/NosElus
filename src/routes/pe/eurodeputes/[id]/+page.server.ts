@@ -1,9 +1,11 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, mandates, organs, votes, scrutins, actorStats } from '$lib/server/db';
-import { eq, and, count, desc, asc, sql, inArray } from 'drizzle-orm';
+import { eq, and, count, desc, asc, sql, inArray, like, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getTermDates } from '$lib/server/periods/pe-terms';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const terme = locals.periods.pe;
 	// Get MEP actor
 	const [actor] = await db
 		.select()
@@ -14,7 +16,50 @@ export const load: PageServerLoad = async ({ params }) => {
 		throw error(404, { message: 'Eurodéputé non trouvé' });
 	}
 
-	// Get MEP's political group (from mandates)
+	// Get term dates for filtering
+	const termDates = terme && terme !== 'all' ? await getTermDates(terme) : null;
+
+	// Check if MEP had a mandate during this term
+	const checkMandate = async (): Promise<boolean> => {
+		if (!terme || terme === 'all') return true;
+
+		const [mandate] = await db
+			.select({ id: mandates.id })
+			.from(mandates)
+			.where(and(
+				eq(mandates.actorId, params.id),
+				eq(mandates.legislature, terme)
+			))
+			.limit(1);
+
+		return !!mandate;
+	};
+
+	const hadMandateDuringPeriod = await checkMandate();
+
+	// Build vote conditions helper
+	const buildVoteConditions = (): SQL[] => {
+		const conditions: SQL[] = [eq(votes.actorId, params.id)];
+		if (terme && terme !== 'all') {
+			conditions.push(eq(scrutins.legislature, `PE-${terme}`));
+		} else {
+			conditions.push(like(scrutins.legislature, 'PE-%'));
+		}
+		return conditions;
+	};
+
+	// Build mandate filter conditions
+	const buildMandateConditions = (): SQL[] => {
+		const conditions: SQL[] = [eq(mandates.actorId, params.id)];
+		if (terme && terme !== 'all') {
+			conditions.push(eq(mandates.legislature, terme));
+		}
+		return conditions;
+	};
+
+	// Get MEP's political group (from mandates, filtered by term)
+	const groupConditions = buildMandateConditions();
+	groupConditions.push(eq(organs.type, 'GP'));
 	const [mepGroup] = await db
 		.select({
 			groupId: organs.id,
@@ -24,10 +69,11 @@ export const load: PageServerLoad = async ({ params }) => {
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(and(eq(mandates.actorId, params.id), eq(organs.type, 'GP')))
+		.where(and(...groupConditions))
+		.orderBy(desc(mandates.startDate))
 		.limit(1);
 
-	// Get all mandates for this MEP
+	// Get all mandates for this MEP (filtered by term)
 	const mepMandates = await db
 		.select({
 			id: mandates.id,
@@ -41,29 +87,33 @@ export const load: PageServerLoad = async ({ params }) => {
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(eq(mandates.actorId, params.id));
+		.where(and(...buildMandateConditions()))
+		.orderBy(desc(mandates.startDate));
 
 	// Loader for vote stats
 	const loadVoteStats = async () => {
+		const baseConditions = buildVoteConditions();
+
 		const [[voteCountResult], voteDistribution, [firstVote], [lastVote]] = await Promise.all([
-			db.select({ value: count() }).from(votes).where(eq(votes.actorId, params.id)),
-			db
-				.select({ position: votes.position, count: count() })
-				.from(votes)
-				.where(eq(votes.actorId, params.id))
-				.groupBy(votes.position),
-			db
-				.select({ date: scrutins.date })
+			db.select({ value: count() })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-				.where(eq(votes.actorId, params.id))
+				.where(and(...baseConditions)),
+			db.select({ position: votes.position, count: count() })
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions))
+				.groupBy(votes.position),
+			db.select({ date: scrutins.date })
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions))
 				.orderBy(asc(scrutins.date))
 				.limit(1),
-			db
-				.select({ date: scrutins.date })
+			db.select({ date: scrutins.date })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-				.where(eq(votes.actorId, params.id))
+				.where(and(...baseConditions))
 				.orderBy(desc(scrutins.date))
 				.limit(1)
 		]);
@@ -98,7 +148,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(eq(votes.actorId, params.id))
+			.where(and(...buildVoteConditions()))
 			.orderBy(desc(scrutins.date))
 			.limit(20);
 	};
@@ -111,18 +161,19 @@ export const load: PageServerLoad = async ({ params }) => {
 				total: count(),
 				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
 				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+				nonVotant: sql<number>`count(case when ${votes.position} = 'non-votant' then 1 end)`
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(eq(votes.actorId, params.id))
+			.where(and(...buildVoteConditions()))
 			.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
 			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
 
 	// Loader for group alignment rate
 	const loadGroupAlignment = async () => {
-		// Get all votes for this MEP with their group at time of vote
+		// Get all votes for this MEP with their group at time of vote (filtered by term)
 		const mepVotes = await db
 			.select({
 				scrutinId: votes.scrutinId,
@@ -130,7 +181,8 @@ export const load: PageServerLoad = async ({ params }) => {
 				groupId: votes.groupId
 			})
 			.from(votes)
-			.where(eq(votes.actorId, params.id));
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(and(...buildVoteConditions()));
 
 		if (mepVotes.length === 0) return null;
 
@@ -214,11 +266,19 @@ export const load: PageServerLoad = async ({ params }) => {
 		.from(actorStats)
 		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'howtheyvote')));
 
+	// Use term dates for the chart period, or compute from actual votes if no term filter
+	const periodDates = termDates || null;
+
 	return {
 		actor,
 		group: mepGroup || null,
 		mandates: mepMandates,
 		activityStats: stats || null,
+		periodDates,
+		hadMandateDuringPeriod,
+		filters: {
+			terme
+		},
 		// Streamed data
 		voteStats: loadVoteStats(),
 		recentVotes: loadRecentVotes(),

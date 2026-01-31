@@ -9,22 +9,40 @@
 		format?: (d: number) => string;
 		gridlines?: boolean;
 		tickMarks?: boolean;
+		integerOnly?: boolean;
 	}
 
 	let {
 		ticks = 4,
 		format = (d: number) => `${d}%`,
 		gridlines = true,
-		tickMarks = false
+		tickMarks = false,
+		integerOnly = false
 	}: Props = $props();
 
 	let tickVals = $derived.by(() => {
 		const scale = $yScale as unknown as { ticks?: (n: number) => number[]; domain: () => number[] };
-		if (Array.isArray(ticks)) return ticks;
-		if (typeof scale.ticks === 'function') {
-			return scale.ticks(ticks);
+		let values: number[];
+
+		if (Array.isArray(ticks)) {
+			values = ticks;
+		} else if (typeof scale.ticks === 'function') {
+			values = scale.ticks(ticks);
+		} else {
+			values = scale.domain();
 		}
-		return scale.domain();
+
+		// Filter to integers only if requested
+		if (integerOnly) {
+			values = values.filter(v => Number.isInteger(v));
+			// Ensure we have at least 0 and the max
+			if (values.length === 0) {
+				const domain = scale.domain();
+				values = [0, Math.ceil(domain[1] || 1)];
+			}
+		}
+
+		return values;
 	});
 </script>
 

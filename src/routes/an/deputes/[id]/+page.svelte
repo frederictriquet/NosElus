@@ -33,6 +33,15 @@
 	<title>{data.actor.fullName} - NosElus</title>
 </svelte:head>
 
+{#if !data.hadMandateDuringPeriod && data.filters.legislature && data.filters.legislature !== 'all'}
+	<div class="period-warning">
+		<p>
+			<strong>{data.actor.fullName}</strong> n'était pas député·e durant la {data.filters.legislature}e législature.
+		</p>
+		<p class="warning-hint">Changez de législature pour voir son activité parlementaire.</p>
+	</div>
+{/if}
+
 {#await data.voteStats then voteStats}
 	<ProfileHeader
 		name={data.actor.fullName}
@@ -48,13 +57,14 @@
 		profession={data.actor.profession}
 		birthDate={data.actor.birthDate}
 		birthPlace={data.actor.birthPlace}
-		timeline={voteStats.timeline}
+		timeline={data.hadMandateDuringPeriod ? voteStats.timeline : null}
 	/>
 {/await}
 
-<ActivityStatsCard stats={data.activityStats} source="NosDéputés.fr" chamberType="an" />
+{#if data.hadMandateDuringPeriod}
+	<ActivityStatsCard stats={data.activityStats} source="NosDéputés.fr" chamberType="an" />
 
-<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
+	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
 	{#snippet children(voteStats)}
 		<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{voteStats.voteCount} votes enregistrés</p>
 
@@ -125,7 +135,12 @@
 <div style="margin-top: 1.5rem;">
 	<AsyncCard title="Évolution des votes" subtitle="Répartition des votes par mois" promise={data.monthlyEvolution} minHeight="220px">
 		{#snippet children(monthlyEvolution)}
-			<VoteEvolutionChart data={monthlyEvolution} height={180} />
+			<VoteEvolutionChart
+				data={monthlyEvolution}
+				height={180}
+				periodStart={data.periodDates?.start}
+				periodEnd={data.periodDates?.end}
+			/>
 		{/snippet}
 	</AsyncCard>
 </div>
@@ -377,8 +392,28 @@
 		</div>
 	{/if}
 {/await}
+{/if}
 
 <style>
+	.period-warning {
+		background: var(--color-warning-bg, #fef3c7);
+		border: 1px solid var(--color-warning, #f59e0b);
+		border-radius: var(--radius-lg);
+		padding: 1rem 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.period-warning p {
+		margin: 0;
+		color: var(--color-text);
+	}
+
+	.period-warning .warning-hint {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin-top: 0.5rem;
+	}
+
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;

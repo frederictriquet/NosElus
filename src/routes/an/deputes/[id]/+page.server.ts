@@ -1,9 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs, amendments, mandates, actorStats } from '$lib/server/db';
-import { eq, and, count, desc, sql, asc } from 'drizzle-orm';
+import { eq, and, count, desc, sql, asc, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const legislature = locals.periods.an;
+
 	// Get actor (synchronous - needed for 404 and page structure)
 	const [actor] = await db
 		.select()
@@ -14,8 +17,40 @@ export const load: PageServerLoad = async ({ params }) => {
 		throw error(404, { message: 'Député non trouvé' });
 	}
 
-	// Get deputy's group (from most recent vote) - fast, needed for header
-	const [deputyGroup] = await db
+	// Get legislature dates for filtering
+	const periodDates = legislature && legislature !== 'all'
+		? await getLegislatureDates(legislature)
+		: null;
+
+	// Check if deputy had a mandate during this legislature
+	const checkMandate = async (): Promise<boolean> => {
+		if (!legislature || legislature === 'all') return true;
+
+		const [mandate] = await db
+			.select({ id: mandates.id })
+			.from(mandates)
+			.where(and(
+				eq(mandates.actorId, params.id),
+				eq(mandates.legislature, legislature)
+			))
+			.limit(1);
+
+		return !!mandate;
+	};
+
+	const hadMandateDuringPeriod = await checkMandate();
+
+	// Build vote conditions helper
+	const buildVoteConditions = (): SQL[] => {
+		const conditions: SQL[] = [eq(votes.actorId, params.id)];
+		if (legislature && legislature !== 'all') {
+			conditions.push(eq(scrutins.legislature, legislature));
+		}
+		return conditions;
+	};
+
+	// Get deputy's group (from most recent vote in period)
+	const groupQuery = db
 		.select({
 			groupId: votes.groupId,
 			groupName: organs.name,
@@ -25,22 +60,38 @@ export const load: PageServerLoad = async ({ params }) => {
 		.from(votes)
 		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 		.leftJoin(organs, eq(votes.groupId, organs.id))
-		.where(eq(votes.actorId, params.id))
+		.where(and(...buildVoteConditions()))
 		.orderBy(desc(scrutins.date))
 		.limit(1);
 
+	const [deputyGroup] = await groupQuery;
+
 	// Loader for vote stats and distribution
 	const loadVoteStats = async () => {
+		const baseConditions = buildVoteConditions();
+
 		const [[voteCountResult], voteDistribution, [firstVote], [lastVote]] = await Promise.all([
-			db.select({ value: count() }).from(votes).where(eq(votes.actorId, params.id)),
+			db.select({ value: count() })
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions)),
 			db.select({ position: votes.position, count: count() })
-				.from(votes).where(eq(votes.actorId, params.id)).groupBy(votes.position),
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions))
+				.groupBy(votes.position),
 			db.select({ date: scrutins.date })
-				.from(votes).innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-				.where(eq(votes.actorId, params.id)).orderBy(asc(scrutins.date)).limit(1),
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions))
+				.orderBy(asc(scrutins.date))
+				.limit(1),
 			db.select({ date: scrutins.date })
-				.from(votes).innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-				.where(eq(votes.actorId, params.id)).orderBy(desc(scrutins.date)).limit(1)
+				.from(votes)
+				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+				.where(and(...baseConditions))
+				.orderBy(desc(scrutins.date))
+				.limit(1)
 		]);
 
 		const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
@@ -73,7 +124,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(eq(votes.actorId, params.id))
+			.where(and(...buildVoteConditions()))
 			.orderBy(desc(scrutins.date))
 			.limit(20);
 	};
@@ -86,11 +137,12 @@ export const load: PageServerLoad = async ({ params }) => {
 				total: count(),
 				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
 				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
-				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
+				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+				nonVotant: sql<number>`count(case when ${votes.position} = 'non-votant' then 1 end)`
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(eq(votes.actorId, params.id))
+			.where(and(...buildVoteConditions()))
 			.groupBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`)
 			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
@@ -106,7 +158,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			})
 			.from(votes)
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-			.where(eq(votes.actorId, params.id));
+			.where(and(...buildVoteConditions()));
 
 		if (deputyVotes.length === 0) {
 			return null;
@@ -207,12 +259,17 @@ export const load: PageServerLoad = async ({ params }) => {
 		return careerMilestones;
 	};
 
-	// Loader for amendment stats
+	// Loader for amendment stats (filtered by legislature if applicable)
 	const loadAmendmentStats = async () => {
+		const amendmentConditions: SQL[] = [eq(amendments.authorId, params.id)];
+		if (legislature && legislature !== 'all') {
+			amendmentConditions.push(eq(amendments.legislature, legislature));
+		}
+
 		const [[amendmentCount], amendmentDistribution] = await Promise.all([
-			db.select({ value: count() }).from(amendments).where(eq(amendments.authorId, params.id)),
+			db.select({ value: count() }).from(amendments).where(and(...amendmentConditions)),
 			db.select({ status: amendments.status, count: count() })
-				.from(amendments).where(eq(amendments.authorId, params.id)).groupBy(amendments.status)
+				.from(amendments).where(and(...amendmentConditions)).groupBy(amendments.status)
 		]);
 
 		const amendmentStats = {
@@ -242,8 +299,13 @@ export const load: PageServerLoad = async ({ params }) => {
 		return amendmentStats;
 	};
 
-	// Loader for recent amendments
+	// Loader for recent amendments (filtered by legislature if applicable)
 	const loadRecentAmendments = async () => {
+		const amendmentConditions: SQL[] = [eq(amendments.authorId, params.id)];
+		if (legislature && legislature !== 'all') {
+			amendmentConditions.push(eq(amendments.legislature, legislature));
+		}
+
 		return await db
 			.select({
 				id: amendments.id,
@@ -254,13 +316,18 @@ export const load: PageServerLoad = async ({ params }) => {
 				exposeSommaire: amendments.exposeSommaire
 			})
 			.from(amendments)
-			.where(eq(amendments.authorId, params.id))
+			.where(and(...amendmentConditions))
 			.orderBy(desc(amendments.depositDate))
 			.limit(10);
 	};
 
 	// Loader for mandates (group memberships, committees, delegations)
 	const loadMandates = async () => {
+		const mandateConditions: SQL[] = [eq(mandates.actorId, params.id)];
+		if (legislature && legislature !== 'all') {
+			mandateConditions.push(eq(mandates.legislature, legislature));
+		}
+
 		return await db
 			.select({
 				id: mandates.id,
@@ -277,7 +344,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			})
 			.from(mandates)
 			.innerJoin(organs, eq(mandates.organId, organs.id))
-			.where(eq(mandates.actorId, params.id))
+			.where(and(...mandateConditions))
 			.orderBy(desc(mandates.startDate));
 	};
 
@@ -292,6 +359,11 @@ export const load: PageServerLoad = async ({ params }) => {
 		actor,
 		group: deputyGroup || null,
 		activityStats: stats || null,
+		periodDates,
+		hadMandateDuringPeriod,
+		filters: {
+			legislature
+		},
 		// Streamed data
 		voteStats: loadVoteStats(),
 		recentVotes: loadRecentVotes(),

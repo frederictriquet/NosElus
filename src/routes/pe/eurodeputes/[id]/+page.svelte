@@ -17,6 +17,15 @@
 	<title>{data.actor.fullName} - Eurodéputé - NosElus</title>
 </svelte:head>
 
+{#if !data.hadMandateDuringPeriod && data.filters.terme && data.filters.terme !== 'all'}
+	<div class="period-warning">
+		<p>
+			<strong>{data.actor.fullName}</strong> n'était pas eurodéputé·e durant le {data.filters.terme}e terme du Parlement européen.
+		</p>
+		<p class="warning-hint">Changez de terme pour voir son activité parlementaire.</p>
+	</div>
+{/if}
+
 {#await data.voteStats then voteStats}
 	<ProfileHeader
 		name={data.actor.fullName}
@@ -34,13 +43,14 @@
 		profession={data.actor.profession}
 		birthDate={data.actor.birthDate}
 		birthPlace={data.actor.birthPlace}
-		timeline={voteStats.voteCount > 0 ? voteStats.timeline : null}
+		timeline={data.hadMandateDuringPeriod && voteStats.voteCount > 0 ? voteStats.timeline : null}
 	/>
 {/await}
 
-<ActivityStatsCard stats={data.activityStats} source="HowTheyVote.eu" chamberType="pe" />
+{#if data.hadMandateDuringPeriod}
+	<ActivityStatsCard stats={data.activityStats} source="HowTheyVote.eu" chamberType="pe" />
 
-<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
+	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
 	{#snippet children(voteStats)}
 		{#if voteStats.voteCount === 0}
 			<p class="empty-state">Aucun vote enregistré</p>
@@ -160,7 +170,11 @@
 		minHeight="220px"
 	>
 		{#snippet children(monthlyEvolution)}
-			<VoteEvolutionChart data={monthlyEvolution} />
+			<VoteEvolutionChart
+				data={monthlyEvolution}
+				periodStart={data.periodDates?.start}
+				periodEnd={data.periodDates?.end}
+			/>
 		{/snippet}
 	</AsyncCard>
 </div>
@@ -237,8 +251,28 @@
 		</div>
 	{/if}
 </div>
+{/if}
 
 <style>
+	.period-warning {
+		background: var(--color-warning-bg, #fef3c7);
+		border: 1px solid var(--color-warning, #f59e0b);
+		border-radius: var(--radius-lg);
+		padding: 1rem 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.period-warning p {
+		margin: 0;
+		color: var(--color-text);
+	}
+
+	.period-warning .warning-hint {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin-top: 0.5rem;
+	}
+
 	.content-section {
 		display: flex;
 		flex-direction: column;

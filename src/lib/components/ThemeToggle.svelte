@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	type Theme = 'light' | 'dark' | 'system';
+	type Theme = 'light' | 'dark' | 'high-contrast' | 'system';
 
 	let theme: Theme = $state('system');
 
@@ -9,7 +9,7 @@
 	$effect(() => {
 		if (browser) {
 			const stored = localStorage.getItem('theme') as Theme | null;
-			if (stored && ['light', 'dark', 'system'].includes(stored)) {
+			if (stored && ['light', 'dark', 'high-contrast', 'system'].includes(stored)) {
 				theme = stored;
 			}
 			applyTheme(theme);
@@ -31,7 +31,7 @@
 	}
 
 	function cycleTheme() {
-		const order: Theme[] = ['light', 'dark', 'system'];
+		const order: Theme[] = ['light', 'dark', 'high-contrast', 'system'];
 		const currentIndex = order.indexOf(theme);
 		const nextIndex = (currentIndex + 1) % order.length;
 		theme = order[nextIndex];
@@ -45,6 +45,8 @@
 				return 'sun';
 			case 'dark':
 				return 'moon';
+			case 'high-contrast':
+				return 'contrast';
 			default:
 				return 'system';
 		}
@@ -56,6 +58,8 @@
 				return 'Clair';
 			case 'dark':
 				return 'Sombre';
+			case 'high-contrast':
+				return 'Contraste';
 			default:
 				return 'Auto';
 		}
@@ -78,6 +82,12 @@
 	{:else if icon === 'moon'}
 		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+		</svg>
+	{:else if icon === 'contrast'}
+		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="12" cy="12" r="10"></circle>
+			<path d="M12 2v20" fill="currentColor"></path>
+			<path d="M12 2a10 10 0 0 1 0 20" fill="currentColor"></path>
 		</svg>
 	{:else}
 		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

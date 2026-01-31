@@ -69,8 +69,8 @@
 
 | Fonctionnalité | Source de données | Complexité |
 |----------------|-------------------|------------|
-| **Mode sombre** : Thème dark mode | Aucune - CSS uniquement | 🟢 Simple - CSS variables |
-| **Mode haut contraste** : Accessibilité visuelle | Aucune - CSS uniquement | 🟢 Simple - CSS variables |
+| **Mode sombre** : Thème dark mode | Aucune - CSS uniquement | ✅ Done |
+| **Mode haut contraste** : Accessibilité visuelle | Aucune - CSS uniquement | ✅ Done |
 | **Navigation clavier** : Support complet clavier | Aucune - code existant | 🟡 Moyen - audit + corrections |
 | **Lecteur d'écran** : Optimisation ARIA | Aucune - code existant | 🟡 Moyen - audit ARIA + corrections |
 
@@ -111,11 +111,9 @@
 
 ## Résumé par complexité
 
-### 🟢 Simple (1-2 jours) - 9 items
+### 🟢 Simple (1-2 jours) - 7 items
 - Commissions PE
 - Comparaison inter-chambres AN/PE
-- Mode sombre
-- Mode haut contraste
 - Glossaire
 - Tutoriels
 - Analytics

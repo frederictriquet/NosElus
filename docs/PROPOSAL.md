@@ -42,7 +42,7 @@
 | **Analyse par thème** : Classifier les scrutins par thématique (économie, santé, écologie...) | Données existantes + classification manuelle ou NLP sur titres | 🔴 Complexe - taxonomie à définir, classification semi-auto |
 | **Votes clés** : Identifier et mettre en avant les scrutins les plus importants | Données existantes + critères éditoriaux (participation élevée, résultat serré) | 🟡 Moyen - algorithme de scoring + curation |
 | **Prédiction de vote** : ML pour prédire le vote probable d'un député sur un nouveau texte | Données existantes (historique votes) | ⚫ Très complexe - modèle ML, entraînement, évaluation |
-| **Analyse de cohésion** : Évolution de la cohésion des groupes dans le temps | Données existantes | 🟢 Simple - calcul sur données existantes |
+| **Analyse de cohésion** : Évolution de la cohésion des groupes dans le temps | Données existantes | ✅ Done |
 
 ### 2.2 Visualisations
 
@@ -111,8 +111,7 @@
 
 ## Résumé par complexité
 
-### 🟢 Simple (1-2 jours) - 10 items
-- Analyse de cohésion dans le temps
+### 🟢 Simple (1-2 jours) - 9 items
 - Commissions PE
 - Comparaison inter-chambres AN/PE
 - Mode sombre

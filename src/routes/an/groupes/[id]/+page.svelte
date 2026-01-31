@@ -3,6 +3,7 @@
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
 	import VoteEvolutionChart from '$lib/components/VoteEvolutionChart.svelte';
+	import GroupCohesionChart from '$lib/components/GroupCohesionChart.svelte';
 
 	let { data } = $props();
 </script>
@@ -95,6 +96,18 @@
 		{#snippet children(monthlyActivity)}
 			<VoteEvolutionChart
 				data={monthlyActivity}
+				periodStart={data.periodDates?.start}
+				periodEnd={data.periodDates?.end}
+			/>
+		{/snippet}
+	</AsyncCard>
+</div>
+
+<div style="margin-top: 1.5rem;">
+	<AsyncCard title="Cohésion du groupe" promise={data.cohesionData} minHeight="200px">
+		{#snippet children(cohesionData)}
+			<GroupCohesionChart
+				data={cohesionData}
 				periodStart={data.periodDates?.start}
 				periodEnd={data.periodDates?.end}
 			/>

@@ -3,6 +3,7 @@ import { db, organs, votes, actors, scrutins } from '$lib/server/db';
 import { eq, count, sql, desc, and, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
+import { calculateMonthlyCohesion } from '$lib/server/utils/cohesion';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -104,6 +105,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
 
+	// Loader for group cohesion over time
+	const loadCohesion = async () => {
+		const votesByScrutin = await db
+			.select({
+				scrutinId: votes.scrutinId,
+				month: sql<string>`to_char(${scrutins.date}, 'YYYY-MM')`,
+				pour: sql<number>`count(case when ${votes.position} = 'pour' then 1 end)`,
+				contre: sql<number>`count(case when ${votes.position} = 'contre' then 1 end)`,
+				abstention: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`,
+				total: count()
+			})
+			.from(votes)
+			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+			.where(and(...buildVoteConditions()))
+			.groupBy(votes.scrutinId, sql`to_char(${scrutins.date}, 'YYYY-MM')`);
+
+		return calculateMonthlyCohesion(votesByScrutin);
+	};
+
 	// Get period dates for the chart
 	const periodDates = legislature && legislature !== 'all'
 		? await getLegislatureDates(legislature)
@@ -119,6 +139,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Streamed data
 		distributionData: loadDistribution(),
 		members: loadMembers(),
-		monthlyActivity: loadMonthlyActivity()
+		monthlyActivity: loadMonthlyActivity(),
+		cohesionData: loadCohesion()
 	};
 };

@@ -29,6 +29,13 @@
       "when": 1769707786037,
       "tag": "0003_petite_chameleon",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769853621738,
+      "tag": "0004_curved_changeling",
+      "breakpoints": true
     }
   ]
 }

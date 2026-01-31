@@ -11,7 +11,8 @@ export const actorStats = pgTable(
 		actorId: varchar('actor_id', { length: 20 })
 			.notNull()
 			.references(() => actors.id, { onDelete: 'cascade' }),
-		source: varchar('source', { length: 50 }).notNull(), // 'nossenateurs', 'nosdeputes'
+		source: varchar('source', { length: 50 }).notNull(), // 'nossenateurs', 'nosdeputes', 'senat'
+		period: varchar('period', { length: 20 }).notNull().default('all'), // 'all', '2023', '2020', etc. or legislature number
 
 		// Presence indicators
 		weeksPresent: integer('weeks_present').default(0), // semaines_presence
@@ -35,8 +36,9 @@ export const actorStats = pgTable(
 		updatedAt: timestamp('updated_at').defaultNow().notNull()
 	},
 	(table) => [
-		primaryKey({ columns: [table.actorId, table.source] }),
-		index('actor_stats_actor_id_idx').on(table.actorId)
+		primaryKey({ columns: [table.actorId, table.source, table.period] }),
+		index('actor_stats_actor_id_idx').on(table.actorId),
+		index('actor_stats_period_idx').on(table.period)
 	]
 );
 

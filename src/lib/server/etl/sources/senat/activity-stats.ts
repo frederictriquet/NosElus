@@ -40,7 +40,61 @@ interface AggregatedStats {
 }
 
 /**
- * Aggregate activity events into stats
+ * Get the year from an event date string
+ */
+function getEventYear(dateStr: string): string {
+	return dateStr.slice(0, 4);
+}
+
+/**
+ * Aggregate activity events into stats, grouped by year
+ */
+function aggregateEventsByYear(events: SenatActivityEvent[]): Map<string, AggregatedStats> {
+	const statsByYear = new Map<string, AggregatedStats>();
+
+	for (const event of events) {
+		const year = getEventYear(event.start);
+
+		if (!statsByYear.has(year)) {
+			statsByYear.set(year, {
+				seancesPlenieres: 0,
+				commissionPresences: 0,
+				questionsGouvernement: 0,
+				votes: 0,
+				missions: 0,
+				delegations: 0,
+				other: 0
+			});
+		}
+
+		const stats = statsByYear.get(year)!;
+		const className = event.className || '';
+		const title = event.title || '';
+
+		if (className.includes('SEANCE_PLENIERE')) {
+			stats.seancesPlenieres++;
+			if (title.includes('Questions')) {
+				stats.questionsGouvernement++;
+			}
+			if (title.includes('Scrutin') || title.includes('vote')) {
+				stats.votes++;
+			}
+		} else if (className.includes('COM_PERMANENTE') || className.includes('COM_SPECIALE')) {
+			stats.commissionPresences++;
+		} else if (className.includes('MISSION')) {
+			stats.missions++;
+		} else if (className.includes('DELEGATION') || className.includes('OFFICE')) {
+			stats.delegations++;
+		} else {
+			stats.other++;
+		}
+	}
+
+	return statsByYear;
+}
+
+/**
+ * Aggregate all events into a single stats object (for 'all' period)
  */
 function aggregateEvents(events: SenatActivityEvent[]): AggregatedStats {
 	const stats: AggregatedStats = {
@@ -166,23 +220,47 @@ export async function importSenatActivityStats(config: ETLConfig): Promise<Impor
 			}
 
 			const events: SenatActivityEvent[] = await activityResponse.json();
-			const aggregated = aggregateEvents(events);
 
+			// Aggregate by year for period-specific stats
+			const statsByYear = aggregateEventsByYear(events);
+			for (const [year, yearStats] of statsByYear) {
+				statsToInsert.push({
+					actorId,
+					source: 'senat',
+					period: year,
+					weeksPresent: Math.ceil(yearStats.seancesPlenieres / 3),
+					commissionPresences: yearStats.commissionPresences,
+					hemicycleInterventions: yearStats.seancesPlenieres,
+					hemicycleShortInterventions: 0,
+					commissionInterventions: 0,
+					amendmentsSigned: 0,
+					amendmentsAdopted: 0,
+					reports: yearStats.missions,
+					writtenProposals: 0,
+					signedProposals: 0,
+					writtenQuestions: 0,
+					oralQuestions: yearStats.questionsGouvernement
+				});
+			}
+
+			// Also store 'all' period for total stats
+			const allStats = aggregateEvents(events);
 			statsToInsert.push({
 				actorId,
 				source: 'senat',
-				weeksPresent: Math.ceil(aggregated.seancesPlenieres / 3), // Approximate weeks
-				commissionPresences: aggregated.commissionPresences,
-				hemicycleInterventions: aggregated.seancesPlenieres,
+				period: 'all',
+				weeksPresent: Math.ceil(allStats.seancesPlenieres / 3),
+				commissionPresences: allStats.commissionPresences,
+				hemicycleInterventions: allStats.seancesPlenieres,
 				hemicycleShortInterventions: 0,
 				commissionInterventions: 0,
 				amendmentsSigned: 0,
 				amendmentsAdopted: 0,
-				reports: aggregated.missions,
+				reports: allStats.missions,
 				writtenProposals: 0,
 				signedProposals: 0,
 				writtenQuestions: 0,
-				oralQuestions: aggregated.questionsGouvernement
+				oralQuestions: allStats.questionsGouvernement
 			});
 		} catch (error) {
 			console.error(`[Senat Activity Stats] Error fetching activity for ${senator.matricule}:`, error);
@@ -209,7 +287,7 @@ export async function importSenatActivityStats(config: ETLConfig): Promise<Impor
 				.insert(actorStats)
 				.values(batch)
 				.onConflictDoUpdate({
-					target: [actorStats.actorId, actorStats.source],
+					target: [actorStats.actorId, actorStats.source, actorStats.period],
 					set: {
 						weeksPresent: sql`excluded.weeks_present`,
 						commissionPresences: sql`excluded.commission_presences`,

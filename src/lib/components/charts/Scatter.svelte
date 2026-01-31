@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { LayerCakeContext } from './types';
 
-	const { data, xGet, yGet } = getContext<LayerCakeContext>('LayerCake');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const { data, xGet, yGet } = getContext<any>('LayerCake');
 
 	interface Props {
 		r?: number;

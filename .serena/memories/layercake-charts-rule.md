@@ -12,6 +12,7 @@
    - `AxisY.svelte` - Axe vertical
    - `HorizontalLine.svelte` - Ligne horizontale (moyenne, seuil)
    - `Scatter.svelte` - Points de données
+   - `ColumnStacked.svelte` - Barres empilées (stacked bar chart)
 
 2. **Ne PAS réimplémenter** de composants de graphe si LayerCake ou les composants existants peuvent le faire
 

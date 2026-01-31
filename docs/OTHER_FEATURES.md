@@ -17,4 +17,4 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 il faut régulièrement que je te rappelle de demander à SERENA pour savoir comment te connecter à la base Postgresql, comment faire pour que tu le fasses tout seul automatiquement
 
 
-le site https://www.nosdeputes.fr/ était inaccessible
+voir pourquoi http://localhost:5173/pe/eurodeputes/MEP-131580 a 9 votes enregistrés mais 1 seul dans le graphe d'évolution des votes

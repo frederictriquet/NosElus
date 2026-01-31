@@ -2,6 +2,7 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
+	import VoteEvolutionChart from '$lib/components/VoteEvolutionChart.svelte';
 
 	let { data } = $props();
 </script>
@@ -92,32 +93,11 @@
 <div style="margin-top: 1.5rem;">
 	<AsyncCard title="Évolution des votes" promise={data.monthlyActivity} minHeight="200px">
 		{#snippet children(monthlyActivity)}
-			{#if monthlyActivity.length > 0}
-				<div class="evolution-chart">
-					{#each monthlyActivity.slice(-12) as month}
-						{@const maxTotal = Math.max(...monthlyActivity.map(m => m.total))}
-						{@const height = (month.total / maxTotal) * 100}
-						{@const pourPct = month.total > 0 ? (month.pour / month.total) * 100 : 0}
-						{@const contrePct = month.total > 0 ? (month.contre / month.total) * 100 : 0}
-						{@const abstPct = month.total > 0 ? (month.abstention / month.total) * 100 : 0}
-						<div class="evolution-bar-container" title="{month.month}: {month.total} votes">
-							<div class="evolution-bar" style="height: {height}%;">
-								<div class="bar-segment pour" style="height: {pourPct}%"></div>
-								<div class="bar-segment contre" style="height: {contrePct}%"></div>
-								<div class="bar-segment abstention" style="height: {abstPct}%"></div>
-							</div>
-							<span class="evolution-label">{month.month.slice(5)}</span>
-						</div>
-					{/each}
-				</div>
-				<div class="evolution-legend">
-					<span class="legend-item"><span class="legend-box pour"></span> Pour</span>
-					<span class="legend-item"><span class="legend-box contre"></span> Contre</span>
-					<span class="legend-item"><span class="legend-box abstention"></span> Abstention</span>
-				</div>
-			{:else}
-				<p class="empty-state">Aucune donnée d'évolution</p>
-			{/if}
+			<VoteEvolutionChart
+				data={monthlyActivity}
+				periodStart={data.periodDates?.start}
+				periodEnd={data.periodDates?.end}
+			/>
 		{/snippet}
 	</AsyncCard>
 </div>

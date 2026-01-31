@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { db, organs, votes, actors, scrutins } from '$lib/server/db';
 import { eq, count, sql, desc, and, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -103,12 +104,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.orderBy(sql`to_char(${scrutins.date}, 'YYYY-MM')`);
 	};
 
+	// Get period dates for the chart
+	const periodDates = legislature && legislature !== 'all'
+		? await getLegislatureDates(legislature)
+		: null;
+
 	return {
 		// Synchronous data
 		group,
 		filters: {
 			legislature: legislature
 		},
+		periodDates,
 		// Streamed data
 		distributionData: loadDistribution(),
 		members: loadMembers(),

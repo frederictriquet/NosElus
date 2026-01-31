@@ -3,6 +3,7 @@
 	import ProfileHeader from '$lib/components/ProfileHeader.svelte';
 	import GroupAlignmentCard from '$lib/components/GroupAlignmentCard.svelte';
 	import ActivityStatsCard from '$lib/components/ActivityStatsCard.svelte';
+	import VoteEvolutionChart from '$lib/components/VoteEvolutionChart.svelte';
 
 	let { data } = $props();
 
@@ -159,33 +160,7 @@
 		minHeight="220px"
 	>
 		{#snippet children(monthlyEvolution)}
-			{#if monthlyEvolution.length > 0}
-				<div class="evolution-chart">
-					{#each monthlyEvolution.slice(-12) as month}
-						{@const maxTotal = Math.max(...monthlyEvolution.map((m) => m.total))}
-						{@const height = (month.total / maxTotal) * 100}
-						{@const pourPct = month.total > 0 ? (month.pour / month.total) * 100 : 0}
-						{@const contrePct = month.total > 0 ? (month.contre / month.total) * 100 : 0}
-						{@const abstPct = month.total > 0 ? (month.abstention / month.total) * 100 : 0}
-						<div class="evolution-bar-container" title="{month.month}: {month.total} votes">
-							<div class="evolution-bar" style="height: {height}%;">
-								<div class="bar-segment pour" style="height: {pourPct}%"></div>
-								<div class="bar-segment contre" style="height: {contrePct}%"></div>
-								<div class="bar-segment abstention" style="height: {abstPct}%"></div>
-							</div>
-							<span class="evolution-label">{month.month.slice(5)}</span>
-							<span class="evolution-value">{month.total}</span>
-						</div>
-					{/each}
-				</div>
-				<div class="evolution-legend">
-					<span class="legend-item"><span class="legend-box pour"></span> Pour</span>
-					<span class="legend-item"><span class="legend-box contre"></span> Contre</span>
-					<span class="legend-item"><span class="legend-box abstention"></span> Abstention</span>
-				</div>
-			{:else}
-				<p class="empty-state">Aucune donnée d'évolution</p>
-			{/if}
+			<VoteEvolutionChart data={monthlyEvolution} />
 		{/snippet}
 	</AsyncCard>
 </div>
@@ -414,94 +389,6 @@
 	}
 
 	.vote-bar-abstention {
-		background: var(--color-warning);
-	}
-
-	/* Evolution chart */
-	.evolution-chart {
-		display: flex;
-		gap: 4px;
-		align-items: flex-end;
-		height: 150px;
-		padding: 0.5rem 0;
-	}
-
-	.evolution-bar-container {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4px;
-		height: 100%;
-	}
-
-	.evolution-bar {
-		width: 100%;
-		max-width: 24px;
-		background: var(--color-bg);
-		border-radius: 4px 4px 0 0;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column-reverse;
-	}
-
-	.bar-segment {
-		width: 100%;
-	}
-
-	.bar-segment.pour {
-		background: var(--color-success);
-	}
-
-	.bar-segment.contre {
-		background: var(--color-danger);
-	}
-
-	.bar-segment.abstention {
-		background: var(--color-warning);
-	}
-
-	.evolution-label {
-		font-size: 0.625rem;
-		color: var(--color-text-muted);
-	}
-
-	.evolution-value {
-		font-size: 0.625rem;
-		font-weight: 600;
-		color: var(--color-text);
-	}
-
-	.evolution-legend {
-		display: flex;
-		justify-content: center;
-		gap: 1rem;
-		margin-top: 0.5rem;
-		font-size: 0.75rem;
-	}
-
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		color: var(--color-text-muted);
-	}
-
-	.legend-box {
-		width: 12px;
-		height: 12px;
-		border-radius: 2px;
-	}
-
-	.legend-box.pour {
-		background: var(--color-success);
-	}
-
-	.legend-box.contre {
-		background: var(--color-danger);
-	}
-
-	.legend-box.abstention {
 		background: var(--color-warning);
 	}
 </style>

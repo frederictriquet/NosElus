@@ -482,54 +482,9 @@ main {
 	background: var(--color-warning);
 }
 
-/* Evolution chart */
-.evolution-chart {
-	display: flex;
-	align-items: flex-end;
-	gap: 0.5rem;
-	height: 150px;
-	margin-top: 1rem;
-	padding-bottom: 2rem;
-}
-
-.evolution-bar-container {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	height: 100%;
-	position: relative;
-}
-
-.evolution-bar {
-	width: 100%;
-	display: flex;
-	flex-direction: column-reverse;
-	border-radius: 4px 4px 0 0;
-	overflow: hidden;
-	min-height: 4px;
-	margin-top: auto;
-}
-
-.evolution-label {
-	position: absolute;
-	bottom: -1.5rem;
-	font-size: 0.7rem;
-	color: var(--color-text-muted);
-}
-
-.evolution-value {
-	position: absolute;
-	bottom: 100%;
-	margin-bottom: 0.25rem;
-	font-size: 0.7rem;
-	font-weight: 500;
-}
-
 .evolution-legend {
 	display: flex;
 	gap: 1.5rem;
-	margin-top: 1rem;
 	font-size: 0.75rem;
 }
 

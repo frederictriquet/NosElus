@@ -74,6 +74,7 @@
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.9",
+		"@types/d3-shape": "^3.1.8",
 		"@types/leaflet": "^1.9.21",
 		"@vitest/ui": "^4.0.15",
 		"drizzle-kit": "^0.31.8",
@@ -92,7 +93,10 @@
 	},
 	"dependencies": {
 		"@tricoteuses/assemblee": "^2.5.31",
+		"d3-scale": "^4.0.2",
+		"d3-shape": "^3.2.0",
 		"drizzle-orm": "^0.45.1",
+		"layercake": "^10.0.2",
 		"leaflet": "^1.9.4",
 		"postgres": "^3.4.8"
 	}

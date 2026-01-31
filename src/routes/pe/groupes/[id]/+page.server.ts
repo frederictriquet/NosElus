@@ -130,6 +130,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		filters: {
 			terme
 		},
+		periodDates: termDates,
 		// Streamed data
 		distributionData: loadDistribution(),
 		members: loadMembers(),

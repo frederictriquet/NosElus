@@ -530,18 +530,18 @@
 	}
 
 	.matrix-cell.high {
-		background: #dcfce7;
-		color: #166534;
+		background: var(--color-success-bg);
+		color: var(--color-success-text);
 	}
 
 	.matrix-cell.medium {
-		background: #fef3c7;
-		color: #92400e;
+		background: var(--color-warning-bg);
+		color: var(--color-warning-text);
 	}
 
 	.matrix-cell.low {
-		background: #fee2e2;
-		color: #991b1b;
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
 	}
 
 	/* Heatmap */
@@ -591,18 +591,18 @@
 	}
 
 	.heatmap-cell.pour {
-		background: #dcfce7;
-		color: #166534;
+		background: var(--color-success-bg);
+		color: var(--color-success-text);
 	}
 
 	.heatmap-cell.contre {
-		background: #fee2e2;
-		color: #991b1b;
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
 	}
 
 	.heatmap-cell.abstention {
-		background: #fef3c7;
-		color: #92400e;
+		background: var(--color-warning-bg);
+		color: var(--color-warning-text);
 	}
 
 	.heatmap-cell.empty {
@@ -625,15 +625,15 @@
 	}
 
 	.heatmap-legend .legend-box.pour {
-		background: #dcfce7;
+		background: var(--color-success-bg);
 	}
 
 	.heatmap-legend .legend-box.contre {
-		background: #fee2e2;
+		background: var(--color-danger-bg);
 	}
 
 	.heatmap-legend .legend-box.abstention {
-		background: #fef3c7;
+		background: var(--color-warning-bg);
 	}
 
 	/* Government Alignment */

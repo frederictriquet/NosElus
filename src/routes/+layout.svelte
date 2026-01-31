@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import '../app.css';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let { children } = $props();
 
@@ -36,6 +37,7 @@
 			{/each}
 		</nav>
 		<div class="header-links">
+			<ThemeToggle />
 			<a href="/sources" class="header-link" class:active={$page.url.pathname === '/sources'}>
 				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>

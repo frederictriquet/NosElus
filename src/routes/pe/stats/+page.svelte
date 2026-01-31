@@ -476,9 +476,9 @@
 	}
 
 	.matrix-cell.diagonal { background: var(--color-border); color: var(--color-text-muted); }
-	.matrix-cell.high { background: #dcfce7; color: #166534; }
-	.matrix-cell.medium { background: #fef3c7; color: #92400e; }
-	.matrix-cell.low { background: #fee2e2; color: #991b1b; }
+	.matrix-cell.high { background: var(--color-success-bg); color: var(--color-success-text); }
+	.matrix-cell.medium { background: var(--color-warning-bg); color: var(--color-warning-text); }
+	.matrix-cell.low { background: var(--color-danger-bg); color: var(--color-danger-text); }
 
 	/* Heatmap */
 	.heatmap-container { overflow-x: auto; }
@@ -503,9 +503,9 @@
 		min-width: 40px;
 	}
 
-	.heatmap-cell.pour { background: #dcfce7; color: #166534; }
-	.heatmap-cell.contre { background: #fee2e2; color: #991b1b; }
-	.heatmap-cell.abstention { background: #fef3c7; color: #92400e; }
+	.heatmap-cell.pour { background: var(--color-success-bg); color: var(--color-success-text); }
+	.heatmap-cell.contre { background: var(--color-danger-bg); color: var(--color-danger-text); }
+	.heatmap-cell.abstention { background: var(--color-warning-bg); color: var(--color-warning-text); }
 	.heatmap-cell.empty { background: var(--color-bg); color: var(--color-text-muted); }
 
 	.heatmap-legend {
@@ -516,9 +516,9 @@
 	}
 
 	.heatmap-legend .legend-box { width: 16px; height: 16px; border-radius: 4px; }
-	.heatmap-legend .legend-box.pour { background: #dcfce7; }
-	.heatmap-legend .legend-box.contre { background: #fee2e2; }
-	.heatmap-legend .legend-box.abstention { background: #fef3c7; }
+	.heatmap-legend .legend-box.pour { background: var(--color-success-bg); }
+	.heatmap-legend .legend-box.contre { background: var(--color-danger-bg); }
+	.heatmap-legend .legend-box.abstention { background: var(--color-warning-bg); }
 
 	/* Evolution Timeline */
 	.evolution-timeline {

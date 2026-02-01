@@ -766,3 +766,91 @@ export async function getScrutinCategories(
 			label: getCategoryLabel(r.category as ScrutinCategory)
 		}));
 }
+
+// ===== Law Implication Helpers =====
+
+/**
+ * Interface pour l'implication d'un acteur sur un texte de loi.
+ */
+export interface ActorLawImplication {
+	lawId: string;
+	lawTitle: string;
+	lawType: string | null;
+	depositDate: string | null;
+	role: 'author' | 'cosignatory';
+	signatureOrder: number | null;
+}
+
+/**
+ * Récupère les textes de loi signés (auteur ou cosignataire) par un acteur.
+ *
+ * @param actorId - ID de l'acteur
+ * @param limit - Nombre maximum de résultats (défaut: 50)
+ * @returns Liste des textes signés avec le rôle de l'acteur
+ */
+export async function getActorLawsImplication(
+	actorId: string,
+	limit = 50
+): Promise<ActorLawImplication[]> {
+	const { lawCosignatories, laws } = await import('$lib/server/db');
+
+	const results = await db
+		.select({
+			lawId: lawCosignatories.lawId,
+			lawTitle: laws.title,
+			lawType: laws.type,
+			depositDate: laws.depositDate,
+			role: lawCosignatories.role,
+			signatureOrder: lawCosignatories.signatureOrder
+		})
+		.from(lawCosignatories)
+		.innerJoin(laws, eq(laws.id, lawCosignatories.lawId))
+		.where(eq(lawCosignatories.actorId, actorId))
+		.orderBy(desc(laws.depositDate), lawCosignatories.signatureOrder)
+		.limit(limit);
+
+	return results.map(r => ({
+		...r,
+		role: r.role as 'author' | 'cosignatory'
+	}));
+}
+
+/**
+ * Interface pour les contributeurs d'un texte de loi.
+ */
+export interface LawContributor {
+	actorId: string;
+	actorName: string;
+	role: 'author' | 'cosignatory';
+	signatureOrder: number | null;
+}
+
+/**
+ * Récupère les contributeurs (auteurs et cosignataires) d'un texte de loi.
+ *
+ * @param lawId - ID du texte de loi
+ * @returns Liste des contributeurs avec leur rôle
+ */
+export async function getLawContributors(lawId: string): Promise<LawContributor[]> {
+	const { lawCosignatories } = await import('$lib/server/db');
+
+	const results = await db
+		.select({
+			actorId: lawCosignatories.actorId,
+			firstName: actors.firstName,
+			lastName: actors.lastName,
+			role: lawCosignatories.role,
+			signatureOrder: lawCosignatories.signatureOrder
+		})
+		.from(lawCosignatories)
+		.innerJoin(actors, eq(actors.id, lawCosignatories.actorId))
+		.where(eq(lawCosignatories.lawId, lawId))
+		.orderBy(lawCosignatories.signatureOrder, actors.lastName);
+
+	return results.map(r => ({
+		actorId: r.actorId,
+		actorName: `${r.firstName} ${r.lastName}`,
+		role: r.role as 'author' | 'cosignatory',
+		signatureOrder: r.signatureOrder
+	}));
+}

@@ -154,6 +154,45 @@
 			{/if}
 		{/snippet}
 	</AsyncCard>
+
+	<AsyncCard title="Contributeurs" promise={data.contributors} minHeight="200px">
+		{#snippet children(contributors)}
+			{#if contributors.length === 0}
+				<p class="empty-state">Aucun contributeur enregistré</p>
+			{:else}
+				{@const authors = contributors.filter(c => c.role === 'author')}
+				{@const cosignatories = contributors.filter(c => c.role === 'cosignatory')}
+
+				<div class="contributors-section">
+					{#if authors.length > 0}
+						<div class="contributor-group">
+							<h3 class="contributor-group-title">Auteur{authors.length > 1 ? 's' : ''} ({authors.length})</h3>
+							<div class="contributor-list">
+								{#each authors as contributor}
+									<a href="/an/deputes/{contributor.actorId}" class="contributor-item">
+										{contributor.actorName}
+									</a>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					{#if cosignatories.length > 0}
+						<div class="contributor-group">
+							<h3 class="contributor-group-title">Cosignataires ({cosignatories.length})</h3>
+							<div class="contributor-list">
+								{#each cosignatories as contributor}
+									<a href="/an/deputes/{contributor.actorId}" class="contributor-item">
+										{contributor.actorName}
+									</a>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+		{/snippet}
+	</AsyncCard>
 </div>
 
 <!-- Info -->
@@ -489,6 +528,41 @@
 
 	.external-link:hover {
 		text-decoration: underline;
+	}
+
+	/* Contributors */
+	.contributors-section {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-top: 1rem;
+	}
+
+	.contributor-group-title {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-text);
+		margin: 0 0 0.75rem 0;
+	}
+
+	.contributor-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.contributor-item {
+		padding: 0.375rem 0.75rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-sm);
+		font-size: 0.875rem;
+		text-decoration: none;
+		color: var(--color-text);
+		transition: background 0.2s;
+	}
+
+	.contributor-item:hover {
+		background: var(--color-bg-tertiary);
 	}
 
 	@media (max-width: 640px) {

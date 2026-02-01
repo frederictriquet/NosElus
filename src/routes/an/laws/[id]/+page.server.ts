@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { db, laws, scrutins } from '$lib/server/db';
 import { eq, and, desc, count, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getLawContributors } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -78,6 +79,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	};
 
+	// Loader for contributors (authors and cosignatories)
+	const loadContributors = async () => {
+		return getLawContributors(params.id);
+	};
+
 	// Build timeline events from law dates
 	const buildTimeline = () => {
 		const events: Array<{
@@ -141,6 +147,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		// Streamed data
 		relatedScrutins: loadRelatedScrutins(),
-		scrutinStats: loadScrutinStats()
+		scrutinStats: loadScrutinStats(),
+		contributors: loadContributors()
 	};
 };

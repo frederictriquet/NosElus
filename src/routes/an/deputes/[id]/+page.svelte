@@ -443,6 +443,35 @@
 					{/if}
 				{/snippet}
 			</AsyncCard>
+
+			<AsyncCard title="Textes signés" promise={data.lawsImplication} minHeight="300px">
+				{#snippet children(lawsImplication)}
+					{#if lawsImplication.length === 0}
+						<p class="empty-state">Aucun texte signé enregistré</p>
+					{:else}
+						<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+							{lawsImplication.length} texte{lawsImplication.length > 1 ? 's' : ''}
+							({lawsImplication.filter(l => l.role === 'author').length} comme auteur,
+							{lawsImplication.filter(l => l.role === 'cosignatory').length} comme cosignataire)
+						</p>
+						<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+							{#each lawsImplication as law}
+								<a href="/an/laws/{law.lawId}" class="law-item">
+									<span class="law-role" class:author={law.role === 'author'} class:cosignatory={law.role === 'cosignatory'}>
+										{law.role === 'author' ? 'Auteur' : 'Cosignataire'}
+									</span>
+									<div class="law-info">
+										<div class="law-title">{law.lawTitle}</div>
+										{#if law.depositDate}
+											<div class="law-date">{new Date(law.depositDate).toLocaleDateString('fr-FR')}</div>
+										{/if}
+									</div>
+								</a>
+							{/each}
+						</div>
+					{/if}
+				{/snippet}
+			</AsyncCard>
 		</div>
 	{/if}
 {/await}
@@ -804,5 +833,62 @@
 	.category-count {
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
+	}
+
+	/* Law Implication */
+	.law-item {
+		display: flex;
+		gap: 1rem;
+		padding: 0.75rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		color: inherit;
+		transition: background 0.2s;
+	}
+
+	.law-item:hover {
+		background: var(--color-bg-tertiary);
+	}
+
+	.law-role {
+		flex-shrink: 0;
+		padding: 0.25rem 0.75rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.law-role.author {
+		background: var(--color-primary-bg, #e0e7ff);
+		color: var(--color-primary, #4f46e5);
+	}
+
+	.law-role.cosignatory {
+		background: var(--color-secondary-bg, #f3f4f6);
+		color: var(--color-text-muted);
+	}
+
+	.law-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.law-title {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	.law-date {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
 	}
 </style>

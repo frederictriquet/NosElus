@@ -6,7 +6,8 @@ import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
 import {
 	mapVoteDistribution,
 	getGroupMajorityPosition,
-	calculateAutonomyStats
+	calculateAutonomyStats,
+	getActorLawsImplication
 } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -339,6 +340,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.from(actorStats)
 		.where(and(eq(actorStats.actorId, params.id), eq(actorStats.source, 'nosdeputes')));
 
+	// Loader for laws implication (author/cosignatory)
+	const loadLawsImplication = async () => {
+		return getActorLawsImplication(params.id, 20);
+	};
+
 	return {
 		// Synchronous data
 		actor,
@@ -358,6 +364,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		careerMilestones: loadCareerMilestones(),
 		amendmentStats: loadAmendmentStats(),
 		recentAmendments: loadRecentAmendments(),
-		mandates: loadMandates()
+		mandates: loadMandates(),
+		lawsImplication: loadLawsImplication()
 	};
 };

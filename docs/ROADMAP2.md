@@ -68,16 +68,25 @@
 
 ---
 
-### 2.2 Implication individuelle par texte ⏳ En cours
+### 2.2 Implication individuelle par texte ✅ Terminé
 
 | Tâche | Complexité | Statut |
 |-------|------------|--------|
 | Lier cosignataires aux propositions de loi | 🟡 Moyen | ✅ `law_cosignatories` (4684 entrées) |
-| Lier amendements aux élus et aux textes | 🟡 Moyen | ⏳ ETL amendements |
-| Agréger : cosignature + amendements + votes par élu/texte | 🟡 Moyen | ⏳ Données liées |
-| UI : vue "implication" sur page élu et page texte | 🟡 Moyen | ⏳ À faire |
+| Helpers d'agrégation et requêtes | 🟡 Moyen | ✅ `getActorLawsImplication()`, `getLawContributors()` |
+| Tests d'intégration | 🟢 Simple | ✅ 11 tests (100% pass) |
+| UI : vue "implication" sur page élu | 🟡 Moyen | ✅ Section "Textes signés" avec rôles et compteurs |
+| UI : contributeurs sur page texte | 🟡 Moyen | ✅ Section "Contributeurs" groupée par rôle |
 
 **Valeur** : Passer de "a voté pour/contre" à "a contribué activement".
+
+**Implémenté** :
+- Helpers factorisés : `getActorLawsImplication()` et `getLawContributors()`
+- Page député : Section "Textes signés" avec badges auteur/cosignataire + compteurs
+- Page dossier : Section "Contributeurs" groupée par rôle avec liens
+- Tests d'intégration validant tous les cas (11 tests, 100% pass)
+- Code review appliquée : imports statiques, tri explicite, accessibilité
+- Commit d'implémentation : `8eb43d2`
 
 ---
 
@@ -228,7 +237,7 @@
 
 ### Priorité 2 - Processus législatif (court terme)
 - ~~Dossiers législatifs~~ ✅ MVP (97.6% scrutins liés)
-- Implication individuelle par texte (bloqué par cosignatures)
+- ~~Implication individuelle par texte~~ ✅ Complété
 - Exports données
 
 ### Priorité 3 - Thématisation (moyen terme)

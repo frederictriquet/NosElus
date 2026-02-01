@@ -35,6 +35,8 @@
 		"etl:actors": "node --import tsx scripts/etl/import-actors.ts",
 		"etl:scrutins": "node --import tsx scripts/etl/import-scrutins.ts",
 		"etl:laws": "node --import tsx scripts/etl/import-laws.ts",
+		"etl:link-laws": "node --import tsx scripts/etl/link-scrutins-by-title.ts",
+		"etl:dossiers-an": "node --import tsx scripts/etl/import-dossiers-an.ts",
 		"etl:senat-laws": "node --import tsx scripts/etl/import-senat-laws.ts",
 		"etl:senat-senators": "node --import tsx scripts/etl/import-senat-senators.ts",
 		"etl:senat-mandates-history": "node --import tsx scripts/etl/import-senat-mandates-history.ts",

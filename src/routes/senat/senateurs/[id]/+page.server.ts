@@ -3,6 +3,7 @@ import { db, actors, mandates, organs, actorStats, votes, scrutins } from '$lib/
 import { eq, and, sql, desc, count, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getRenouvellementDates } from '$lib/server/periods/senat-renouvellements';
+import { buildMandateOverlapConditions, type PeriodDates } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const renouvellement = locals.periods.senat;
@@ -18,23 +19,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get renouvellement dates for filtering
-	const renouvellementDates = renouvellement && renouvellement !== 'all'
+	const periodDates: PeriodDates | null = renouvellement && renouvellement !== 'all'
 		? await getRenouvellementDates(renouvellement)
 		: null;
 
 	// Check if senator had an active mandate during this renouvellement period
 	const checkMandate = async (): Promise<boolean> => {
-		if (!renouvellement || renouvellement === 'all' || !renouvellementDates) return true;
+		if (!periodDates) return true;
 
-		const { start, end } = renouvellementDates;
 		const [mandate] = await db
 			.select({ id: mandates.id })
 			.from(mandates)
 			.where(and(
 				eq(mandates.actorId, params.id),
 				eq(mandates.type, 'senateur'),
-				end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`,
-				sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
+				...buildMandateOverlapConditions(periodDates)
 			))
 			.limit(1);
 
@@ -46,29 +45,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Build vote conditions helper (filter by date range if renouvellement specified)
 	const buildVoteConditions = (): SQL[] => {
 		const conditions: SQL[] = [eq(votes.actorId, params.id)];
-		if (renouvellementDates && renouvellement !== 'all') {
-			const { start, end } = renouvellementDates;
-			conditions.push(sql`${scrutins.date} >= ${start}`);
-			if (end) {
-				conditions.push(sql`${scrutins.date} <= ${end}`);
+		if (periodDates) {
+			conditions.push(sql`${scrutins.date} >= ${periodDates.start}`);
+			if (periodDates.end) {
+				conditions.push(sql`${scrutins.date} <= ${periodDates.end}`);
 			}
 		}
 		return conditions;
 	};
 
-	// Build mandate filter conditions
+	// Build mandate filter conditions using shared helper
 	const buildMandateConditions = (): SQL[] => {
 		const conditions: SQL[] = [eq(mandates.actorId, params.id)];
-		if (renouvellementDates && renouvellement !== 'all') {
-			const { start, end } = renouvellementDates;
-			// A mandate is active during a period if it overlaps with the period
-			conditions.push(
-				end ? sql`${mandates.startDate} <= ${end}` : sql`1=1`
-			);
-			conditions.push(
-				sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`
-			);
-		}
+		conditions.push(...buildMandateOverlapConditions(periodDates));
 		return conditions;
 	};
 
@@ -236,7 +225,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		senatorMandate: senatorMandate[0] || null,
 		activityStats: stats || null,
 		hadMandateDuringPeriod,
-		periodDates: renouvellementDates,
+		periodDates,
 		filters: {
 			renouvellement
 		},

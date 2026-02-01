@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { db, organs, mandates } from '$lib/server/db';
-import { eq, and, sql, notLike, inArray } from 'drizzle-orm';
+import { db, organs, mandates, actors } from '$lib/server/db';
+import { eq, and, sql, notLike, inArray, count, type SQL } from 'drizzle-orm';
 
 // ===== Period Filters =====
 
@@ -268,4 +268,122 @@ export async function getANGroupsWithMemberCount(
 		}))
 		.filter(g => g.memberCount > 0)
 		.sort((a, b) => b.memberCount - a.memberCount);
+}
+
+// ===== Sénat Helpers =====
+
+export interface PeriodDates {
+	start: string;
+	end: string | null;
+}
+
+/**
+ * Construit les conditions SQL pour filtrer les mandats qui chevauchent une période.
+ * Un mandat chevauche une période si : startDate <= period.end ET (endDate IS NULL OR endDate >= period.start)
+ */
+export function buildMandateOverlapConditions(
+	periodDates: PeriodDates | null
+): SQL[] {
+	if (!periodDates) return [];
+
+	const { start, end } = periodDates;
+	const conditions: SQL[] = [];
+
+	if (end) {
+		conditions.push(sql`${mandates.startDate} <= ${end}`);
+	}
+	conditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
+
+	return conditions;
+}
+
+/**
+ * Construit les conditions pour les mandats actifs (sans date de fin ou date de fin future)
+ */
+export function buildActiveMandateConditions(referenceDate: string): SQL[] {
+	return [sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${referenceDate})`];
+}
+
+/**
+ * Récupère les groupes du Sénat avec leur nombre de membres
+ * pour une période de renouvellement donnée.
+ *
+ * @param periodDates - Dates de la période (null = mandats actifs aujourd'hui)
+ */
+export async function getSenatGroupsWithMemberCount(
+	periodDates: PeriodDates | null
+): Promise<GroupWithMemberCount[]> {
+	const today = new Date().toISOString().split('T')[0];
+
+	// Build conditions for active group memberships
+	const mandateConditions: SQL[] = [
+		eq(organs.type, 'GP'),
+		eq(organs.chamber, 'SENAT'),
+		eq(actors.chamber, 'SENAT')
+	];
+
+	if (periodDates) {
+		mandateConditions.push(...buildMandateOverlapConditions(periodDates));
+	} else {
+		// By default, show groups with currently active members
+		mandateConditions.push(...buildActiveMandateConditions(today));
+	}
+
+	// Get groups with member count
+	const groupsWithMembers = await db
+		.select({
+			id: organs.id,
+			name: organs.name,
+			shortName: organs.shortName,
+			color: organs.color,
+			legislature: sql<string | null>`NULL`,
+			memberCount: count(sql`DISTINCT ${actors.id}`)
+		})
+		.from(organs)
+		.innerJoin(mandates, eq(mandates.organId, organs.id))
+		.innerJoin(actors, eq(mandates.actorId, actors.id))
+		.where(and(...mandateConditions))
+		.groupBy(organs.id, organs.name, organs.shortName, organs.color);
+
+	return groupsWithMembers
+		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))
+		.sort((a, b) => b.memberCount - a.memberCount);
+}
+
+/**
+ * Récupère les IDs des membres d'un groupe Sénat pour une période donnée.
+ */
+export async function getSenatGroupMemberIds(
+	groupId: string,
+	periodDates: PeriodDates | null
+): Promise<string[]> {
+	const memberConditions: SQL[] = [
+		eq(mandates.organId, groupId),
+		eq(actors.chamber, 'SENAT')
+	];
+
+	if (periodDates) {
+		memberConditions.push(...buildMandateOverlapConditions(periodDates));
+	}
+
+	const memberIds = await db
+		.selectDistinct({ id: actors.id })
+		.from(actors)
+		.innerJoin(mandates, eq(mandates.actorId, actors.id))
+		.where(and(...memberConditions));
+
+	return memberIds.map(m => m.id);
+}
+
+/**
+ * Convertit une période en liste d'années (pour filtrer actorStats.period)
+ */
+export function getYearsInPeriod(start: string, end: string | null): string[] {
+	const startYear = parseInt(start.slice(0, 4));
+	const endYear = end ? parseInt(end.slice(0, 4)) : new Date().getFullYear();
+	const years: string[] = [];
+	for (let y = startYear; y <= endYear; y++) {
+		years.push(String(y));
+	}
+	return years;
 }

@@ -1,8 +1,9 @@
 import type { PageServerLoad } from './$types';
-import { db, organs, actors, mandates, actorStats } from '$lib/server/db';
-import { eq, and, sql, inArray, desc, type SQL } from 'drizzle-orm';
+import { db, organs, actors, actorStats } from '$lib/server/db';
+import { eq, and, sql, inArray, desc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getRenouvellementDates } from '$lib/server/periods/senat-renouvellements';
+import { getSenatGroupMemberIds, getYearsInPeriod, type PeriodDates } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const renouvellement = locals.periods.senat;
@@ -18,90 +19,41 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get renouvellement dates for filtering
-	const renouvellementDates =
-		renouvellement && renouvellement !== 'all' ? await getRenouvellementDates(renouvellement) : null;
+	const periodDates: PeriodDates | null =
+		renouvellement && renouvellement !== 'all'
+			? await getRenouvellementDates(renouvellement)
+			: null;
 
 	// Loader for group members
 	const loadMembers = async () => {
-		const memberConditions: SQL[] = [
-			eq(mandates.organId, group.id),
-			eq(actors.chamber, 'SENAT')
-		];
-
-		// Filter by renouvellement if specified
-		if (renouvellementDates && renouvellement && renouvellement !== 'all') {
-			const { start, end } = renouvellementDates;
-			if (end) {
-				memberConditions.push(sql`${mandates.startDate} <= ${end}`);
-			}
-			memberConditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
-		}
-		// For 'all', no date filter - show all members who have ever been in this group
+		const memberIds = await getSenatGroupMemberIds(group.id, periodDates);
+		if (memberIds.length === 0) return [];
 
 		const members = await db
-			.selectDistinct({
+			.select({
 				id: actors.id,
 				name: actors.fullName,
 				lastName: actors.lastName,
 				photoUrl: actors.photoUrl
 			})
 			.from(actors)
-			.innerJoin(mandates, eq(mandates.actorId, actors.id))
-			.where(and(...memberConditions))
+			.where(inArray(actors.id, memberIds))
 			.orderBy(actors.lastName);
 
 		return members;
 	};
 
-	// Get years covered by a renouvellement period
-	const getYearsInPeriod = (start: string, end: string | null): string[] => {
-		const startYear = parseInt(start.slice(0, 4));
-		const endYear = end ? parseInt(end.slice(0, 4)) : new Date().getFullYear();
-		const years: string[] = [];
-		for (let y = startYear; y <= endYear; y++) {
-			years.push(String(y));
-		}
-		return years;
-	};
-
 	// Loader for aggregated activity stats of group members
 	const loadGroupStats = async () => {
-		// First get member IDs for this group
-		const memberConditions: SQL[] = [
-			eq(mandates.organId, group.id),
-			eq(actors.chamber, 'SENAT')
-		];
+		const memberIds = await getSenatGroupMemberIds(group.id, periodDates);
+		if (memberIds.length === 0) return null;
 
-		if (renouvellementDates && renouvellement && renouvellement !== 'all') {
-			const { start, end } = renouvellementDates;
-			if (end) {
-				memberConditions.push(sql`${mandates.startDate} <= ${end}`);
-			}
-			memberConditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
-		}
-		// For 'all', no date filter - include all members
-
-		const memberIds = await db
-			.selectDistinct({ id: actors.id })
-			.from(actors)
-			.innerJoin(mandates, eq(mandates.actorId, actors.id))
-			.where(and(...memberConditions));
-
-		if (memberIds.length === 0) {
-			return null;
-		}
-
-		const ids = memberIds.map(m => m.id);
-
-		// Build stats conditions
-		const statsConditions: SQL[] = [inArray(actorStats.actorId, ids)];
-
-		if (renouvellementDates && renouvellement && renouvellement !== 'all') {
-			// Filter by years in the renouvellement period
-			const years = getYearsInPeriod(renouvellementDates.start, renouvellementDates.end);
+		// Build stats period filter
+		const statsConditions = [inArray(actorStats.actorId, memberIds)];
+		if (periodDates) {
+			const years = getYearsInPeriod(periodDates.start, periodDates.end);
 			statsConditions.push(inArray(actorStats.period, years));
 		} else {
-			// Use 'all' period for total stats
 			statsConditions.push(eq(actorStats.period, 'all'));
 		}
 
@@ -126,41 +78,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Loader for most active senators in the group
 	const loadTopMembers = async () => {
+		const memberIds = await getSenatGroupMemberIds(group.id, periodDates);
+		if (memberIds.length === 0) return [];
+
 		// Build period filter for stats
-		let periodFilter: SQL;
-		if (renouvellementDates && renouvellement && renouvellement !== 'all') {
-			const years = getYearsInPeriod(renouvellementDates.start, renouvellementDates.end);
-			periodFilter = inArray(actorStats.period, years);
-		} else {
-			periodFilter = eq(actorStats.period, 'all');
-		}
-
-		// Get member IDs first (filtered by mandate period)
-		const memberConditions: SQL[] = [
-			eq(mandates.organId, group.id),
-			eq(actors.chamber, 'SENAT')
-		];
-
-		if (renouvellementDates && renouvellement && renouvellement !== 'all') {
-			const { start, end } = renouvellementDates;
-			if (end) {
-				memberConditions.push(sql`${mandates.startDate} <= ${end}`);
-			}
-			memberConditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
-		}
-		// For 'all', no date filter - include all members
-
-		const memberIds = await db
-			.selectDistinct({ id: actors.id })
-			.from(actors)
-			.innerJoin(mandates, eq(mandates.actorId, actors.id))
-			.where(and(...memberConditions));
-
-		if (memberIds.length === 0) {
-			return [];
-		}
-
-		const ids = memberIds.map(m => m.id);
+		const periodFilter = periodDates
+			? inArray(actorStats.period, getYearsInPeriod(periodDates.start, periodDates.end))
+			: eq(actorStats.period, 'all');
 
 		// Get aggregated stats per actor for the selected period
 		const topMembers = await db
@@ -177,7 +101,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				eq(actorStats.actorId, actors.id),
 				periodFilter
 			))
-			.where(inArray(actors.id, ids))
+			.where(inArray(actors.id, memberIds))
 			.groupBy(actors.id, actors.fullName, actors.lastName, actors.photoUrl)
 			.orderBy(desc(sql`SUM(${actorStats.hemicycleInterventions})`))
 			.limit(10);

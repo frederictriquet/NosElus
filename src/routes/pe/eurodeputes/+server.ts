@@ -81,6 +81,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		.offset(offset);
 
 	// Get group for these MEPs (from mandates - GP = groupe parlementaire)
+	// Order by startDate DESC to get most recent mandate first
 	const mepIds = mepsRaw.map((d) => d.id);
 	const groupsData =
 		mepIds.length > 0
@@ -90,14 +91,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 						groupId: organs.id,
 						groupName: organs.name,
 						groupShortName: organs.shortName,
-						groupColor: organs.color
+						groupColor: organs.color,
+						startDate: mandates.startDate
 					})
 					.from(mandates)
 					.innerJoin(organs, eq(mandates.organId, organs.id))
 					.where(sql`${mandates.actorId} IN ${mepIds} AND ${organs.type} = 'GP'`)
+					.orderBy(desc(mandates.startDate))
 			: [];
 
-	// Build lookup map
+	// Build lookup map - first entry for each actor wins (most recent due to ordering)
 	const groupByActor = new Map<
 		string,
 		{ id: string; name: string | null; shortName: string | null; color: string | null }

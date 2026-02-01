@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { getProxiedPhotoUrl } from '$lib/utils/photo';
+	import GroupName from './GroupName.svelte';
 
 	interface Props {
 		name: string;
@@ -85,12 +86,7 @@
 				style="background: {group.color || '#888'}20; border: 1px solid {group.color || '#888'}; color: {group.color || '#888'};"
 			>
 				<span class="group-dot" style="background: {group.color || '#888'}"></span>
-				<span class="group-label">
-					<span class="group-short">{group.shortName || group.name}</span>
-					{#if group.name && group.shortName && group.name !== group.shortName}
-						<span class="group-full">{group.name}</span>
-					{/if}
-				</span>
+				<GroupName shortName={group.shortName} fullName={group.name} variant="stacked" />
 			</a>
 		{/if}
 		<div class="profile-meta">
@@ -180,22 +176,6 @@
 	.group-badge:hover {
 		text-decoration: none;
 		opacity: 0.9;
-	}
-
-	.group-label {
-		display: flex;
-		flex-direction: column;
-		line-height: 1.3;
-	}
-
-	.group-short {
-		font-weight: 600;
-	}
-
-	.group-full {
-		font-size: 0.75rem;
-		font-weight: 400;
-		opacity: 0.85;
 	}
 
 	.group-dot {

@@ -3,8 +3,9 @@ import { createImportStats, type ImportStats, type ETLConfig } from '../../types
 import { logProgress } from '../../utils';
 import { sql, eq } from 'drizzle-orm';
 import type { NewActor, NewOrgan, NewMandate } from '../../../db';
+import { SENAT_SOURCES } from '../../config';
 
-const SENAT_API_URL = 'https://www.senat.fr/api-senat/senateurs.json';
+const SENAT_API_URL = SENAT_SOURCES.senatorsApiUrl;
 
 interface SenateurAPI {
 	matricule: string;

@@ -6,7 +6,9 @@ export { scrutins, type Scrutin, type NewScrutin } from './scrutins';
 export { votes, type Vote, type NewVote } from './votes';
 export { laws, type Law, type NewLaw } from './laws';
 export { amendments, type Amendment, type NewAmendment } from './amendments';
+export { lawCosignatories, type LawCosignatory, type NewLawCosignatory } from './law-cosignatories';
 export { syncMetadata, type SyncMetadata, type NewSyncMetadata } from './sync-metadata';
+export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
 
 // Relations
 export {
@@ -16,5 +18,6 @@ export {
 	scrutinsRelations,
 	votesRelations,
 	lawsRelations,
+	lawCosignatoriesRelations,
 	amendmentsRelations
 } from './relations';

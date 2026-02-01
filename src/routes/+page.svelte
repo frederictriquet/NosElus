@@ -4,35 +4,69 @@
 
 <div class="page-header">
 	<h1 class="page-title">Suivi de l'activité parlementaire</h1>
-	<p class="page-subtitle">Explorez les votes et activités des élus de l'Assemblée nationale</p>
+	<p class="page-subtitle">Explorez les votes et activités des élus français</p>
 </div>
 
-<div class="stats-grid">
-	<div class="stat-card">
-		<div class="stat-value">{data.stats.deputies}</div>
-		<div class="stat-label">Députés</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value">{data.stats.scrutins}</div>
-		<div class="stat-label">Scrutins</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value">{data.stats.votes}</div>
-		<div class="stat-label">Votes enregistrés</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value">{data.stats.groups}</div>
-		<div class="stat-label">Groupes parlementaires</div>
-	</div>
+<div class="chambers-grid">
+	<a href="/an" class="chamber-card an">
+		<div class="chamber-icon">
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M3 21h18"/>
+				<path d="M5 21V7l7-4 7 4v14"/>
+				<path d="M9 21v-8h6v8"/>
+			</svg>
+		</div>
+		<h2 class="chamber-title">Assemblée nationale</h2>
+		<div class="chamber-stats">
+			<span>{data.chambers.an.deputies} députés</span>
+			<span>•</span>
+			<span>{data.chambers.an.groups} groupes</span>
+		</div>
+		<p class="chamber-desc">Votes, scrutins et activités des députés français</p>
+	</a>
+
+	<a href="/senat" class="chamber-card senat">
+		<div class="chamber-icon">
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="10"/>
+				<path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+				<path d="M2 12h20"/>
+			</svg>
+		</div>
+		<h2 class="chamber-title">Sénat</h2>
+		<div class="chamber-stats">
+			<span>{data.chambers.senat.senators} sénateurs</span>
+			<span>•</span>
+			<span>{data.chambers.senat.groups} groupes</span>
+		</div>
+		<p class="chamber-desc">Sénateurs et groupes politiques du Sénat</p>
+	</a>
+
+	<a href="/pe" class="chamber-card pe">
+		<div class="chamber-icon">
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="10"/>
+				<path d="M2 12h20"/>
+				<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+			</svg>
+		</div>
+		<h2 class="chamber-title">Parlement européen</h2>
+		<div class="chamber-stats">
+			<span>{data.chambers.pe.meps} eurodéputés</span>
+			<span>•</span>
+			<span>{data.chambers.pe.groups} groupes</span>
+		</div>
+		<p class="chamber-desc">Eurodéputés français et leurs votes au PE</p>
+	</a>
 </div>
 
-<div class="card-grid">
-	<section class="card">
+{#if data.recentScrutins.length > 0}
+	<section class="card" style="margin-top: 2rem;">
 		<h2>Derniers scrutins</h2>
 		<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
 			{#each data.recentScrutins as scrutin}
 				{@const total = scrutin.totalFor + scrutin.totalAgainst + scrutin.totalAbstention || 1}
-				<a href="/scrutins/{scrutin.id}" class="scrutin-card" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
+				<a href="/an/scrutins/{scrutin.id}" class="scrutin-card" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
 					<div class="scrutin-title">{scrutin.title.slice(0, 100)}{scrutin.title.length > 100 ? '...' : ''}</div>
 					<div class="scrutin-meta">
 						<span>{new Date(scrutin.date).toLocaleDateString('fr-FR')}</span>
@@ -50,29 +84,101 @@
 			{/each}
 		</div>
 		<div style="margin-top: 1rem; text-align: center;">
-			<a href="/scrutins" class="btn btn-secondary">Voir tous les scrutins</a>
+			<a href="/an/scrutins" class="btn btn-secondary">Voir tous les scrutins</a>
 		</div>
 	</section>
-
-	<section class="card">
-		<h2>Groupes parlementaires</h2>
-		<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-			{#each data.groups as group}
-				<a href="/groupes/{group.id}" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit;">
-					<span style="width: 12px; height: 12px; border-radius: 50%; background: {group.color || '#ccc'}"></span>
-					<span style="flex: 1">{group.name}</span>
-					<span class="badge">{group.shortName}</span>
-				</a>
-			{/each}
-		</div>
-	</section>
-</div>
+{/if}
 
 <style>
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;
 		color: var(--color-text);
+	}
+
+	.chambers-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.chamber-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: 2rem 1.5rem;
+		background: var(--color-surface);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow);
+		text-decoration: none;
+		color: inherit;
+		transition: transform 0.2s, box-shadow 0.2s;
+		border: 2px solid transparent;
+	}
+
+	.chamber-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-lg);
+		text-decoration: none;
+	}
+
+	.chamber-card.an:hover {
+		border-color: var(--color-primary);
+	}
+
+	.chamber-card.senat:hover {
+		border-color: #9333ea;
+	}
+
+	.chamber-card.pe:hover {
+		border-color: #0369a1;
+	}
+
+	.chamber-icon {
+		width: 80px;
+		height: 80px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		margin-bottom: 1rem;
+	}
+
+	.chamber-card.an .chamber-icon {
+		background: var(--color-primary-bg, rgba(59, 130, 246, 0.1));
+		color: var(--color-primary);
+	}
+
+	.chamber-card.senat .chamber-icon {
+		background: rgba(147, 51, 234, 0.1);
+		color: #9333ea;
+	}
+
+	.chamber-card.pe .chamber-icon {
+		background: rgba(3, 105, 161, 0.1);
+		color: #0369a1;
+	}
+
+	.chamber-title {
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin: 0 0 0.5rem 0;
+	}
+
+	.chamber-stats {
+		display: flex;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin-bottom: 0.75rem;
+	}
+
+	.chamber-desc {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin: 0;
+		line-height: 1.5;
 	}
 
 	.scrutin-card {

@@ -1,5 +1,9 @@
 # Requêter la base de données PostgreSQL
 
+## ⚠️ RÈGLE OBLIGATOIRE
+**TOUJOURS lire cette mémoire AVANT d'exécuter toute commande PostgreSQL.**
+Ne JAMAIS utiliser `docker compose exec db` - utiliser uniquement la méthode ci-dessous.
+
 ## Commande pour exécuter des requêtes SQL
 
 ```bash

@@ -1,26 +1,56 @@
 /**
- * Import parliamentary group colors from nosdeputes.fr for all legislatures (12-17)
+ * Import parliamentary group colors from nosdeputes.fr for all legislatures
  *
  * This script fetches group information including colors from nosdeputes.fr
  * for both current and historical legislatures.
+ *
+ * The list of legislatures is retrieved dynamically from the database.
  *
  * Usage: npx tsx scripts/etl/import-groupes-colors.ts
  */
 
 import { importGroupesFromNosdeputes } from '../../src/lib/server/etl/sources/nosdeputes/import.js';
 import type { ETLConfig } from '../../src/lib/server/etl/types.js';
+import { db, organs } from '../../src/lib/server/db/index.js';
+import { eq, and, isNotNull, sql } from 'drizzle-orm';
 
-const LEGISLATURES = ['12', '13', '14', '15', '16', '17'];
+/**
+ * Mapping of legislature numbers to nosdeputes.fr subdomain format
+ * For older legislatures, nosdeputes.fr uses subdomains like 2017-2022.nosdeputes.fr
+ * This is API configuration, not business data - it reflects how nosdeputes.fr structures their URLs
+ */
+function getSubdomainForLegislature(legislature: string): string | null {
+	const num = parseInt(legislature, 10);
+	if (num >= 16) return null; // Uses main domain
 
-// Mapping of legislature numbers to nosdeputes.fr subdomain format
-// For older legislatures, nosdeputes.fr uses subdomains like 2017-2022.nosdeputes.fr
-const LEGISLATURE_SUBDOMAINS: Record<string, string> = {
-	'12': '2002-2007',
-	'13': '2007-2012',
-	'14': '2012-2017',
-	'15': '2017-2022'
-	// 16 and 17 use main domain (www.nosdeputes.fr)
-};
+	// Calculate subdomain based on legislature number
+	// Legislature 12 = 2002-2007, 13 = 2007-2012, etc.
+	// Pattern: startYear = 1997 + (legislature - 11) * 5
+	const startYear = 1997 + (num - 11) * 5;
+	const endYear = startYear + 5;
+	return `${startYear}-${endYear}`;
+}
+
+/**
+ * Get distinct legislatures from the database (AN groups only)
+ */
+async function getLegislaturesFromDb(): Promise<string[]> {
+	const result = await db
+		.selectDistinct({ legislature: organs.legislature })
+		.from(organs)
+		.where(
+			and(
+				eq(organs.chamber, 'AN'),
+				eq(organs.type, 'GP'),
+				isNotNull(organs.legislature)
+			)
+		)
+		.orderBy(sql`${organs.legislature}::int DESC`);
+
+	return result
+		.filter((r) => r.legislature !== null)
+		.map((r) => r.legislature!);
+}
 
 async function main() {
 	console.log('='.repeat(60));
@@ -28,14 +58,25 @@ async function main() {
 	console.log('='.repeat(60));
 	console.log('');
 	console.log('Ce script importe les groupes parlementaires avec leurs couleurs');
-	console.log('depuis nosdeputes.fr pour toutes les législatures (12-17).');
+	console.log('depuis nosdeputes.fr pour toutes les législatures disponibles.');
+	console.log('');
+
+	// Get legislatures dynamically from DB
+	const legislatures = await getLegislaturesFromDb();
+
+	if (legislatures.length === 0) {
+		console.log('⚠ Aucune législature trouvée en base. Exécutez d\'abord l\'import des groupes AN.');
+		process.exit(1);
+	}
+
+	console.log(`Législatures trouvées: ${legislatures.join(', ')}`);
 	console.log('');
 
 	const startTime = Date.now();
 	const results: Record<string, { inserted: number; errors: number }> = {};
 
-	for (const legislature of LEGISLATURES) {
-		const subdomain = LEGISLATURE_SUBDOMAINS[legislature];
+	for (const legislature of legislatures) {
+		const subdomain = getSubdomainForLegislature(legislature);
 		const domain = subdomain ? `${subdomain}.nosdeputes.fr` : 'www.nosdeputes.fr';
 
 		console.log('\n' + '-'.repeat(40));
@@ -72,11 +113,13 @@ async function main() {
 	let totalInserted = 0;
 	let totalErrors = 0;
 
-	for (const legislature of LEGISLATURES) {
+	for (const legislature of legislatures) {
 		const result = results[legislature];
-		console.log(`  Législature ${legislature}: ${result.inserted} groupes (${result.errors} erreurs)`);
-		totalInserted += result.inserted;
-		totalErrors += result.errors;
+		if (result) {
+			console.log(`  Législature ${legislature}: ${result.inserted} groupes (${result.errors} erreurs)`);
+			totalInserted += result.inserted;
+			totalErrors += result.errors;
+		}
 	}
 
 	console.log('');

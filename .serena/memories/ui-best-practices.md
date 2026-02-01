@@ -42,13 +42,24 @@ export const load: PageServerLoad = async ({ url }) => {
 - Le composant gère automatiquement loading/error states
 
 ### Pages migrées avec AsyncCard
-- `/stats` ✅ - Tous les panels (totaux, distribution, activité, etc.)
-- `/carte` ✅ - Hémicycle et liste des députés par groupe
-- `/groupes/[id]` ✅ - Distribution des votes, membres actifs, évolution mensuelle
-- `/deputes/[id]` ✅ - Stats de votes, votes récents, évolution, milestones, amendements
-- `/compare` ✅ - Données de comparaison (streamées après sélection)
-- `/scrutins/[id]` ✅ - Détail des votes par position
+
+**Assemblée nationale (`/an/`)**
+- `/an/stats` ✅ - Tous les panels (totaux, distribution, activité, etc.)
+- `/an/carte` ✅ - Hémicycle et liste des députés par groupe
+- `/an/groupes/[id]` ✅ - Distribution des votes, membres actifs, évolution mensuelle
+- `/an/deputes/[id]` ✅ - Stats de votes, votes récents, évolution, milestones, amendements
+- `/an/compare` ✅ - Données de comparaison (streamées après sélection)
+- `/an/scrutins/[id]` ✅ - Détail des votes par position
+
+**Parlement européen (`/pe/`)**
+- `/pe/eurodeputes/[id]` ✅ - Stats de votes, votes récents
+- `/pe/eurodeputes/compare` ✅ - Comparateur d'eurodéputés
+
+**Sénat (`/senat/`)**
+- À venir
 
 ### Pages non candidates
-- `/deputes` - Liste paginée avec recherche, pas de panels indépendants
-- `/scrutins` - Liste avec filtres, architecture différente
+- `/an/deputes` - Liste paginée avec recherche, pas de panels indépendants
+- `/an/scrutins` - Liste avec filtres, architecture différente
+- `/pe/eurodeputes` - Liste paginée
+- `/senat/senateurs` - Liste paginée

@@ -145,21 +145,23 @@
 ## Phase 7 - Parlement européen (31-38 semaines)
 
 ### 7.1 Données eurodéputés
-- [ ] ETL Parlement européen - Eurodéputés français (81 MEPs, législature 2024-2029)
-- [ ] ETL Parlement européen - Groupes politiques européens
-- [ ] ETL votes en session plénière (via data.europarl.europa.eu ou itsyourparliament.eu)
-- [ ] Historique des mandats européens (depuis 2004)
+- [x] ETL Parlement européen - Eurodéputés français (84 MEPs via ParlTrack, mandat 10 2024-2029)
+- [x] ETL Parlement européen - Groupes politiques européens (9 groupes avec couleurs officielles)
+- [x] ETL couleurs groupes PE depuis results.elections.europa.eu
+- [x] ETL couleurs groupes Sénat depuis senat.fr
+- [x] ETL votes en session plénière (via HowTheyVote.eu API)
+- [x] Historique des mandats européens (depuis 2004) - 303 MEPs, 554 mandats, termes 6-10
 
 ### 7.2 Interface eurodéputés
-- [ ] Page `/eurodeputes` - Liste des eurodéputés français avec filtres
-- [ ] Fiche détaillée eurodéputé (profil + votes européens)
-- [ ] Statistiques de vote au Parlement européen
-- [ ] Comparaison entre eurodéputés
+- [x] Page `/eurodeputes` - Liste des eurodéputés français avec filtres (84 MEPs, infinite scroll)
+- [x] Fiche détaillée eurodéputé (profil + groupe + mandats)
+- [x] Statistiques de vote au Parlement européen (via ETL HowTheyVote.eu)
+- [x] Comparaison entre eurodéputés (`/eurodeputes/compare`)
 
 ### 7.3 Intégration multi-chambres
-- [ ] Navigation unifiée AN / Sénat / PE
-- [ ] Recherche globale tous élus français
-- [ ] Statistiques comparées entre chambres
+- [x] Navigation unifiée AN / Sénat / PE (liens dans header)
+- [x] Recherche globale tous élus français (`/recherche`)
+- [x] Statistiques comparées entre chambres (page `/stats`)
 
 ---
 
@@ -168,11 +170,123 @@
 | Source | Type | Statut | Documentation |
 |--------|------|--------|---------------|
 | NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
+| NosSénateurs.fr | API JSON | ⚠️ Inaccessible | Site archivé |
 | Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
 | Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
-| Parlement européen | API RDF/JSON | Planifié | [data.europarl.europa.eu](https://data.europarl.europa.eu) |
-| It's Your Parliament | API XML | Planifié | [itsyourparliament.eu/api](http://www.itsyourparliament.eu/api/) |
+| ParlTrack | JSON dump | ✅ Fait | [parltrack.org](https://parltrack.org/dumps/) |
+| EU Election Results | HTML/CSS | ✅ Fait | [results.elections.europa.eu](https://results.elections.europa.eu) |
+| HowTheyVote.eu | API JSON | ✅ Fait | [howtheyvote.eu](https://howtheyvote.eu) |
 | Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
+
+### Limitations des sources
+
+**NosDéputés.fr (Regards Citoyens)** ✅
+- Site de nouveau accessible (janvier 2026)
+- Statistiques d'activité parlementaire importées (586 députés) :
+  - Semaines de présence, présences en commission
+  - Interventions en hémicycle et commission
+  - Amendements signés/adoptés, rapports
+  - Questions écrites/orales
+- **ETL** : `make etl-nosdeputes-stats`
+
+**NosSénateurs.fr (Regards Citoyens)** ⚠️
+- Site toujours inaccessible
+- **ETL prêt** : `make etl-nossenateurs-stats`
+- **Alternative utilisée** : Données d'activité récupérées via senat.fr officiel
+
+**Sénat - Votes nominatifs**
+- Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable
+- Seuls les résultats agrégés des scrutins sont disponibles
+- Impact : pas de statistiques de vote ni de comparaison pour les sénateurs
+
+---
+
+## Phase 8 - Parité fonctionnelle multi-chambres (39-46 semaines)
+
+### 8.1 Analyse des fonctionnalités AN existantes
+
+| Fonctionnalité AN | Page | PE | Sénat | Notes |
+|------------------|------|:---:|:-----:|-------|
+| Liste élus avec filtres | `/an/deputes` | ✅ | ✅ | Déjà implémenté |
+| Fiche détaillée élu | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
+| Historique mandats | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
+| Liste groupes | `/an/groupes` | 🔜 | 🔜 | À implémenter |
+| Détail groupe | `/an/groupes/[id]` | 🔜 | 🔜 | À implémenter |
+| Liste scrutins | `/an/scrutins` | 🔜 | ❌ | PE: données HowTheyVote, Sénat: pas de données |
+| Détail scrutin | `/an/scrutins/[id]` | 🔜 | ❌ | PE: votes disponibles, Sénat: bloqué |
+| Statistiques | `/an/stats` | 🔜 | ❌ | PE: calculable, Sénat: pas de votes |
+| Carte/Hémicycle | `/an/carte` | ✅ | ❌ | PE: implémenté, Sénat: pas de positionnement |
+| Comparateur élus | `/an/compare` | ✅ | ❌ | PE: déjà fait, Sénat: nécessite votes |
+
+**Légende**: ✅ Fait | 🔜 À faire | ❌ Bloqué (données manquantes)
+
+### 8.2 Parlement européen (PE) - 89% faisable
+
+Pages implémentées :
+- [x] `/pe/groupes` - Liste des 9 groupes politiques européens
+- [x] `/pe/groupes/[id]` - Détail groupe avec membres français
+- [x] `/pe/scrutins` - Liste des scrutins PE (données HowTheyVote.eu)
+- [x] `/pe/scrutins/[id]` - Détail scrutin avec votes par eurodéputé
+- [x] `/pe/stats` - Statistiques de vote PE (participation, cohésion groupes)
+- [x] `/pe/carte` - Visualisation hémicycle européen (spectre gauche-droite)
+
+Données disponibles :
+- ✅ Eurodéputés français (84 actuels, 303 historiques depuis 2004)
+- ✅ Groupes politiques européens avec couleurs
+- ✅ Votes en session plénière (via HowTheyVote.eu API)
+- ✅ Mandats historiques termes 6-10
+
+### 8.3 Sénat - 33% faisable (bloqué)
+
+Pages implémentées :
+- [x] `/senat/senateurs` - Liste des sénateurs (348)
+- [x] `/senat/senateurs/[id]` - Fiche détaillée sénateur
+- [x] `/senat/groupes` - Liste des groupes sénatoriaux
+- [x] `/senat/groupes/[id]` - Détail groupe avec membres
+
+Pages bloquées (absence de données) :
+- ❌ `/senat/scrutins` - Pas de données de scrutins publics
+- ❌ `/senat/scrutins/[id]` - Pas de votes individuels
+- ❌ `/senat/stats` - Nécessite votes pour calculer statistiques
+- ❌ `/senat/compare` - Comparaison nécessite votes
+
+**Problème**: Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable.
+Sources explorées sans succès :
+- data.senat.fr : dossiers législatifs uniquement
+- API senat.fr : liste sénateurs et commissions uniquement
+- NosSénateurs.fr : site fermé
+
+**Piste potentielle**: Scraping des comptes-rendus de séance (complexe, non fiable)
+
+### 8.4 Infrastructure commune
+
+Améliorations déjà implémentées :
+- [x] Store unifié `chamber-period.ts` (cookies pour persistance)
+- [x] Hooks server pour lecture périodes depuis cookies
+- [x] Sélecteurs de période contextuels par chambre
+- [x] Valeur par défaut : mandature en cours (plus "toutes")
+- [x] Filtrage dropdowns comparateur par période sélectionnée
+
+### 8.5 Ordre d'implémentation recommandé
+
+1. **PE Groupes** (1-2 jours)
+   - `/pe/groupes` - Liste groupes européens
+   - `/pe/groupes/[id]` - Détail avec membres
+
+2. **PE Scrutins** (2-3 jours)
+   - `/pe/scrutins` - Liste scrutins avec filtres
+   - `/pe/scrutins/[id]` - Détail scrutin + votes
+
+3. **PE Stats** (1-2 jours)
+   - `/pe/stats` - Dashboard statistiques PE
+
+4. **Sénat Groupes** (1 jour)
+   - `/senat/groupes` - Liste groupes sénatoriaux
+   - `/senat/groupes/[id]` - Détail avec membres
+
+5. **Investigation Sénat votes** (exploration)
+   - Rechercher sources alternatives pour votes nominatifs
+   - Évaluer faisabilité scraping comptes-rendus
 
 ---
 
@@ -180,6 +294,9 @@
 
 - **Stack**: SvelteKit + TypeScript + PostgreSQL + Drizzle ORM
 - **Législatures supportées**: 14, 15, 16, 17 (via @tricoteuses/assemblee)
-- **Import**: `make etl-all-legislatures` pour importer toutes les législatures
+- **Import AN**: `make etl-all-legislatures` pour importer toutes les législatures
+- **Import PE**: `make etl-europarl-meps` pour importer les eurodéputés français (ParlTrack)
+- **Import couleurs**: `make etl-external-colors` pour les couleurs PE/Sénat depuis sources officielles
 - **Mode incrémental**: `make etl-incremental` avec tracking dans table `sync_metadata`
+- **Cache ETL**: Fichiers JSON dans `data/cache/` avec TTL configurable
 - **Fréquence ETL**: À définir (quotidien/hebdomadaire)

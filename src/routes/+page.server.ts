@@ -1,85 +1,70 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, scrutins, votes, organs, mandates } from '$lib/server/db';
-import { count, desc, eq, and, countDistinct, sql } from 'drizzle-orm';
-import { parsePeriodFilters } from '$lib/server/api/helpers';
+import { db, actors, scrutins, organs } from '$lib/server/db';
+import { count, desc, eq, and, like, notLike } from 'drizzle-orm';
 
-export const load: PageServerLoad = async ({ url }) => {
-	const { legislature } = parsePeriodFilters(url);
+export const load: PageServerLoad = async () => {
+	// Statistiques par chambre - requêtes parallèles
+	const [
+		[anDeputies],
+		[anGroups],
+		[senatSenators],
+		[senatGroups],
+		[peMeps],
+		[peGroups],
+		[peScrutins],
+		[totalScrutins],
+		recentScrutins
+	] = await Promise.all([
+		// AN
+		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'AN')),
+		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'AN'))),
+		// Sénat
+		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'SENAT')),
+		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'SENAT'))),
+		// PE
+		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'PE')),
+		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'PE'))),
+		db.select({ value: count() }).from(scrutins).where(like(scrutins.legislature, 'PE-%')),
+		// Total scrutins
+		db.select({ value: count() }).from(scrutins),
+		// Derniers scrutins
+		db
+			.select({
+				id: scrutins.id,
+				title: scrutins.title,
+				date: scrutins.date,
+				result: scrutins.result,
+				totalVoters: scrutins.totalVoters,
+				totalFor: scrutins.totalFor,
+				totalAgainst: scrutins.totalAgainst,
+				totalAbstention: scrutins.totalAbstention
+			})
+			.from(scrutins)
+			.where(notLike(scrutins.legislature, 'PE-%'))
+			.orderBy(desc(scrutins.date), desc(scrutins.number))
+			.limit(5)
+	]);
 
-	// Build conditions based on legislature filter
-	const scrutinCondition = legislature ? eq(scrutins.legislature, legislature) : undefined;
-	const groupCondition = legislature
-		? and(eq(organs.type, 'GP'), eq(organs.legislature, legislature))
-		: eq(organs.type, 'GP');
-
-	// Get stats
-	let deputiesCount: { value: number };
-	if (legislature) {
-		// Count deputies with a mandate in this legislature
-		const [result] = await db
-			.select({ value: countDistinct(mandates.actorId) })
-			.from(mandates)
-			.where(and(eq(mandates.type, 'depute'), eq(mandates.legislature, legislature)));
-		deputiesCount = result;
-	} else {
-		const [result] = await db.select({ value: count() }).from(actors);
-		deputiesCount = result;
-	}
-
-	const [scrutinsCount] = legislature
-		? await db.select({ value: count() }).from(scrutins).where(scrutinCondition)
-		: await db.select({ value: count() }).from(scrutins);
-
-	const [votesCount] = legislature
-		? await db
-				.select({ value: count() })
-				.from(votes)
-				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-				.where(scrutinCondition)
-		: await db.select({ value: count() }).from(votes);
-
-	const [groupsCount] = await db.select({ value: count() }).from(organs).where(groupCondition);
-
-	// Get recent scrutins
-	const recentScrutins = await db
-		.select({
-			id: scrutins.id,
-			title: scrutins.title,
-			date: scrutins.date,
-			result: scrutins.result,
-			totalVoters: scrutins.totalVoters,
-			totalFor: scrutins.totalFor,
-			totalAgainst: scrutins.totalAgainst,
-			totalAbstention: scrutins.totalAbstention
-		})
-		.from(scrutins)
-		.where(scrutinCondition)
-		.orderBy(desc(scrutins.date), desc(scrutins.number))
-		.limit(5);
-
-	// Get groups
-	const groups = await db
-		.select({
-			id: organs.id,
-			name: organs.name,
-			shortName: organs.shortName,
-			color: organs.color
-		})
-		.from(organs)
-		.where(groupCondition)
-		.orderBy(organs.name);
+	// Scrutins AN = total - PE
+	const anScrutinsCount = totalScrutins.value - peScrutins.value;
 
 	return {
-		stats: {
-			deputies: deputiesCount.value,
-			scrutins: scrutinsCount.value,
-			votes: votesCount.value,
-			groups: groupsCount.value
+		chambers: {
+			an: {
+				deputies: anDeputies.value,
+				scrutins: anScrutinsCount > 0 ? anScrutinsCount : 0,
+				groups: anGroups.value
+			},
+			senat: {
+				senators: senatSenators.value,
+				groups: senatGroups.value
+			},
+			pe: {
+				meps: peMeps.value,
+				scrutins: peScrutins.value,
+				groups: peGroups.value
+			}
 		},
-		recentScrutins,
-		groups,
-		filters: {
-			legislature
-		}
+		recentScrutins
 	};
 };

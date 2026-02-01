@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -110,6 +110,12 @@ etl-scrutins: ## Import des scrutins et votes
 etl-laws: ## Import des dossiers législatifs AN
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:laws
 
+etl-link-laws: ## Lie les scrutins aux textes via parsing des titres (MVP)
+	ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:link-laws
+
+etl-dossiers-an: ## Import complet des dossiers législatifs AN avec cosignataires
+	ETL_DATA_DIR=$(ETL_DATA_DIR)/dossiers_legislatifs ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:dossiers-an
+
 etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
 	@echo "$(CYAN)Import des dossiers législatifs du Sénat...$(RESET)"
 	npm run etl:senat-laws
@@ -118,8 +124,52 @@ etl-senat-senators: ## Import des sénateurs (API Sénat)
 	@echo "$(CYAN)Import des sénateurs...$(RESET)"
 	npm run etl:senat-senators
 
+etl-senat-mandates-history: ## Import historique des mandats sénatoriaux (data.senat.fr)
+	@echo "$(CYAN)Import historique des mandats sénatoriaux...$(RESET)"
+	npm run etl:senat-mandates-history
+
+etl-nossenateurs-stats: ## Import statistiques d'assiduité sénateurs (NosSénateurs.fr)
+	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
+	npm run etl:nossenateurs-stats
+
+etl-senat-activity-stats: ## Import statistiques d'activité sénateurs (senat.fr officiel)
+	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
+	npm run etl:senat-activity-stats
+
+etl-classify-scrutins: ## Classifier les scrutins existants par catégorie sémantique
+	@echo "$(CYAN)Classification des scrutins...$(RESET)"
+	npm run etl:classify-scrutins
+
+etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
+	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
+	npm run etl:europarl-meps
+
+etl-europarl-historical: ## Import historique des eurodéputés (depuis 2004)
+	@echo "$(CYAN)Import historique des eurodéputés français (2004-présent)...$(RESET)"
+	npm run etl:europarl-historical
+
+etl-europarl-votes: ## Import des votes PE (HowTheyVote.eu)
+	@echo "$(CYAN)Import des votes du Parlement Européen...$(RESET)"
+	npm run etl:europarl-votes
+
+etl-europarl-activity-stats: ## Import statistiques d'activité MEPs (HowTheyVote.eu)
+	@echo "$(CYAN)Import statistiques d'activité des eurodéputés...$(RESET)"
+	npm run etl:europarl-activity-stats
+
+etl-pe-enrich-groups: ## Enrichit les noms des groupes PE (HowTheyVote.eu)
+	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
+	npm run etl:pe-enrich-groups
+
+etl-external-colors: ## Import des couleurs PE/Sénat depuis sources externes
+	@echo "$(CYAN)Import des couleurs depuis sources externes...$(RESET)"
+	npm run etl:external-colors
+
 etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
 	npm run etl:nosdeputes
+
+etl-nosdeputes-stats: ## Import statistiques d'activité députés (NosDéputés.fr)
+	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
+	npm run etl:nosdeputes-stats
 
 etl-colors: ## Synchronise les couleurs des groupes
 	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"

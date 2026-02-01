@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
+// @hardcoded-ok: fallback dev local, DATABASE_URL requis en prod (voir .env.example)
 const connectionString =
 	process.env.DATABASE_URL || 'postgresql://noselus:noselus@localhost:5432/noselus';
 

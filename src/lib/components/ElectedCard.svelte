@@ -6,8 +6,10 @@
 		id: string;
 		name: string;
 		photoUrl?: string | null;
-		/** Type d'élu pour construire le lien */
-		type?: 'depute' | 'senateur';
+		/** Type d'élu pour construire le lien (ignoré si href est fourni) */
+		type?: 'depute' | 'senateur' | 'eurodepute';
+		/** Lien personnalisé (prioritaire sur type) */
+		href?: string;
 		/** Variante d'affichage */
 		variant?: 'full' | 'compact' | 'thumbnail' | 'inline';
 		/** Groupe politique */
@@ -32,6 +34,7 @@
 		name,
 		photoUrl = null,
 		type = 'depute',
+		href: hrefProp,
 		variant = 'full',
 		group = null,
 		subtitle = '',
@@ -40,32 +43,48 @@
 		stat
 	}: Props = $props();
 
-	const href = type === 'depute' ? `/deputes/${id}` : `/senateurs/${id}`;
+	const typeRoutes = {
+		depute: '/an/deputes',
+		senateur: '/senat/senateurs',
+		eurodepute: '/pe/eurodeputes'
+	};
+	const href = hrefProp || `${typeRoutes[type]}/${id}`;
 	const placeholder = '/placeholder.svg';
-	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
 
-	// Handle image load errors by falling back to placeholder
-	function handleImageError(event: Event) {
-		const img = event.target as HTMLImageElement;
-		if (img.src !== placeholder) {
-			img.src = placeholder;
+	// État pour la photo chargée - commence toujours par le placeholder
+	let loadedSrc = $state(placeholder);
+
+	// Charger la vraie photo en arrière-plan
+	$effect(() => {
+		const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
+		if (!proxiedPhoto) {
+			loadedSrc = placeholder;
+			return;
 		}
-	}
+
+		const img = new Image();
+		img.onload = () => {
+			loadedSrc = proxiedPhoto;
+		};
+		img.onerror = () => {
+			loadedSrc = placeholder;
+		};
+		img.src = proxiedPhoto;
+	});
 </script>
 
 {#if variant === 'thumbnail'}
 	<a {href} class="elected-thumbnail" style={group?.color ? `border-color: ${group.color}` : ''} title="{name}{group?.shortName ? ` (${group.shortName})` : ''}">
-		<img src={proxiedPhoto || placeholder} alt={name} width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<img src={loadedSrc} alt={name} width="32" height="32" loading="lazy" decoding="async" />
 	</a>
 {:else if variant === 'inline'}
 	<a {href} class="elected-inline">
 		{#if rank !== undefined}
 			<span class="elected-rank">{rank}</span>
 		{/if}
-		{#if group?.color}
-			<span class="group-dot" style="background: {group.color}"></span>
-		{/if}
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		</span>
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
 			<span class="elected-group-tag group-name-hover">
@@ -81,10 +100,9 @@
 	</a>
 {:else if variant === 'compact'}
 	<a {href} class="elected-compact">
-		{#if group?.color}
-			<span class="group-dot" style="background: {group.color}"></span>
-		{/if}
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" onerror={handleImageError} />
+		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+		</span>
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
 			{#if group?.shortName}
@@ -99,7 +117,9 @@
 	</a>
 {:else}
 	<a {href} class="elected-card">
-		<img src={proxiedPhoto || placeholder} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" onerror={handleImageError} />
+		<span class="photo-ring photo-ring-lg" style={group?.color ? `--ring-color: ${group.color}` : ''}>
+			<img src={loadedSrc} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" />
+		</span>
 		<div class="elected-info">
 			<div class="elected-name">{name}</div>
 			{#if group}
@@ -268,6 +288,29 @@
 		object-fit: cover;
 		background: var(--color-border);
 		flex-shrink: 0;
+	}
+
+	/* Anneau coloré autour de la photo */
+	.photo-ring {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		padding: 2px;
+		background: var(--ring-color, transparent);
+		flex-shrink: 0;
+	}
+
+	.photo-ring .elected-photo-sm {
+		border: 2px solid var(--color-surface);
+	}
+
+	.photo-ring-lg {
+		padding: 3px;
+	}
+
+	.photo-ring-lg .elected-photo {
+		border: 3px solid var(--color-surface);
 	}
 
 	/* Full - carte complète */

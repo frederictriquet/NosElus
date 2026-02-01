@@ -110,6 +110,12 @@ etl-scrutins: ## Import des scrutins et votes
 etl-laws: ## Import des dossiers législatifs AN
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:laws
 
+etl-link-laws: ## Lie les scrutins aux textes via parsing des titres (MVP)
+	ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:link-laws
+
+etl-dossiers-an: ## Import complet des dossiers législatifs AN avec cosignataires
+	ETL_DATA_DIR=$(ETL_DATA_DIR)/dossiers_legislatifs ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:dossiers-an
+
 etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
 	@echo "$(CYAN)Import des dossiers législatifs du Sénat...$(RESET)"
 	npm run etl:senat-laws

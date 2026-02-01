@@ -40,28 +40,42 @@
 
 ## Phase 2 : Processus législatif
 
-### 2.1 Trajectoire des textes de loi
+### 2.1 Trajectoire des textes de loi ✅ MVP Terminé
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Modèle de données "dossier législatif" (texte → lectures → votes) | 🔴 Complexe | Conception |
-| ETL : importer les dossiers législatifs AN | 🔴 Complexe | Modèle données |
-| ETL : lier scrutins existants aux dossiers | 🟡 Moyen | Dossiers importés |
-| UI : page texte avec chronologie (dépôt → adoption) | 🔴 Complexe | Données liées |
-| UI : visualisation du parcours AN ↔ Sénat ↔ CMP | 🔴 Complexe | Page texte |
+| Tâche | Complexité | Statut |
+|-------|------------|--------|
+| Modèle de données "dossier législatif" (texte → lectures → votes) | 🟡 Moyen | ✅ `src/lib/server/db/schema/laws.ts` |
+| ETL : lier scrutins aux textes (parsing titres) | 🟢 Simple | ✅ `make etl-link-laws` (97.6% couverture) |
+| UI : page texte avec chronologie (dépôt → adoption) | 🟡 Moyen | ✅ `/an/laws/[id]` |
+| UI : page détail scrutin avec lien vers dossier | 🟢 Simple | ✅ `/an/scrutins/[id]` |
+| UI : liste des dossiers législatifs | 🟢 Simple | ✅ `/an/laws` |
+| ETL : import complet via API AN (dossiers + cosignataires) | 🟡 Moyen | ✅ `make etl-dossiers-an` |
+| UI : visualisation du parcours AN ↔ Sénat ↔ CMP | 🔴 Complexe | ⏳ à faire |
 
 **Valeur** : Sortir du vote isolé, comprendre le processus complet.
 
+**MVP Implémenté** :
+- ETL `linkScrutinsByTitle()` : extrait le nom du texte depuis les titres de scrutins
+- 874 textes créés, 5121/5244 scrutins liés (97.6%)
+- UI : liste `/an/laws`, détail `/an/laws/[id]`, détail scrutin `/an/scrutins/[id]`
+- Navigation "Textes" ajoutée
+
+**Option 3 Implémenté** :
+- ETL `importDossiersAN()` : import complet depuis les fichiers AN OpenData
+- 2213 dossiers importés, 4684 cosignataires (2699 auteurs + 1984 cosignataires)
+- Table `law_cosignatories` avec rôle et ordre de signature
+- Phase 2.2 débloquée
+
 ---
 
-### 2.2 Implication individuelle par texte
+### 2.2 Implication individuelle par texte ⏳ En cours
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Lier cosignataires aux propositions de loi | 🟡 Moyen | Dossiers législatifs |
-| Lier amendements aux élus et aux textes | 🟡 Moyen | ETL amendements |
-| Agréger : cosignature + amendements + votes par élu/texte | 🟡 Moyen | Données liées |
-| UI : vue "implication" sur page élu et page texte | 🟡 Moyen | Agrégation |
+| Tâche | Complexité | Statut |
+|-------|------------|--------|
+| Lier cosignataires aux propositions de loi | 🟡 Moyen | ✅ `law_cosignatories` (4684 entrées) |
+| Lier amendements aux élus et aux textes | 🟡 Moyen | ⏳ ETL amendements |
+| Agréger : cosignature + amendements + votes par élu/texte | 🟡 Moyen | ⏳ Données liées |
+| UI : vue "implication" sur page élu et page texte | 🟡 Moyen | ⏳ À faire |
 
 **Valeur** : Passer de "a voté pour/contre" à "a contribué activement".
 
@@ -213,8 +227,8 @@
 - Documentation méthodologique
 
 ### Priorité 2 - Processus législatif (court terme)
-- Dossiers législatifs
-- Implication individuelle par texte
+- ~~Dossiers législatifs~~ ✅ MVP (97.6% scrutins liés)
+- Implication individuelle par texte (bloqué par cosignatures)
 - Exports données
 
 ### Priorité 3 - Thématisation (moyen terme)

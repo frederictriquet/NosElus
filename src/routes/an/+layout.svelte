@@ -16,6 +16,7 @@
 	const subNavItems = [
 		{ href: '/an/deputes', label: 'Députés', match: '/an/deputes' },
 		{ href: '/an/scrutins', label: 'Scrutins', match: '/an/scrutins' },
+		{ href: '/an/laws', label: 'Textes', match: '/an/laws' },
 		{ href: '/an/groupes', label: 'Groupes', match: '/an/groupes' },
 		{ href: '/an/stats', label: 'Stats', match: '/an/stats' },
 		{ href: '/an/carte', label: 'Carte', match: '/an/carte' },

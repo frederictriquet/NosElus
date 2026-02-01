@@ -4,35 +4,16 @@ import { logProgress } from '../../utils';
 import { sql, eq, and, inArray } from 'drizzle-orm';
 import type { NewScrutin, NewVote } from '../../../db';
 import { getCache, setCache, type CacheOptions } from '../../cache';
+import { PE_SOURCES, PE_GROUP_CODE_MAP, PE_POSITION_MAP, ETL_CONFIG } from '../../config';
+import { getCurrentTerm as getCurrentPETerm } from '../../../periods/pe-terms';
 
-const HTV_API_BASE = 'https://howtheyvote.eu/api';
+const HTV_API_BASE = PE_SOURCES.howTheyVoteApiUrl;
 const CACHE_KEY_PREFIX = 'htv_votes';
-const CACHE_OPTIONS: CacheOptions = { ttlHours: 6 };
+const CACHE_OPTIONS: CacheOptions = { ttlHours: ETL_CONFIG.cacheTtl.votes };
 
-// Current parliamentary term
-const CURRENT_TERM = 10;
-
-// Position mapping from HowTheyVote to our schema
-const POSITION_MAP: Record<string, string> = {
-	FOR: 'pour',
-	AGAINST: 'contre',
-	ABSTENTION: 'abstention',
-	DID_NOT_VOTE: 'non-votant'
-};
-
-// Mapping HowTheyVote group codes to our database shortNames
-// This is necessary because HTV uses different codes than ParlTrack/our DB
-const HTV_GROUP_CODE_MAP: Record<string, string> = {
-	EPP: 'PPE', // European People's Party
-	SD: 'S&D', // Socialists & Democrats
-	RENEW: 'RE', // Renew Europe
-	GREEN_EFA: 'Verts/ALE', // Greens/EFA
-	GUE_NGL: 'GUE/NGL', // The Left
-	ECR: 'ECR', // European Conservatives and Reformists
-	PFE: 'Patriots for Europe Group', // Patriots for Europe
-	ESN: 'Europe of Sovereign Nations Group', // Europe of Sovereign Nations
-	NI: 'NA' // Non-attached
-};
+// Position and group mappings imported from config
+const POSITION_MAP = PE_POSITION_MAP;
+const HTV_GROUP_CODE_MAP = PE_GROUP_CODE_MAP;
 
 interface HTVMember {
 	id: number;
@@ -143,8 +124,8 @@ async function fetchVoteDetails(voteId: string): Promise<HTVVote> {
 /**
  * Generate scrutin ID for PE votes
  */
-function generateScrutinId(voteId: string): string {
-	return `VTPE${CURRENT_TERM}-${voteId}`;
+function generateScrutinId(voteId: string, term: number): string {
+	return `VTPE${term}-${voteId}`;
 }
 
 /**
@@ -157,8 +138,8 @@ function generateVoteId(scrutinId: string, actorId: string): string {
 /**
  * Map HTV vote to scrutin
  */
-function mapToScrutin(vote: HTVVote): NewScrutin {
-	const id = generateScrutinId(vote.id);
+function mapToScrutin(vote: HTVVote, term: number): NewScrutin {
+	const id = generateScrutinId(vote.id, term);
 	const date = vote.timestamp.split('T')[0];
 	const totals = vote.stats.total;
 
@@ -169,7 +150,7 @@ function mapToScrutin(vote: HTVVote): NewScrutin {
 		id,
 		uid: `HTV-${vote.id}`,
 		number: parseInt(vote.id, 10) || 0,
-		legislature: `PE-${CURRENT_TERM}`,
+		legislature: `PE-${term}`,
 		date,
 		title: vote.display_title || 'Vote sans titre',
 		type: 'PLN', // Plénière
@@ -190,6 +171,11 @@ export async function importEuroparlVotes(config: ETLConfig): Promise<ImportStat
 	const stats = createImportStats();
 
 	console.log('[EuroParl Votes] Starting import from HowTheyVote.eu...');
+
+	// Get current term dynamically from database
+	const currentTermStr = await getCurrentPETerm();
+	const currentTerm = parseInt(currentTermStr, 10);
+	console.log(`[EuroParl Votes] Using term ${currentTerm} from database`);
 
 	// Get French MEP IDs from database
 	const frenchMeps = await db
@@ -263,7 +249,7 @@ export async function importEuroparlVotes(config: ETLConfig): Promise<ImportStat
 			const voteDetails = await fetchVoteDetails(voteItem.id);
 
 			// Map to scrutin
-			const scrutin = mapToScrutin(voteDetails);
+			const scrutin = mapToScrutin(voteDetails, currentTerm);
 			scrutinBatch.push(scrutin);
 
 			// Extract French MEP votes only

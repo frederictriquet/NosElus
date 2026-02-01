@@ -3,6 +3,7 @@ import { db, actors, votes, scrutins, organs, amendments, mandates, actorStats }
 import { eq, and, count, desc, sql, asc, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
+import { mapVoteDistribution, getGroupMajorityPosition } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -94,16 +95,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.limit(1)
 		]);
 
-		const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
-		for (const v of voteDistribution) {
-			if (v.position in distribution) {
-				distribution[v.position as keyof typeof distribution] = v.count;
-			}
-		}
-
 		return {
 			voteCount: voteCountResult.value,
-			distribution,
+			distribution: mapVoteDistribution(voteDistribution),
 			timeline: {
 				firstVote: firstVote?.date || null,
 				lastVote: lastVote?.date || null
@@ -160,9 +154,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 			.where(and(...buildVoteConditions()));
 
-		if (deputyVotes.length === 0) {
-			return null;
-		}
+		if (deputyVotes.length === 0) return null;
 
 		let aligned = 0;
 		let total = 0;
@@ -170,37 +162,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		for (const vote of deputyVotes) {
 			if (!vote.groupId || !vote.groupResults) continue;
 
-			const groupData = (
-				vote.groupResults as Record<
-					string,
-					{ position?: string; pour?: number; contre?: number; abstention?: number; for?: number; against?: number }
-				>
-			)[vote.groupId];
+			const results = vote.groupResults as Record<string, Record<string, unknown>>;
+			const groupData = results[vote.groupId];
 			if (!groupData) continue;
 
-			// Get group's majority position - either from pre-computed field or calculate from counts
-			let groupPos: string;
-			if (groupData.position) {
-				groupPos = groupData.position.toLowerCase();
-			} else {
-				// Calculate from vote counts (handle both field naming conventions)
-				const pour = groupData.pour ?? groupData.for ?? 0;
-				const contre = groupData.contre ?? groupData.against ?? 0;
-				const abstention = groupData.abstention ?? 0;
-
-				if (pour >= contre && pour >= abstention) {
-					groupPos = 'pour';
-				} else if (contre >= pour && contre >= abstention) {
-					groupPos = 'contre';
-				} else {
-					groupPos = 'abstention';
-				}
-			}
+			const groupPos = getGroupMajorityPosition(groupData);
+			if (!groupPos) continue;
 
 			total++;
-			const deputyPos = vote.position?.toLowerCase();
-
-			if (deputyPos === groupPos) {
+			if (vote.position?.toLowerCase() === groupPos) {
 				aligned++;
 			}
 		}

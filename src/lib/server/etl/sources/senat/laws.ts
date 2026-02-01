@@ -3,8 +3,9 @@ import { createImportStats, type ImportStats, type ETLConfig } from '../../types
 import { formatDate, logProgress } from '../../utils';
 import { sql, desc, notLike } from 'drizzle-orm';
 import type { NewLaw } from '../../../db';
+import { SENAT_SOURCES } from '../../config';
 
-const DOSLEG_CSV_URL = 'https://data.senat.fr/data/dosleg/dossiers-legislatifs.csv';
+const DOSLEG_CSV_URL = SENAT_SOURCES.lawsUrl;
 
 /**
  * Cache pour les législatures

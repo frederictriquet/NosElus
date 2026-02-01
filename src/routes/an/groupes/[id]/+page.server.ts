@@ -4,6 +4,7 @@ import { eq, count, sql, desc, and, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
 import { calculateMonthlyCohesion } from '$lib/server/utils/cohesion';
+import { mapVoteDistribution } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -53,12 +54,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.where(and(...buildVoteConditions()))
 			.groupBy(votes.position);
 
-		const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
-		for (const v of voteDistribution) {
-			if (v.position in distribution) {
-				distribution[v.position as keyof typeof distribution] = v.count;
-			}
-		}
+		const distribution = mapVoteDistribution(voteDistribution);
 
 		// Also get total votes count
 		const [totalVotes] = await db

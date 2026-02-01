@@ -114,3 +114,91 @@ export function parseSort(
 
 	return { field, order };
 }
+
+// ===== Vote Statistics Helpers =====
+
+export type VotePosition = 'pour' | 'contre' | 'abstention' | 'non-votant';
+
+export interface VoteDistribution {
+	pour: number;
+	contre: number;
+	abstention: number;
+	'non-votant': number;
+}
+
+/**
+ * Convertit un tableau de {position, count} en objet VoteDistribution
+ * Utilisé dans les pages de détail d'élus et de groupes
+ */
+export function mapVoteDistribution(
+	rows: Array<{ position: string | null; count: number }>
+): VoteDistribution {
+	const distribution: VoteDistribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
+	for (const row of rows) {
+		if (row.position && row.position in distribution) {
+			distribution[row.position as VotePosition] = row.count;
+		}
+	}
+	return distribution;
+}
+
+/**
+ * Détermine la position majoritaire d'un groupe à partir des données de vote
+ * Gère les différents formats (pour/contre ou for/against)
+ */
+export function getGroupMajorityPosition(
+	groupData: Record<string, unknown>
+): VotePosition | null {
+	if (!groupData) return null;
+
+	// Si une position est explicitement définie
+	if (typeof groupData.position === 'string') {
+		return groupData.position.toLowerCase() as VotePosition;
+	}
+
+	// Calculer depuis les compteurs
+	const pour = (groupData.pour ?? groupData.for ?? 0) as number;
+	const contre = (groupData.contre ?? groupData.against ?? 0) as number;
+	const abstention = (groupData.abstention ?? 0) as number;
+
+	if (pour >= contre && pour >= abstention) return 'pour';
+	if (contre >= pour && contre >= abstention) return 'contre';
+	if (abstention > 0) return 'abstention';
+
+	return null;
+}
+
+/**
+ * Calcule le taux d'alignement d'un élu avec son groupe
+ */
+export function calculateAlignmentRate(
+	actorVotes: Array<{
+		position: string | null;
+		groupId: string | null;
+		groupResults: unknown;
+	}>
+): number | null {
+	if (actorVotes.length === 0) return null;
+
+	let aligned = 0;
+	let total = 0;
+
+	for (const vote of actorVotes) {
+		if (!vote.position || vote.position === 'non-votant') continue;
+		if (!vote.groupResults || !vote.groupId) continue;
+
+		const results = vote.groupResults as Record<string, Record<string, unknown>>;
+		const groupData = results[vote.groupId];
+		if (!groupData) continue;
+
+		const groupMajority = getGroupMajorityPosition(groupData);
+		if (!groupMajority || groupMajority === 'non-votant') continue;
+
+		total++;
+		if (vote.position === groupMajority) {
+			aligned++;
+		}
+	}
+
+	return total > 0 ? Math.round((aligned / total) * 100) : null;
+}

@@ -3,6 +3,7 @@ import { db, actors, mandates, organs, votes, scrutins, actorStats } from '$lib/
 import { eq, and, count, desc, asc, sql, inArray, like, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTermDates } from '$lib/server/periods/pe-terms';
+import { mapVoteDistribution, getGroupMajorityPosition } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const terme = locals.periods.pe;
@@ -118,16 +119,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.limit(1)
 		]);
 
-		const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
-		for (const v of voteDistribution) {
-			if (v.position in distribution) {
-				distribution[v.position as keyof typeof distribution] = v.count;
-			}
-		}
-
 		return {
 			voteCount: voteCountResult.value,
-			distribution,
+			distribution: mapVoteDistribution(voteDistribution),
 			timeline: {
 				firstVote: firstVote?.date || null,
 				lastVote: lastVote?.date || null

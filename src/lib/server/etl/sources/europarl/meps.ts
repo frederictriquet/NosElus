@@ -8,25 +8,26 @@ import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 import { getCache, setCache, type CacheOptions } from '../../cache';
+import {
+	PE_SOURCES,
+	PE_OFFICIAL_TERM_DATES,
+	PE_HISTORICAL_MIN_TERM,
+	ETL_CONFIG
+} from '../../config';
+import { getCurrentTerm as getCurrentPETerm, getTermDates } from '../../../periods/pe-terms';
 
-const PARLTRACK_MEPS_URL = 'https://parltrack.org/dumps/ep_meps.json.zst';
+const PARLTRACK_MEPS_URL = PE_SOURCES.parltrackMepsUrl;
 const CACHE_KEY = 'europarl_meps';
-const CACHE_OPTIONS: CacheOptions = { ttlHours: 24 };
-
-// Current parliamentary term (2024-2029)
-const CURRENT_TERM = 10;
+const CACHE_OPTIONS: CacheOptions = { ttlHours: ETL_CONFIG.cacheTtl.meps };
 
 // Historical import starts from term 6 (2004-2009)
-const HISTORICAL_MIN_TERM = 6;
+const HISTORICAL_MIN_TERM = PE_HISTORICAL_MIN_TERM;
 
-// Term dates for reference
-const TERM_DATES: Record<number, { start: string; end: string | null }> = {
-	6: { start: '2004-07-20', end: '2009-07-13' },
-	7: { start: '2009-07-14', end: '2014-06-30' },
-	8: { start: '2014-07-01', end: '2019-07-01' },
-	9: { start: '2019-07-02', end: '2024-07-15' },
-	10: { start: '2024-07-16', end: null }
-};
+// Official term dates as fallback for ETL (before DB has data)
+const TERM_DATES = PE_OFFICIAL_TERM_DATES;
+
+// Will be set dynamically at import time
+let CURRENT_TERM = 10;
 
 interface ParlTrackGroup {
 	role: string;
@@ -626,6 +627,15 @@ export async function importEuroparlMeps(config: ETLConfig): Promise<ImportStats
 	const stats = createImportStats();
 
 	console.log('[EuroParl MEPs] Starting import...');
+
+	// Get current term dynamically from database (or fallback to latest known)
+	try {
+		const currentTermStr = await getCurrentPETerm();
+		CURRENT_TERM = parseInt(currentTermStr, 10);
+		console.log(`[EuroParl MEPs] Using term ${CURRENT_TERM} from database`);
+	} catch {
+		console.log(`[EuroParl MEPs] Using fallback term ${CURRENT_TERM}`);
+	}
 
 	// Download and parse data
 	const allMeps = await downloadMepsDump();

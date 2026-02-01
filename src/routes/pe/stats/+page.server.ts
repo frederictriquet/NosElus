@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs, mandates } from '$lib/server/db';
 import { count, eq, sql, desc, inArray, and, like, type SQL } from 'drizzle-orm';
+import { mapVoteDistribution } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const terme = locals.periods.pe;
@@ -71,13 +72,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.where(inArray(votes.scrutinId, filteredScrutinIds))
 			.groupBy(votes.position);
 
-		const distribution = { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 };
-		for (const v of voteDistribution) {
-			if (v.position in distribution) {
-				distribution[v.position as keyof typeof distribution] = v.count;
-			}
-		}
-		return distribution;
+		return mapVoteDistribution(voteDistribution);
 	};
 
 	// Scrutin results

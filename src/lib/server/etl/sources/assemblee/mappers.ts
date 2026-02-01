@@ -2,6 +2,7 @@ import type { Acteur, Organe, Mandat } from '@tricoteuses/assemblee';
 import type { Scrutin, Votant, VentilationVotesGroupe } from '@tricoteuses/assemblee';
 import type { NewActor, NewOrgan, NewMandate, NewScrutin, NewVote } from '../../../db';
 import { formatDate } from '../../utils';
+import { classifyScrutin } from '../../classify';
 
 // === ACTORS ===
 
@@ -90,6 +91,7 @@ export function mapScrutin(scrutin: Scrutin): NewScrutin {
 		title: scrutin.titre,
 		type: scrutin.typeVote.codeTypeVote,
 		sortType: scrutin.sort.code,
+		category: classifyScrutin(scrutin.titre),
 		totalVoters: parseInt(synthesis.nombreVotants, 10) || 0,
 		totalFor: parseInt(decompte.pour, 10) || 0,
 		totalAgainst: parseInt(decompte.contre, 10) || 0,

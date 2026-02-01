@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -129,6 +129,10 @@ etl-nossenateurs-stats: ## Import statistiques d'assiduité sénateurs (NosSéna
 etl-senat-activity-stats: ## Import statistiques d'activité sénateurs (senat.fr officiel)
 	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
 	npm run etl:senat-activity-stats
+
+etl-classify-scrutins: ## Classifier les scrutins existants par catégorie sémantique
+	@echo "$(CYAN)Classification des scrutins...$(RESET)"
+	npm run etl:classify-scrutins
 
 etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
 	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"

@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, organs, mandates } from '$lib/server/db';
 import { count, eq, sql, desc, inArray, and, gte, lte, notLike, isNull, or, type SQL } from 'drizzle-orm';
-import { mapVoteDistribution } from '$lib/server/api/helpers';
+import { mapVoteDistribution, getScrutinCategories } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	const legislature = locals.periods.an;
@@ -112,6 +112,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			if (s.result === 'rejeté') results.rejeté = s.count;
 		}
 		return results;
+	};
+
+	// Category stats (répartition par type de scrutin)
+	const loadCategoryStats = async () => {
+		return await getScrutinCategories(scrutinWhereClause);
 	};
 
 	// Monthly activity
@@ -526,6 +531,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		totals: loadTotals(),
 		distribution: loadDistribution(),
 		scrutinResults: loadScrutinResults(),
+		categoryStats: loadCategoryStats(),
 		monthlyActivity: loadMonthlyActivity(),
 		topParticipation: loadTopParticipation(),
 		groupStats: loadGroupStats(),

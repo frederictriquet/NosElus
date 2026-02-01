@@ -22,6 +22,7 @@ export const scrutins = pgTable(
 		title: text('title').notNull(),
 		type: varchar('type', { length: 50 }).notNull(), // SPO (solennel), SPS (sur projet), etc.
 		sortType: varchar('sort_type', { length: 50 }), // adoption, rejet, etc.
+		category: varchar('category', { length: 30 }), // Catégorie sémantique (vote-final, amendement, etc.)
 		// Résultats agrégés
 		totalVoters: integer('total_voters').notNull().default(0),
 		totalFor: integer('total_for').notNull().default(0),
@@ -43,7 +44,8 @@ export const scrutins = pgTable(
 		index('scrutins_date_idx').on(table.date),
 		index('scrutins_type_idx').on(table.type),
 		index('scrutins_number_idx').on(table.number),
-		index('scrutins_law_id_idx').on(table.lawId)
+		index('scrutins_law_id_idx').on(table.lawId),
+		index('scrutins_category_idx').on(table.category)
 	]
 );
 

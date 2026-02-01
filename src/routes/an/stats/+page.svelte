@@ -47,6 +47,28 @@
 {/await}
 
 <div class="card-grid">
+	<AsyncCard title="Types de scrutins" subtitle="Répartition par catégorie sémantique" promise={data.categoryStats} minHeight="180px">
+		{#snippet children(categoryStats)}
+			{#if categoryStats.length > 0}
+				{@const total = categoryStats.reduce((sum, c) => sum + c.count, 0)}
+				<div class="category-bars">
+					{#each categoryStats as cat}
+						{@const pct = (cat.count / total) * 100}
+						<a href="/an/scrutins?category={cat.category}" class="category-row">
+							<span class="category-label">{cat.label}</span>
+							<div class="category-bar-container">
+								<div class="category-bar" style="width: {pct}%"></div>
+							</div>
+							<span class="category-value">{cat.count.toLocaleString('fr-FR')} <span class="category-pct">({pct.toFixed(1)}%)</span></span>
+						</a>
+					{/each}
+				</div>
+			{:else}
+				<p class="empty-state">Aucune donnée de catégorie</p>
+			{/if}
+		{/snippet}
+	</AsyncCard>
+
 	<AsyncCard title="Répartition des votes" promise={data.distribution} minHeight="180px">
 		{#snippet children(distribution)}
 			{@const totalDistribution = distribution.pour + distribution.contre + distribution.abstention + (distribution['non-votant'] || 0)}
@@ -406,6 +428,63 @@
 		100% {
 			background-position: -200% 0;
 		}
+	}
+
+	/* Category Stats */
+	.category-bars {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+	}
+
+	.category-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		text-decoration: none;
+		color: inherit;
+		padding: 0.25rem;
+		border-radius: 4px;
+		transition: background 0.15s;
+	}
+
+	.category-row:hover {
+		background: var(--color-bg);
+		text-decoration: none;
+	}
+
+	.category-label {
+		min-width: 100px;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.category-bar-container {
+		flex: 1;
+		height: 20px;
+		background: var(--color-bg);
+		border-radius: 10px;
+		overflow: hidden;
+	}
+
+	.category-bar {
+		height: 100%;
+		background: var(--color-primary);
+		border-radius: 10px;
+		min-width: 4px;
+	}
+
+	.category-value {
+		min-width: 100px;
+		text-align: right;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.category-pct {
+		color: var(--color-text-muted);
+		font-weight: 400;
 	}
 
 	.results-chart {

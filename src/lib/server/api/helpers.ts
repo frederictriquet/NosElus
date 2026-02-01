@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { db, organs, mandates, actors } from '$lib/server/db';
-import { eq, and, sql, notLike, inArray, count, type SQL } from 'drizzle-orm';
+import { db, organs, mandates, actors, scrutins } from '$lib/server/db';
+import { eq, and, sql, notLike, inArray, count, desc, type SQL } from 'drizzle-orm';
+import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
 // ===== Period Filters =====
 
@@ -477,4 +478,59 @@ export async function getPEGroupMemberIds(
 		.where(and(...memberConditions));
 
 	return memberIds.map(m => m.id);
+}
+
+// ===== Scrutins Helpers =====
+
+/**
+ * Interface pour les catégories de scrutins avec compteurs.
+ */
+export interface ScrutinCategoryWithCount {
+	/** Valeur de la catégorie (ex: 'vote-final', 'amendement') */
+	category: string;
+	/** Nombre de scrutins dans cette catégorie */
+	count: number;
+	/** Label traduit en français pour l'affichage UI */
+	label: string;
+}
+
+/**
+ * Récupère dynamiquement les catégories de scrutins avec compteurs.
+ *
+ * IMPORTANT : Cette fonction respecte la règle "no-hardcoding" en récupérant
+ * toujours les catégories via SELECT DISTINCT depuis la base de données.
+ *
+ * @param whereClause - Conditions de filtrage optionnelles (ex: legislature, dates)
+ * @returns Liste des catégories avec compteurs, triées par count desc
+ *
+ * @example
+ * ```typescript
+ * // Sans filtre (toutes les catégories)
+ * const categories = await getScrutinCategories();
+ *
+ * // Avec filtre sur legislature
+ * const categories = await getScrutinCategories(eq(scrutins.legislature, '17'));
+ * ```
+ */
+export async function getScrutinCategories(
+	whereClause?: SQL
+): Promise<ScrutinCategoryWithCount[]> {
+	const result = await db
+		.select({
+			category: scrutins.category,
+			count: count()
+		})
+		.from(scrutins)
+		.where(whereClause)
+		.groupBy(scrutins.category)
+		.orderBy(desc(count()));
+
+	// Filtrer les catégories null et ajouter les labels traduits
+	return result
+		.filter((r) => r.category !== null)
+		.map((r) => ({
+			category: r.category!,
+			count: Number(r.count),
+			label: getCategoryLabel(r.category as ScrutinCategory)
+		}));
 }

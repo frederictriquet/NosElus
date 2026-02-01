@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db, scrutins } from '$lib/server/db';
 import { count, ilike, eq, desc, and, gte, lte, type SQL } from 'drizzle-orm';
+import { getScrutinCategories } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -8,6 +9,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const offset = (page - 1) * limit;
 	const search = url.searchParams.get('q') || '';
 	const result = url.searchParams.get('result') || '';
+	const category = url.searchParams.get('category') || '';
 	const legislature = locals.periods.an;
 	const dateFrom = url.searchParams.get('dateFrom') || null;
 	const dateTo = url.searchParams.get('dateTo') || null;
@@ -21,6 +23,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	if (result) {
 		conditions.push(eq(scrutins.result, result));
+	}
+
+	if (category) {
+		conditions.push(eq(scrutins.category, category));
 	}
 
 	if (legislature && legislature !== 'all') {
@@ -37,6 +43,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+	// Get categories for filter dropdown (dynamique, pas hardcodé!)
+	const legislatureCondition =
+		legislature && legislature !== 'all' ? eq(scrutins.legislature, legislature) : undefined;
+	const categories = await getScrutinCategories(legislatureCondition);
+
 	// Get total count
 	const [{ value: total }] = await db.select({ value: count() }).from(scrutins).where(whereClause);
 
@@ -48,6 +59,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			title: scrutins.title,
 			date: scrutins.date,
 			type: scrutins.type,
+			category: scrutins.category,
 			result: scrutins.result,
 			totalVoters: scrutins.totalVoters,
 			totalFor: scrutins.totalFor,
@@ -62,6 +74,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	return {
 		scrutins: data,
+		categories,
 		pagination: {
 			page,
 			limit,
@@ -71,6 +84,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		filters: {
 			search,
 			result,
+			category,
 			legislature: legislature,
 			dateFrom: dateFrom,
 			dateTo: dateTo

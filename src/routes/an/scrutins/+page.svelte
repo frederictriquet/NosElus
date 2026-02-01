@@ -50,6 +50,14 @@
 			bind:value={searchInput}
 		/>
 	</form>
+	<select class="input" style="width: auto;" onchange={(e) => setFilter('category', e.currentTarget.value)}>
+		<option value="">Tous les types</option>
+		{#each data.categories as cat}
+			<option value={cat.category} selected={data.filters.category === cat.category}>
+				{cat.label} ({cat.count})
+			</option>
+		{/each}
+	</select>
 	<select class="input" style="width: auto;" onchange={(e) => setFilter('result', e.currentTarget.value)}>
 		<option value="">Tous les résultats</option>
 		<option value="adopté" selected={data.filters.result === 'adopté'}>Adoptés</option>

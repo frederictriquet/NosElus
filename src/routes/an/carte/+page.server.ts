@@ -1,7 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, organs, mandates } from '$lib/server/db';
-import { eq, and, sql, inArray, isNull, or, gte, notLike } from 'drizzle-orm';
+import { db, actors, mandates } from '$lib/server/db';
+import { eq, and, isNull, or, gte } from 'drizzle-orm';
 import { getLegislatureDates, getCurrentLegislature } from '$lib/server/periods/an-legislatures';
+import { getANGroupsWithMemberCount } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Cette page nécessite une législature spécifique (défaut: législature courante)
@@ -18,56 +19,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Loader pour la distribution des groupes (hémicycle + bar chart)
 	const loadGroupDistribution = async () => {
-		// Trouver les groupes parlementaires (GP) avec leurs membres ACTIFS dans cette législature
-		const groupMandateCounts = await db
-			.select({
-				organId: mandates.organId,
-				deputyCount: sql<number>`count(distinct case when ${mandates.endDate} is null or ${mandates.endDate} >= ${referenceDate} then ${mandates.actorId} end)`
-			})
-			.from(mandates)
-			.innerJoin(organs, eq(organs.id, mandates.organId))
-			.where(and(
-				eq(mandates.legislature, legislature),
-				eq(organs.type, 'GP'),
-				notLike(organs.id, 'PO_GP_%')
-			))
-			.groupBy(mandates.organId);
+		const groups = await getANGroupsWithMemberCount(legislature, referenceDate);
 
-		const organIds = groupMandateCounts.map(g => g.organId);
-
-		// Récupérer les infos des groupes
-		const groups = organIds.length > 0
-			? await db
-				.select({
-					groupId: organs.id,
-					groupName: organs.name,
-					groupShortName: organs.shortName,
-					groupColor: organs.color
-				})
-				.from(organs)
-				.where(inArray(organs.id, organIds))
-			: [];
-
-		const countByGroup = new Map(groupMandateCounts.map(c => [c.organId, Number(c.deputyCount)]));
-		const groupInfoById = new Map(groups.map(g => [g.groupId, g]));
-
-		// Build group distribution with actual counts
-		const groupDistribution = groupMandateCounts
-			.map(c => {
-				const info = groupInfoById.get(c.organId);
-				const shortName = info?.groupShortName || c.organId;
-				const fullName = info?.groupName || c.organId;
-				const color = info?.groupColor || '#888';
-				return {
-					groupId: c.organId,
-					groupName: fullName,
-					groupShortName: shortName,
-					groupColor: color,
-					deputyCount: Number(c.deputyCount)
-				};
-			})
-			.filter(g => g.deputyCount > 0)
-			.sort((a, b) => b.deputyCount - a.deputyCount);
+		// Map to expected format for this page
+		const groupDistribution = groups.map(g => ({
+			groupId: g.id,
+			groupName: g.name || g.id,
+			groupShortName: g.shortName || g.id,
+			groupColor: g.color || '#888',
+			deputyCount: g.memberCount
+		}));
 
 		const totalDeputies = groupDistribution.reduce((sum, g) => sum + g.deputyCount, 0);
 

@@ -13,7 +13,10 @@
 			<div class="group-color" style="background: {group.color || '#ccc'}"></div>
 			<div class="group-info">
 				<div class="group-name">{group.name}</div>
-				<div class="group-short">{group.shortName}</div>
+				<div class="group-meta">
+					<span class="group-short">{group.shortName}</span>
+					<span class="group-members">{group.memberCount} membre{group.memberCount > 1 ? 's' : ''}</span>
+				</div>
 			</div>
 		</a>
 	{/each}
@@ -54,8 +57,19 @@
 		font-size: 1.125rem;
 	}
 
-	.group-short {
+	.group-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
+	}
+
+	.group-short {
+		font-weight: 500;
+	}
+
+	.group-members {
+		opacity: 0.8;
 	}
 </style>

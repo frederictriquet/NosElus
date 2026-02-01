@@ -1,33 +1,24 @@
 import type { PageServerLoad } from './$types';
-import { db, organs } from '$lib/server/db';
-import { eq, and, type SQL } from 'drizzle-orm';
+import { getLegislatureDates, getCurrentLegislature } from '$lib/server/periods/an-legislatures';
+import { getANGroupsWithMemberCount } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const legislature = locals.periods.an;
+	const currentLeg = await getCurrentLegislature();
+	const legislature = locals.periods.an && locals.periods.an !== 'all'
+		? locals.periods.an
+		: currentLeg;
 
-	// Build conditions
-	const conditions: SQL[] = [eq(organs.type, 'GP')];
+	// Get legislature dates for reference date calculation
+	const legislatureInfo = await getLegislatureDates(legislature);
+	// Reference date: today for current legislature, end date for past ones
+	const referenceDate = legislatureInfo?.end || new Date().toISOString().split('T')[0];
 
-	if (legislature && legislature !== 'all') {
-		conditions.push(eq(organs.legislature, legislature));
-	}
-
-	const groups = await db
-		.select({
-			id: organs.id,
-			name: organs.name,
-			shortName: organs.shortName,
-			color: organs.color,
-			legislature: organs.legislature
-		})
-		.from(organs)
-		.where(and(...conditions))
-		.orderBy(organs.name);
+	const groups = await getANGroupsWithMemberCount(legislature, referenceDate);
 
 	return {
 		groups,
 		filters: {
-			legislature: legislature
+			legislature
 		}
 	};
 };

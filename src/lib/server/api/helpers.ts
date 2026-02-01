@@ -1,4 +1,6 @@
 import { error } from '@sveltejs/kit';
+import { db, organs, mandates } from '$lib/server/db';
+import { eq, and, sql, notLike, inArray } from 'drizzle-orm';
 
 // ===== Period Filters =====
 
@@ -201,4 +203,69 @@ export function calculateAlignmentRate(
 	}
 
 	return total > 0 ? Math.round((aligned / total) * 100) : null;
+}
+
+// ===== Group Distribution Helpers =====
+
+export interface GroupWithMemberCount {
+	id: string;
+	name: string | null;
+	shortName: string | null;
+	color: string | null;
+	legislature: string | null;
+	memberCount: number;
+}
+
+/**
+ * Récupère les groupes parlementaires AN avec leur nombre de membres actifs
+ * pour une législature donnée.
+ *
+ * @param legislature - Numéro de législature (ex: "17")
+ * @param referenceDate - Date de référence pour déterminer les mandats actifs
+ *                        (aujourd'hui pour législature en cours, date de fin pour les passées)
+ */
+export async function getANGroupsWithMemberCount(
+	legislature: string,
+	referenceDate: string
+): Promise<GroupWithMemberCount[]> {
+	// Count distinct active members per group for this legislature
+	const groupMemberCounts = await db
+		.select({
+			organId: mandates.organId,
+			memberCount: sql<number>`count(distinct case when ${mandates.endDate} is null or ${mandates.endDate} >= ${referenceDate} then ${mandates.actorId} end)`
+		})
+		.from(mandates)
+		.innerJoin(organs, eq(organs.id, mandates.organId))
+		.where(and(
+			eq(mandates.legislature, legislature),
+			eq(organs.type, 'GP'),
+			notLike(organs.id, 'PO_GP_%') // Exclude artificial groups
+		))
+		.groupBy(mandates.organId);
+
+	const organIds = groupMemberCounts.map(g => g.organId);
+	if (organIds.length === 0) return [];
+
+	const countByOrgan = new Map(groupMemberCounts.map(c => [c.organId, Number(c.memberCount)]));
+
+	// Get group details
+	const groupDetails = await db
+		.select({
+			id: organs.id,
+			name: organs.name,
+			shortName: organs.shortName,
+			color: organs.color,
+			legislature: organs.legislature
+		})
+		.from(organs)
+		.where(inArray(organs.id, organIds));
+
+	// Combine and sort by member count (descending)
+	return groupDetails
+		.map(g => ({
+			...g,
+			memberCount: countByOrgan.get(g.id) || 0
+		}))
+		.filter(g => g.memberCount > 0)
+		.sort((a, b) => b.memberCount - a.memberCount);
 }

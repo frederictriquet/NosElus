@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { db, organs, mandates, actors, scrutins, votes } from '$lib/server/db';
-import { eq, and, sql, notLike, inArray, count, desc, type SQL } from 'drizzle-orm';
+import { db, organs, mandates, actors, scrutins, votes, laws, lawCosignatories } from '$lib/server/db';
+import { eq, and, sql, notLike, inArray, count, desc, asc, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
 // ===== Period Filters =====
@@ -792,8 +792,6 @@ export async function getActorLawsImplication(
 	actorId: string,
 	limit = 50
 ): Promise<ActorLawImplication[]> {
-	const { lawCosignatories, laws } = await import('$lib/server/db');
-
 	const results = await db
 		.select({
 			lawId: lawCosignatories.lawId,
@@ -806,7 +804,7 @@ export async function getActorLawsImplication(
 		.from(lawCosignatories)
 		.innerJoin(laws, eq(laws.id, lawCosignatories.lawId))
 		.where(eq(lawCosignatories.actorId, actorId))
-		.orderBy(desc(laws.depositDate), lawCosignatories.signatureOrder)
+		.orderBy(desc(laws.depositDate), asc(lawCosignatories.signatureOrder))
 		.limit(limit);
 
 	return results.map(r => ({
@@ -832,8 +830,6 @@ export interface LawContributor {
  * @returns Liste des contributeurs avec leur rôle
  */
 export async function getLawContributors(lawId: string): Promise<LawContributor[]> {
-	const { lawCosignatories } = await import('$lib/server/db');
-
 	const results = await db
 		.select({
 			actorId: lawCosignatories.actorId,
@@ -845,7 +841,7 @@ export async function getLawContributors(lawId: string): Promise<LawContributor[
 		.from(lawCosignatories)
 		.innerJoin(actors, eq(actors.id, lawCosignatories.actorId))
 		.where(eq(lawCosignatories.lawId, lawId))
-		.orderBy(lawCosignatories.signatureOrder, actors.lastName);
+		.orderBy(asc(lawCosignatories.signatureOrder), asc(actors.lastName));
 
 	return results.map(r => ({
 		actorId: r.actorId,

@@ -169,7 +169,7 @@
 							<h3 class="contributor-group-title">Auteur{authors.length > 1 ? 's' : ''} ({authors.length})</h3>
 							<div class="contributor-list">
 								{#each authors as contributor}
-									<a href="/an/deputes/{contributor.actorId}" class="contributor-item">
+									<a href="/an/deputes/{contributor.actorId}" class="contributor-item" title="Voir le profil du député">
 										{contributor.actorName}
 									</a>
 								{/each}
@@ -182,7 +182,7 @@
 							<h3 class="contributor-group-title">Cosignataires ({cosignatories.length})</h3>
 							<div class="contributor-list">
 								{#each cosignatories as contributor}
-									<a href="/an/deputes/{contributor.actorId}" class="contributor-item">
+									<a href="/an/deputes/{contributor.actorId}" class="contributor-item" title="Voir le profil du député">
 										{contributor.actorName}
 									</a>
 								{/each}

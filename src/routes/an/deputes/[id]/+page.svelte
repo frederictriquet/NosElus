@@ -456,7 +456,7 @@
 						</p>
 						<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
 							{#each lawsImplication as law}
-								<a href="/an/laws/{law.lawId}" class="law-item">
+								<a href="/an/laws/{law.lawId}" class="law-item" title="Voir le détail du texte">
 									<span class="law-role" class:author={law.role === 'author'} class:cosignatory={law.role === 'cosignatory'}>
 										{law.role === 'author' ? 'Auteur' : 'Cosignataire'}
 									</span>

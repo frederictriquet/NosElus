@@ -8,16 +8,18 @@
 
 ## Phase 1 : Fondations analytiques
 
-### 1.1 Typologie des scrutins (priorité haute)
+### 1.1 Typologie des scrutins (priorité haute) ✅ Terminé
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Classifier les scrutins (vote final, article, amendement, procédure, budget, constitutionnel) | 🟡 Moyen | Analyse des données existantes |
-| Ajouter le type de scrutin dans la base | 🟢 Simple | Classification |
-| UI : filtres par type de scrutin | 🟢 Simple | Données typées |
-| Stats séparées par type de scrutin | 🟡 Moyen | UI filtres |
+| Tâche | Complexité | Statut |
+|-------|------------|--------|
+| Classifier les scrutins (vote final, article, amendement, procédure, budget, constitutionnel) | 🟡 Moyen | ✅ `src/lib/server/etl/classify.ts` |
+| Ajouter le type de scrutin dans la base | 🟢 Simple | ✅ colonne `category` + migration |
+| UI : filtres par type de scrutin | 🟢 Simple | ✅ `/an/scrutins` |
+| Stats séparées par type de scrutin | 🟡 Moyen | ✅ `/an/stats` |
 
 **Valeur** : Rend les statistiques défendables et nuancées.
+
+**Implémenté** : Classification regex par titre (99% de couverture), helper dynamique `getScrutinCategories()`, filtres et panel de stats.
 
 ---
 
@@ -204,7 +206,7 @@
 ## Récapitulatif par priorité
 
 ### Priorité 1 - Fondations (immédiat)
-- Typologie des scrutins
+- ~~Typologie des scrutins~~ ✅
 - Dissidence intra-groupe
 - Documentation méthodologique
 

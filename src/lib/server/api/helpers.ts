@@ -387,3 +387,94 @@ export function getYearsInPeriod(start: string, end: string | null): string[] {
 	}
 	return years;
 }
+
+// ===== Parlement Européen Helpers =====
+
+/**
+ * Construit les conditions SQL pour filtrer les mandats PE par terme.
+ * Inclut le filtre sur legislature + les dates de chevauchement.
+ */
+export function buildPEMandateConditions(
+	terme: string | null,
+	periodDates: PeriodDates | null
+): SQL[] {
+	if (!terme || terme === 'all' || !periodDates) return [];
+
+	const { start, end } = periodDates;
+	const conditions: SQL[] = [eq(mandates.legislature, terme)];
+
+	if (end) {
+		conditions.push(sql`${mandates.startDate} <= ${end}`);
+	}
+	conditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
+
+	return conditions;
+}
+
+/**
+ * Récupère les groupes PE avec leur nombre de membres pour un terme donné.
+ *
+ * @param terme - Numéro du terme (ex: "10") ou null pour tous
+ * @param periodDates - Dates du terme pour filtrer les mandats actifs
+ */
+export async function getPEGroupsWithMemberCount(
+	terme: string | null,
+	periodDates: PeriodDates | null
+): Promise<GroupWithMemberCount[]> {
+	// Build conditions for active group memberships
+	const mandateConditions: SQL[] = [
+		eq(organs.type, 'GP'),
+		eq(organs.chamber, 'PE'),
+		eq(actors.chamber, 'PE')
+	];
+
+	if (terme && terme !== 'all' && periodDates) {
+		mandateConditions.push(...buildPEMandateConditions(terme, periodDates));
+	}
+
+	// Get groups with member count
+	const groupsWithMembers = await db
+		.select({
+			id: organs.id,
+			name: organs.name,
+			shortName: organs.shortName,
+			color: organs.color,
+			legislature: sql<string | null>`NULL`,
+			memberCount: count(sql`DISTINCT ${actors.id}`)
+		})
+		.from(organs)
+		.innerJoin(mandates, eq(mandates.organId, organs.id))
+		.innerJoin(actors, eq(mandates.actorId, actors.id))
+		.where(and(...mandateConditions))
+		.groupBy(organs.id, organs.name, organs.shortName, organs.color);
+
+	return groupsWithMembers
+		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))
+		.sort((a, b) => b.memberCount - a.memberCount);
+}
+
+/**
+ * Récupère les IDs des membres d'un groupe PE pour un terme donné.
+ */
+export async function getPEGroupMemberIds(
+	groupId: string,
+	terme: string | null,
+	periodDates: PeriodDates | null
+): Promise<string[]> {
+	const memberConditions: SQL[] = [
+		eq(mandates.organId, groupId),
+		eq(actors.chamber, 'PE')
+	];
+
+	if (terme && terme !== 'all' && periodDates) {
+		memberConditions.push(...buildPEMandateConditions(terme, periodDates));
+	}
+
+	const memberIds = await db
+		.selectDistinct({ id: actors.id })
+		.from(actors)
+		.innerJoin(mandates, eq(mandates.actorId, actors.id))
+		.where(and(...memberConditions));
+
+	return memberIds.map(m => m.id);
+}

@@ -1,10 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { db, organs, votes, actors, scrutins, mandates } from '$lib/server/db';
-import { eq, count, sql, desc, and, inArray, like, type SQL } from 'drizzle-orm';
+import { db, organs, votes, actors, scrutins } from '$lib/server/db';
+import { eq, count, sql, and, inArray, like } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTermDates } from '$lib/server/periods/pe-terms';
 import { calculateMonthlyCohesion } from '$lib/server/utils/cohesion';
-import { mapVoteDistribution } from '$lib/server/api/helpers';
+import { mapVoteDistribution, getPEGroupMemberIds, type PeriodDates } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const terme = locals.periods.pe;
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get term dates for filtering
-	const termDates = terme && terme !== 'all' ? await getTermDates(terme) : null;
+	const periodDates: PeriodDates | null = terme && terme !== 'all' ? await getTermDates(terme) : null;
 
 	// Get PE scrutin IDs, filtered by term if specified
 	const getPeScrutinIds = async (): Promise<string[]> => {
@@ -66,32 +66,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Loader for group members (French MEPs in this group)
 	const loadMembers = async () => {
-		// Get MEPs who are members of this group
-		const memberConditions: SQL[] = [
-			eq(mandates.organId, group.id),
-			eq(actors.chamber, 'PE')
-		];
-
-		// Filter by term if specified
-		if (termDates && terme && terme !== 'all') {
-			const { start, end } = termDates;
-			memberConditions.push(eq(mandates.legislature, terme));
-			if (end) {
-				memberConditions.push(sql`${mandates.startDate} <= ${end}`);
-			}
-			memberConditions.push(sql`(${mandates.endDate} IS NULL OR ${mandates.endDate} >= ${start})`);
-		}
+		const memberIds = await getPEGroupMemberIds(group.id, terme, periodDates);
+		if (memberIds.length === 0) return [];
 
 		const members = await db
-			.selectDistinct({
+			.select({
 				id: actors.id,
 				name: actors.fullName,
 				lastName: actors.lastName,
 				photoUrl: actors.photoUrl
 			})
 			.from(actors)
-			.innerJoin(mandates, eq(mandates.actorId, actors.id))
-			.where(and(...memberConditions))
+			.where(inArray(actors.id, memberIds))
 			.orderBy(actors.lastName)
 			.limit(20);
 
@@ -153,7 +139,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		filters: {
 			terme
 		},
-		periodDates: termDates,
+		periodDates,
 		// Streamed data
 		distributionData: loadDistribution(),
 		members: loadMembers(),

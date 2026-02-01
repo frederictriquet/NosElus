@@ -23,16 +23,18 @@
 
 ---
 
-### 1.2 Dissidence intra-groupe
+### 1.2 Dissidence intra-groupe ✅ Terminé
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Calculer le taux de dissidence par élu vs son groupe | 🟡 Moyen | Données existantes |
-| Identifier les votes clivants en interne (écart-type élevé) | 🟡 Moyen | Calcul dissidence |
-| UI : badge "frondeur" / indicateur de loyauté | 🟢 Simple | Calculs |
-| Page groupe : liste des votes les plus divisifs | 🟡 Moyen | Votes clivants |
+| Tâche | Complexité | Statut |
+|-------|------------|--------|
+| Calculer le taux de dissidence par élu vs son groupe | 🟡 Moyen | ✅ `calculateAutonomyStats()` |
+| Identifier les votes clivants en interne (% minorité) | 🟡 Moyen | ✅ `getDivisiveVotes()` |
+| UI : indicateur d'autonomie de vote | 🟢 Simple | ✅ `/an/deputes/[id]` panel |
+| Page groupe : liste des votes les plus divisifs | 🟡 Moyen | ✅ `/an/groupes/[id]` section |
 
 **Valeur** : Révèle la discipline de parti et les "francs-tireurs".
+
+**Implémenté** : Calcul TypeScript avec cache in-memory (1h), helpers `calculateAutonomyStats()` et `getDivisiveVotes()`, wording neutre "Autonomie de vote" (au lieu de "dissidence"), breakdown par catégorie de scrutin, métrique minorityRate pour votes divisifs.
 
 ---
 
@@ -207,7 +209,7 @@
 
 ### Priorité 1 - Fondations (immédiat)
 - ~~Typologie des scrutins~~ ✅
-- Dissidence intra-groupe
+- ~~Dissidence intra-groupe~~ ✅
 - Documentation méthodologique
 
 ### Priorité 2 - Processus législatif (court terme)

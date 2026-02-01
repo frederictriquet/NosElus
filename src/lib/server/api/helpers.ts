@@ -767,6 +767,84 @@ export async function getScrutinCategories(
 		}));
 }
 
+// ===== Actor Groups Helpers =====
+
+/**
+ * Interface pour le groupe d'un acteur.
+ */
+export interface ActorGroup {
+	id: string;
+	name: string | null;
+	shortName: string | null;
+	color: string | null;
+}
+
+/**
+ * Récupère les groupes parlementaires (GP) des acteurs donnés.
+ * IMPORTANT: Les résultats sont ordonnés par startDate DESC pour garantir
+ * que le groupe le plus récent est retourné en premier.
+ *
+ * @param actorIds - Liste des IDs d'acteurs
+ * @param chamberFilter - Filtre optionnel sur la chambre (ex: 'SENAT', 'PE')
+ * @returns Map actorId -> groupe
+ *
+ * @example
+ * ```typescript
+ * const actorIds = deputies.map(d => d.id);
+ * const groupByActor = await getActorGroups(actorIds);
+ * const deputiesWithGroups = deputies.map(d => ({
+ *   ...d,
+ *   group: groupByActor.get(d.id) || null
+ * }));
+ * ```
+ */
+export async function getActorGroups(
+	actorIds: string[],
+	chamberFilter?: 'AN' | 'SENAT' | 'PE'
+): Promise<Map<string, ActorGroup>> {
+	if (actorIds.length === 0) {
+		return new Map();
+	}
+
+	// Build WHERE clause
+	let whereClause = sql`${mandates.actorId} IN ${actorIds} AND ${organs.type} = 'GP'`;
+	if (chamberFilter === 'SENAT') {
+		whereClause = sql`${mandates.actorId} IN ${actorIds} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'SENAT'`;
+	} else if (chamberFilter === 'PE') {
+		whereClause = sql`${mandates.actorId} IN ${actorIds} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'PE'`;
+	}
+
+	// Query with ORDER BY startDate DESC to get most recent mandate first
+	const groupsData = await db
+		.select({
+			actorId: mandates.actorId,
+			groupId: organs.id,
+			groupName: organs.name,
+			groupShortName: organs.shortName,
+			groupColor: organs.color,
+			startDate: mandates.startDate
+		})
+		.from(mandates)
+		.innerJoin(organs, eq(mandates.organId, organs.id))
+		.where(whereClause)
+		.orderBy(desc(mandates.startDate));
+
+	// Build lookup map - first entry for each actor wins (most recent due to ordering)
+	const groupByActor = new Map<string, ActorGroup>();
+	for (const g of groupsData) {
+		if (!groupByActor.has(g.actorId) && g.groupId) {
+			groupByActor.set(g.actorId, {
+				id: g.groupId,
+				name: g.groupName,
+				shortName: g.groupShortName,
+				color: g.groupColor
+			});
+		}
+	}
+
+	return groupByActor;
+}
+
 // ===== Law Implication Helpers =====
 
 /**

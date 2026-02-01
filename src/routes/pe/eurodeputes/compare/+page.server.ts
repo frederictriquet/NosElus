@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, votes, scrutins, mandates, organs } from '$lib/server/db';
-import { eq, and, count, sql, inArray, like, type SQL } from 'drizzle-orm';
+import { eq, and, count, sql, inArray, like, desc, type SQL } from 'drizzle-orm';
 import { getTermDates } from '$lib/server/periods/pe-terms';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
@@ -128,20 +128,22 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		// Run all independent queries in parallel
 		const [groupsData, [votes1Count], [votes2Count], dist1, dist2, commonVotes, disagreements] =
 			await Promise.all([
-				// Groups for both MEPs
+				// Groups for both MEPs (order by startDate DESC to get most recent)
 				db
 					.select({
 						actorId: mandates.actorId,
 						groupId: organs.id,
 						groupName: organs.name,
 						groupShortName: organs.shortName,
-						groupColor: organs.color
+						groupColor: organs.color,
+						startDate: mandates.startDate
 					})
 					.from(mandates)
 					.innerJoin(organs, eq(mandates.organId, organs.id))
 					.where(
 						sql`${mandates.actorId} IN ${[mep1Id, mep2Id]} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'PE'`
-					),
+					)
+					.orderBy(desc(mandates.startDate)),
 
 				// Vote counts
 				db.select({ value: count() }).from(votes).where(buildVoteConditions(mep1Id)),
@@ -185,7 +187,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 					.limit(10)
 			]);
 
-		// Process groups
+		// Process groups - first entry for each actor wins (most recent due to ordering)
 		const groupByActor = new Map<
 			string,
 			{ id: string; name: string | null; shortName: string | null; color: string | null }

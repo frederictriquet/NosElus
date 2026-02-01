@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, scrutins, mandates } from '$lib/server/db';
-import { ilike, or, eq, sql } from 'drizzle-orm';
+import { ilike, or, eq, sql, desc } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q') || '';
@@ -31,6 +31,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.limit(limit);
 
 	// Get groups for found actors
+	// Order by startDate DESC to get most recent mandate first
 	const actorIds = actorsResults.map((a) => a.id);
 	const groupsData =
 		actorIds.length > 0
@@ -40,14 +41,16 @@ export const load: PageServerLoad = async ({ url }) => {
 						groupId: organs.id,
 						groupName: organs.name,
 						groupShortName: organs.shortName,
-						groupColor: organs.color
+						groupColor: organs.color,
+						startDate: mandates.startDate
 					})
 					.from(mandates)
 					.innerJoin(organs, eq(mandates.organId, organs.id))
 					.where(sql`${mandates.actorId} IN ${actorIds} AND ${organs.type} = 'GP'`)
+					.orderBy(desc(mandates.startDate))
 			: [];
 
-	// Build lookup map
+	// Build lookup map - first entry for each actor wins (most recent due to ordering)
 	const groupByActor = new Map<
 		string,
 		{ id: string; name: string | null; shortName: string | null; color: string | null }

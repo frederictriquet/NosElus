@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { getProxiedPhotoUrl } from '$lib/utils/photo';
+	import GroupName from './GroupName.svelte';
 
 	interface Props {
 		id: string;
@@ -87,11 +88,8 @@
 		</span>
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
-			<span class="elected-group-tag group-name-hover">
-				<span class="group-short">{group.shortName}</span>
-				{#if group.name && group.name !== group.shortName}
-					<span class="group-full">{group.name}</span>
-				{/if}
+			<span class="elected-group-tag">
+				<GroupName shortName={group.shortName} fullName={group.name} />
 			</span>
 		{/if}
 		{#if stat}
@@ -106,12 +104,7 @@
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
 			{#if group?.shortName}
-				<span class="elected-group-inline group-name-hover">
-					<span class="group-short">{group.shortName}</span>
-					{#if group.name && group.name !== group.shortName}
-						<span class="group-full">{group.name}</span>
-					{/if}
-				</span>
+				<GroupName shortName={group.shortName} fullName={group.name} class="elected-group-inline" />
 			{/if}
 		</div>
 	</a>
@@ -125,12 +118,7 @@
 			{#if group}
 				<div class="elected-group">
 					<span class="group-dot" style="background: {group.color || '#888'}"></span>
-					<span class="group-name-hover">
-						<span class="group-short">{group.shortName || group.name}</span>
-						{#if group.name && group.shortName && group.name !== group.shortName}
-							<span class="group-full">{group.name}</span>
-						{/if}
-					</span>
+					<GroupName shortName={group.shortName} fullName={group.name} />
 				</div>
 			{:else if subtitle}
 				<div class="elected-subtitle">{subtitle}</div>
@@ -205,54 +193,6 @@
 		font-weight: 500;
 	}
 
-	/* Animation commune nom court → nom complet au hover */
-	.group-name-hover {
-		display: block;
-		position: relative;
-		cursor: default;
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		container-type: inline-size;
-	}
-
-	.group-name-hover .group-short,
-	.group-name-hover .group-full {
-		white-space: nowrap;
-		display: block;
-	}
-
-	.group-name-hover .group-full {
-		position: absolute;
-		left: 0;
-		top: 0;
-		opacity: 0;
-		pointer-events: none;
-	}
-
-	.group-name-hover:hover .group-short {
-		opacity: 0;
-	}
-
-	.group-name-hover:hover .group-full {
-		opacity: 1;
-		pointer-events: auto;
-		animation: scroll-text 3s linear infinite;
-	}
-
-	@keyframes scroll-text {
-		0%, 10% {
-			transform: translateX(0);
-		}
-		45%, 55% {
-			/* Scroll: -100% du texte + 100% du conteneur (100cqi) */
-			transform: translateX(min(0px, calc(-100% + 100cqi)));
-		}
-		90%, 100% {
-			transform: translateX(0);
-		}
-	}
-
 	/* Compact - photo + nom, petit format */
 	.elected-compact {
 		display: flex;
@@ -276,7 +216,7 @@
 		min-width: 0;
 	}
 
-	.elected-group-inline {
+	.elected-compact-info :global(.elected-group-inline) {
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
 	}

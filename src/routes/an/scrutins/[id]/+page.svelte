@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
+	import GroupName from '$lib/components/GroupName.svelte';
 
 	let { data } = $props();
 
@@ -123,7 +124,9 @@
 						<a href="/an/groupes/{group.id}" class="group-card">
 							<div class="group-header">
 								<div class="group-color" style="background: {group.color || '#ccc'}"></div>
-								<div class="group-name">{group.shortName || group.name}</div>
+								<div class="group-name">
+									<GroupName shortName={group.shortName} fullName={group.name} />
+								</div>
 								<div class="group-total">{group.total}</div>
 							</div>
 							<div class="group-votes">

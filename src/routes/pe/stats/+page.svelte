@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
+	import GroupName from '$lib/components/GroupName.svelte';
 
 	let { data } = $props();
 </script>
@@ -176,7 +177,7 @@
 									<td>
 										<a href="/pe/groupes/{group.groupId}" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
 											<span style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor || '#ccc'}"></span>
-											<span>{group.groupShortName || group.groupName}</span>
+											<GroupName shortName={group.groupShortName} fullName={group.groupName} />
 										</a>
 									</td>
 									<td style="text-align: right; color: var(--color-success);">{group.pourVotes.toLocaleString('fr-FR')}</td>

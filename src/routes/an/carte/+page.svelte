@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
+	import GroupName from '$lib/components/GroupName.svelte';
 
 	let { data } = $props();
 
@@ -119,7 +120,9 @@
 			{#each sortedGroups as group}
 				<a href="/an/groupes/{group.groupId}" class="legend-item">
 					<span class="legend-color" style="background: {group.groupColor || '#888'}"></span>
-					<span class="legend-name">{group.groupShortName || group.groupName}</span>
+					<span class="legend-name">
+						<GroupName shortName={group.groupShortName} fullName={group.groupName} />
+					</span>
 					<span class="legend-count">{group.deputyCount}</span>
 				</a>
 			{/each}
@@ -133,7 +136,9 @@
 				{#each sortedGroups as group}
 					{@const widthPct = (group.deputyCount / barScaleMax) * 100}
 					<div class="bar-row">
-						<a href="/an/groupes/{group.groupId}" class="bar-label">{group.groupShortName}</a>
+						<a href="/an/groupes/{group.groupId}" class="bar-label">
+							<GroupName shortName={group.groupShortName} fullName={group.groupName} />
+						</a>
 						<div class="bar-track">
 							<div
 								class="bar-fill"
@@ -159,7 +164,9 @@
 					<div class="group-card">
 						<div class="group-header">
 							<span class="group-color" style="background: {group.groupColor || '#888'}"></span>
-							<a href="/an/groupes/{group.groupId}" class="group-name">{group.groupShortName || group.groupName}</a>
+							<a href="/an/groupes/{group.groupId}" class="group-name">
+								<GroupName shortName={group.groupShortName} fullName={group.groupName} />
+							</a>
 							<span class="group-count">{group.deputyCount} députés</span>
 						</div>
 						{#if deputiesByGroup[group.groupId]?.length > 0}

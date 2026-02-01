@@ -4,7 +4,7 @@ import { eq, count, sql, desc, and, inArray, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
 import { calculateMonthlyCohesion } from '$lib/server/utils/cohesion';
-import { mapVoteDistribution } from '$lib/server/api/helpers';
+import { mapVoteDistribution, getDivisiveVotes } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -121,6 +121,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return calculateMonthlyCohesion(votesByScrutin);
 	};
 
+	// Loader for divisive votes
+	const loadDivisiveVotes = async () => {
+		return await getDivisiveVotes(
+			relatedGroupIds,
+			{ legislature, dateFrom: null, dateTo: null },
+			20
+		);
+	};
+
 	// Get period dates for the chart
 	const periodDates = legislature && legislature !== 'all'
 		? await getLegislatureDates(legislature)
@@ -137,6 +146,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		distributionData: loadDistribution(),
 		members: loadMembers(),
 		monthlyActivity: loadMonthlyActivity(),
-		cohesionData: loadCohesion()
+		cohesionData: loadCohesion(),
+		divisiveVotes: loadDivisiveVotes()
 	};
 };

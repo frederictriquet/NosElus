@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { db, organs, mandates, actors, scrutins } from '$lib/server/db';
+import { db, organs, mandates, actors, scrutins, votes } from '$lib/server/db';
 import { eq, and, sql, notLike, inArray, count, desc, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
@@ -169,6 +169,238 @@ export function getGroupMajorityPosition(
 	if (abstention > 0) return 'abstention';
 
 	return null;
+}
+
+// ===== Autonomy Stats =====
+
+import {
+	type AutonomyStats,
+	type AutonomyByCategory,
+	type DivisiveVote,
+	CATEGORY_LABELS,
+	MIN_VOTES_FOR_STATS,
+	getCachedAutonomyStats,
+	setCachedAutonomyStats
+} from '../utils/dissidence';
+
+/**
+ * Calcule les stats d'autonomie d'un député par rapport à son groupe.
+ * Autonomie = pourcentage de votes où le député diffère de la position majoritaire de son groupe.
+ *
+ * Utilise un cache in-memory (TTL 1h) pour optimiser les performances.
+ *
+ * @param actorId - ID du député
+ * @param groupId - ID du groupe (optionnel, sinon déduit des votes)
+ * @param filters - Filtres de période (legislature, dateFrom, dateTo)
+ * @returns Stats d'autonomie ou null si pas assez de votes comparables
+ */
+export async function calculateAutonomyStats(
+	actorId: string,
+	groupId: string | null,
+	filters: PeriodFilters
+): Promise<AutonomyStats | null> {
+	// Check cache first
+	const cached = getCachedAutonomyStats(actorId, groupId, filters);
+	if (cached) {
+		return cached;
+	}
+
+	// Build WHERE conditions
+	const conditions: SQL[] = [
+		eq(votes.actorId, actorId),
+		sql`${votes.groupId} IS NOT NULL`,
+		sql`${scrutins.groupResults} ? ${votes.groupId}` // Group has results for this scrutin
+	];
+
+	if (groupId) {
+		conditions.push(eq(votes.groupId, groupId));
+	}
+
+	if (filters.legislature && filters.legislature !== 'all') {
+		conditions.push(eq(scrutins.legislature, filters.legislature));
+	}
+
+	if (filters.dateFrom) {
+		conditions.push(sql`${scrutins.date} >= ${filters.dateFrom}`);
+	}
+
+	if (filters.dateTo) {
+		conditions.push(sql`${scrutins.date} <= ${filters.dateTo}`);
+	}
+
+	// Query: Get all votes with group results
+	const deputyVotes = await db
+		.select({
+			position: votes.position,
+			groupId: votes.groupId,
+			category: scrutins.category,
+			groupResults: scrutins.groupResults
+		})
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.where(and(...conditions));
+
+	// Calculate divergence by category (TypeScript side)
+	const categoryStats = new Map<
+		string,
+		{ totalVotes: number; divergentVotes: number }
+	>();
+
+	for (const vote of deputyVotes) {
+		if (!vote.groupId || !vote.groupResults || !vote.position) continue;
+
+		const results = vote.groupResults as Record<string, Record<string, unknown>>;
+		const groupData = results[vote.groupId];
+		if (!groupData) continue;
+
+		const groupPos = getGroupMajorityPosition(groupData);
+		if (!groupPos) continue;
+
+		const category = vote.category || 'autre';
+		const current = categoryStats.get(category) || { totalVotes: 0, divergentVotes: 0 };
+
+		current.totalVotes++;
+		if (vote.position.toLowerCase() !== groupPos) {
+			current.divergentVotes++;
+		}
+
+		categoryStats.set(category, current);
+	}
+
+	// Aggregate results
+	let totalComparableVotes = 0;
+	let totalDivergentVotes = 0;
+	const byCategory: AutonomyByCategory[] = [];
+
+	for (const [category, stats] of categoryStats) {
+		const total = stats.totalVotes;
+		const divergent = stats.divergentVotes;
+
+		totalComparableVotes += total;
+		totalDivergentVotes += divergent;
+
+		byCategory.push({
+			category,
+			label: CATEGORY_LABELS[category] || category,
+			divergenceRate: total > 0 ? (divergent / total) * 100 : 0,
+			divergentVotes: divergent,
+			totalVotes: total
+		});
+	}
+
+	// Not enough votes to show meaningful stats
+	if (totalComparableVotes < MIN_VOTES_FOR_STATS) {
+		return null;
+	}
+
+	// Sort by totalVotes descending
+	byCategory.sort((a, b) => b.totalVotes - a.totalVotes);
+
+	const stats: AutonomyStats = {
+		divergenceRate: (totalDivergentVotes / totalComparableVotes) * 100,
+		divergentVotes: totalDivergentVotes,
+		totalComparableVotes,
+		byCategory
+	};
+
+	// Cache the result
+	setCachedAutonomyStats(actorId, groupId, filters, stats);
+
+	return stats;
+}
+
+/**
+ * Récupère les votes les plus divisifs d'un groupe.
+ * Divisif = scrutin avec forte proportion de minorité (votes contre la position majoritaire).
+ *
+ * @param groupIds - IDs du groupe (peut inclure plusieurs si même shortName)
+ * @param filters - Filtres de période
+ * @param limit - Nombre max de résultats (default 20)
+ * @returns Liste des votes divisifs triés par minorityRate décroissant
+ */
+export async function getDivisiveVotes(
+	groupIds: string[],
+	filters: PeriodFilters,
+	limit = 20
+): Promise<DivisiveVote[]> {
+	// Build WHERE conditions
+	const conditions: SQL[] = [inArray(votes.groupId, groupIds)];
+
+	if (filters.legislature && filters.legislature !== 'all') {
+		conditions.push(eq(scrutins.legislature, filters.legislature));
+	}
+
+	if (filters.dateFrom) {
+		conditions.push(sql`${scrutins.date} >= ${filters.dateFrom}`);
+	}
+
+	if (filters.dateTo) {
+		conditions.push(sql`${scrutins.date} <= ${filters.dateTo}`);
+	}
+
+	// Subquery: votes distribution by scrutin
+	const votesDistribution = await db
+		.select({
+			scrutinId: votes.scrutinId,
+			scrutinTitle: scrutins.title,
+			scrutinDate: scrutins.date,
+			scrutinCategory: scrutins.category,
+			scrutinResult: scrutins.result,
+			pour: sql<number>`SUM(CASE WHEN ${votes.position} = 'pour' THEN 1 ELSE 0 END)`,
+			contre: sql<number>`SUM(CASE WHEN ${votes.position} = 'contre' THEN 1 ELSE 0 END)`,
+			abstention: sql<number>`SUM(CASE WHEN ${votes.position} = 'abstention' THEN 1 ELSE 0 END)`,
+			total: count()
+		})
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.where(and(...conditions))
+		.groupBy(
+			votes.scrutinId,
+			scrutins.id,
+			scrutins.title,
+			scrutins.date,
+			scrutins.category,
+			scrutins.result
+		);
+
+	// Calculate minorityRate and majorityPosition for each scrutin
+	const divisiveVotes: DivisiveVote[] = votesDistribution
+		.map((row) => {
+			const { pour, contre, abstention, total } = row;
+
+			// Determine majority position
+			let majorityPosition: 'pour' | 'contre' | 'abstention' = 'pour';
+			let majorityCount = pour;
+
+			if (contre > majorityCount) {
+				majorityPosition = 'contre';
+				majorityCount = contre;
+			}
+			if (abstention > majorityCount) {
+				majorityPosition = 'abstention';
+				majorityCount = abstention;
+			}
+
+			// Minority rate = (min votes / total) * 100
+			const minorityCount = Math.min(pour, contre, abstention);
+			const minorityRate = total > 0 ? (minorityCount / total) * 100 : 0;
+
+			return {
+				scrutinId: row.scrutinId,
+				scrutinTitle: row.scrutinTitle,
+				scrutinDate: row.scrutinDate,
+				category: row.scrutinCategory,
+				result: row.scrutinResult,
+				minorityRate,
+				distribution: { pour, contre, abstention, total },
+				majorityPosition
+			};
+		})
+		.filter((v) => v.minorityRate > 0) // Only keep divided votes
+		.sort((a, b) => b.minorityRate - a.minorityRate) // Most divisive first
+		.slice(0, limit);
+
+	return divisiveVotes;
 }
 
 /**

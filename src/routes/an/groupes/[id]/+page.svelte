@@ -115,6 +115,48 @@
 	</AsyncCard>
 </div>
 
+<div style="margin-top: 1.5rem;">
+	<AsyncCard
+		title="Votes les plus divisifs"
+		subtitle="Scrutins avec forte division interne"
+		promise={data.divisiveVotes}
+		minHeight="300px"
+	>
+		{#snippet children(votes)}
+			{#if votes && votes.length > 0}
+				<div class="divisive-votes-list">
+					{#each votes as vote}
+						<a href="/an/scrutins/{vote.scrutinId}" class="divisive-vote-item">
+							<div class="vote-header">
+								<div class="vote-title">{vote.scrutinTitle}</div>
+								<div class="vote-meta">
+									<span class="vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span>
+									{#if vote.category}
+										<span class="vote-category">{vote.category}</span>
+									{/if}
+								</div>
+							</div>
+							<div class="vote-stats">
+								<div class="vote-minority">
+									<span class="minority-label">Minorité :</span>
+									<span class="minority-value">{vote.minorityRate.toFixed(0)}%</span>
+								</div>
+								<div class="vote-distribution">
+									<span class="dist-pour">Pour : {vote.distribution.pour}</span>
+									<span class="dist-contre">Contre : {vote.distribution.contre}</span>
+									<span class="dist-abst">Abst : {vote.distribution.abstention}</span>
+								</div>
+							</div>
+						</a>
+					{/each}
+				</div>
+			{:else}
+				<p class="empty-state">Aucun vote divisif identifié pour cette période</p>
+			{/if}
+		{/snippet}
+	</AsyncCard>
+</div>
+
 <section class="card" style="margin-top: 1.5rem;">
 	<h2>Informations</h2>
 	<dl style="margin-top: 1rem;">
@@ -201,5 +243,105 @@
 		color: var(--color-text-muted);
 		padding: 2rem;
 		text-align: center;
+	}
+
+	/* Divisive Votes */
+	.divisive-votes-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.divisive-vote-item {
+		display: block;
+		padding: 1rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		text-decoration: none;
+		color: var(--color-text);
+		transition: all 0.2s;
+	}
+
+	.divisive-vote-item:hover {
+		background: var(--color-bg-hover);
+		border-color: var(--color-primary);
+	}
+
+	.vote-header {
+		margin-bottom: 0.5rem;
+	}
+
+	.vote-title {
+		font-weight: 500;
+		margin-bottom: 0.25rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	.vote-meta {
+		display: flex;
+		gap: 0.75rem;
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.vote-date {
+		font-family: var(--font-mono);
+	}
+
+	.vote-category {
+		padding: 0.125rem 0.5rem;
+		background: var(--color-primary-bg);
+		color: var(--color-primary);
+		border-radius: var(--radius-sm);
+	}
+
+	.vote-stats {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 0.5rem;
+		padding-top: 0.5rem;
+		border-top: 1px solid var(--color-border);
+	}
+
+	.vote-minority {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.minority-label {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.minority-value {
+		font-weight: 600;
+		font-family: var(--font-mono);
+		color: var(--color-warning);
+		font-size: 0.875rem;
+	}
+
+	.vote-distribution {
+		display: flex;
+		gap: 0.75rem;
+		font-size: 0.75rem;
+	}
+
+	.dist-pour {
+		color: var(--color-success);
+	}
+
+	.dist-contre {
+		color: var(--color-danger);
+	}
+
+	.dist-abst {
+		color: var(--color-text-muted);
 	}
 </style>

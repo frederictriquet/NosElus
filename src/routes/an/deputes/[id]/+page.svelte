@@ -109,6 +109,60 @@
 </AsyncCard>
 
 <div style="margin-top: 1.5rem;">
+	<AsyncCard
+		title="Autonomie de vote"
+		subtitle="Divergence par rapport au groupe"
+		promise={data.autonomyStats}
+		minHeight="200px"
+	>
+		{#snippet children(stats)}
+			{#if stats}
+				<div class="stats-grid">
+					<div class="stat-box">
+						<div class="stat-value">{stats.divergenceRate.toFixed(1)}%</div>
+						<div class="stat-label">Taux de divergence</div>
+					</div>
+					<div class="stat-box">
+						<div class="stat-value">{stats.divergentVotes}</div>
+						<div class="stat-label">Votes divergents</div>
+					</div>
+					<div class="stat-box">
+						<div class="stat-value">{stats.totalComparableVotes}</div>
+						<div class="stat-label">Votes analysés</div>
+					</div>
+				</div>
+
+				{#if stats.byCategory.length > 0}
+					<div style="margin-top: 1.5rem;">
+						<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
+							Par catégorie de scrutin
+						</h4>
+						<div class="category-list">
+							{#each stats.byCategory as cat}
+								<div class="category-item">
+									<div class="category-name">{cat.label}</div>
+									<div class="category-stats">
+										<span class="category-rate">{cat.divergenceRate.toFixed(1)}%</span>
+										<span class="category-count">({cat.divergentVotes}/{cat.totalVotes})</span>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
+					Mesure l'écart entre le vote du député et la position majoritaire de son groupe. Base : {stats.totalComparableVotes}
+					vote{stats.totalComparableVotes > 1 ? 's' : ''}.
+				</p>
+			{:else}
+				<p class="empty-state">Données insuffisantes pour calculer l'autonomie de vote</p>
+			{/if}
+		{/snippet}
+	</AsyncCard>
+</div>
+
+<div style="margin-top: 1.5rem;">
 	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
 		{#snippet children(recentVotes)}
 			{#if recentVotes.length === 0}
@@ -712,5 +766,43 @@
 	.current-badge {
 		color: var(--color-success);
 		font-weight: 500;
+	}
+
+	/* Autonomy Stats */
+	.category-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.category-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+	}
+
+	.category-name {
+		font-size: 0.875rem;
+		color: var(--color-text);
+	}
+
+	.category-stats {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.category-rate {
+		font-weight: 600;
+		font-family: var(--font-mono);
+		color: var(--color-text);
+	}
+
+	.category-count {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
 	}
 </style>

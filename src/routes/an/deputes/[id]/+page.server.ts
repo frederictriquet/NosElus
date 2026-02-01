@@ -3,7 +3,11 @@ import { db, actors, votes, scrutins, organs, amendments, mandates, actorStats }
 import { eq, and, count, desc, sql, asc, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLegislatureDates } from '$lib/server/periods/an-legislatures';
-import { mapVoteDistribution, getGroupMajorityPosition } from '$lib/server/api/helpers';
+import {
+	mapVoteDistribution,
+	getGroupMajorityPosition,
+	calculateAutonomyStats
+} from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
@@ -185,6 +189,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	};
 
+	// Loader for autonomy stats (divergence from group)
+	const loadAutonomyStats = async () => {
+		if (!deputyGroup?.groupId) return null;
+
+		return await calculateAutonomyStats(params.id, deputyGroup.groupId, {
+			legislature,
+			dateFrom: null,
+			dateTo: null
+		});
+	};
+
 	// Loader for career milestones
 	const loadCareerMilestones = async () => {
 		const voteStats = await loadVoteStats();
@@ -339,6 +354,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		recentVotes: loadRecentVotes(),
 		monthlyEvolution: loadMonthlyEvolution(),
 		groupAlignment: loadGroupAlignment(),
+		autonomyStats: loadAutonomyStats(),
 		careerMilestones: loadCareerMilestones(),
 		amendmentStats: loadAmendmentStats(),
 		recentAmendments: loadRecentAmendments(),

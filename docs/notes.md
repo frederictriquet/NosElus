@@ -23,9 +23,3 @@ il faudrait pouvoir accéder aux propositions de loi par thèmes, par dates -> o
 
 sur toutes les pages et dans tous les composants ou on affiche le nom court d'un parti, je veux qu'on affiche le nom long lorsque l'on hover avec la souris : inspire-toi de ce qui a été fait dans le composant ElectedCard.svelte au niveau du group-name-hover et fais-en un sous-composant réutilisable
 
-ajoute une règle indiquant qu'il faut toujours utiliser le composant GroupName.svelte quand on affiche le nom court d'un groupe
-
-
- │ Factoriser requêtes mandates │ P1 - ✅  │ getActorGroups() dans helpers.ts
-  ├──────────────────────────────┼──────────┤
-  │ Test E2E données temporelles │ P2 - ✅  │ tests/e2e/data-consistency.test.ts    

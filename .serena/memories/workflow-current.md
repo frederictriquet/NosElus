@@ -1,58 +1,49 @@
 # Workflow Actif
 
-## Session Actuelle - Post-Mortem & Refactoring (2026-02-02)
-
 ## Tâche
-Compléter les actions restantes du post-mortem de Phase 2.2 (GroupName component):
-1. ✅ Factoriser requêtes mandates (P1) → getActorGroups() helper
-2. ✅ Tests E2E données temporelles (P2) → data-consistency.test.ts
-3. ✅ Audit de sécurité statique → security-audit-report.md
-4. ✅ Mettre à jour roadmap
+Implémenter les security headers HTTP dans l'application NosElus
+
+## Objectif
+Ajouter les headers de sécurité (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP) pour protéger contre clickjacking, MIME sniffing et injections de contenu
 
 ## Démarré
-2026-02-02
+2026-02-02 (branche: secu)
 
-## Historique Complet
-
+## Historique
 | Timestamp | Skill | Status | Notes |
 |-----------|-------|--------|-------|
-| 2026-02-02 | /analyze | ✅ | Audit de sécurité statique - 9 catégories examinées |
-| 2026-02-02 | Tests créés | ✅ | E2E + helpers test créés et fonctionnels |
-| 2026-02-02 | /roadmap-update | ✅ | "Tests E2E interface" marqué DONE |
+| 2026-02-02 | /analyze | ✅ | Headers à implémenter identifiés, CSP définie |
+| 2026-02-02 | /implement | ✅ | Headers ajoutés + 6 tests d'intégration |
+
+## Phase Actuelle
+/implement ✅ → /test-run (manuel)
 
 ## Contexte Clé
+- **Fichier modifié** : `src/hooks.server.ts` (29 lignes ajoutées)
+- **4 headers ajoutés** : X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP
+- **Sources externes** : assemblee-nationale.fr, senat.fr, europarl.europa.eu (images)
+- **CSP directive** : 7 directives configurées
+- **Tests** : 6 nouveaux tests d'intégration (100% passés)
 
-### Travaux complétés
-1. **getActorGroups() helper** - `src/lib/server/api/helpers.ts:14`
-   - Centralise requêtes mandats groupes avec ordering DESC
-   - Réduit duplication dans 3 fichiers (PE & AN compare)
+## Décisions Prises
+1. ✅ CSP stricte avec img-src incluant les 3 sources officielles
+2. ✅ style-src 'unsafe-inline' pour compatibilité Svelte
+3. ✅ frame-ancestors 'none' (équivalent moderne de X-Frame-Options)
 
-2. **Tests E2E** - `tests/e2e/data-consistency.test.ts`
-   - 5 test suites (5 déploiements)
-   - Vérifie cohérence groupes entre list/detail pages
-   - Couvre AN, PE, Sénat, recherche, comparaison
+## Fichiers Concernés
+- `src/hooks.server.ts` (modifié - 29 lignes ajoutées)
+- `src/hooks.server.test.ts` (créé - 107 lignes, 6 tests)
 
-3. **Audit sécurité** - Rapport statique complété
-   - SQL injection: ✅ Sécurisé (Drizzle ORM)
-   - XSS: ✅ Sécurisé (Svelte protection)
-   - Headers: ⚠️ À ajouter (CSP, X-Frame-Options)
-   - Dépendances: 11 vulnérabilités npm (transitives)
-
-### Fichiers modifiés
-- `src/lib/server/api/helpers.ts` - Ajout getActorGroups()
-- `src/lib/server/api/helpers.actor-groups.test.ts` - 6 tests d'intégration
-- `tests/e2e/data-consistency.test.ts` - Créé (5 test suites, 250 lignes)
-- `docs/ROADMAP.md` - Marqué "Tests E2E interface" ✅
+## Commits Effectués
+1. `b3933ed` - feat(security): add HTTP security headers
+2. `cd11562` - test(security): add integration tests for headers
 
 ## Prochaine Étape
-✅ TÂCHE TERMINÉE
+/test-run (test manuel dans le navigateur pour vérifier CSP)
 
-Recommandations:
-1. **Code review** des changements
-2. **Merge** sur main
-3. Considérer implémentation security headers (priorité haute de l'audit)
-
-## Prêt pour
-- `/pre-merge` - Review finale avant merge
-- `/capitalize` - Documenter patterns E2E et sécurité
-- `/post-mortem --session` - Analyser session complète
+## Critères d'Acceptation
+- [x] Headers présents dans toutes les réponses (vérifié par tests)
+- [x] Tests d'intégration passent (6/6 ✅)
+- [x] Tous les tests unitaires passent (36/36 ✅)
+- [ ] Application fonctionne en mode dev (à vérifier manuellement)
+- [ ] Pas d'erreurs CSP dans la console (à vérifier manuellement)

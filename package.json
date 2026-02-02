@@ -52,6 +52,7 @@
 		"etl:nossenateurs-stats": "node --import tsx scripts/etl/import-nossenateurs-stats.ts",
 		"etl:senat-activity-stats": "node --import tsx scripts/etl/import-senat-activity-stats.ts",
 		"etl:classify-scrutins": "node --import tsx scripts/etl/classify-scrutins.ts",
+		"etl:analyze-laws": "node --import tsx scripts/etl/analyze-laws.ts",
 		"etl:download": "node --import tsx scripts/etl/download-data.ts",
 		"lint-staged": "lint-staged",
 		"commitlint": "commitlint"

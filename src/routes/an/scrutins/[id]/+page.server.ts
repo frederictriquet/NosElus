@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, scrutins, votes, actors, organs, laws } from '$lib/server/db';
+import { db, scrutins, votes, actors, organs, laws, lawSummaries } from '$lib/server/db';
 import { eq, count } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTightLabel, DEFAULT_TIGHT_THRESHOLD } from '$lib/server/api/helpers';
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		throw error(404, { message: 'Scrutin non trouvé' });
 	}
 
-	// Get related law if exists
+	// Get related law if exists (with AI summary)
 	const loadRelatedLaw = async () => {
 		if (!scrutin.lawId) return null;
 
@@ -25,9 +25,16 @@ export const load: PageServerLoad = async ({ params }) => {
 				title: laws.title,
 				shortTitle: laws.shortTitle,
 				type: laws.type,
-				status: laws.status
+				status: laws.status,
+				description: laws.description,
+				sourceUrl: laws.sourceUrl,
+				// AI-generated summary
+				summary: lawSummaries.summary,
+				tags: lawSummaries.tags,
+				summaryModel: lawSummaries.model
 			})
 			.from(laws)
+			.leftJoin(lawSummaries, eq(laws.id, lawSummaries.lawId))
 			.where(eq(laws.id, scrutin.lawId));
 
 		return law || null;

@@ -2,6 +2,7 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
+	import LawSummaryCard from '$lib/components/LawSummaryCard.svelte';
 
 	let { data } = $props();
 
@@ -83,6 +84,49 @@
 					</span>
 				{/if}
 			</a>
+			{#if law.summary}
+				<LawSummaryCard
+					summary={law.summary}
+					tags={law.tags || []}
+					model={law.summaryModel ?? undefined}
+					class="law-summary-section"
+				/>
+			{/if}
+			{#if law.title || law.description}
+				<details class="law-details">
+					<summary class="law-details-toggle">
+						<span>Voir le texte complet</span>
+						<svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6 9 12 15 18 9"></polyline>
+						</svg>
+					</summary>
+					<div class="law-full-text">
+						<h3>Intitulé complet</h3>
+						<p class="law-title-full">{law.title}</p>
+
+						<h3>Description</h3>
+						{#if law.description}
+							<p class="law-description">{law.description}</p>
+						{:else}
+							<p class="law-no-data">Aucune description disponible pour ce texte.</p>
+						{/if}
+
+						<h3>Source officielle</h3>
+						{#if law.sourceUrl}
+							<a href={law.sourceUrl} target="_blank" rel="noopener noreferrer" class="law-source-link">
+								Voir sur le site de l'Assemblée nationale
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+									<polyline points="15 3 21 3 21 9"></polyline>
+									<line x1="10" y1="14" x2="21" y2="3"></line>
+								</svg>
+							</a>
+						{:else}
+							<p class="law-no-data">Aucun lien vers la source officielle disponible.</p>
+						{/if}
+					</div>
+				</details>
+			{/if}
 		</section>
 	{/if}
 {/await}
@@ -347,6 +391,109 @@
 	.law-status.status-rejected {
 		background: var(--color-danger-bg);
 		color: var(--color-danger);
+	}
+
+	.law-link-card :global(.law-summary-section) {
+		margin-top: 1rem;
+	}
+
+	/* Law details (collapsible) */
+	.law-details {
+		margin-top: 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.law-details-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		background: var(--color-bg-secondary);
+		cursor: pointer;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		transition: all 0.2s;
+		list-style: none;
+	}
+
+	.law-details-toggle::-webkit-details-marker {
+		display: none;
+	}
+
+	.law-details-toggle:hover {
+		background: var(--color-bg-hover);
+		color: var(--color-text);
+	}
+
+	.law-details-toggle .chevron {
+		transition: transform 0.2s;
+	}
+
+	.law-details[open] .law-details-toggle .chevron {
+		transform: rotate(180deg);
+	}
+
+	.law-full-text {
+		padding: 1rem;
+		background: var(--color-bg);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.law-full-text h3 {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
+		margin: 0 0 0.5rem;
+	}
+
+	.law-full-text h3:not(:first-child) {
+		margin-top: 1rem;
+	}
+
+	.law-title-full {
+		margin: 0;
+		font-size: 0.9375rem;
+		line-height: 1.6;
+	}
+
+	.law-description {
+		margin: 0;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		color: var(--color-text-muted);
+		white-space: pre-wrap;
+	}
+
+	.law-no-data {
+		margin: 0;
+		font-size: 0.875rem;
+		font-style: italic;
+		color: var(--color-text-muted);
+		opacity: 0.7;
+	}
+
+	.law-source-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-top: 1rem;
+		padding: 0.5rem 0.75rem;
+		font-size: 0.8125rem;
+		color: var(--color-primary);
+		background: var(--color-primary-bg);
+		border-radius: var(--radius-sm);
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+
+	.law-source-link:hover {
+		background: var(--color-primary);
+		color: white;
 	}
 
 	/* Groups grid */

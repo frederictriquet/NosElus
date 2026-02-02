@@ -349,7 +349,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Loader for tight votes stats
 	const loadTightVoteStats = async () => {
-		const whereClause = voteConditions.length > 0 ? and(...voteConditions) : undefined;
+		// Only pass legislature filter (actorId is passed directly to helper)
+		const whereClause = legislature && legislature !== 'all'
+			? eq(scrutins.legislature, legislature)
+			: undefined;
 		return getActorTightVoteStats(params.id, DEFAULT_TIGHT_THRESHOLD, whereClause, 5);
 	};
 

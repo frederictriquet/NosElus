@@ -42,6 +42,42 @@ UNION ALL SELECT 'scrutins', COUNT(*) FROM scrutins;
 "
 ```
 
+## Requêtes de Mandats : RÈGLE CRITIQUE
+
+**⚠️ Toute requête récupérant des mandats DOIT être ordonnée par `startDate DESC`**
+
+### Pattern obligatoire
+```typescript
+const mandatesData = await db
+  .select({
+    actorId: mandates.actorId,
+    // ... autres colonnes
+    startDate: mandates.startDate  // ← Obligatoire pour le tri
+  })
+  .from(mandates)
+  .where(/* conditions */)
+  .orderBy(desc(mandates.startDate));  // ← OBLIGATOIRE
+```
+
+### Justification
+Un acteur peut avoir plusieurs mandats successifs dans différents groupes. Sans ordre :
+- La base retourne un mandat **arbitraire**
+- Risque d'afficher un groupe obsolète au lieu du groupe actuel
+- Incohérence entre pages (liste vs profil)
+
+### Exemple de bug sans ordering
+Deputy PA841067 avait 4 mandats GP :
+- 2024-07-19 : Non inscrit (NI)
+- 2024-08-06 : À Droite (AD)
+- 2024-09-17 : UDR (nom court uniquement)
+- 2024-09-17 : Union des droites pour la République (UDR avec nom complet)
+
+Sans `.orderBy()`, la requête pouvait retourner le 3e mandat au lieu du 4e, affichant "UDR" au lieu de "Union des droites pour la République".
+
+**Fix** : `.orderBy(desc(mandates.startDate))` garantit que le mandat le plus récent est utilisé.
+
+Voir : `bug-2026-02-01-unordered-mandate-query.md` pour détails complets.
+
 ## Notes
 
 - Ne PAS utiliser `docker compose exec db` car cela peut échouer avec des erreurs de variables d'environnement

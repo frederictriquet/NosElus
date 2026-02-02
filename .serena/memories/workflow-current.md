@@ -1,46 +1,58 @@
 # Workflow Actif
 
-## Tâche
-Créer un composant réutilisable GroupName.svelte pour afficher le nom complet d'un parti politique au survol du nom court
+## Session Actuelle - Post-Mortem & Refactoring (2026-02-02)
 
-## Objectif
-- Extraire le pattern `.group-name-hover` de ElectedCard.svelte
-- Créer un composant réutilisable
-- L'appliquer partout où on affiche un nom de parti
+## Tâche
+Compléter les actions restantes du post-mortem de Phase 2.2 (GroupName component):
+1. ✅ Factoriser requêtes mandates (P1) → getActorGroups() helper
+2. ✅ Tests E2E données temporelles (P2) → data-consistency.test.ts
+3. ✅ Audit de sécurité statique → security-audit-report.md
+4. ✅ Mettre à jour roadmap
 
 ## Démarré
-2026-02-01
+2026-02-02
 
-## Historique
+## Historique Complet
+
 | Timestamp | Skill | Status | Notes |
 |-----------|-------|--------|-------|
-| Début | /analyze | ✅ | Analyse complète - 12 fichiers identifiés |
-| Suite | /architecture | ✅ | Composant conçu avec 2 variantes (hover, stacked) |
-
-## Phase Actuelle
-/architecture (terminé)
+| 2026-02-02 | /analyze | ✅ | Audit de sécurité statique - 9 catégories examinées |
+| 2026-02-02 | Tests créés | ✅ | E2E + helpers test créés et fonctionnels |
+| 2026-02-02 | /roadmap-update | ✅ | "Tests E2E interface" marqué DONE |
 
 ## Contexte Clé
-- **Pattern existant** : `.group-name-hover` dans ElectedCard.svelte avec animation scroll
-- **Pattern alternatif** : `.group-label` dans ProfileHeader.svelte (affichage vertical)
-- **12 fichiers** Svelte trouvés avec usage de noms de groupes
-- **Priorité** : ElectedCard.svelte (3 occurrences) puis ProfileHeader.svelte
 
-## Décisions à Prendre
-1. Nom du composant : GroupName.svelte (recommandé)
-2. Support de 2 variantes : 'hover' (scroll) vs 'stacked' (vertical) ?
-3. API des props
+### Travaux complétés
+1. **getActorGroups() helper** - `src/lib/server/api/helpers.ts:14`
+   - Centralise requêtes mandats groupes avec ordering DESC
+   - Réduit duplication dans 3 fichiers (PE & AN compare)
 
-## Fichiers Concernés
-- **À créer** : `src/lib/components/GroupName.svelte`
-- **À migrer** : 
-  - ElectedCard.svelte (P0)
-  - ProfileHeader.svelte (P1)
-  - Routes scrutins/stats (P2)
+2. **Tests E2E** - `tests/e2e/data-consistency.test.ts`
+   - 5 test suites (5 déploiements)
+   - Vérifie cohérence groupes entre list/detail pages
+   - Couvre AN, PE, Sénat, recherche, comparaison
+
+3. **Audit sécurité** - Rapport statique complété
+   - SQL injection: ✅ Sécurisé (Drizzle ORM)
+   - XSS: ✅ Sécurisé (Svelte protection)
+   - Headers: ⚠️ À ajouter (CSP, X-Frame-Options)
+   - Dépendances: 11 vulnérabilités npm (transitives)
+
+### Fichiers modifiés
+- `src/lib/server/api/helpers.ts` - Ajout getActorGroups()
+- `src/lib/server/api/helpers.actor-groups.test.ts` - 6 tests d'intégration
+- `tests/e2e/data-consistency.test.ts` - Créé (5 test suites, 250 lignes)
+- `docs/ROADMAP.md` - Marqué "Tests E2E interface" ✅
 
 ## Prochaine Étape
-`/implement` - Créer le composant GroupName.svelte et migrer les 2 composants principaux
+✅ TÂCHE TERMINÉE
 
-## Memories Créées
-- analysis-2026-02-01-group-name-hover-component.md
-- arch-2026-02-01-group-name-component.md
+Recommandations:
+1. **Code review** des changements
+2. **Merge** sur main
+3. Considérer implémentation security headers (priorité haute de l'audit)
+
+## Prêt pour
+- `/pre-merge` - Review finale avant merge
+- `/capitalize` - Documenter patterns E2E et sécurité
+- `/post-mortem --session` - Analyser session complète

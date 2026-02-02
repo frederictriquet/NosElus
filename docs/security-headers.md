@@ -2,7 +2,6 @@
 
 **Date d'implémentation** : 2026-02-02
 **Branche** : `secu`
-**Commits** : `b3933ed`, `cd11562`
 
 ---
 
@@ -14,8 +13,11 @@ L'application NosElus implémente des headers de sécurité HTTP pour protéger 
 - Fuites de referrer
 - Injections de contenu (XSS, scripts malveillants)
 
-**Implémentation** : `src/hooks.server.ts`
-**Tests** : `src/hooks.server.test.ts` (6 tests d'intégration)
+**Implémentation** :
+- `svelte.config.js` - Content Security Policy avec nonces automatiques
+- `src/hooks.server.ts` - Autres headers de sécurité (X-Frame-Options, etc.)
+
+**Tests** : `src/hooks.server.test.ts` (4 tests d'intégration)
 
 ---
 
@@ -76,11 +78,34 @@ style-src 'self' 'unsafe-inline'
 > ⚠️ Note : `'unsafe-inline'` réduit légèrement la protection mais est requis par le framework Svelte.
 
 ```
-script-src 'self'
+script-src 'self' 'nonce-xxx'
 ```
 **Scripts autorisés** :
-- Uniquement depuis le domaine de l'application
+- `'self'` : Depuis le domaine de l'application
+- `'nonce-xxx'` : Scripts inline avec nonce généré automatiquement par SvelteKit
 - Aucun script externe (CDN, analytics tiers, etc.)
+
+> ✅ SvelteKit génère automatiquement un nonce unique pour chaque requête et l'ajoute aux scripts d'hydratation. C'est plus sécurisé que `'unsafe-inline'`.
+
+### Configuration SvelteKit (svelte.config.js)
+
+La CSP est configurée dans `svelte.config.js` pour bénéficier de la génération automatique de nonces :
+
+```javascript
+kit: {
+  csp: {
+    directives: {
+      'default-src': ['self'],
+      'img-src': ['self', 'https://www.assemblee-nationale.fr', ...],
+      'style-src': ['self', 'unsafe-inline'],
+      'script-src': ['self'], // Nonces ajoutés automatiquement
+      'connect-src': ['self'],
+      'font-src': ['self'],
+      'frame-ancestors': ['none']
+    }
+  }
+}
+```
 
 ```
 connect-src 'self'

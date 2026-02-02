@@ -7,7 +7,9 @@ import {
 	mapVoteDistribution,
 	getGroupMajorityPosition,
 	calculateAutonomyStats,
-	getActorLawsImplication
+	getActorLawsImplication,
+	getActorTightVoteStats,
+	DEFAULT_TIGHT_THRESHOLD
 } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -345,6 +347,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return getActorLawsImplication(params.id, 20);
 	};
 
+	// Loader for tight votes stats
+	const loadTightVoteStats = async () => {
+		const whereClause = voteConditions.length > 0 ? and(...voteConditions) : undefined;
+		return getActorTightVoteStats(params.id, DEFAULT_TIGHT_THRESHOLD, whereClause, 5);
+	};
+
 	return {
 		// Synchronous data
 		actor,
@@ -365,6 +373,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		amendmentStats: loadAmendmentStats(),
 		recentAmendments: loadRecentAmendments(),
 		mandates: loadMandates(),
-		lawsImplication: loadLawsImplication()
+		lawsImplication: loadLawsImplication(),
+		tightVoteStats: loadTightVoteStats()
 	};
 };

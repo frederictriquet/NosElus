@@ -20,7 +20,8 @@
 		{ href: '/an/groupes', label: 'Groupes', match: '/an/groupes' },
 		{ href: '/an/stats', label: 'Stats', match: '/an/stats' },
 		{ href: '/an/carte', label: 'Carte', match: '/an/carte' },
-		{ href: '/an/compare', label: 'Comparer', match: '/an/compare' }
+		{ href: '/an/compare', label: 'Comparer', match: '/an/compare' },
+		{ href: '/an/scrutins/serres', label: 'Votes serrés', match: '/an/scrutins/serres' }
 	];
 </script>
 

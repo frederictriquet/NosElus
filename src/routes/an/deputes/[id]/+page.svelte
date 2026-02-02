@@ -163,6 +163,83 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
+	<AsyncCard
+		title="Votes serrés"
+		subtitle="Scrutins où chaque voix comptait"
+		promise={data.tightVoteStats}
+		minHeight="200px"
+	>
+		{#snippet children(stats)}
+			{#if stats && stats.totalTightVotes > 0}
+				<div class="stats-grid">
+					<div class="stat-box">
+						<div class="stat-value">{stats.totalTightVotes}</div>
+						<div class="stat-label">Votes serrés</div>
+					</div>
+					{#if stats.tieVotes > 0}
+						<div class="stat-box">
+							<div class="stat-value" style="color: var(--color-info);">{stats.tieVotes}</div>
+							<div class="stat-label">Égalités</div>
+						</div>
+					{/if}
+					<div class="stat-box">
+						<div class="stat-value" style="color: var(--color-success);">{stats.winningVotes}</div>
+						<div class="stat-label">Camp gagnant</div>
+					</div>
+					<div class="stat-box">
+						<div class="stat-value" style="color: var(--color-danger);">{stats.losingVotes}</div>
+						<div class="stat-label">Camp perdant</div>
+					</div>
+				</div>
+
+				{#if stats.recentTightVotes.length > 0}
+					<div style="margin-top: 1.5rem;">
+						<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
+							Derniers votes serrés
+						</h4>
+						<div class="tight-votes-list">
+							{#each stats.recentTightVotes as vote}
+								<a href="/an/scrutins/{vote.scrutinId}" class="tight-vote-item">
+									<div class="tight-vote-info">
+										<div class="tight-vote-title">
+											{vote.scrutinTitle.slice(0, 100)}{vote.scrutinTitle.length > 100 ? '...' : ''}
+										</div>
+										<div class="tight-vote-meta">
+											<span class="tight-vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span>
+											<span class="tight-vote-position" class:pour={vote.actorPosition === 'pour'} class:contre={vote.actorPosition === 'contre'}>
+												{vote.actorPosition}
+											</span>
+											{#if vote.wasWinning !== null}
+												<span class="tight-vote-result" class:winning={vote.wasWinning} class:losing={!vote.wasWinning}>
+													{vote.wasWinning ? '✓ gagnant' : '✗ perdant'}
+												</span>
+											{/if}
+										</div>
+									</div>
+									<div class="tight-vote-margin">
+										{#if vote.isTie}
+											<span class="tie-badge">Égalité</span>
+										{:else}
+											<span class="margin-badge">±{vote.margin}</span>
+										{/if}
+									</div>
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
+					Scrutins avec une marge de victoire ≤ 10 voix. Base : {stats.totalTightVotes} scrutin{stats.totalTightVotes > 1 ? 's' : ''}.
+				</p>
+			{:else}
+				<p class="empty-state">Aucune participation à un vote serré durant cette période</p>
+			{/if}
+		{/snippet}
+	</AsyncCard>
+</div>
+
+<div style="margin-top: 1.5rem;">
 	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
 		{#snippet children(recentVotes)}
 			{#if recentVotes.length === 0}
@@ -890,5 +967,120 @@
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
+	}
+
+	/* Tight votes styles */
+	.tight-votes-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.tight-vote-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.75rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-sm);
+		text-decoration: none;
+		color: inherit;
+		transition: all 0.2s;
+	}
+
+	.tight-vote-item:hover {
+		background: var(--color-bg-hover);
+		transform: translateX(2px);
+	}
+
+	.tight-vote-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tight-vote-title {
+		font-size: 0.875rem;
+		font-weight: 500;
+		line-height: 1.4;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+
+	.tight-vote-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.tight-vote-date {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.tight-vote-position {
+		padding: 0.125rem 0.375rem;
+		border-radius: var(--radius-xs);
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+
+	.tight-vote-position.pour {
+		background: var(--color-success-bg);
+		color: var(--color-success);
+	}
+
+	.tight-vote-position.contre {
+		background: var(--color-danger-bg);
+		color: var(--color-danger);
+	}
+
+	.tight-vote-result {
+		padding: 0.125rem 0.375rem;
+		border-radius: var(--radius-xs);
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+
+	.tight-vote-result.winning {
+		background: var(--color-success-bg);
+		color: var(--color-success);
+	}
+
+	.tight-vote-result.losing {
+		background: var(--color-danger-bg);
+		color: var(--color-danger);
+	}
+
+	.tight-vote-margin {
+		flex-shrink: 0;
+	}
+
+	.margin-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.5rem;
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
+		border-radius: var(--radius-sm);
+		font-size: 0.875rem;
+		font-weight: 600;
+		font-family: var(--font-mono);
+	}
+
+	.tie-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.5rem;
+		background: var(--color-info-bg);
+		color: var(--color-info);
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		font-weight: 600;
 	}
 </style>

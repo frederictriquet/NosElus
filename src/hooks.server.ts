@@ -46,5 +46,33 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return resolve(event);
+	// Resolve the request
+	const response = await resolve(event);
+
+	// Add security headers
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+	// Content Security Policy
+	// - default-src 'self': Only load resources from same origin by default
+	// - img-src: Allow images from self, official sources (AN, Sénat, EP) and data: URIs for inline SVG
+	// - style-src 'unsafe-inline': Required for Svelte scoped styles
+	// - script-src 'self': Only scripts from same origin
+	// - connect-src 'self': Only API calls to same origin
+	// - font-src 'self': Only fonts from same origin
+	// - frame-ancestors 'none': Prevent embedding in iframes (modern equivalent of X-Frame-Options)
+	const csp = [
+		"default-src 'self'",
+		"img-src 'self' https://www.assemblee-nationale.fr https://www.senat.fr https://www.europarl.europa.eu data:",
+		"style-src 'self' 'unsafe-inline'",
+		"script-src 'self'",
+		"connect-src 'self'",
+		"font-src 'self'",
+		"frame-ancestors 'none'"
+	].join('; ');
+
+	response.headers.set('Content-Security-Policy', csp);
+
+	return response;
 };

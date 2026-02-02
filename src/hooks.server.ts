@@ -46,5 +46,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return resolve(event);
+	// Resolve the request
+	const response = await resolve(event);
+
+	// Add security headers (CSP is handled by SvelteKit via svelte.config.js with nonces)
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+	return response;
 };

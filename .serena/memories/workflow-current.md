@@ -9,41 +9,57 @@ Ajouter les headers de sécurité (X-Frame-Options, X-Content-Type-Options, Refe
 ## Démarré
 2026-02-02 (branche: secu)
 
-## Historique
+## Historique Complet
 | Timestamp | Skill | Status | Notes |
 |-----------|-------|--------|-------|
-| 2026-02-02 | /analyze | ✅ | Headers à implémenter identifiés, CSP définie |
-| 2026-02-02 | /implement | ✅ | Headers ajoutés + 6 tests d'intégration |
+| 2026-02-02 | /analyze | ✅ | Headers identifiés, CSP définie |
+| 2026-02-02 | /implement | ✅ | Headers + tests ajoutés, CSP avec nonces SvelteKit |
+| 2026-02-02 | /test-run | ✅ | Application fonctionne, photos se chargent, pas d'erreurs CSP |
 
 ## Phase Actuelle
-/implement ✅ → /test-run (manuel)
+✅ IMPLEMENTATION COMPLETE - Prêt pour merge
 
-## Contexte Clé
-- **Fichier modifié** : `src/hooks.server.ts` (29 lignes ajoutées)
-- **4 headers ajoutés** : X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP
-- **Sources externes** : assemblee-nationale.fr, senat.fr, europarl.europa.eu (images)
-- **CSP directive** : 7 directives configurées
-- **Tests** : 6 nouveaux tests d'intégration (100% passés)
+## Architecture Finale
 
-## Décisions Prises
-1. ✅ CSP stricte avec img-src incluant les 3 sources officielles
-2. ✅ style-src 'unsafe-inline' pour compatibilité Svelte
-3. ✅ frame-ancestors 'none' (équivalent moderne de X-Frame-Options)
+### svelte.config.js
+- CSP avec nonces automatiques (SvelteKit)
+- img-src : self + AN + nosdeputes.fr + Sénat + EP + data:
+- style-src : self + unsafe-inline (requis Svelte)
+- script-src : self (nonces ajoutés automatiquement)
 
-## Fichiers Concernés
-- `src/hooks.server.ts` (modifié - 29 lignes ajoutées)
-- `src/hooks.server.test.ts` (créé - 107 lignes, 6 tests)
+### src/hooks.server.ts
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+
+## Fichiers Modifiés
+- `svelte.config.js` - CSP configuration
+- `src/hooks.server.ts` - 3 headers de sécurité
+- `src/hooks.server.test.ts` - 4 tests d'intégration
+- `docs/security-headers.md` - Documentation complète
+- `docs/security-audit-2026-02-02.md` - Rapport d'audit
 
 ## Commits Effectués
 1. `b3933ed` - feat(security): add HTTP security headers
-2. `cd11562` - test(security): add integration tests for headers
+2. `cd11562` - test(security): add integration tests
+3. `438282d` - docs: add security headers documentation
+4. `87d9279` - chore: update workflow memory
+5. `746126e` - refactor(security): use SvelteKit CSP with nonces
+
+## Tests Status
+- ✅ 34/34 tests passent
+- ✅ Type checking: 0 erreurs
+- ✅ Application fonctionne en dev
+- ✅ Pas d'erreurs CSP dans la console
+- ✅ Photos se chargent correctement
 
 ## Prochaine Étape
-/test-run (test manuel dans le navigateur pour vérifier CSP)
+/pre-merge --pr (créer la PR pour merger sur master)
 
 ## Critères d'Acceptation
-- [x] Headers présents dans toutes les réponses (vérifié par tests)
-- [x] Tests d'intégration passent (6/6 ✅)
-- [x] Tous les tests unitaires passent (36/36 ✅)
-- [ ] Application fonctionne en mode dev (à vérifier manuellement)
-- [ ] Pas d'erreurs CSP dans la console (à vérifier manuellement)
+- [x] Headers présents dans toutes les réponses
+- [x] CSP avec nonces fonctionne
+- [x] Tests passent (34/34)
+- [x] Application fonctionne manuellement
+- [x] Pas d'erreurs CSP dans la console
+- [x] Documentation complète

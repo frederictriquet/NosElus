@@ -17,9 +17,22 @@ Mettre en lumière les scrutins où chaque voix comptait vraiment et identifier 
 | 2026-02-02 | /tech-choice | ✅ | ADR-2026-02-02 créé, MVP + enrichissement |
 | 2026-02-02 | /roadmap-update | ✅ | Section 4.2 marquée IN_PROGRESS |
 | 2026-02-02 | /architecture | ✅ | Design complet, 3 créations + 9 modifications |
+| 2026-02-02 | /implement | ✅ | MVP Phase 1 complété (2 commits) |
+| 2026-02-02 | /test-run | ✅ | 34 tests passés, 5 suites, 7.05s durée |
+| 2026-02-02 | /code-review | ✅ | Approuvé, 2 suggestions mineures |
+| 2026-02-02 | /pre-merge | ✅ | Checklist validée, 3 commits (562003d, 6bca32d, 41ce163) |
 
 ## Phase Actuelle
-/architecture ✅ → /implement pour implémentation MVP
+WORKFLOW TERMINÉ ✅
+
+## Commits Finaux
+- 562003d: feat(tight-votes): implement core infrastructure and scrutin pages
+- 6bca32d: feat(tight-votes): add deputy panel and navigation
+- 41ce163: fix(tight-votes): use correct legislature filter in loadTightVoteStats
+
+## Commits effectués
+- 562003d: Core infrastructure + scrutin pages + badge
+- 6bca32d: Deputy panel + navigation link
 
 ## Fichiers Concernés
 **À créer** : 3 fichiers

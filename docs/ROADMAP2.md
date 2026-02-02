@@ -134,14 +134,14 @@
 
 ---
 
-### 4.2 Votes décisifs ⏳ IN PROGRESS
+### 4.2 Votes décisifs ✅ DONE (MVP Phase 1)
 
 | Tâche | Complexité | Statut | Notes |
 |-------|------------|--------|-------|
-| Identifier scrutins à faible majorité (< 10 voix) | 🟢 Simple | ✅ Phase 1 | Colonne `scrutins.margin` pré-calculée |
-| Calculer "poids décisif" de chaque vote individuel | 🟡 Moyen | ✅ Phase 1 | Margin Simple (margin ≤ 10) + AsyncCard |
-| Identifier groupes pivot | 🟡 Moyen | ⏳ Phase 2 | Helper `getPivotGroups()` enrichissement |
-| UI : badge "vote serré" + page `/an/scrutins/serres` | 🟡 Moyen | ⏳ Phase 1 | Wording neutre, filtres ajustables |
+| Identifier scrutins à faible majorité (< 10 voix) | 🟢 Simple | ✅ Done | Colonne `scrutins.margin` pré-calculée + index |
+| Calculer "poids décisif" de chaque vote individuel | 🟡 Moyen | ✅ Done | Margin Simple (margin ≤ 10) + stats gagnant/perdant |
+| Identifier groupes pivot | 🟡 Moyen | ⏳ Phase 2 | Helper `getPivotGroups()` enrichissement futur |
+| UI : badge "vote serré" + page `/an/scrutins/serres` | 🟡 Moyen | ✅ Done | Route + filtres + pagination + badges scrutins/députés |
 
 **Valeur** : Mettre en lumière les moments où chaque voix comptait.
 

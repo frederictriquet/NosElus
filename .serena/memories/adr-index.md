@@ -9,7 +9,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 | ID | Date | Titre | Statut | Phase | Fichier |
 |----|------|-------|--------|-------|---------|
 | ADR-001 | 2026-02-01 | Classification sémantique des scrutins | ✅ Accepté | 1.1 | `adr-2026-02-01-scrutin-category.md` |
-| ADR-002 | 2026-02-02 | Identification et calcul des votes décisifs | 📋 Proposé | 4.2 | `adr-2026-02-02-decisive-votes.md` |
+| ADR-002 | 2026-02-02 | Identification et calcul des votes décisifs | ✅ Accepté | 4.2 | `adr-2026-02-02-decisive-votes.md` |
 
 ## Par catégorie
 

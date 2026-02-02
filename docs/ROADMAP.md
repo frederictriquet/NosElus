@@ -107,7 +107,7 @@
 
 ### 5.1 Qualité
 - [ ] Tests unitaires API
-- [ ] Tests E2E interface
+- [x] Tests E2E interface
 - [ ] Audit de performance
 - [ ] Audit d'accessibilité (RGAA)
 

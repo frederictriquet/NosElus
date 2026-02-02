@@ -30,6 +30,7 @@ export const scrutins = pgTable(
 		totalAbstention: integer('total_abstention').notNull().default(0),
 		totalNonVoting: integer('total_non_voting').notNull().default(0),
 		result: varchar('result', { length: 20 }), // 'adopté', 'rejeté'
+		margin: integer('margin').notNull().default(0), // ABS(total_for - total_against) - pré-calculé pour performance
 		// Détails par groupe (JSONB pour flexibilité)
 		groupResults: jsonb('group_results'), // Résultats détaillés par groupe parlementaire
 		// Contexte législatif
@@ -45,7 +46,8 @@ export const scrutins = pgTable(
 		index('scrutins_type_idx').on(table.type),
 		index('scrutins_number_idx').on(table.number),
 		index('scrutins_law_id_idx').on(table.lawId),
-		index('scrutins_category_idx').on(table.category)
+		index('scrutins_category_idx').on(table.category),
+		index('scrutins_margin_idx').on(table.margin)
 	]
 );
 

@@ -50,6 +50,13 @@
       "when": 1769965960589,
       "tag": "0006_sweet_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770028257013,
+      "tag": "0007_bent_justice",
+      "breakpoints": true
     }
   ]
 }

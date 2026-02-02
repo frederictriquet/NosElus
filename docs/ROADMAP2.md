@@ -134,16 +134,22 @@
 
 ---
 
-### 4.2 Votes décisifs
+### 4.2 Votes décisifs ⏳ IN PROGRESS
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Identifier scrutins à faible majorité (< 10 voix) | 🟢 Simple | Données existantes |
-| Calculer "poids décisif" de chaque vote individuel | 🟡 Moyen | Scrutins serrés |
-| Identifier groupes pivot | 🟡 Moyen | Analyse coalitions |
-| UI : badge "vote décisif" + page dédiée | 🟡 Moyen | Calculs |
+| Tâche | Complexité | Statut | Notes |
+|-------|------------|--------|-------|
+| Identifier scrutins à faible majorité (< 10 voix) | 🟢 Simple | ✅ Phase 1 | Colonne `scrutins.margin` pré-calculée |
+| Calculer "poids décisif" de chaque vote individuel | 🟡 Moyen | ✅ Phase 1 | Margin Simple (margin ≤ 10) + AsyncCard |
+| Identifier groupes pivot | 🟡 Moyen | ⏳ Phase 2 | Helper `getPivotGroups()` enrichissement |
+| UI : badge "vote serré" + page `/an/scrutins/serres` | 🟡 Moyen | ⏳ Phase 1 | Wording neutre, filtres ajustables |
 
 **Valeur** : Mettre en lumière les moments où chaque voix comptait.
+
+**Implémentation décidée** (ADR-2026-02-02) :
+- **Formule** : `margin = ABS(total_for - total_against)`, is_tight = margin ≤ 10 voix
+- **Wording** : "Vote serré" (neutre, factuel) vs "vote décisif"
+- **Seuil** : Paramétrable en UI (5, 10, 20), ~1 800 scrutins détectés
+- **Enrichissement Phase 2** : Groupes pivot dont basculement inverse résultat
 
 ---
 

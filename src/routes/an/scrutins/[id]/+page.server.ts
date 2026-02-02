@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { db, scrutins, votes, actors, organs, laws } from '$lib/server/db';
 import { eq, count } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { getTightLabel, DEFAULT_TIGHT_THRESHOLD } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params }) => {
 	// Get scrutin info
@@ -118,9 +119,15 @@ export const load: PageServerLoad = async ({ params }) => {
 			.limit(100);
 	};
 
+	// Calculate tight vote metadata
+	const isTightVote = scrutin.margin <= DEFAULT_TIGHT_THRESHOLD;
+	const tightLabel = getTightLabel(scrutin.margin);
+
 	return {
 		// Synchronous data
 		scrutin,
+		isTightVote,
+		tightLabel,
 		// Streamed data
 		relatedLaw: loadRelatedLaw(),
 		groupBreakdown: loadGroupBreakdown(),

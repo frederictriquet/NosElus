@@ -767,6 +767,246 @@ export async function getScrutinCategories(
 		}));
 }
 
+// ===== Tight Votes (Votes Serrés) =====
+
+/**
+ * Seuils disponibles pour les votes serrés (en nombre de voix d'écart)
+ */
+export const TIGHT_VOTE_THRESHOLDS = [5, 10, 20] as const;
+export type TightVoteThreshold = (typeof TIGHT_VOTE_THRESHOLDS)[number];
+export const DEFAULT_TIGHT_THRESHOLD: TightVoteThreshold = 10;
+
+/**
+ * Labels UI pour les différents seuils
+ */
+export const TIGHT_THRESHOLD_LABELS: Record<TightVoteThreshold, string> = {
+	5: 'Très serré (≤ 5 voix)',
+	10: 'Serré (≤ 10 voix)',
+	20: 'Assez serré (≤ 20 voix)'
+};
+
+/**
+ * Un scrutin serré avec ses métadonnées essentielles
+ */
+export interface TightScrutin {
+	id: string;
+	number: number;
+	date: string;
+	title: string;
+	category: string | null;
+	result: string | null;
+	totalFor: number;
+	totalAgainst: number;
+	margin: number;
+	/** Égalité parfaite (margin = 0) */
+	isTie: boolean;
+}
+
+/**
+ * Statistiques des votes serrés pour un acteur
+ */
+export interface ActorTightVoteStats {
+	/** Nombre total de participations dans des scrutins serrés */
+	totalTightVotes: number;
+	/** Nombre de votes dans le camp gagnant */
+	winningVotes: number;
+	/** Nombre de votes dans le camp perdant */
+	losingVotes: number;
+	/** Nombre de participations dans des égalités parfaites */
+	tieVotes: number;
+	/** Liste des votes serrés récents (limité) */
+	recentTightVotes: TightVoteDetail[];
+}
+
+/**
+ * Détail d'un vote serré pour un acteur
+ */
+export interface TightVoteDetail {
+	scrutinId: string;
+	scrutinTitle: string;
+	scrutinDate: string;
+	margin: number;
+	isTie: boolean;
+	actorPosition: 'pour' | 'contre' | 'abstention' | 'non-votant';
+	result: string | null;
+	/** L'acteur était-il dans le camp gagnant? null si égalité */
+	wasWinning: boolean | null;
+}
+
+/**
+ * Récupère les scrutins serrés (margin ≤ threshold)
+ *
+ * @param threshold - Seuil de marge (5, 10 ou 20 voix)
+ * @param whereClause - Condition SQL additionnelle (ex: legislature)
+ * @param limit - Nombre max de résultats
+ * @param offset - Offset pour pagination
+ * @returns Liste triée par margin ASC puis date DESC
+ */
+export async function getTightScrutins(
+	threshold: TightVoteThreshold = DEFAULT_TIGHT_THRESHOLD,
+	whereClause?: SQL,
+	limit: number = 50,
+	offset: number = 0
+): Promise<TightScrutin[]> {
+	const conditions = [sql`${scrutins.margin} <= ${threshold}`];
+	if (whereClause) {
+		conditions.push(whereClause);
+	}
+
+	const result = await db
+		.select({
+			id: scrutins.id,
+			number: scrutins.number,
+			date: scrutins.date,
+			title: scrutins.title,
+			category: scrutins.category,
+			result: scrutins.result,
+			totalFor: scrutins.totalFor,
+			totalAgainst: scrutins.totalAgainst,
+			margin: scrutins.margin
+		})
+		.from(scrutins)
+		.where(and(...conditions))
+		.orderBy(asc(scrutins.margin), desc(scrutins.date))
+		.limit(limit)
+		.offset(offset);
+
+	return result.map((r) => ({
+		...r,
+		date: r.date.toString(),
+		isTie: r.margin === 0
+	}));
+}
+
+/**
+ * Compte le nombre de scrutins serrés
+ *
+ * @param threshold - Seuil de marge
+ * @param whereClause - Condition SQL additionnelle
+ * @returns Nombre de scrutins avec margin <= threshold
+ */
+export async function countTightScrutins(
+	threshold: TightVoteThreshold = DEFAULT_TIGHT_THRESHOLD,
+	whereClause?: SQL
+): Promise<number> {
+	const conditions = [sql`${scrutins.margin} <= ${threshold}`];
+	if (whereClause) {
+		conditions.push(whereClause);
+	}
+
+	const result = await db
+		.select({ count: count() })
+		.from(scrutins)
+		.where(and(...conditions));
+
+	return Number(result[0]?.count || 0);
+}
+
+/**
+ * Récupère les statistiques de votes serrés pour un acteur
+ *
+ * @param actorId - ID de l'acteur
+ * @param threshold - Seuil de marge
+ * @param whereClause - Condition SQL additionnelle (legislature)
+ * @param recentLimit - Nombre de votes récents à inclure
+ * @returns Statistiques agrégées + liste des votes récents
+ */
+export async function getActorTightVoteStats(
+	actorId: string,
+	threshold: TightVoteThreshold = DEFAULT_TIGHT_THRESHOLD,
+	whereClause?: SQL,
+	recentLimit: number = 10
+): Promise<ActorTightVoteStats> {
+	// Conditions sur les scrutins serrés
+	const scrutinConditions = [sql`${scrutins.margin} <= ${threshold}`];
+	if (whereClause) {
+		scrutinConditions.push(whereClause);
+	}
+
+	// Récupérer tous les votes de l'acteur dans des scrutins serrés
+	const votesData = await db
+		.select({
+			scrutinId: votes.scrutinId,
+			scrutinNumber: scrutins.number,
+			scrutinTitle: scrutins.title,
+			scrutinDate: scrutins.date,
+			scrutinResult: scrutins.result,
+			margin: scrutins.margin,
+			totalFor: scrutins.totalFor,
+			totalAgainst: scrutins.totalAgainst,
+			position: votes.position
+		})
+		.from(votes)
+		.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+		.where(and(eq(votes.actorId, actorId), and(...scrutinConditions)))
+		.orderBy(desc(scrutins.date))
+		.limit(100); // Limite haute pour stats
+
+	// Calculer les statistiques
+	let winningVotes = 0;
+	let losingVotes = 0;
+	let tieVotes = 0;
+
+	const recentTightVotes: TightVoteDetail[] = [];
+
+	for (const vote of votesData) {
+		const isTie = vote.margin === 0;
+		let wasWinning: boolean | null = null;
+
+		if (!isTie) {
+			// Déterminer qui a gagné
+			const forWon = vote.totalFor > vote.totalAgainst;
+			// Déterminer si l'acteur était dans le camp gagnant
+			if (vote.position === 'pour' && forWon) {
+				wasWinning = true;
+				winningVotes++;
+			} else if (vote.position === 'contre' && !forWon) {
+				wasWinning = true;
+				winningVotes++;
+			} else if (vote.position === 'pour' || vote.position === 'contre') {
+				wasWinning = false;
+				losingVotes++;
+			}
+			// abstention et non-votant ne comptent ni comme winning ni losing
+		} else {
+			tieVotes++;
+		}
+
+		// Ajouter aux récents (limité)
+		if (recentTightVotes.length < recentLimit) {
+			recentTightVotes.push({
+				scrutinId: vote.scrutinId,
+				scrutinTitle: vote.scrutinTitle,
+				scrutinDate: vote.scrutinDate.toString(),
+				margin: vote.margin,
+				isTie,
+				actorPosition: vote.position as 'pour' | 'contre' | 'abstention' | 'non-votant',
+				result: vote.scrutinResult,
+				wasWinning
+			});
+		}
+	}
+
+	return {
+		totalTightVotes: votesData.length,
+		winningVotes,
+		losingVotes,
+		tieVotes,
+		recentTightVotes
+	};
+}
+
+/**
+ * Helper interne : détermine le label textuel selon la marge
+ */
+export function getTightLabel(margin: number): string | null {
+	if (margin === 0) return 'Égalité parfaite';
+	if (margin <= 5) return 'Très serré';
+	if (margin <= 10) return 'Serré';
+	if (margin <= 20) return 'Assez serré';
+	return null;
+}
+
 // ===== Actor Groups Helpers =====
 
 /**

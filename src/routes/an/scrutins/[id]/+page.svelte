@@ -51,6 +51,15 @@
 				{data.scrutin.result}
 			</span>
 		{/if}
+		{#if data.isTightVote && data.tightLabel}
+			<span
+				class="tight-vote-badge"
+				class:tie={data.scrutin.margin === 0}
+				title="Marge de {data.scrutin.margin} voix"
+			>
+				{data.tightLabel}
+			</span>
+		{/if}
 	</div>
 	<h1 class="page-title">{data.scrutin.title}</h1>
 	<p class="page-subtitle">{formatDate(data.scrutin.date)}</p>
@@ -272,6 +281,24 @@
 	.result-badge.rejected {
 		background: var(--color-danger-bg);
 		color: var(--color-danger);
+	}
+
+	.tight-vote-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.5rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		font-weight: 500;
+		background-color: var(--color-warning-bg);
+		color: var(--color-warning);
+		border: 1px solid var(--color-warning-border);
+	}
+
+	.tight-vote-badge.tie {
+		background-color: var(--color-info-bg);
+		color: var(--color-info);
+		border-color: var(--color-info-border);
 	}
 
 	/* Law link card */

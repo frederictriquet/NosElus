@@ -108,6 +108,7 @@
 ### 5.1 Qualité
 - [ ] Tests unitaires API
 - [x] Tests E2E interface
+- [x] Audit de sécurité statique + Security Headers HTTP
 - [ ] Audit de performance
 - [ ] Audit d'accessibilité (RGAA)
 

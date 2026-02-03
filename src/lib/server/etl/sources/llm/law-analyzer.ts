@@ -3,7 +3,7 @@
  *
  * Prérequis:
  *   - Ollama installé et lancé (ollama serve)
- *   - Modèle téléchargé (ollama pull mistral)
+ *   - Modèle téléchargé (ollama pull mistral-nemo)
  */
 
 import { db } from '../../../db';
@@ -52,44 +52,40 @@ export interface AnalyzerConfig {
 }
 
 const DEFAULT_CONFIG: AnalyzerConfig = {
-	model: 'mistral',
+	model: 'mistral-nemo',
 	baseUrl: 'http://localhost:11434',
 	temperature: 0.3, // Bas pour des réponses cohérentes
 	maxTokens: 200,
-	timeout: 120000 // 2 minutes
+	timeout: 300000 // 5 minutes (textes de loi complets)
 };
 
 const SYSTEM_PROMPT = `Tu es un expert en analyse de textes législatifs français.
 Tu dois rendre les lois accessibles au grand public.
-Réponds UNIQUEMENT en JSON valide, sans commentaire ni explication.`;
+Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
 
 function buildUserPrompt(lawTitle: string, lawDescription: string | null): string {
 	const hasFullText = lawDescription && lawDescription.length > 200;
 	const text = lawDescription ? `${lawTitle}\n\n${lawDescription}` : lawTitle;
 
 	const sourceHint = hasFullText
-		? `NOTE: Ce texte provient du Journal Officiel. Il peut contenir des métadonnées (dates, rapporteurs, références à d'autres textes, articles abrogés) mélangées au contenu substantiel. Lis l'ENSEMBLE du texte pour identifier ce que la loi change concrètement.`
-		: `NOTE: Seul le titre est disponible, pas le texte complet. Fais de ton mieux avec ces informations limitées.`;
+		? `NOTE: Ce texte provient du Journal Officiel. Lis l'ENSEMBLE pour identifier l'impact concret.`
+		: `NOTE: Seul le titre est disponible. Fais de ton mieux.`;
 
-	return `Analyse ce texte de loi français.
+	return `${sourceHint}
 
-${sourceHint}
+TÂCHE: Analyse cette loi et retourne UN SEUL objet JSON avec exactement 2 clés: "resume" et "tags".
 
-INSTRUCTIONS:
-1. Écris UN résumé en TROIS phrases simples MAXIMUM, compréhensibles par un citoyen non-juriste
-2. Concentre-toi sur l'IMPACT CONCRET de la loi : que change-t-elle ? pour qui ?
-3. Ignore les détails procéduraux (dates d'application, références juridiques, noms des rapporteurs)
-4. Choisis 2 à 4 tags pertinents UNIQUEMENT parmi cette liste: ${AVAILABLE_TAGS.join(', ')}
+RÈGLES:
+- resume: 1-3 phrases simples sur l'impact concret (pas de jargon juridique)
+- tags: 2-4 tags parmi [${AVAILABLE_TAGS.join(', ')}]
 
-FORMAT DE RÉPONSE (JSON strict):
-{"resume": "La phrase de résumé ici", "tags": ["tag1", "tag2"]}
+EXEMPLE DE RÉPONSE ATTENDUE:
+{"resume": "Cette loi augmente le SMIC de 2%. Elle concerne tous les salariés au salaire minimum.", "tags": ["travail", "économie"]}
 
-TEXTE DE LOI:
-"""
+LOI À ANALYSER:
 ${text}
-"""
 
-JSON:`;
+Réponds avec UN SEUL objet JSON:`;
 }
 
 /**
@@ -114,9 +110,14 @@ function parseResponse(rawText: string): LawAnalysis {
 				tags: validTags,
 				rawResponse: rawText
 			};
+		} else {
+			console.error('  [Parse] Aucun JSON trouvé dans la réponse');
+			console.error(`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`);
 		}
-	} catch {
-		// Parsing échoué
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Erreur inconnue';
+		console.error(`  [Parse] Erreur JSON: ${message}`);
+		console.error(`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`);
 	}
 
 	return {

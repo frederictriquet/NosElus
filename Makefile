@@ -142,7 +142,7 @@ etl-classify-scrutins: ## Classifier les scrutins existants par catégorie séma
 
 etl-analyze-laws: ## Analyser les lois avec LLM local (Ollama) - résumé et tags
 	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral$(RESET)"
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:analyze-laws -- $(ARGS)
 
 etl-law-texts: ## Import des textes complets de lois via Légifrance PISTE

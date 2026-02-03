@@ -8,7 +8,7 @@
 
 import { db } from '../../../db';
 import { laws, lawSummaries } from '../../../db/schema';
-import { eq, isNull, and, desc } from 'drizzle-orm';
+import { eq, isNull, isNotNull, and, desc } from 'drizzle-orm';
 import type { Law, NewLawSummary } from '../../../db/schema';
 
 // Tags disponibles pour la catégorisation des lois
@@ -64,20 +64,29 @@ Tu dois rendre les lois accessibles au grand public.
 Réponds UNIQUEMENT en JSON valide, sans commentaire ni explication.`;
 
 function buildUserPrompt(lawTitle: string, lawDescription: string | null): string {
+	const hasFullText = lawDescription && lawDescription.length > 200;
 	const text = lawDescription ? `${lawTitle}\n\n${lawDescription}` : lawTitle;
+
+	const sourceHint = hasFullText
+		? `NOTE: Ce texte provient du Journal Officiel. Il peut contenir des métadonnées (dates, rapporteurs, références à d'autres textes, articles abrogés) mélangées au contenu substantiel. Lis l'ENSEMBLE du texte pour identifier ce que la loi change concrètement.`
+		: `NOTE: Seul le titre est disponible, pas le texte complet. Fais de ton mieux avec ces informations limitées.`;
 
 	return `Analyse ce texte de loi français.
 
+${sourceHint}
+
 INSTRUCTIONS:
-1. Écris UN résumé en UNE SEULE phrase simple (max 30 mots), compréhensible par un citoyen non-juriste
-2. Choisis 2 à 4 tags pertinents UNIQUEMENT parmi cette liste: ${AVAILABLE_TAGS.join(', ')}
+1. Écris UN résumé en TROIS phrases simples MAXIMUM, compréhensibles par un citoyen non-juriste
+2. Concentre-toi sur l'IMPACT CONCRET de la loi : que change-t-elle ? pour qui ?
+3. Ignore les détails procéduraux (dates d'application, références juridiques, noms des rapporteurs)
+4. Choisis 2 à 4 tags pertinents UNIQUEMENT parmi cette liste: ${AVAILABLE_TAGS.join(', ')}
 
 FORMAT DE RÉPONSE (JSON strict):
 {"resume": "La phrase de résumé ici", "tags": ["tag1", "tag2"]}
 
 TEXTE DE LOI:
 """
-${text.slice(0, 3000)}
+${text}
 """
 
 JSON:`;
@@ -158,14 +167,13 @@ export async function getUnanalyzedLaws(
 	limit: number = 100,
 	legislature?: string
 ): Promise<Law[]> {
-	// Sous-requête pour trouver les lois sans résumé
-	const analyzed = db.select({ lawId: lawSummaries.lawId }).from(lawSummaries);
-
-	let query = db
+	const query = db
 		.select()
 		.from(laws)
 		.where(
 			and(
+				// Seulement les lois avec texte complet
+				isNotNull(laws.description),
 				// Pas encore analysée
 				isNull(
 					db

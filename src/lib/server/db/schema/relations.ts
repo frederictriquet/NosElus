@@ -7,6 +7,7 @@ import { votes } from './votes';
 import { laws } from './laws';
 import { amendments } from './amendments';
 import { lawCosignatories } from './law-cosignatories';
+import { lawSummaries } from './law-summaries';
 
 // Relations pour actors
 export const actorsRelations = relations(actors, ({ many }) => ({
@@ -73,10 +74,22 @@ export const votesRelations = relations(votes, ({ one }) => ({
 }));
 
 // Relations pour laws
-export const lawsRelations = relations(laws, ({ many }) => ({
+export const lawsRelations = relations(laws, ({ one, many }) => ({
 	scrutins: many(scrutins),
 	amendments: many(amendments),
-	cosignatories: many(lawCosignatories)
+	cosignatories: many(lawCosignatories),
+	summary: one(lawSummaries, {
+		fields: [laws.id],
+		references: [lawSummaries.lawId]
+	})
+}));
+
+// Relations pour lawSummaries
+export const lawSummariesRelations = relations(lawSummaries, ({ one }) => ({
+	law: one(laws, {
+		fields: [lawSummaries.lawId],
+		references: [laws.id]
+	})
 }));
 
 // Relations pour lawCosignatories

@@ -1,0 +1,168 @@
+/**
+ * Script ETL pour analyser les textes de lois avec un LLM local (Ollama).
+ *
+ * Usage:
+ *   npm run etl:analyze-laws
+ *   npm run etl:analyze-laws -- --limit 50
+ *   npm run etl:analyze-laws -- --model mistral-nemo
+ *   npm run etl:analyze-laws -- --dry-run
+ *
+ * Prérequis:
+ *   1. Ollama installé: https://ollama.com
+ *   2. Modèle téléchargé: ollama pull mistral
+ *   3. Ollama lancé: ollama serve
+ */
+
+import { analyzeLawsBatch, AVAILABLE_TAGS } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+
+interface Args {
+	limit: number;
+	legislature?: string;
+	model: string;
+	dryRun: boolean;
+	help: boolean;
+}
+
+function parseArgs(argv: string[]): Args {
+	const args: Args = {
+		limit: 100,
+		model: 'mistral',
+		dryRun: false,
+		help: false
+	};
+
+	for (let i = 0; i < argv.length; i++) {
+		const arg = argv[i];
+		switch (arg) {
+			case '--limit':
+			case '-l':
+				args.limit = parseInt(argv[++i], 10) || 100;
+				break;
+			case '--legislature':
+				args.legislature = argv[++i];
+				break;
+			case '--model':
+			case '-m':
+				args.model = argv[++i] || 'mistral';
+				break;
+			case '--dry-run':
+			case '-n':
+				args.dryRun = true;
+				break;
+			case '--help':
+			case '-h':
+				args.help = true;
+				break;
+		}
+	}
+
+	return args;
+}
+
+function printHelp() {
+	console.log(`
+Usage: npm run etl:analyze-laws -- [options]
+
+Options:
+  -l, --limit <n>       Nombre max de lois à analyser (défaut: 100)
+  --legislature <leg>   Filtrer par législature (ex: 17)
+  -m, --model <name>    Modèle Ollama à utiliser (défaut: mistral)
+  -n, --dry-run         Mode simulation, n'écrit pas en base
+  -h, --help            Affiche cette aide
+
+Tags disponibles:
+  ${AVAILABLE_TAGS.join(', ')}
+
+Exemples:
+  npm run etl:analyze-laws                      # Analyse 100 lois
+  npm run etl:analyze-laws -- --limit 50        # Analyse 50 lois
+  npm run etl:analyze-laws -- --model llama3.1  # Utilise Llama 3.1
+  npm run etl:analyze-laws -- --dry-run         # Simulation
+
+Prérequis:
+  1. Installer Ollama: https://ollama.com
+  2. Télécharger un modèle: ollama pull mistral
+  3. Lancer Ollama: ollama serve (dans un terminal séparé)
+`);
+}
+
+async function checkOllamaConnection(baseUrl: string): Promise<boolean> {
+	try {
+		const response = await fetch(`${baseUrl}/api/tags`, {
+			signal: AbortSignal.timeout(5000)
+		});
+		return response.ok;
+	} catch {
+		return false;
+	}
+}
+
+async function main() {
+	const args = parseArgs(process.argv.slice(2));
+
+	if (args.help) {
+		printHelp();
+		process.exit(0);
+	}
+
+	console.log('='.repeat(60));
+	console.log('NosElus ETL - Analyse des Lois avec LLM');
+	console.log('='.repeat(60));
+	console.log('');
+
+	// Vérifier la connexion à Ollama
+	console.log('Vérification de la connexion à Ollama...');
+	const ollamaOk = await checkOllamaConnection('http://localhost:11434');
+
+	if (!ollamaOk) {
+		console.error('');
+		console.error('ERREUR: Impossible de se connecter à Ollama.');
+		console.error('');
+		console.error('Assurez-vous que:');
+		console.error('  1. Ollama est installé: https://ollama.com');
+		console.error('  2. Ollama est lancé: ollama serve');
+		console.error(`  3. Le modèle est téléchargé: ollama pull ${args.model}`);
+		console.error('');
+		process.exit(1);
+	}
+
+	console.log('  ✓ Ollama est accessible');
+	console.log('');
+	console.log('Configuration:');
+	console.log(`  Modèle: ${args.model}`);
+	console.log(`  Limite: ${args.limit} lois`);
+	if (args.legislature) {
+		console.log(`  Législature: ${args.legislature}`);
+	}
+	if (args.dryRun) {
+		console.log('  Mode: DRY RUN (pas d\'écriture en base)');
+	}
+	console.log('');
+
+	try {
+		const result = await analyzeLawsBatch({
+			limit: args.limit,
+			legislature: args.legislature,
+			model: args.model,
+			dryRun: args.dryRun
+		});
+
+		console.log('');
+		console.log('='.repeat(60));
+		console.log('Résultats:');
+		console.log(`  Total: ${result.total} lois`);
+		console.log(`  Succès: ${result.success}`);
+		console.log(`  Erreurs: ${result.errors}`);
+		if (result.skipped > 0) {
+			console.log(`  Ignorées (dry-run): ${result.skipped}`);
+		}
+		console.log('='.repeat(60));
+
+		process.exit(result.errors > 0 ? 1 : 0);
+	} catch (error) {
+		console.error('Erreur fatale:', error);
+		process.exit(1);
+	}
+}
+
+main();

@@ -91,6 +91,8 @@
 					model={law.summaryModel ?? undefined}
 					class="law-summary-section"
 				/>
+			{:else}
+				<p class="no-summary-notice">Résumé IA non disponible pour ce texte.</p>
 			{/if}
 			{#if law.title || law.description}
 				<details class="law-details">
@@ -395,6 +397,17 @@
 
 	.law-link-card :global(.law-summary-section) {
 		margin-top: 1rem;
+	}
+
+	.no-summary-notice {
+		margin: 1rem 0 0;
+		padding: 0.75rem 1rem;
+		font-size: 0.875rem;
+		font-style: italic;
+		color: var(--color-text-muted);
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		border-left: 3px solid var(--color-border);
 	}
 
 	/* Law details (collapsible) */

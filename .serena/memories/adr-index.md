@@ -10,6 +10,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 |----|------|-------|--------|-------|---------|
 | ADR-001 | 2026-02-01 | Classification sémantique des scrutins | ✅ Accepté | 1.1 | `adr-2026-02-01-scrutin-category.md` |
 | ADR-002 | 2026-02-02 | Identification et calcul des votes décisifs | ✅ Accepté | 4.2 | `adr-2026-02-02-decisive-votes.md` |
+| ADR-003 | 2026-02-02 | Récupération du texte complet des lois | 📋 Proposé | 2.1 | `adr-2026-02-02-law-full-text-retrieval.md` |
 
 ## Par catégorie
 

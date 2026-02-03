@@ -1,5 +1,6 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
+	import LawSummaryCard from '$lib/components/LawSummaryCard.svelte';
 
 	let { data } = $props();
 
@@ -69,6 +70,21 @@
 		</div>
 	</section>
 {/if}
+
+<!-- AI Summary -->
+<AsyncCard title="Résumé" promise={data.aiSummary}>
+	{#snippet children(summary)}
+		{#if summary}
+			<LawSummaryCard
+				summary={summary.summary}
+				tags={summary.tags || []}
+				model={summary.model}
+			/>
+		{:else}
+			<p class="empty-state">Aucun résumé disponible pour ce dossier législatif.</p>
+		{/if}
+	{/snippet}
+</AsyncCard>
 
 <!-- Stats -->
 <AsyncCard title="Scrutins liés" promise={data.scrutinStats}>
@@ -241,7 +257,7 @@
 		{#if data.law.description}
 			<div class="info-row full-width">
 				<dt>Description</dt>
-				<dd>{data.law.description}</dd>
+				<dd class="law-description">{data.law.description}</dd>
 			</div>
 		{/if}
 		{#if data.law.sourceUrl}
@@ -495,6 +511,16 @@
 	.info-row dd {
 		margin: 0;
 		font-size: 0.875rem;
+	}
+
+	.law-description {
+		white-space: pre-wrap;
+		line-height: 1.6;
+		max-height: 400px;
+		overflow-y: auto;
+		padding: 0.75rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
 	}
 
 	.status-badge {

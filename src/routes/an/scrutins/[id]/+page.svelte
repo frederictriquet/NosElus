@@ -71,6 +71,14 @@
 	{#if law}
 		<section class="card law-link-card">
 			<h2>Dossier législatif</h2>
+			<p class="matching-disclaimer">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="16" x2="12" y2="12"></line>
+					<line x1="12" y1="8" x2="12.01" y2="8"></line>
+				</svg>
+				<span>Ce dossier est associé automatiquement par similarité de titre, car les données officielles ne fournissent pas de lien direct entre scrutins et textes de loi. Il est possible que ce ne soit pas exactement le bon texte.</span>
+			</p>
 			<a href="/an/laws/{law.id}" class="law-link">
 				<div class="law-type">{typeLabels[law.type] || law.type}</div>
 				<div class="law-title">{law.shortTitle || law.title}</div>
@@ -129,6 +137,35 @@
 					</div>
 				</details>
 			{/if}
+		</section>
+	{:else}
+		<section class="card law-link-card no-law-card">
+			<h2>Dossier législatif</h2>
+			<div class="no-law-notice">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="16" x2="12" y2="12"></line>
+					<line x1="12" y1="8" x2="12.01" y2="8"></line>
+				</svg>
+				<div class="no-law-content">
+					<p class="no-law-title">Aucun dossier législatif associé</p>
+					<p class="no-law-explanation">
+						Ce scrutin n'a pas pu être automatiquement associé à un dossier législatif.
+						Cela peut arriver pour plusieurs raisons :
+					</p>
+					<ul class="no-law-reasons">
+						<li>Le scrutin porte sur une motion de procédure ou un amendement sans dossier principal identifiable</li>
+						<li>Le titre du scrutin ne correspond pas assez aux titres des dossiers législatifs connus</li>
+						<li>Le dossier législatif n'est pas encore disponible dans notre base de données</li>
+					</ul>
+					<p class="no-law-suggestion">
+						Vous pouvez rechercher le texte concerné sur
+						<a href="https://www.assemblee-nationale.fr/dyn/{data.scrutin.legislature}/dossiers" target="_blank" rel="noopener noreferrer">
+							le site de l'Assemblée nationale
+						</a>.
+					</p>
+				</div>
+			</div>
 		</section>
 	{/if}
 {/await}
@@ -408,6 +445,88 @@
 		background: var(--color-bg-secondary);
 		border-radius: var(--radius-md);
 		border-left: 3px solid var(--color-border);
+	}
+
+	.matching-disclaimer {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+		padding: 0.625rem 0.875rem;
+		font-size: 0.8125rem;
+		color: var(--color-warning);
+		background: var(--color-warning-bg);
+		border: 1px solid var(--color-warning-border);
+		border-radius: var(--radius-md);
+	}
+
+	.matching-disclaimer svg {
+		flex-shrink: 0;
+		margin-top: 0.125rem;
+	}
+
+	.matching-disclaimer span {
+		line-height: 1.4;
+	}
+
+	/* No law associated */
+	.no-law-notice {
+		display: flex;
+		gap: 1rem;
+		padding: 1rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		border: 1px dashed var(--color-border);
+	}
+
+	.no-law-notice svg {
+		flex-shrink: 0;
+		color: var(--color-text-muted);
+		opacity: 0.6;
+	}
+
+	.no-law-content {
+		flex: 1;
+	}
+
+	.no-law-title {
+		margin: 0 0 0.5rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.no-law-explanation {
+		margin: 0 0 0.5rem;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		line-height: 1.5;
+	}
+
+	.no-law-reasons {
+		margin: 0 0 0.75rem;
+		padding-left: 1.25rem;
+		font-size: 0.8125rem;
+		color: var(--color-text-muted);
+		line-height: 1.6;
+	}
+
+	.no-law-reasons li {
+		margin-bottom: 0.25rem;
+	}
+
+	.no-law-suggestion {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	.no-law-suggestion a {
+		color: var(--color-primary);
+		text-decoration: underline;
+	}
+
+	.no-law-suggestion a:hover {
+		color: var(--color-primary-hover);
 	}
 
 	/* Law details (collapsible) */

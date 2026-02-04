@@ -96,15 +96,15 @@ describe('ParlGov Matcher - Political Position', () => {
 			expect(position).toBe(5.0); // Fallback to center
 		});
 
-		it('should use match leftRight even for NI groups (current behavior)', () => {
+		it('should return 999 for NI groups even if they have a match', () => {
 			const organ = realOrgans.ni;
 			const match = createMatchResult(organ, parlGovParties.lfi);
 
 			const position = determinePosition(organ, match);
 
-			// COMPORTEMENT ACTUEL: leftRight du match est prioritaire sur la vérification NI
-			// Ceci pourrait être considéré comme un bug, mais c'est le comportement actuel
-			expect(position).toBe(1.3); // leftRight de LFI
+			// NI doit toujours être à la fin du spectre, même avec un match ParlGov
+			// C'est le comportement correct : NI n'est pas un parti politique
+			expect(position).toBe(999);
 		});
 
 		it('should handle zero leftRight value', () => {

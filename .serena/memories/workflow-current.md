@@ -1,12 +1,12 @@
-# Workflow Actif - Vote Breakdown Stacked Bar
+# Workflow Actif - Automatisation Positionnement Politique
 
 ## Tâche
-Graphiques empilés pour la répartition des votes par groupe politique
+Récupérer automatiquement le positionnement idéologique des partis politiques pour éliminer le hardcoding
 
 ## Objectif
-Créer un composant réutilisable pour visualiser les votes avec deux modes :
-- by-group : Barres par groupe, empilées par position
-- by-position : Barres par position, empilées par groupe
+**Éliminer tout hardcoding de `spectrumOrder`** dans `/an/carte` et `/pe/carte` en récupérant les positions depuis une source externe académique (ParlGov/IPWE/ELFF) et en les stockant en base de données.
+
+**Critère de succès** : Ajouter un nouveau parti via ETL sans modifier le code applicatif.
 
 ## Démarré
 2026-02-04
@@ -14,51 +14,73 @@ Créer un composant réutilisable pour visualiser les votes avec deux modes :
 ## Historique
 | Timestamp | Skill | Status | Notes |
 |-----------|-------|--------|-------|
-| 2026-02-04 | /analyze | ✅ | Analyse de la demande utilisateur |
-| 2026-02-04 | Implementation | ✅ | Composant + tests (16 tests passants) |
-| 2026-02-04 | /code-review | ✅ | Review avec 2 suggestions mineures |
-| 2026-02-04 | Refactoring | ✅ | Extraction utilitaires + mapping explicite |
-| 2026-02-04 | /document | ✅ | JSDoc + README complet |
-| 2026-02-04 | /capitalize | ✅ | 3 mémoires créées (patterns + lessons) |
+| 2026-02-04 | /analyze | ✅ | Problème identifié, périmètre défini |
+| 2026-02-04 | /explore-options | ✅ | 3 sources + 4 stratégies évaluées |
+| 2026-02-04 | /tech-choice | ✅ | ADR-004 créé, décision ParlGov+Jaccard documentée |
+| 2026-02-04 | /architecture | ✅ | Blueprint complet, 12 fichiers identifiés |
+| 2026-02-04 | /implement | ✅ | Implémentation complète, 75% matching |
+| 2026-02-04 | /test-write | ✅ | 124 tests créés, 100% coverage ParlGov |
+| 2026-02-04 | /test-run | ✅ | 198/198 tests passants |
+| 2026-02-04 | /code-review | ✅ | Approuvé sans changements requis |
+| 2026-02-04 | /document | ✅ | 900+ lignes de documentation créées |
+| 2026-02-04 | /capitalize | ✅ | Lessons learned sauvegardées |
+| 2026-02-04 | /roadmap-update | ✅ | Section 4.6 marquée DONE dans ROADMAP.md |
 
 ## Phase Actuelle
-**Capitalisation terminée** - Prêt pour `/pre-merge`
+/roadmap-update ✅ → **/pre-merge**
 
-## Contexte Clé
-- Branch : `feature/vote-breakdown-stacked-bar`
-- Commits : 2 commits (6a67e5e + ac60a6b) + refactoring/docs à commiter
-- Tests : 50/50 passants
-- Composant conforme aux standards LayerCake et réutilisabilité
+## Statut : IMPLÉMENTÉ ✅
 
-## Décisions Prises
-- Utiliser LayerCake + ColumnStacked existant (conforme au standard)
-- Deux modes d'affichage complémentaires
-- Extraction de la logique dans `.utils.ts` pour testabilité
-- Mapping explicite des positions (évite type assertions)
+### Ce qui a été fait
 
-## Fichiers Concernés
-### Créés
-- `src/lib/components/GroupVotesStackedBar.svelte` (composant principal)
-- `src/lib/components/GroupVotesStackedBar.utils.ts` (utilitaires)
-- `src/lib/components/GroupVotesStackedBar.test.ts` (16 tests)
-- `src/lib/components/GroupVotesStackedBar.README.md` (documentation)
-- `.serena/memories/datasources-political-positioning.md` (note recherche)
-- `.serena/memories/pattern-component-documentation.md` (pattern doc)
-- `.serena/memories/pattern-svelte-utils-extraction.md` (pattern extraction)
-- `.serena/memories/lessons-learned-2026-02-04-stacked-bars.md` (lessons)
+**Fichiers créés :**
+- `src/lib/server/etl/sources/parlgov/types.ts` - Types et constantes
+- `src/lib/server/etl/sources/parlgov/client.ts` - Client CSV natif
+- `src/lib/server/etl/sources/parlgov/matcher.ts` - Fuzzy Jaccard
+- `src/lib/server/etl/sources/parlgov/index.ts` - Exports
+- `scripts/etl/import-political-positions.ts` - Script CLI ETL
+- `src/lib/utils/political-spectrum.ts` - Utilitaire de tri
+- `src/lib/utils/political-spectrum.test.ts` - 24 tests unitaires
+- `drizzle/migrations/0009_premium_scalphunter.sql` - Migration DB
 
-### Modifiés
-- `src/routes/an/scrutins/[id]/+page.svelte` (intégration composant)
-- `.serena/memories/workflow-current.md` (ce fichier)
+**Fichiers modifiés :**
+- `src/lib/server/db/schema/organs.ts` - Ajout `politicalPosition`
+- `src/lib/server/api/helpers.ts` - Ajout politicalPosition aux 3 fonctions groupe
+- `src/routes/an/carte/+page.svelte` - Suppression hardcoding (33 IDs)
+- `src/routes/pe/carte/+page.svelte` - Suppression hardcoding (38 IDs)
+- `Makefile` - Ajout target `etl-political-positions`
+
+### Résultats ETL
+- **1707 partis** téléchargés depuis ParlGov
+- **80 partis français** filtrés
+- **~75% matching** sur les groupes AN/PE/Sénat
+- **Fallbacks appliqués** : NI=999, inconnus=5.0
+
+### Positions en base (AN Legislature 17)
+| Groupe | Position |
+|--------|----------|
+| LFI-NFP, GDR, SOC | 1.3 (gauche) |
+| ECO, EcoS | 2.5 (écolo) |
+| HOR, REN | 6.0 (centre) |
+| LR, Dem | 7.4 (centre-droit) |
+| DR | 8.8 (droite) |
+| NI | 999 |
+
+### Commits
+1. `9a3f0de` - feat(political-positioning): automate political spectrum ordering via ParlGov
+2. `50b4426` - fix(political-positioning): use word boundary regex for NI detection
+
+### Tests
+- 74 tests passent (dont 24 nouveaux pour political-spectrum)
+- Build OK
 
 ## Prochaine Étape
-**`/pre-merge`** pour checklist finale avant merge
+**/pre-merge** - Préparer le merge vers master
 
 ## Blocages
 Aucun
 
-## Notes
-- Refactoring appliqué suite à code review
-- Documentation complète (JSDoc + README 200+ lignes)
-- Pattern réutilisable pour futurs graphiques empilés
-- 3 mémoires SERENA créées pour capitaliser les apprentissages
+## Documents de Référence
+- **ADR** : `adr-2026-02-04-political-positioning-automation.md`
+- **Architecture** : `arch-2026-02-04-political-positioning.md`
+- **Pattern Jaccard** : `pattern-jaccard-title-matching.md`

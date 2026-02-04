@@ -7,7 +7,7 @@
 
 import type { Organ } from '$lib/server/db';
 import type { ParlGovParty, MatchResult, MatchField, MatcherConfig } from './types';
-import { FAMILY_POSITIONS, NI_IDENTIFIERS } from './types';
+import { FAMILY_POSITIONS, NI_IDENTIFIERS, EU_GROUP_POSITIONS } from './types';
 
 /** Seuil de similarité par défaut (40%) */
 const DEFAULT_THRESHOLD = 0.4;
@@ -277,14 +277,21 @@ export function isNonInscrit(organ: Organ): boolean {
  * @returns Position sur l'échiquier (0-10, ou 999 pour NI)
  */
 export function determinePosition(organ: Organ, match: MatchResult | null): number {
-	// 1. Si match trouvé avec position
-	if (match && match.parlGovParty.leftRight !== null) {
-		return match.parlGovParty.leftRight;
-	}
-
-	// 2. Non-inscrit → fin de liste
+	// 0. Non-inscrit → fin de liste (priorité maximale)
 	if (isNonInscrit(organ)) {
 		return 999;
+	}
+
+	// 1. Mapping manuel pour groupes européens (PE)
+	// ParlGov ne couvre pas les groupes PE, seulement les partis nationaux
+	const shortName = organ.shortName?.trim();
+	if (shortName && EU_GROUP_POSITIONS[shortName] !== undefined) {
+		return EU_GROUP_POSITIONS[shortName];
+	}
+
+	// 2. Si match trouvé avec position ParlGov
+	if (match && match.parlGovParty.leftRight !== null) {
+		return match.parlGovParty.leftRight;
 	}
 
 	// 3. Fallback sur famille politique (si match sans position L/R)

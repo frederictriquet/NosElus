@@ -87,7 +87,7 @@ describe('ParlGov Matcher - Political Position', () => {
 			const party = {
 				...parlGovParties.lfi,
 				leftRight: null,
-				familyShort: null
+				familyShort: ''
 			};
 			const match = createMatchResult(organ, party);
 

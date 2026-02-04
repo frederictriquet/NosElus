@@ -13,14 +13,17 @@ export function createTestOrgan(overrides?: Partial<Organ>): Organ {
 		uid: 'TEST-UID',
 		name: 'Test Organ',
 		shortName: 'TO',
-		acronym: null,
 		type: 'GP',
 		chamber: 'AN',
 		color: '#000000',
-		legislature: 17,
+		legislature: '17',
 		startDate: '2024-01-01',
 		endDate: null,
+		parentId: null,
+		description: null,
 		politicalPosition: null,
+		createdAt: new Date(),
+		updatedAt: new Date(),
 		...overrides
 	};
 }
@@ -30,9 +33,7 @@ export function createTestOrgan(overrides?: Partial<Organ>): Organ {
  */
 export function createTestParlGovParty(overrides?: Partial<ParlGovParty>): ParlGovParty {
 	return {
-		partyId: 1,
 		countryCode: 'FRA',
-		nameShort: 'TEST',
 		nameEnglish: 'Test Party',
 		nameNative: 'Parti Test',
 		shortName: 'TP',
@@ -83,9 +84,7 @@ export const realOrgans = {
  */
 export const parlGovParties = {
 	lfi: createTestParlGovParty({
-		partyId: 1709,
 		countryCode: 'FRA',
-		nameShort: 'LFI',
 		nameEnglish: 'La France Insoumise',
 		nameNative: 'La France Insoumise',
 		shortName: 'LFI',
@@ -93,9 +92,7 @@ export const parlGovParties = {
 		leftRight: 1.3
 	}),
 	rn: createTestParlGovParty({
-		partyId: 1439,
 		countryCode: 'FRA',
-		nameShort: 'RN',
 		nameEnglish: 'National Rally',
 		nameNative: 'Rassemblement national',
 		shortName: 'RN',
@@ -103,9 +100,7 @@ export const parlGovParties = {
 		leftRight: 8.8
 	}),
 	lrem: createTestParlGovParty({
-		partyId: 1766,
 		countryCode: 'FRA',
-		nameShort: 'LREM',
 		nameEnglish: 'The Republic on the Move',
 		nameNative: 'La République en Marche',
 		shortName: 'LREM',
@@ -113,9 +108,7 @@ export const parlGovParties = {
 		leftRight: 6.0
 	}),
 	lr: createTestParlGovParty({
-		partyId: 1327,
 		countryCode: 'FRA',
-		nameShort: 'LR',
 		nameEnglish: 'The Republicans',
 		nameNative: 'Les Républicains',
 		shortName: 'LR',
@@ -123,9 +116,7 @@ export const parlGovParties = {
 		leftRight: 7.4
 	}),
 	ps: createTestParlGovParty({
-		partyId: 1110,
 		countryCode: 'FRA',
-		nameShort: 'PS',
 		nameEnglish: 'Socialist Party',
 		nameNative: 'Parti socialiste',
 		shortName: 'PS',

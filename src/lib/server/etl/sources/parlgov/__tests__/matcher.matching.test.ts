@@ -23,7 +23,7 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(organ, parties);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.lfi.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.lfi.shortName);
 			expect(result?.matchedOn).toBe('shortName');
 		});
 
@@ -37,7 +37,7 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(organ, parties);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.rn.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.rn.shortName);
 			expect(result?.matchedOn).toBe('nameNative');
 		});
 
@@ -64,7 +64,7 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(organ, parties);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.ps.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.ps.shortName);
 		});
 
 		it('should return null when score below threshold', () => {
@@ -109,7 +109,7 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(organ, parties);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.lr.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.lr.shortName);
 		});
 
 		it('should prioritize shortName match over name match', () => {
@@ -122,7 +122,7 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(organ, parties);
 
 			// LR devrait gagner car shortName exact
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.lr.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.lr.shortName);
 		});
 
 		it('should return match result with correct structure', () => {
@@ -136,7 +136,7 @@ describe('ParlGov Matcher - Best Match', () => {
 				organName: organ.name,
 				organShortName: organ.shortName,
 				parlGovParty: expect.objectContaining({
-					partyId: parlGovParties.lfi.partyId
+					shortName: parlGovParties.lfi.shortName
 				}),
 				score: expect.any(Number),
 				matchedOn: expect.stringMatching(/shortName|nameNative|nameEnglish/)
@@ -171,8 +171,8 @@ describe('ParlGov Matcher - Best Match', () => {
 				shortName: 'TP'
 			});
 			const party = createTestParlGovParty({
-				shortName: null,
-				nameEnglish: null,
+				shortName: '',
+				nameEnglish: '',
 				nameNative: 'Test Party'
 			});
 
@@ -186,21 +186,21 @@ describe('ParlGov Matcher - Best Match', () => {
 			const result = findBestMatch(realOrgans.lfi, [parlGovParties.lfi]);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.lfi.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.lfi.shortName);
 		});
 
 		it('should match real RN organ to ParlGov RN', () => {
 			const result = findBestMatch(realOrgans.rn, [parlGovParties.rn]);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.rn.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.rn.shortName);
 		});
 
 		it('should match real LR organ to ParlGov LR', () => {
 			const result = findBestMatch(realOrgans.lr, [parlGovParties.lr]);
 
 			expect(result).not.toBeNull();
-			expect(result?.parlGovParty.partyId).toBe(parlGovParties.lr.partyId);
+			expect(result?.parlGovParty.shortName).toBe(parlGovParties.lr.shortName);
 		});
 	});
 

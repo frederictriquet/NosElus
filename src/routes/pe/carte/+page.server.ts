@@ -45,7 +45,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					groupId: organs.id,
 					groupName: organs.name,
 					groupShortName: organs.shortName,
-					groupColor: organs.color
+					groupColor: organs.color,
+					politicalPosition: organs.politicalPosition
 				})
 				.from(organs)
 				.where(inArray(organs.id, organIds))
@@ -61,12 +62,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 				const shortName = info?.groupShortName || c.organId;
 				const fullName = info?.groupName || c.organId;
 				const color = info?.groupColor || '#888';
+				const politicalPosition = info?.politicalPosition ?? null;
 				return {
 					groupId: c.organId,
 					groupName: fullName,
 					groupShortName: shortName,
 					groupColor: color,
-					mepCount: Number(c.mepCount)
+					mepCount: Number(c.mepCount),
+					politicalPosition
 				};
 			})
 			.filter(g => g.mepCount > 0)

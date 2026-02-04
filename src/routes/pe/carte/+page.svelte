@@ -2,57 +2,37 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
+	import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
 
 	let { data } = $props();
 
-	// Type for group distribution
+	// Type for group distribution (includes politicalPosition from DB)
 	type GroupDistribution = {
 		groupId: string;
 		groupName: string;
 		groupShortName: string;
 		groupColor: string;
 		mepCount: number;
+		politicalPosition: number | null;
 	};
 
-	// Political spectrum order (left to right) for European Parliament groups
-	// Using both official IDs and short names for flexibility
-	const spectrumOrder = [
-		// The Left (GUE/NGL)
-		'GPEU-GUE', 'GUE/NGL', 'The Left', 'LEFT',
-		// Greens/EFA
-		'GPEU-GREENS', 'GPEU-G/EFA', 'Verts/ALE', 'Greens/EFA', 'G/EFA',
-		// S&D (Socialists & Democrats)
-		'GPEU-SD', 'GPEU-S&D', 'S&D',
-		// Renew Europe (ex-ALDE)
-		'GPEU-RENEW', 'Renew', 'RE',
-		// EPP (European People's Party)
-		'GPEU-EPP', 'GPEU-PPE', 'PPE', 'EPP',
-		// ECR (European Conservatives and Reformists)
-		'GPEU-ECR', 'ECR', 'CRE',
-		// Patriots for Europe / ID (Identity and Democracy)
-		'GPEU-PFE', 'GPEU-ID', 'PfE', 'ID',
-		// Europe of Sovereign Nations (ESN)
-		'GPEU-ESN', 'ESN',
-		// Non-attached
-		'GPEU-NI', 'NI', 'NA'
-	];
-
+	/**
+	 * Trie les groupes par position politique (gauche → droite → NI)
+	 * Utilise les positions stockées en base de données via ParlGov ETL
+	 */
 	function sortBySpectrum(groups: GroupDistribution[]): GroupDistribution[] {
-		return [...groups].sort((a, b) => {
-			const aIndex = spectrumOrder.findIndex(id =>
-				a.groupId === id ||
-				a.groupId.includes(id) ||
-				a.groupShortName === id ||
-				a.groupShortName?.includes(id)
-			);
-			const bIndex = spectrumOrder.findIndex(id =>
-				b.groupId === id ||
-				b.groupId.includes(id) ||
-				b.groupShortName === id ||
-				b.groupShortName?.includes(id)
-			);
-			return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-		});
+		// Adapter le format pour sortByPoliticalPosition
+		const adapted = groups.map((g) => ({
+			id: g.groupId,
+			name: g.groupName,
+			shortName: g.groupShortName,
+			politicalPosition: g.politicalPosition
+		}));
+
+		const sorted = sortByPoliticalPosition(adapted);
+
+		// Remettre dans l'ordre trié
+		return sorted.map((s) => groups.find((g) => g.groupId === s.id)!);
 	}
 </script>
 

@@ -1,66 +1,10 @@
 import { describe, it, expect } from 'vitest';
-
-interface GroupData {
-	id: string;
-	name: string;
-	shortName: string | null;
-	color: string | null;
-	pour: number;
-	contre: number;
-	abstention: number;
-	nonVotant: number;
-	total: number;
-}
-
-// Test utilities extracted from component logic
-function sortAndLimitGroups(groups: GroupData[], maxGroups: number): GroupData[] {
-	return [...groups]
-		.sort((a, b) => b.total - a.total)
-		.slice(0, maxGroups);
-}
-
-function prepareByGroupData(groups: GroupData[], maxGroups: number) {
-	const sortedGroups = sortAndLimitGroups(groups, maxGroups);
-
-	if (sortedGroups.length === 0) return null;
-
-	const seriesNames = ['pour', 'contre', 'abstention', 'nonVotant'];
-
-	const dataForStack = sortedGroups.map((g) => ({
-		label: g.shortName || g.name.slice(0, 10),
-		fullName: g.name,
-		pour: g.pour,
-		contre: g.contre,
-		abstention: g.abstention,
-		nonVotant: g.nonVotant,
-		total: g.total
-	}));
-
-	return { seriesNames, dataForStack };
-}
-
-function prepareByPositionData(groups: GroupData[], maxGroups: number) {
-	const sortedGroups = sortAndLimitGroups(groups, maxGroups);
-
-	if (sortedGroups.length === 0) return null;
-
-	const positions = ['Pour', 'Contre', 'Abstention', 'Non-votant'];
-	const groupNames = sortedGroups.map((g) => g.shortName || g.id);
-
-	const dataForStack = positions.map((pos) => {
-		const posKey = pos === 'Non-votant' ? 'nonVotant' : pos.toLowerCase() as 'pour' | 'contre' | 'abstention' | 'nonVotant';
-		const row: Record<string, unknown> = { label: pos };
-		let total = 0;
-		sortedGroups.forEach((g, i) => {
-			row[groupNames[i]] = g[posKey];
-			total += g[posKey];
-		});
-		row['total'] = total;
-		return row;
-	});
-
-	return { dataForStack, groupNames, sortedGroups };
-}
+import {
+	type GroupData,
+	sortAndLimitGroups,
+	prepareByGroupData,
+	prepareByPositionData
+} from './GroupVotesStackedBar.utils';
 
 describe('GroupVotesStackedBar', () => {
 	const createMockGroup = (overrides: Partial<GroupData> = {}): GroupData => ({

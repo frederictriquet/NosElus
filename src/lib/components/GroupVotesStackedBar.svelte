@@ -1,3 +1,44 @@
+<!--
+	GroupVotesStackedBar - Graphique de répartition des votes empilés
+
+	Composant réutilisable pour visualiser les votes d'un scrutin avec deux modes d'affichage :
+
+	**Mode "by-group"** :
+	- Une barre par groupe politique (LFI, RN, Renaissance, etc.)
+	- Empilée par position de vote (Pour/Contre/Abstention/Non-votant)
+	- Couleurs : celles des positions de vote
+
+	**Mode "by-position"** :
+	- Une barre par position de vote (Pour, Contre, Abstention, Non-votant)
+	- Empilée par groupe politique
+	- Couleurs : celles des groupes politiques
+
+	@component
+	@example
+	```svelte
+	<script>
+	  import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
+	</script>
+
+	<!-- Mode by-group -->
+	<GroupVotesStackedBar
+	  {groups}
+	  mode="by-group"
+	  height={220}
+	  maxGroups={10}
+	/>
+
+	<!-- Mode by-position -->
+	<GroupVotesStackedBar
+	  {groups}
+	  mode="by-position"
+	  height={220}
+	/>
+	```
+
+	@see {@link GroupVotesStackedBar.utils.ts} - Utilitaires de préparation des données
+	@see {@link ColumnStacked.svelte} - Composant LayerCake utilisé pour le rendu
+-->
 <script lang="ts">
 	import { LayerCake, Svg, flatten } from 'layercake';
 	import { stack } from 'd3-shape';
@@ -5,27 +46,22 @@
 	import ColumnStacked from './charts/ColumnStacked.svelte';
 	import AxisX from './charts/AxisX.svelte';
 	import AxisY from './charts/AxisY.svelte';
-
-	interface GroupData {
-		id: string;
-		name: string;
-		shortName: string | null;
-		color: string | null;
-		pour: number;
-		contre: number;
-		abstention: number;
-		nonVotant: number;
-		total: number;
-	}
+	import {
+		type GroupData,
+		sortAndLimitGroups,
+		prepareByGroupData,
+		prepareByPositionData,
+		VOTE_POSITIONS
+	} from './GroupVotesStackedBar.utils';
 
 	interface Props {
-		/** Données des votes par groupe */
+		/** Données des votes par groupe politique (GroupData[]) */
 		groups: GroupData[];
-		/** Mode d'affichage */
+		/** Mode d'affichage : "by-group" (barres par groupe) ou "by-position" (barres par position) */
 		mode: 'by-group' | 'by-position';
-		/** Hauteur du graphique en pixels */
+		/** Hauteur du graphique en pixels (défaut: 250) */
 		height?: number;
-		/** Nombre max de groupes à afficher (mode by-group) */
+		/** Nombre maximum de groupes à afficher (défaut: 10, les plus gros d'abord) */
 		maxGroups?: number;
 	}
 
@@ -43,24 +79,11 @@
 	const byGroupData = $derived.by(() => {
 		if (mode !== 'by-group') return null;
 
-		const sortedGroups = [...groups]
-			.sort((a, b) => b.total - a.total)
-			.slice(0, maxGroups);
+		const prepared = prepareByGroupData(groups, maxGroups);
+		if (!prepared) return null;
 
-		if (sortedGroups.length === 0) return null;
-
-		const seriesNames = ['pour', 'contre', 'abstention', 'nonVotant'];
+		const { seriesNames, dataForStack } = prepared;
 		const seriesColors = [positionColors.pour, positionColors.contre, positionColors.abstention, positionColors.nonVotant];
-
-		const dataForStack = sortedGroups.map((g) => ({
-			label: g.shortName || g.name.slice(0, 10),
-			fullName: g.name,
-			pour: g.pour,
-			contre: g.contre,
-			abstention: g.abstention,
-			nonVotant: g.nonVotant,
-			total: g.total
-		}));
 
 		const stackFn = stack<(typeof dataForStack)[0]>().keys(seriesNames);
 		const stacked = stackFn(dataForStack);
@@ -73,33 +96,15 @@
 	const byPositionData = $derived.by(() => {
 		if (mode !== 'by-position') return null;
 
-		const sortedGroups = [...groups]
-			.sort((a, b) => b.total - a.total)
-			.slice(0, maxGroups);
+		const prepared = prepareByPositionData(groups, maxGroups);
+		if (!prepared) return null;
 
-		if (sortedGroups.length === 0) return null;
-
-		// Transformer: une barre par position, empilée par groupe
-		const positions = ['Pour', 'Contre', 'Abstention', 'Non-votant'];
-		const groupNames = sortedGroups.map((g) => g.shortName || g.id);
+		const { dataForStack, groupNames, sortedGroups } = prepared;
 		const groupColors = sortedGroups.map((g) => g.color || '#888');
-
-		// Créer les données: chaque position contient les votes de chaque groupe
-		const dataForStack = positions.map((pos) => {
-			const posKey = pos === 'Non-votant' ? 'nonVotant' : pos.toLowerCase() as 'pour' | 'contre' | 'abstention' | 'nonVotant';
-			const row: Record<string, unknown> = { label: pos };
-			let total = 0;
-			sortedGroups.forEach((g, i) => {
-				row[groupNames[i]] = g[posKey];
-				total += g[posKey];
-			});
-			row['total'] = total;
-			return row;
-		});
 
 		const stackFn = stack<(typeof dataForStack)[0]>().keys(groupNames);
 		const stacked = stackFn(dataForStack);
-		const xDomain = positions;
+		const xDomain = [...VOTE_POSITIONS];
 
 		return { stacked, xDomain, seriesNames: groupNames, seriesColors: groupColors, dataForStack, sortedGroups };
 	});

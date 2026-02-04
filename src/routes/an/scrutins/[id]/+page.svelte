@@ -1,8 +1,8 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
-	import GroupName from '$lib/components/GroupName.svelte';
 	import LawSummaryCard from '$lib/components/LawSummaryCard.svelte';
+	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 
 	let { data } = $props();
 
@@ -204,50 +204,17 @@
 	/>
 </div>
 
-<!-- Group breakdown -->
-<div style="margin-top: 1.5rem;">
-	<AsyncCard title="Vote par groupe" promise={data.groupBreakdown} minHeight="200px">
+<!-- Stacked bar charts -->
+<div class="charts-row">
+	<AsyncCard title="Votes par groupe" promise={data.groupBreakdown} minHeight="280px">
 		{#snippet children(groups)}
-			{#if groups.length === 0}
-				<p class="empty-state">Aucune donnée de vote par groupe</p>
-			{:else}
-				<div class="groups-grid">
-					{#each groups as group}
-						<a href="/an/groupes/{group.id}" class="group-card">
-							<div class="group-header">
-								<div class="group-color" style="background: {group.color || '#ccc'}"></div>
-								<div class="group-name">
-									<GroupName shortName={group.shortName} fullName={group.name} />
-								</div>
-								<div class="group-total">{group.total}</div>
-							</div>
-							<div class="group-votes">
-								<div class="vote-bar">
-									{#if group.total > 0}
-										<div
-											class="bar-segment pour"
-											style="width: {(group.pour / group.total) * 100}%"
-										></div>
-										<div
-											class="bar-segment contre"
-											style="width: {(group.contre / group.total) * 100}%"
-										></div>
-										<div
-											class="bar-segment abstention"
-											style="width: {(group.abstention / group.total) * 100}%"
-										></div>
-									{/if}
-								</div>
-								<div class="vote-counts">
-									<span class="vote-pour">{group.pour}</span>
-									<span class="vote-contre">{group.contre}</span>
-									<span class="vote-abstention">{group.abstention}</span>
-								</div>
-							</div>
-						</a>
-					{/each}
-				</div>
-			{/if}
+			<GroupVotesStackedBar {groups} mode="by-group" height={220} />
+		{/snippet}
+	</AsyncCard>
+
+	<AsyncCard title="Répartition par position" promise={data.groupBreakdown} minHeight="280px">
+		{#snippet children(groups)}
+			<GroupVotesStackedBar {groups} mode="by-position" height={220} />
 		{/snippet}
 	</AsyncCard>
 </div>
@@ -322,6 +289,19 @@
 </section>
 
 <style>
+	.charts-row {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5rem;
+		margin-top: 1.5rem;
+	}
+
+	@media (max-width: 900px) {
+		.charts-row {
+			grid-template-columns: 1fr;
+		}
+	}
+
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;
@@ -626,100 +606,6 @@
 	.law-source-link:hover {
 		background: var(--color-primary);
 		color: white;
-	}
-
-	/* Groups grid */
-	.groups-grid {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.group-card {
-		display: block;
-		padding: 1rem;
-		background: var(--color-bg-secondary);
-		border-radius: var(--radius-md);
-		text-decoration: none;
-		color: var(--color-text);
-		transition: all 0.2s;
-	}
-
-	.group-card:hover {
-		background: var(--color-bg-hover);
-	}
-
-	.group-header {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.group-color {
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	.group-name {
-		flex: 1;
-		font-weight: 500;
-	}
-
-	.group-total {
-		font-family: var(--font-mono);
-		font-size: 0.875rem;
-		color: var(--color-text-muted);
-	}
-
-	.group-votes {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.vote-bar {
-		display: flex;
-		height: 8px;
-		background: var(--color-border);
-		border-radius: 4px;
-		overflow: hidden;
-	}
-
-	.bar-segment {
-		height: 100%;
-	}
-
-	.bar-segment.pour {
-		background: var(--color-success);
-	}
-
-	.bar-segment.contre {
-		background: var(--color-danger);
-	}
-
-	.bar-segment.abstention {
-		background: var(--color-warning);
-	}
-
-	.vote-counts {
-		display: flex;
-		gap: 1rem;
-		font-size: 0.75rem;
-	}
-
-	.vote-pour {
-		color: var(--color-success);
-	}
-
-	.vote-contre {
-		color: var(--color-danger);
-	}
-
-	.vote-abstention {
-		color: var(--color-text-muted);
 	}
 
 	/* Voters grid */

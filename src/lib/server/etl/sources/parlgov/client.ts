@@ -18,8 +18,9 @@ const DEFAULT_COUNTRY_CODES = ['FRA'];
 
 /**
  * Parse une ligne CSV en tenant compte des guillemets
+ * Exported for testing
  */
-function parseCSVLine(line: string): string[] {
+export function parseCSVLine(line: string): string[] {
 	const result: string[] = [];
 	let current = '';
 	let inQuotes = false;
@@ -48,8 +49,9 @@ function parseCSVLine(line: string): string[] {
 
 /**
  * Parse un CSV complet en objets avec colonnes comme clés
+ * Exported for testing
  */
-function parseCSV(csvText: string): Record<string, string>[] {
+export function parseCSV(csvText: string): Record<string, string>[] {
 	const lines = csvText.split('\n').filter((line) => line.trim());
 	if (lines.length === 0) return [];
 

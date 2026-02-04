@@ -64,28 +64,26 @@ Tu dois rendre les lois accessibles au grand public.
 Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
 
 function buildUserPrompt(lawTitle: string, lawDescription: string | null): string {
-	const hasFullText = lawDescription && lawDescription.length > 200;
 	const text = lawDescription ? `${lawTitle}\n\n${lawDescription}` : lawTitle;
 
-	const sourceHint = hasFullText
-		? `NOTE: Ce texte provient du Journal Officiel. Lis l'ENSEMBLE pour identifier l'impact concret.`
-		: `NOTE: Seul le titre est disponible. Fais de ton mieux.`;
+	return `TEXTE DE LOI À ANALYSER:
+"""
+${text}
+"""
 
-	return `${sourceHint}
+TÂCHE: Résume cette loi pour un citoyen non-juriste.
 
-TÂCHE: Analyse cette loi et retourne UN SEUL objet JSON avec exactement 2 clés: "resume" et "tags".
+FORMAT OBLIGATOIRE - réponds UNIQUEMENT avec ce JSON (remplace les ... par ton analyse):
+{"resume": "...", "tags": ["...", "..."]}
 
 RÈGLES:
-- resume: 1-3 phrases simples sur l'impact concret (pas de jargon juridique)
-- tags: 2-4 tags parmi [${AVAILABLE_TAGS.join(', ')}]
+- resume: 1-3 phrases simples sur ce que change concrètement cette loi
+- tags: 2-4 mots parmi: ${AVAILABLE_TAGS.join(', ')}
 
-EXEMPLE DE RÉPONSE ATTENDUE:
-{"resume": "Cette loi augmente le SMIC de 2%. Elle concerne tous les salariés au salaire minimum.", "tags": ["travail", "économie"]}
+EXEMPLE:
+{"resume": "Cette loi augmente le SMIC de 2% pour tous les salariés au salaire minimum.", "tags": ["travail", "économie"]}
 
-LOI À ANALYSER:
-${text}
-
-Réponds avec UN SEUL objet JSON:`;
+TON JSON:`;
 }
 
 /**
@@ -100,13 +98,22 @@ function parseResponse(rawText: string): LawAnalysis {
 			const jsonStr = rawText.slice(start, end);
 			const data = JSON.parse(jsonStr);
 
+			// Debug: afficher les clés reçues
+			console.log(`  [Parse] Clés JSON reçues: ${Object.keys(data).join(', ')}`);
+
 			// Valide et filtre les tags
 			const validTags = (data.tags || []).filter((t: string) =>
 				AVAILABLE_TAGS.includes(t as LawTag)
 			) as LawTag[];
 
+			const summary = data.resume || data.summary || data.résumé;
+			if (!summary) {
+				console.error(`  [Parse] Aucune clé resume/summary/résumé trouvée`);
+				console.error(`  [Parse] Contenu: ${JSON.stringify(data).slice(0, 300)}`);
+			}
+
 			return {
-				summary: data.resume || data.summary || 'Résumé non disponible',
+				summary: summary || 'Résumé non disponible',
 				tags: validTags,
 				rawResponse: rawText
 			};

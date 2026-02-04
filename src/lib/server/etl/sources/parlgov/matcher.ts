@@ -247,7 +247,15 @@ export function isNonInscrit(organ: Organ): boolean {
 
 	for (const ni of NI_IDENTIFIERS) {
 		const niLower = ni.toLowerCase();
-		if (name.includes(niLower) || shortName === niLower) {
+		// Vérifier shortName exact
+		if (shortName === niLower) {
+			return true;
+		}
+		// Vérifier si le nom contient le mot entier (pas en sous-chaîne)
+		// Utiliser des word boundaries pour éviter les faux positifs
+		// Ex: "Rassemblement National" ne doit pas matcher "na"
+		const wordRegex = new RegExp(`\\b${niLower}\\b`, 'i');
+		if (wordRegex.test(name)) {
 			return true;
 		}
 	}

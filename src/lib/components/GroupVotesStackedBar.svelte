@@ -3,41 +3,17 @@
 
 	Composant réutilisable pour visualiser les votes d'un scrutin avec deux modes d'affichage :
 
-	**Mode "by-group"** :
+	Mode "by-group" :
 	- Une barre par groupe politique (LFI, RN, Renaissance, etc.)
 	- Empilée par position de vote (Pour/Contre/Abstention/Non-votant)
 	- Couleurs : celles des positions de vote
 
-	**Mode "by-position"** :
+	Mode "by-position" :
 	- Une barre par position de vote (Pour, Contre, Abstention, Non-votant)
 	- Empilée par groupe politique
 	- Couleurs : celles des groupes politiques
 
-	@component
-	@example
-	```svelte
-	<script>
-	  import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
-	</script>
-
-	<!-- Mode by-group -->
-	<GroupVotesStackedBar
-	  {groups}
-	  mode="by-group"
-	  height={220}
-	  maxGroups={10}
-	/>
-
-	<!-- Mode by-position -->
-	<GroupVotesStackedBar
-	  {groups}
-	  mode="by-position"
-	  height={220}
-	/>
-	```
-
-	@see {@link GroupVotesStackedBar.utils.ts} - Utilitaires de préparation des données
-	@see {@link ColumnStacked.svelte} - Composant LayerCake utilisé pour le rendu
+	Voir GroupVotesStackedBar.README.md pour la documentation complète
 -->
 <script lang="ts">
 	import { LayerCake, Svg, flatten } from 'layercake';

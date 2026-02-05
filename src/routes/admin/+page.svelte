@@ -20,6 +20,8 @@
 		const groups = data.groups[activeChamber] ?? [];
 		const leg = selectedLegislature[activeChamber];
 		if (!leg) return groups;
+		// Cas spécial : "__none__" = groupes sans legislature
+		if (leg === '__none__') return groups.filter((g) => !g.legislature);
 		return groups.filter((g) => g.legislature === leg);
 	});
 
@@ -40,8 +42,15 @@
 	const legislatureLabels: Record<string, (leg: string) => string> = {
 		AN: (leg) => `${leg}e législature`,
 		PE: (leg) => `${leg}e terme`,
-		SENAT: (leg) => leg
+		SENAT: (leg) => leg // Géré par les labels du serveur
 	};
+
+	// Label de la mandature pour l'affichage dans le tableau
+	function getLegislatureDisplay(chamber: string, leg: string | null): string {
+		if (!leg) return '—';
+		if (chamber === 'SENAT') return leg === 'SENAT' ? 'Actuel' : leg;
+		return leg;
+	}
 
 	// Récupérer la position (éditée ou originale)
 	function getPosition(organId: string, originalPosition: number | null): number {
@@ -177,9 +186,11 @@
 						value={selectedLegislature[activeChamber]}
 						onchange={(e) => (selectedLegislature[activeChamber] = e.currentTarget.value)}
 					>
-						<option value="">Toutes les mandatures</option>
+						<option value="">Tous</option>
 						{#each data.legislatures[activeChamber] as leg}
-							<option value={leg}>{legislatureLabels[activeChamber](leg)}</option>
+							<option value={leg.value}>
+								{activeChamber === 'SENAT' ? leg.label : legislatureLabels[activeChamber](leg.value)}
+							</option>
 						{/each}
 					</select>
 				{/if}
@@ -214,7 +225,7 @@
 								</td>
 								<td><code>{group.shortName || '—'}</code></td>
 								{#if !selectedLegislature[activeChamber]}
-									<td>{group.legislature || '—'}</td>
+									<td>{getLegislatureDisplay(activeChamber, group.legislature)}</td>
 								{/if}
 								<td>
 									<input

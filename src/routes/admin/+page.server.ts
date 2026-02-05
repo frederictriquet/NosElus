@@ -45,22 +45,29 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const groups = Array.from(deduped.values());
 
 	// Extraire les mandatures disponibles par chambre
-	const legislaturesPerChamber: Record<string, string[]> = {
+	const legislaturesPerChamber: Record<string, { value: string; label: string }[]> = {
 		AN: [],
 		PE: [],
 		SENAT: []
 	};
+	const seenLegislatures: Record<string, Set<string>> = { AN: new Set(), PE: new Set(), SENAT: new Set() };
 	for (const group of groups) {
 		const chamber = group.chamber;
+		if (!chamber || !seenLegislatures[chamber]) continue;
 		const leg = group.legislature || '';
-		if (chamber && legislaturesPerChamber[chamber] && leg && !legislaturesPerChamber[chamber].includes(leg)) {
-			legislaturesPerChamber[chamber].push(leg);
+		if (leg && !seenLegislatures[chamber].has(leg)) {
+			seenLegislatures[chamber].add(leg);
+			legislaturesPerChamber[chamber].push({ value: leg, label: leg });
 		}
 	}
-	// Trier : numérique décroissant pour AN et PE, alphabétique pour SENAT
-	legislaturesPerChamber.AN.sort((a, b) => Number(b) - Number(a));
-	legislaturesPerChamber.PE.sort((a, b) => Number(b) - Number(a));
-	legislaturesPerChamber.SENAT.sort();
+	// Trier : numérique décroissant pour AN et PE
+	legislaturesPerChamber.AN.sort((a, b) => Number(b.value) - Number(a.value));
+	legislaturesPerChamber.PE.sort((a, b) => Number(b.value) - Number(a.value));
+	// Pour le Sénat : remplacer par "Actuels" / "Historiques"
+	legislaturesPerChamber.SENAT = [
+		{ value: 'SENAT', label: 'Groupes actuels' },
+		{ value: '__none__', label: 'Groupes historiques' }
+	];
 
 	// Charger les settings ETL
 	const settings = await db.select().from(adminSettings);

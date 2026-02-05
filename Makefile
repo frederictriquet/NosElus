@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts etl-political-positions \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -142,13 +142,13 @@ etl-classify-scrutins: ## Classifier les scrutins existants par catégorie séma
 
 etl-analyze-laws: ## Analyser les lois avec LLM local (Ollama) - résumé et tags
 	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral$(RESET)"
-	npm run etl:analyze-laws
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
+	npm run etl:analyze-laws -- $(ARGS)
 
 etl-law-texts: ## Import des textes complets de lois via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: PISTE_CLIENT_ID et PISTE_CLIENT_SECRET dans .env$(RESET)"
-	npm run etl:law-texts
+	npm run etl:law-texts -- $(ARGS)
 
 etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
 	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
@@ -184,6 +184,10 @@ etl-nosdeputes-stats: ## Import statistiques d'activité députés (NosDéputés
 etl-colors: ## Synchronise les couleurs des groupes
 	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"
 	node --import tsx scripts/etl/sync-group-colors.ts
+
+etl-political-positions: ## Import positions politiques depuis ParlGov
+	@echo "$(CYAN)Import des positions politiques (ParlGov)...$(RESET)"
+	node --import tsx scripts/etl/import-political-positions.ts $(ARGS)
 
 etl-leg14: ## Import législature 14 (2012-2017)
 	@$(MAKE) etl-all ETL_LEGISLATURE=14

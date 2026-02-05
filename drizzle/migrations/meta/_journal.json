@@ -64,6 +64,13 @@
       "when": 1770064420539,
       "tag": "0008_steep_invisible_woman",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770212873790,
+      "tag": "0009_premium_scalphunter",
+      "breakpoints": true
     }
   ]
 }

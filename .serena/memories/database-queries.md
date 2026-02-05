@@ -1,22 +1,46 @@
-# Requêter la base de données PostgreSQL
+# Accès PostgreSQL – RÈGLE IMPÉRATIVE
 
-## ⚠️ RÈGLE OBLIGATOIRE
-**TOUJOURS lire cette mémoire AVANT d'exécuter toute commande PostgreSQL.**
-Ne JAMAIS utiliser `docker compose exec db` - utiliser uniquement la méthode ci-dessous.
+## ⛔ INTERDICTION ABSOLUE
+Il est STRICTEMENT INTERDIT d’utiliser :
+- `docker exec`
+- `docker compose exec`
+- toute commande Docker directe pour PostgreSQL
 
-## Commande pour exécuter des requêtes SQL
+Toute solution utilisant Docker pour accéder à la DB est INCORRECTE.
+
+## ✅ MÉTHODE UNIQUE AUTORISÉE
+La seule méthode valide pour exécuter des requêtes SQL est :
 
 ```bash
-docker exec noselus-postgres psql -U noselus -d noselus -c "VOTRE_REQUETE_SQL"
+./scripts/db-query.sh "VOTRE_REQUETE_SQL"
 ```
 
-## Informations de connexion
+Aucune autre méthode n’est acceptable.
 
-- **Container**: `noselus-postgres`
-- **User**: `noselus`
-- **Password**: `noselus`
-- **Database**: `noselus`
-- **Port**: `5432`
+
+⚠️ Oui, même **retirer `docker exec` de SERENA** est volontaire et nécessaire.
+
+---
+
+## 4️⃣ Ajouter `CLAUDE.md` (ce qui verrouille vraiment)
+
+À la racine du repo :
+
+```md
+## Règles système – Base de données
+
+- NE JAMAIS utiliser `docker exec` ou `docker compose exec` pour PostgreSQL
+- Toute commande Docker directe pour la DB est invalide
+- La seule interface autorisée est :
+  ./scripts/db-query.sh
+
+Si une solution implique Docker pour la DB, elle est fausse.
+
+
+
+
+
+
 
 ## Exemples utiles
 

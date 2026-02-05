@@ -4,16 +4,19 @@
  * Usage:
  *   npm run etl:analyze-laws
  *   npm run etl:analyze-laws -- --limit 50
- *   npm run etl:analyze-laws -- --model mistral-nemo
+ *   npm run etl:analyze-laws -- --model llama3.1
  *   npm run etl:analyze-laws -- --dry-run
  *
  * Prérequis:
  *   1. Ollama installé: https://ollama.com
- *   2. Modèle téléchargé: ollama pull mistral
+ *   2. Modèle téléchargé: ollama pull mistral-nemo
  *   3. Ollama lancé: ollama serve
  */
 
-import { analyzeLawsBatch, AVAILABLE_TAGS } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+import { analyzeLawsBatch, analyzeLaw, saveLawAnalysis, AVAILABLE_TAGS } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+import { db } from '../../src/lib/server/db/index.js';
+import { laws, lawSummaries } from '../../src/lib/server/db/schema/index.js';
+import { eq } from 'drizzle-orm';
 
 interface Args {
 	limit: number;
@@ -21,12 +24,13 @@ interface Args {
 	model: string;
 	dryRun: boolean;
 	help: boolean;
+	reanalyze?: string; // ID de loi à ré-analyser
 }
 
 function parseArgs(argv: string[]): Args {
 	const args: Args = {
 		limit: 100,
-		model: 'mistral',
+		model: 'mistral-nemo',
 		dryRun: false,
 		help: false
 	};
@@ -49,6 +53,10 @@ function parseArgs(argv: string[]): Args {
 			case '-n':
 				args.dryRun = true;
 				break;
+			case '--reanalyze':
+			case '-r':
+				args.reanalyze = argv[++i];
+				break;
 			case '--help':
 			case '-h':
 				args.help = true;
@@ -66,7 +74,8 @@ Usage: npm run etl:analyze-laws -- [options]
 Options:
   -l, --limit <n>       Nombre max de lois à analyser (défaut: 100)
   --legislature <leg>   Filtrer par législature (ex: 17)
-  -m, --model <name>    Modèle Ollama à utiliser (défaut: mistral)
+  -m, --model <name>    Modèle Ollama à utiliser (défaut: mistral-nemo)
+  -r, --reanalyze <id>  Ré-analyser une loi spécifique (supprime l'ancien résumé)
   -n, --dry-run         Mode simulation, n'écrit pas en base
   -h, --help            Affiche cette aide
 
@@ -81,7 +90,7 @@ Exemples:
 
 Prérequis:
   1. Installer Ollama: https://ollama.com
-  2. Télécharger un modèle: ollama pull mistral
+  2. Télécharger un modèle: ollama pull mistral-nemo
   3. Lancer Ollama: ollama serve (dans un terminal séparé)
 `);
 }
@@ -128,6 +137,63 @@ async function main() {
 
 	console.log('  ✓ Ollama est accessible');
 	console.log('');
+
+	// Mode ré-analyse d'une loi spécifique
+	if (args.reanalyze) {
+		console.log(`Ré-analyse de la loi: ${args.reanalyze}`);
+		console.log(`  Modèle: ${args.model}`);
+		console.log('');
+
+		try {
+			// Récupérer la loi
+			const [law] = await db.select().from(laws).where(eq(laws.id, args.reanalyze));
+			if (!law) {
+				console.error(`Erreur: Loi ${args.reanalyze} non trouvée`);
+				process.exit(1);
+			}
+
+			if (!law.description) {
+				console.error(`Erreur: Loi ${args.reanalyze} n'a pas de texte complet`);
+				process.exit(1);
+			}
+
+			console.log(`Titre: ${law.title.slice(0, 60)}...`);
+			console.log(`Texte: ${law.description.length} caractères`);
+			console.log('');
+
+			// Supprimer l'ancien résumé s'il existe
+			await db.delete(lawSummaries).where(eq(lawSummaries.lawId, args.reanalyze));
+			console.log('Ancien résumé supprimé (s\'il existait)');
+
+			// Analyser
+			console.log('Analyse en cours...');
+			const analysis = await analyzeLaw(law, { model: args.model });
+
+			if (analysis.summary.startsWith('Erreur:')) {
+				console.error(`Erreur: ${analysis.summary}`);
+				console.error(`Réponse brute: ${analysis.rawResponse?.slice(0, 500)}`);
+				process.exit(1);
+			}
+
+			// Sauvegarder
+			if (!args.dryRun) {
+				await saveLawAnalysis(args.reanalyze, analysis, args.model);
+				console.log('Résumé sauvegardé');
+			}
+
+			console.log('');
+			console.log('='.repeat(60));
+			console.log('Résultat:');
+			console.log(`  Résumé: ${analysis.summary}`);
+			console.log(`  Tags: ${analysis.tags.join(', ')}`);
+			console.log('='.repeat(60));
+			process.exit(0);
+		} catch (error) {
+			console.error('Erreur:', error);
+			process.exit(1);
+		}
+	}
+
 	console.log('Configuration:');
 	console.log(`  Modèle: ${args.model}`);
 	console.log(`  Limite: ${args.limit} lois`);

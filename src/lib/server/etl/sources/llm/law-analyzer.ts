@@ -3,12 +3,12 @@
  *
  * Prérequis:
  *   - Ollama installé et lancé (ollama serve)
- *   - Modèle téléchargé (ollama pull mistral)
+ *   - Modèle téléchargé (ollama pull mistral-nemo)
  */
 
 import { db } from '../../../db';
 import { laws, lawSummaries } from '../../../db/schema';
-import { eq, isNull, and, desc } from 'drizzle-orm';
+import { eq, isNull, isNotNull, and, desc } from 'drizzle-orm';
 import type { Law, NewLawSummary } from '../../../db/schema';
 
 // Tags disponibles pour la catégorisation des lois
@@ -52,35 +52,38 @@ export interface AnalyzerConfig {
 }
 
 const DEFAULT_CONFIG: AnalyzerConfig = {
-	model: 'mistral',
+	model: 'mistral-nemo',
 	baseUrl: 'http://localhost:11434',
 	temperature: 0.3, // Bas pour des réponses cohérentes
 	maxTokens: 200,
-	timeout: 120000 // 2 minutes
+	timeout: 300000 // 5 minutes (textes de loi complets)
 };
 
 const SYSTEM_PROMPT = `Tu es un expert en analyse de textes législatifs français.
 Tu dois rendre les lois accessibles au grand public.
-Réponds UNIQUEMENT en JSON valide, sans commentaire ni explication.`;
+Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
 
 function buildUserPrompt(lawTitle: string, lawDescription: string | null): string {
 	const text = lawDescription ? `${lawTitle}\n\n${lawDescription}` : lawTitle;
 
-	return `Analyse ce texte de loi français.
-
-INSTRUCTIONS:
-1. Écris UN résumé en UNE SEULE phrase simple (max 30 mots), compréhensible par un citoyen non-juriste
-2. Choisis 2 à 4 tags pertinents UNIQUEMENT parmi cette liste: ${AVAILABLE_TAGS.join(', ')}
-
-FORMAT DE RÉPONSE (JSON strict):
-{"resume": "La phrase de résumé ici", "tags": ["tag1", "tag2"]}
-
-TEXTE DE LOI:
+	return `TEXTE DE LOI À ANALYSER:
 """
-${text.slice(0, 3000)}
+${text}
 """
 
-JSON:`;
+TÂCHE: Résume cette loi pour un citoyen non-juriste.
+
+FORMAT OBLIGATOIRE - réponds UNIQUEMENT avec ce JSON (remplace les ... par ton analyse):
+{"resume": "...", "tags": ["...", "..."]}
+
+RÈGLES:
+- resume: 1-3 phrases simples sur ce que change concrètement cette loi
+- tags: 2-4 mots parmi: ${AVAILABLE_TAGS.join(', ')}
+
+EXEMPLE:
+{"resume": "Cette loi augmente le SMIC de 2% pour tous les salariés au salaire minimum.", "tags": ["travail", "économie"]}
+
+TON JSON:`;
 }
 
 /**
@@ -95,19 +98,33 @@ function parseResponse(rawText: string): LawAnalysis {
 			const jsonStr = rawText.slice(start, end);
 			const data = JSON.parse(jsonStr);
 
+			// Debug: afficher les clés reçues
+			console.log(`  [Parse] Clés JSON reçues: ${Object.keys(data).join(', ')}`);
+
 			// Valide et filtre les tags
 			const validTags = (data.tags || []).filter((t: string) =>
 				AVAILABLE_TAGS.includes(t as LawTag)
 			) as LawTag[];
 
+			const summary = data.resume || data.summary || data.résumé;
+			if (!summary) {
+				console.error(`  [Parse] Aucune clé resume/summary/résumé trouvée`);
+				console.error(`  [Parse] Contenu: ${JSON.stringify(data).slice(0, 300)}`);
+			}
+
 			return {
-				summary: data.resume || data.summary || 'Résumé non disponible',
+				summary: summary || 'Résumé non disponible',
 				tags: validTags,
 				rawResponse: rawText
 			};
+		} else {
+			console.error('  [Parse] Aucun JSON trouvé dans la réponse');
+			console.error(`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`);
 		}
-	} catch {
-		// Parsing échoué
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Erreur inconnue';
+		console.error(`  [Parse] Erreur JSON: ${message}`);
+		console.error(`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`);
 	}
 
 	return {
@@ -158,14 +175,13 @@ export async function getUnanalyzedLaws(
 	limit: number = 100,
 	legislature?: string
 ): Promise<Law[]> {
-	// Sous-requête pour trouver les lois sans résumé
-	const analyzed = db.select({ lawId: lawSummaries.lawId }).from(lawSummaries);
-
-	let query = db
+	const query = db
 		.select()
 		.from(laws)
 		.where(
 			and(
+				// Seulement les lois avec texte complet
+				isNotNull(laws.description),
 				// Pas encore analysée
 				isNull(
 					db

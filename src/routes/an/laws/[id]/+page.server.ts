@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, laws, scrutins } from '$lib/server/db';
+import { db, laws, scrutins, lawSummaries } from '$lib/server/db';
 import { eq, and, desc, count, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLawContributors } from '$lib/server/api/helpers';
@@ -84,6 +84,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return getLawContributors(params.id);
 	};
 
+	// Loader for AI summary
+	const loadSummary = async () => {
+		const [summary] = await db
+			.select({
+				summary: lawSummaries.summary,
+				tags: lawSummaries.tags,
+				model: lawSummaries.model
+			})
+			.from(lawSummaries)
+			.where(eq(lawSummaries.lawId, params.id));
+		return summary || null;
+	};
+
 	// Build timeline events from law dates
 	const buildTimeline = () => {
 		const events: Array<{
@@ -148,6 +161,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Streamed data
 		relatedScrutins: loadRelatedScrutins(),
 		scrutinStats: loadScrutinStats(),
-		contributors: loadContributors()
+		contributors: loadContributors(),
+		aiSummary: loadSummary()
 	};
 };

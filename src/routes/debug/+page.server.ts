@@ -1,7 +1,7 @@
 import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { laws, lawSummaries } from '$lib/server/db/schema';
+import { laws, lawSummaries, lawTags, tags } from '$lib/server/db/schema';
 import { eq, desc, isNotNull, isNull, and } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
@@ -19,7 +19,6 @@ export const load: PageServerLoad = async () => {
 			fullTitle: laws.title,
 			hasDescription: isNotNull(laws.description),
 			summary: lawSummaries.summary,
-			tags: lawSummaries.tags,
 			model: lawSummaries.model,
 			analyzedAt: lawSummaries.analyzedAt
 		})
@@ -27,6 +26,25 @@ export const load: PageServerLoad = async () => {
 		.innerJoin(laws, eq(lawSummaries.lawId, laws.id))
 		.orderBy(desc(lawSummaries.analyzedAt))
 		.limit(100);
+
+	// Get tags for each law (in parallel)
+	const lawsWithTags = await Promise.all(
+		lawsWithSummaries.map(async (law) => {
+			const lawTagsList = await db
+				.select({
+					slug: tags.slug,
+					name: tags.name
+				})
+				.from(lawTags)
+				.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
+				.where(eq(lawTags.lawId, law.id));
+
+			return {
+				...law,
+				tags: lawTagsList.map((t) => t.slug)
+			};
+		})
+	);
 
 	// Laws with full text but no summary
 	const lawsWithTextNoSummary = await db
@@ -50,7 +68,7 @@ export const load: PageServerLoad = async () => {
 	};
 
 	return {
-		lawsWithSummaries,
+		lawsWithSummaries: lawsWithTags,
 		lawsWithTextNoSummary,
 		stats
 	};

@@ -71,6 +71,13 @@
       "when": 1770212873790,
       "tag": "0009_premium_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1770299003477,
+      "tag": "0010_cloudy_the_phantom",
+      "breakpoints": true
     }
   ]
 }

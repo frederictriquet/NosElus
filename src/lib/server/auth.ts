@@ -1,24 +1,33 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 heures
+
+/**
+ * Obtient le mot de passe admin depuis les variables d'environnement
+ * Fonction plutôt que constante pour permettre le rechargement en dev
+ */
+function getAdminPassword(): string | undefined {
+	return process.env.ADMIN_PASSWORD;
+}
 
 /**
  * Vérifie si le mot de passe admin est configuré
  */
 export function isAdminPasswordConfigured(): boolean {
-	return !!ADMIN_PASSWORD;
+	const password = getAdminPassword();
+	return !!password;
 }
 
 /**
  * Vérifie si le mot de passe fourni correspond au mot de passe admin
  */
 export function verifyAdminPassword(password: string): boolean {
-	if (!ADMIN_PASSWORD) return false;
+	const adminPassword = getAdminPassword();
+	if (!adminPassword) return false;
 
 	// Comparaison timing-safe
 	const providedBuffer = Buffer.from(password, 'utf-8');
-	const expectedBuffer = Buffer.from(ADMIN_PASSWORD, 'utf-8');
+	const expectedBuffer = Buffer.from(adminPassword, 'utf-8');
 
 	if (providedBuffer.length !== expectedBuffer.length) {
 		return false;
@@ -31,10 +40,11 @@ export function verifyAdminPassword(password: string): boolean {
  * Génère un token de session admin signé
  */
 export function generateAdminSessionToken(): string {
-	if (!ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD not configured');
+	const adminPassword = getAdminPassword();
+	if (!adminPassword) throw new Error('ADMIN_PASSWORD not configured');
 
 	const timestamp = Date.now().toString();
-	const hmac = createHmac('sha256', ADMIN_PASSWORD);
+	const hmac = createHmac('sha256', adminPassword);
 	hmac.update(timestamp);
 	const signature = hmac.digest('hex');
 
@@ -45,7 +55,8 @@ export function generateAdminSessionToken(): string {
  * Vérifie la validité d'un token de session admin
  */
 export function verifyAdminSessionToken(token: string): boolean {
-	if (!ADMIN_PASSWORD) return false;
+	const adminPassword = getAdminPassword();
+	if (!adminPassword) return false;
 	if (!token || typeof token !== 'string') return false;
 
 	const parts = token.split('.');
@@ -60,7 +71,7 @@ export function verifyAdminSessionToken(token: string): boolean {
 	}
 
 	// Vérifier la signature
-	const hmac = createHmac('sha256', ADMIN_PASSWORD);
+	const hmac = createHmac('sha256', adminPassword);
 	hmac.update(timestamp);
 	const expectedSignature = hmac.digest('hex');
 

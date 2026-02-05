@@ -94,15 +94,23 @@
 
 ### 3.1 Classification thématique
 
-| Tâche | Complexité | Dépendances |
-|-------|------------|-------------|
-| Définir taxonomie de thèmes (10-15 catégories) | 🟢 Simple | Analyse éditoriale |
-| Classifier manuellement les 100 scrutins principaux | 🟡 Moyen | Taxonomie |
-| Exploiter les mots-clés officiels des dossiers | 🟡 Moyen | Dossiers importés |
-| NLP léger pour suggestion automatique de thème | 🔴 Complexe | Classification manuelle |
-| UI : filtres et stats par thème | 🟡 Moyen | Thèmes en base |
+| Tâche | Complexité | Dépendances | Statut |
+|-------|------------|-------------|--------|
+| Définir taxonomie de thèmes (10-15 catégories) | 🟢 Simple | Analyse éditoriale | ✅ 20 tags implémentés |
+| Classifier manuellement les 100 scrutins principaux | 🟡 Moyen | Taxonomie | 🔜 Auto via LLM |
+| Exploiter les mots-clés officiels des dossiers | 🟡 Moyen | Dossiers importés | 🔜 À faire |
+| NLP léger pour suggestion automatique de thème | 🔴 Complexe | Classification manuelle | ✅ LLM Ollama (mistral-nemo) |
+| UI : filtres et stats par thème | 🟡 Moyen | Thèmes en base | ✅ Filtre dropdown `/an/laws` + TagBadge |
 
 **Valeur** : Répondre à "Comment X vote sur l'environnement ?".
+
+**Implémentation 2026-02-05** :
+- 20 tags référence (économie, santé, environnement, etc.) dans table `tags` avec couleurs
+- Migration JSONB → relational `law_tags` (many-to-many) avec `unaccent` pour accent normalization
+- UI : dropdown filtre par tag, TagBadge composant réutilisable affichant couleur depuis DB
+- LLM : tags dynamiques depuis DB (pas hardcodé), génération auto par mistral-nemo via Ollama
+- Batch loading (1+N → 2 queries) pour éviter N+1 sur `/an/laws` et `/debug`
+- Commit `7e4c28e` : docs(tags) avec JSDoc + pattern documentation
 
 ---
 

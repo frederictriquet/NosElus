@@ -32,9 +32,10 @@ Permettre aux utilisateurs de filtrer les lois par thématique en utilisant les 
 | 17:30 | /code-review | ✅ | N+1 corrigé, nommage amélioré |
 | 18:00 | /document | ✅ | JSDoc sur TagBadge, law-analyzer, batch pattern |
 | 18:30 | /capitalize | ✅ | 3 mémoires : LLM mapping, batch loading, migration |
+| 19:00 | /roadmap-update | ✅ | Phase 3.1 marquée DONE, tags implémentés |
 
 ## Phase Actuelle
-/capitalize ✅ → **Prochaine étape** : `/roadmap-update --done`
+/roadmap-update ✅ → **Prochaine étape** : `/pre-merge`
 
 ## Contexte Clé
 - **Architecture tags** : Table `tags` (référence) + `law_tags` (jonction many-to-many)

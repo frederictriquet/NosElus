@@ -7,6 +7,22 @@
 	// État local pour la chambre active
 	let activeChamber = $state<'AN' | 'PE' | 'SENAT'>('AN');
 
+	// Filtre par mandature (par chambre)
+	let selectedLegislature = $state<Record<string, string>>({
+		AN: '',
+		PE: '',
+		SENAT: ''
+	});
+
+	// Groupes filtrés par mandature
+	const filteredGroups = $derived(() => {
+		if (!data.authenticated || !data.groups) return [];
+		const groups = data.groups[activeChamber] ?? [];
+		const leg = selectedLegislature[activeChamber];
+		if (!leg) return groups;
+		return groups.filter((g) => g.legislature === leg);
+	});
+
 	// État local pour les positions (permet édition avant sauvegarde)
 	let editedPositions = $state<Record<string, number>>({});
 
@@ -19,6 +35,12 @@
 		AN: 'Assemblée nationale',
 		PE: 'Parlement européen',
 		SENAT: 'Sénat'
+	};
+
+	const legislatureLabels: Record<string, (leg: string) => string> = {
+		AN: (leg) => `${leg}e législature`,
+		PE: (leg) => `${leg}e terme`,
+		SENAT: (leg) => leg
 	};
 
 	// Récupérer la position (éditée ou originale)
@@ -146,23 +168,41 @@
 
 		<!-- Liste des groupes -->
 		<div class="groups-list">
-			<h2>Groupes parlementaires - {chamberLabels[activeChamber]}</h2>
+			<div class="groups-header">
+				<h2>Groupes parlementaires - {chamberLabels[activeChamber]}</h2>
 
-			{#if data.groups[activeChamber].length === 0}
-				<p class="empty-state">Aucun groupe parlementaire pour cette chambre</p>
+				{#if data.legislatures[activeChamber]?.length > 0}
+					<select
+						class="legislature-select"
+						value={selectedLegislature[activeChamber]}
+						onchange={(e) => (selectedLegislature[activeChamber] = e.currentTarget.value)}
+					>
+						<option value="">Toutes les mandatures</option>
+						{#each data.legislatures[activeChamber] as leg}
+							<option value={leg}>{legislatureLabels[activeChamber](leg)}</option>
+						{/each}
+					</select>
+				{/if}
+			</div>
+
+			{#if filteredGroups().length === 0}
+				<p class="empty-state">Aucun groupe parlementaire pour cette sélection</p>
 			{:else}
+				<p class="groups-count">{filteredGroups().length} groupes</p>
 				<table class="groups-table">
 					<thead>
 						<tr>
 							<th>Nom</th>
 							<th>Sigle</th>
-							<th>Législature</th>
+							{#if !selectedLegislature[activeChamber]}
+								<th>Mandature</th>
+							{/if}
 							<th>Position</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.groups[activeChamber] as group}
+						{#each filteredGroups() as group}
 							<tr>
 								<td>
 									<div class="group-name">
@@ -173,7 +213,9 @@
 									</div>
 								</td>
 								<td><code>{group.shortName || '—'}</code></td>
-								<td>{group.legislature || '—'}</td>
+								{#if !selectedLegislature[activeChamber]}
+									<td>{group.legislature || '—'}</td>
+								{/if}
 								<td>
 									<input
 										type="number"
@@ -393,9 +435,39 @@
 		color: var(--color-text-muted);
 	}
 
+	.groups-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
 	.groups-list h2 {
 		font-size: 1.125rem;
-		margin: 0 0 1rem 0;
+		margin: 0;
+	}
+
+	.legislature-select {
+		padding: 0.375rem 0.75rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		font-size: 0.875rem;
+		background: var(--color-bg);
+		color: var(--color-text);
+		cursor: pointer;
+	}
+
+	.legislature-select:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+	}
+
+	.groups-count {
+		margin: 0 0 0.5rem 0;
+		font-size: 0.8125rem;
+		color: var(--color-text-muted);
 	}
 
 	.groups-table {

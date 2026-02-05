@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { verifyAdminPassword, generateAdminSessionToken } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { organs, adminSettings } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Si non authentifié, retourner uniquement le flag
@@ -30,6 +30,24 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(eq(organs.type, 'GP'))
 		.orderBy(organs.chamber, organs.politicalPosition);
 
+	// Extraire les mandatures disponibles par chambre
+	const legislaturesPerChamber: Record<string, string[]> = {
+		AN: [],
+		PE: [],
+		SENAT: []
+	};
+	for (const group of groups) {
+		const chamber = group.chamber;
+		const leg = group.legislature || '';
+		if (chamber && legislaturesPerChamber[chamber] && leg && !legislaturesPerChamber[chamber].includes(leg)) {
+			legislaturesPerChamber[chamber].push(leg);
+		}
+	}
+	// Trier : numérique décroissant pour AN et PE, alphabétique pour SENAT
+	legislaturesPerChamber.AN.sort((a, b) => Number(b) - Number(a));
+	legislaturesPerChamber.PE.sort((a, b) => Number(b) - Number(a));
+	legislaturesPerChamber.SENAT.sort();
+
 	// Charger les settings ETL
 	const settings = await db.select().from(adminSettings);
 
@@ -49,6 +67,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		authenticated: true,
 		groups: groupedByChamber,
+		legislatures: legislaturesPerChamber,
 		etlSettings
 	};
 };

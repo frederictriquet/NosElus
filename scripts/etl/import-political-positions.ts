@@ -163,6 +163,15 @@ async function main() {
 			const match = findBestMatch(organ, allParties);
 			const position = determinePosition(organ, match);
 
+			// Ne pas écraser une position déjà seedée en DB (ex: groupes PE)
+			// quand ParlGov n'a pas de meilleure donnée
+			if (!match && organ.politicalPosition !== null) {
+				logVerbose(
+					`  ⊘ ${organ.shortName || organ.name.slice(0, 20)} → Keeping DB position ${organ.politicalPosition} (no ParlGov match)`
+				);
+				continue;
+			}
+
 			results.push({ organ, match, position });
 
 			if (match) {

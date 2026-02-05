@@ -53,7 +53,8 @@ Pages (AN/PE/Senat carte)
 |-----------|----------|---------|
 | **ParlGov Client** | `src/lib/server/etl/sources/parlgov/client.ts` | HTTP fetch + CSV parsing |
 | **Fuzzy Matcher** | `src/lib/server/etl/sources/parlgov/matcher.ts` | Jaccard similarity with NLP |
-| **ETL Script** | `scripts/etl/import-political-positions.ts` | CLI import tool |
+| **ETL Script** | `scripts/etl/import-political-positions.ts` | CLI import tool (national parties) |
+| **PE Seed Script** | `scripts/etl/seed-pe-positions.ts` | Seed PE group positions (CHES) |
 | **Sort Utility** | `src/lib/utils/political-spectrum.ts` | Reusable sorting logic |
 | **DB Schema** | `src/lib/server/db/schema/organs.ts` | `politicalPosition` column |
 
@@ -108,10 +109,15 @@ if (score >= 0.4) {  // 40% minimum
 
 ### Position Determination
 
-**Priority cascade**:
+**Two sources of positions**:
 
-1. **ParlGov match** (`leftRight`) → Use academic position (0-10)
-2. **Non-Inscrit detection** → Position = 999 (end of spectrum)
+1. **PE groups** (European Parliament): Seeded in DB via `scripts/etl/seed-pe-positions.ts` using Chapel Hill Expert Survey data. ParlGov doesn't cover EP groups directly.
+2. **National groups** (AN, Sénat): Calculated by `determinePosition()` from ParlGov data.
+
+**Priority cascade** (for `determinePosition()`):
+
+1. **Non-Inscrit detection** → Position = 999 (end of spectrum)
+2. **ParlGov match** (`leftRight`) → Use academic position (0-10)
 3. **Family fallback** (`FAMILY_POSITIONS`) → Use political family average
 4. **Default** → Position = 5.0 (center)
 
@@ -128,17 +134,18 @@ determinePosition(unknownGroup, null) // → 5.0 (center)
 ### ETL Import
 
 ```bash
-# One-time setup
-make etl-political-positions
+# Seed PE group positions (Chapel Hill Expert Survey)
+make etl-seed-pe-positions
 
-# Update positions
-npm run etl:political-positions
+# Import national party positions via ParlGov
+make etl-political-positions
 
 # Dry-run mode
 npm run etl:political-positions -- --dry-run --verbose
 ```
 
 **Frequency**: Run once per legislature or when new groups are added.
+**PE groups**: Seeded separately — `import-political-positions` skips groups already seeded.
 
 ### Frontend Usage
 
@@ -309,6 +316,7 @@ const NI_IDENTIFIERS = [
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.3.0 | 2026-02-05 | PE positions migrated to DB via seed script |
 | 1.2.0 | 2026-02-04 | Documentation release |
 | 1.1.0 | 2026-02-04 | Fix: Word boundaries for NI detection |
 | 1.0.0 | 2026-02-04 | Initial release - 124 tests passing |

@@ -100,7 +100,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const lawTagsList = await db
 			.select({
 				slug: tags.slug,
-				name: tags.name
+				name: tags.name,
+				color: tags.color
 			})
 			.from(lawTags)
 			.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
@@ -108,7 +109,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		return {
 			...summary,
-			tags: lawTagsList.map((t) => t.slug)
+			tags: lawTagsList
 		};
 	};
 

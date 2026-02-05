@@ -7,9 +7,9 @@
  */
 
 import { db } from '../../../db';
-import { laws, lawSummaries } from '../../../db/schema';
+import { laws, lawSummaries, lawTags } from '../../../db/schema';
 import { eq, isNull, isNotNull, and, desc } from 'drizzle-orm';
-import type { Law, NewLawSummary } from '../../../db/schema';
+import type { Law, NewLawSummary, NewLawTag } from '../../../db/schema';
 
 // Tags disponibles pour la catégorisation des lois
 export const AVAILABLE_TAGS = [
@@ -207,6 +207,7 @@ export async function getUnanalyzedLaws(
 
 /**
  * Sauvegarde une analyse dans la base de données.
+ * Écrit le résumé dans law_summaries et les tags dans law_tags.
  */
 export async function saveLawAnalysis(
 	lawId: string,
@@ -216,12 +217,12 @@ export async function saveLawAnalysis(
 	const newSummary: NewLawSummary = {
 		lawId,
 		summary: analysis.summary,
-		tags: analysis.tags,
 		model,
 		analyzedAt: new Date(),
 		updatedAt: new Date()
 	};
 
+	// Upsert du résumé
 	await db
 		.insert(lawSummaries)
 		.values(newSummary)
@@ -229,11 +230,22 @@ export async function saveLawAnalysis(
 			target: lawSummaries.lawId,
 			set: {
 				summary: newSummary.summary,
-				tags: newSummary.tags,
 				model: newSummary.model,
 				updatedAt: new Date()
 			}
 		});
+
+	// Supprimer les anciens tags et insérer les nouveaux
+	await db.delete(lawTags).where(eq(lawTags.lawId, lawId));
+
+	if (analysis.tags.length > 0) {
+		const tagValues: NewLawTag[] = analysis.tags.map((tag) => ({
+			lawId,
+			tagSlug: tag
+		}));
+
+		await db.insert(lawTags).values(tagValues);
+	}
 }
 
 export interface AnalyzeBatchResult {

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, laws, scrutins, lawSummaries } from '$lib/server/db';
+import { db, laws, scrutins, lawSummaries, lawTags, tags } from '$lib/server/db';
 import { eq, and, desc, count, type SQL } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getLawContributors } from '$lib/server/api/helpers';
@@ -89,12 +89,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const [summary] = await db
 			.select({
 				summary: lawSummaries.summary,
-				tags: lawSummaries.tags,
 				model: lawSummaries.model
 			})
 			.from(lawSummaries)
 			.where(eq(lawSummaries.lawId, params.id));
-		return summary || null;
+
+		if (!summary) return null;
+
+		// Get tags for this law
+		const lawTagsList = await db
+			.select({
+				slug: tags.slug,
+				name: tags.name,
+				color: tags.color
+			})
+			.from(lawTags)
+			.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
+			.where(eq(lawTags.lawId, params.id));
+
+		return {
+			...summary,
+			tags: lawTagsList
+		};
 	};
 
 	// Build timeline events from law dates

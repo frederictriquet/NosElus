@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import TagBadge from '$lib/components/TagBadge.svelte';
 
 	let { data } = $props();
 
@@ -70,6 +71,14 @@
 					</option>
 				{/each}
 			</select>
+			<select name="tag" class="filter-select">
+				<option value="">Tous les thèmes</option>
+				{#each data.availableTags as availableTag}
+					<option value={availableTag.slug} selected={data.filters.tag === availableTag.slug}>
+						{availableTag.name}
+					</option>
+				{/each}
+			</select>
 			<button type="submit" class="btn btn-primary">Filtrer</button>
 		</div>
 	</form>
@@ -106,6 +115,13 @@
 						<span class="law-theme">{law.theme}</span>
 					{/if}
 				</div>
+				{#if law.tags.length > 0}
+					<div class="law-tags">
+						{#each law.tags as lawTag}
+							<TagBadge tag={lawTag} />
+						{/each}
+					</div>
+				{/if}
 			</a>
 		{/each}
 	</div>
@@ -257,6 +273,13 @@
 		padding: 0.125rem 0.5rem;
 		background: var(--color-bg-secondary);
 		border-radius: var(--radius-sm);
+	}
+
+	.law-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+		margin-top: 0.5rem;
 	}
 
 	@media (max-width: 640px) {

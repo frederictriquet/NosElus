@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { db, scrutins, votes, actors, organs, laws, lawSummaries } from '$lib/server/db';
+import { db, scrutins, votes, actors, organs, laws, lawSummaries, lawTags, tags } from '$lib/server/db';
 import { eq, count } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTightLabel, DEFAULT_TIGHT_THRESHOLD } from '$lib/server/api/helpers';
@@ -30,14 +30,29 @@ export const load: PageServerLoad = async ({ params }) => {
 				sourceUrl: laws.sourceUrl,
 				// AI-generated summary
 				summary: lawSummaries.summary,
-				tags: lawSummaries.tags,
 				summaryModel: lawSummaries.model
 			})
 			.from(laws)
 			.leftJoin(lawSummaries, eq(laws.id, lawSummaries.lawId))
 			.where(eq(laws.id, scrutin.lawId));
 
-		return law || null;
+		if (!law) return null;
+
+		// Get tags for this law
+		const lawTagsList = await db
+			.select({
+				slug: tags.slug,
+				name: tags.name,
+				color: tags.color
+			})
+			.from(lawTags)
+			.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
+			.where(eq(lawTags.lawId, scrutin.lawId));
+
+		return {
+			...law,
+			tags: lawTagsList
+		};
 	};
 
 	// Get votes breakdown by group

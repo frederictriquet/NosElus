@@ -1,9 +1,11 @@
 <script lang="ts">
+	import TagBadge, { type TagData } from './TagBadge.svelte';
+
 	interface Props {
 		/** Résumé de la loi généré par IA */
 		summary: string;
-		/** Tags de catégorisation */
-		tags: string[];
+		/** Tags de catégorisation (objets avec slug, name, color) */
+		tags: TagData[];
 		/** Modèle utilisé pour l'analyse */
 		model?: string;
 		/** Afficher le badge "IA" */
@@ -19,34 +21,6 @@
 		showAiBadge = true,
 		class: className = ''
 	}: Props = $props();
-
-	// Couleurs par catégorie de tag
-	const tagColors: Record<string, string> = {
-		économie: '#3b82f6',
-		fiscalité: '#3b82f6',
-		environnement: '#22c55e',
-		énergie: '#22c55e',
-		agriculture: '#22c55e',
-		santé: '#ef4444',
-		travail: '#f59e0b',
-		social: '#f59e0b',
-		justice: '#8b5cf6',
-		sécurité: '#8b5cf6',
-		éducation: '#06b6d4',
-		recherche: '#06b6d4',
-		culture: '#ec4899',
-		défense: '#64748b',
-		immigration: '#64748b',
-		international: '#64748b',
-		transports: '#14b8a6',
-		logement: '#f97316',
-		numérique: '#6366f1',
-		collectivités: '#a855f7'
-	};
-
-	function getTagColor(tag: string): string {
-		return tagColors[tag.toLowerCase()] || '#6b7280';
-	}
 </script>
 
 <div class="law-summary {className}">
@@ -79,9 +53,7 @@
 	{#if tags.length > 0}
 		<div class="tags">
 			{#each tags as tag}
-				<span class="tag" style="--tag-color: {getTagColor(tag)}">
-					{tag}
-				</span>
+				<TagBadge {tag} />
 			{/each}
 		</div>
 	{/if}
@@ -138,22 +110,5 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-	}
-
-	.tag {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.25rem 0.625rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		border-radius: 9999px;
-		background: color-mix(in srgb, var(--tag-color) 15%, transparent);
-		color: var(--tag-color);
-		border: 1px solid color-mix(in srgb, var(--tag-color) 30%, transparent);
-	}
-
-	/* Dark mode adjustments */
-	:global(.dark) .tag {
-		background: color-mix(in srgb, var(--tag-color) 20%, transparent);
 	}
 </style>

@@ -11,6 +11,8 @@ export { lawSummaries, type LawSummary, type NewLawSummary } from './law-summari
 export { syncMetadata, type SyncMetadata, type NewSyncMetadata } from './sync-metadata';
 export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
 export { adminSettings, type AdminSetting, type NewAdminSetting } from './admin-settings';
+export { tags, type Tag, type NewTag } from './tags';
+export { lawTags, type LawTag, type NewLawTag } from './law-tags';
 
 // Relations
 export {
@@ -22,5 +24,7 @@ export {
 	lawsRelations,
 	lawCosignatoriesRelations,
 	lawSummariesRelations,
-	amendmentsRelations
+	amendmentsRelations,
+	tagsRelations,
+	lawTagsRelations
 } from './relations';

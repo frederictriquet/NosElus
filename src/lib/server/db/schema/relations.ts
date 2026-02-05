@@ -8,6 +8,8 @@ import { laws } from './laws';
 import { amendments } from './amendments';
 import { lawCosignatories } from './law-cosignatories';
 import { lawSummaries } from './law-summaries';
+import { tags } from './tags';
+import { lawTags } from './law-tags';
 
 // Relations pour actors
 export const actorsRelations = relations(actors, ({ many }) => ({
@@ -81,7 +83,8 @@ export const lawsRelations = relations(laws, ({ one, many }) => ({
 	summary: one(lawSummaries, {
 		fields: [laws.id],
 		references: [lawSummaries.lawId]
-	})
+	}),
+	lawTags: many(lawTags)
 }));
 
 // Relations pour lawSummaries
@@ -113,5 +116,22 @@ export const amendmentsRelations = relations(amendments, ({ one }) => ({
 	author: one(actors, {
 		fields: [amendments.authorId],
 		references: [actors.id]
+	})
+}));
+
+// Relations pour tags
+export const tagsRelations = relations(tags, ({ many }) => ({
+	lawTags: many(lawTags)
+}));
+
+// Relations pour lawTags
+export const lawTagsRelations = relations(lawTags, ({ one }) => ({
+	law: one(laws, {
+		fields: [lawTags.lawId],
+		references: [laws.id]
+	}),
+	tag: one(tags, {
+		fields: [lawTags.tagSlug],
+		references: [tags.slug]
 	})
 }));

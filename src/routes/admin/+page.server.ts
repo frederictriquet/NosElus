@@ -1,9 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import type { Actions, PageServerLoad } from './$types';
 import { verifyAdminPassword, generateAdminSessionToken } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { organs, adminSettings } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Si non authentifié, retourner uniquement le flag
@@ -71,7 +72,7 @@ export const actions = {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
-			secure: process.env.NODE_ENV === 'production',
+			secure: !dev,
 			maxAge: 60 * 60 * 24 // 24 heures
 		});
 

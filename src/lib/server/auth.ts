@@ -1,28 +1,20 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import { env } from '$env/dynamic/private';
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 heures
-
-/**
- * Obtient le mot de passe admin depuis les variables d'environnement
- * Fonction plutôt que constante pour permettre le rechargement en dev
- */
-function getAdminPassword(): string | undefined {
-	return process.env.ADMIN_PASSWORD;
-}
 
 /**
  * Vérifie si le mot de passe admin est configuré
  */
 export function isAdminPasswordConfigured(): boolean {
-	const password = getAdminPassword();
-	return !!password;
+	return !!env.ADMIN_PASSWORD;
 }
 
 /**
  * Vérifie si le mot de passe fourni correspond au mot de passe admin
  */
 export function verifyAdminPassword(password: string): boolean {
-	const adminPassword = getAdminPassword();
+	const adminPassword = env.ADMIN_PASSWORD;
 	if (!adminPassword) return false;
 
 	// Comparaison timing-safe
@@ -40,7 +32,7 @@ export function verifyAdminPassword(password: string): boolean {
  * Génère un token de session admin signé
  */
 export function generateAdminSessionToken(): string {
-	const adminPassword = getAdminPassword();
+	const adminPassword = env.ADMIN_PASSWORD;
 	if (!adminPassword) throw new Error('ADMIN_PASSWORD not configured');
 
 	const timestamp = Date.now().toString();
@@ -55,7 +47,7 @@ export function generateAdminSessionToken(): string {
  * Vérifie la validité d'un token de session admin
  */
 export function verifyAdminSessionToken(token: string): boolean {
-	const adminPassword = getAdminPassword();
+	const adminPassword = env.ADMIN_PASSWORD;
 	if (!adminPassword) return false;
 	if (!token || typeof token !== 'string') return false;
 

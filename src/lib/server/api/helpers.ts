@@ -446,6 +446,7 @@ export interface GroupWithMemberCount {
 	shortName: string | null;
 	color: string | null;
 	legislature: string | null;
+	politicalPosition: number | null;
 	memberCount: number;
 }
 
@@ -488,7 +489,8 @@ export async function getANGroupsWithMemberCount(
 			name: organs.name,
 			shortName: organs.shortName,
 			color: organs.color,
-			legislature: organs.legislature
+			legislature: organs.legislature,
+			politicalPosition: organs.politicalPosition
 		})
 		.from(organs)
 		.where(inArray(organs.id, organIds));
@@ -570,13 +572,14 @@ export async function getSenatGroupsWithMemberCount(
 			shortName: organs.shortName,
 			color: organs.color,
 			legislature: sql<string | null>`NULL`,
+			politicalPosition: organs.politicalPosition,
 			memberCount: count(sql`DISTINCT ${actors.id}`)
 		})
 		.from(organs)
 		.innerJoin(mandates, eq(mandates.organId, organs.id))
 		.innerJoin(actors, eq(mandates.actorId, actors.id))
 		.where(and(...mandateConditions))
-		.groupBy(organs.id, organs.name, organs.shortName, organs.color);
+		.groupBy(organs.id, organs.name, organs.shortName, organs.color, organs.politicalPosition);
 
 	return groupsWithMembers
 		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))
@@ -673,13 +676,14 @@ export async function getPEGroupsWithMemberCount(
 			shortName: organs.shortName,
 			color: organs.color,
 			legislature: sql<string | null>`NULL`,
+			politicalPosition: organs.politicalPosition,
 			memberCount: count(sql`DISTINCT ${actors.id}`)
 		})
 		.from(organs)
 		.innerJoin(mandates, eq(mandates.organId, organs.id))
 		.innerJoin(actors, eq(mandates.actorId, actors.id))
 		.where(and(...mandateConditions))
-		.groupBy(organs.id, organs.name, organs.shortName, organs.color);
+		.groupBy(organs.id, organs.name, organs.shortName, organs.color, organs.politicalPosition);
 
 	return groupsWithMembers
 		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))

@@ -2,41 +2,37 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import ElectedCard from '$lib/components/ElectedCard.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
+	import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
 
 	let { data } = $props();
 
-	// Type for group distribution
+	// Type for group distribution (includes politicalPosition from DB)
 	type GroupDistribution = {
 		groupId: string;
 		groupName: string;
 		groupShortName: string;
 		groupColor: string;
 		deputyCount: number;
+		politicalPosition: number | null;
 	};
 
-	// Political spectrum order (left to right) - includes both old and new group IDs
-	const spectrumOrder = [
-		'PO_GP_LFI', 'PO845413', 'LFI-NFP',
-		'PO_GP_GDR', 'PO845514', 'GDR',
-		'PO_GP_ECO', 'PO845439', 'EcoS',
-		'PO_GP_SOC', 'PO845419', 'SOC',
-		'PO_GP_LIOT', 'PO845485', 'LIOT',
-		'PO_GP_MODEM', 'PO845454', 'Dem',
-		'PO_GP_REN', 'PO845407', 'EPR',
-		'PO_GP_HOR', 'PO845470', 'HOR',
-		'PO_GP_LR', 'PO845425', 'DR',
-		'PO845520', 'AD',
-		'PO847173', 'PO872880', 'UDR',
-		'PO_GP_RN', 'PO845401', 'RN',
-		'PO_GP_NI', 'PO840056', 'NI'
-	];
-
+	/**
+	 * Trie les groupes par position politique (gauche → droite → NI)
+	 * Utilise les positions stockées en base de données via ParlGov ETL
+	 */
 	function sortBySpectrum(groups: GroupDistribution[]): GroupDistribution[] {
-		return [...groups].sort((a, b) => {
-			const aIndex = spectrumOrder.findIndex(id => a.groupId.includes(id) || a.groupShortName === id);
-			const bIndex = spectrumOrder.findIndex(id => b.groupId.includes(id) || b.groupShortName === id);
-			return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-		});
+		// Adapter le format pour sortByPoliticalPosition
+		const adapted = groups.map((g) => ({
+			id: g.groupId,
+			name: g.groupName,
+			shortName: g.groupShortName,
+			politicalPosition: g.politicalPosition
+		}));
+
+		const sorted = sortByPoliticalPosition(adapted);
+
+		// Remettre dans l'ordre trié
+		return sorted.map((s) => groups.find((g) => g.groupId === s.id)!);
 	}
 </script>
 

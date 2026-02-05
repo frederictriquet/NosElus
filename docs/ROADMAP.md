@@ -101,6 +101,14 @@
 - [x] Liste des votes divergents
 - [x] Distance politique calculée (pondérée selon type de désaccord)
 
+### 4.6 Positionnement politique automatisé
+- [x] Intégrer données ParlGov (1700+ partis européens)
+- [x] Implémenter fuzzy Jaccard matching (75% success rate)
+- [x] Éliminer hardcoding spectrumOrder AN/PE (71 IDs)
+- [x] ETL import automatisé avec CLI flags (--dry-run, --verbose)
+- [x] Migration DB + index politicalPosition
+- [x] 124 tests (100% coverage module ParlGov)
+
 ---
 
 ## Phase 5 - Soft Launch (19-22 semaines)

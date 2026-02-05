@@ -27,7 +27,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			groupName: g.name || g.id,
 			groupShortName: g.shortName || g.id,
 			groupColor: g.color || '#888',
-			deputyCount: g.memberCount
+			deputyCount: g.memberCount,
+			politicalPosition: g.politicalPosition
 		}));
 
 		const totalDeputies = groupDistribution.reduce((sum, g) => sum + g.deputyCount, 0);

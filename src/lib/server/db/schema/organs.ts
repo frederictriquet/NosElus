@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, date, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, date, timestamp, index, real } from 'drizzle-orm/pg-core';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
 export const organs = pgTable(
@@ -16,13 +16,15 @@ export const organs = pgTable(
 		endDate: date('end_date'),
 		parentId: varchar('parent_id', { length: 20 }).references((): AnyPgColumn => organs.id),
 		description: text('description'),
+		politicalPosition: real('political_position'), // Position sur l'échiquier gauche-droite (0=gauche, 10=droite, 999=NI)
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull()
 	},
 	(table) => [
 		index('organs_type_idx').on(table.type),
 		index('organs_chamber_idx').on(table.chamber),
-		index('organs_legislature_idx').on(table.legislature)
+		index('organs_legislature_idx').on(table.legislature),
+		index('organs_political_position_idx').on(table.politicalPosition)
 	]
 );
 

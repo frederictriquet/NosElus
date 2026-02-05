@@ -143,13 +143,18 @@ export const actions = {
 		}
 
 		try {
-			await db
+			const result = await db
 				.update(organs)
 				.set({
 					politicalPosition: positionNum,
 					updatedAt: new Date()
 				})
-				.where(eq(organs.id, organId));
+				.where(eq(organs.id, organId))
+				.returning({ id: organs.id });
+
+			if (result.length === 0) {
+				return fail(404, { error: 'Groupe parlementaire introuvable' });
+			}
 
 			return { success: true };
 		} catch (error) {

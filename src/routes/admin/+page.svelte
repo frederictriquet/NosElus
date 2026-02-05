@@ -70,7 +70,17 @@
 	<title>Administration - NosElus</title>
 </svelte:head>
 
-{#if !data.authenticated}
+{#if !data.passwordConfigured}
+	<div class="login-container">
+		<div class="login-card">
+			<h1>Administration</h1>
+			<p class="login-subtitle">Page d'administration non disponible</p>
+			<div class="error-banner">
+				La variable d'environnement <code>ADMIN_PASSWORD</code> n'est pas configurée.
+			</div>
+		</div>
+	</div>
+{:else if !data.authenticated}
 	<!-- Formulaire de login -->
 	<div class="login-container">
 		<div class="login-card">
@@ -90,7 +100,7 @@
 					return async ({ result, update }) => {
 						isSubmitting = false;
 						if (result.type === 'failure') {
-							loginError = result.data?.error || 'Erreur de connexion';
+							loginError = String(result.data?.error ?? 'Erreur de connexion');
 						}
 						await update();
 					};

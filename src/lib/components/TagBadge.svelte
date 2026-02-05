@@ -1,15 +1,39 @@
+<!--
+  TagBadge - Badge de tag coloré pour catégoriser les lois
+
+  Affiche un tag (ex: "Économie", "Santé") avec la couleur définie dans la table `tags`.
+  Utilise `color-mix()` pour générer automatiquement le background et la bordure.
+
+  **Mode 1 (recommandé)** : Objet tag complet depuis la DB
+  **Mode 2** : Props name/color séparées (utile pour des tags custom)
+
+  @component
+  @example
+  ```svelte
+  <script>
+    import TagBadge from '$lib/components/TagBadge.svelte';
+    const tag = { slug: 'economie', name: 'Économie', color: '#3b82f6' };
+  </script>
+
+  <!-- Mode 1: avec objet tag -->
+  <TagBadge {tag} />
+
+  <!-- Mode 2: avec props séparées -->
+  <TagBadge name="Économie" color="#3b82f6" />
+  ```
+
+  @see {@link src/lib/server/db/schema/tags.ts} - Table de référence des tags
+-->
 <script lang="ts">
 	/**
-	 * Composant réutilisable pour afficher un tag de loi avec sa couleur.
-	 *
-	 * Peut être utilisé de deux manières :
-	 * 1. Avec un objet tag complet (recommandé) : <TagBadge {tag} />
-	 * 2. Avec des propriétés séparées : <TagBadge name="Économie" color="#3b82f6" />
+	 * Interface représentant un tag de loi avec sa couleur depuis la DB.
 	 */
-
 	export interface TagData {
+		/** Slug du tag (clé primaire, ex: "economie") */
 		slug: string;
+		/** Nom affiché (ex: "Économie") */
 		name: string;
+		/** Couleur hexadécimale (ex: "#3b82f6") ou null pour couleur par défaut */
 		color: string | null;
 	}
 

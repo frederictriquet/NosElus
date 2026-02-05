@@ -40,7 +40,10 @@ INSERT INTO "tags" ("slug", "name", "description", "color") VALUES
 	('international', 'International', 'Traités internationaux, relations internationales', '#0891b2'),
 	('securite', 'Sécurité', 'Lois sur la sécurité publique, la police, la criminalité', '#991b1b');--> statement-breakpoint
 -- Migrer les tags JSONB existants vers law_tags (normaliser les slugs sans accents)
--- Utilise unaccent pour supprimer tous les accents automatiquement
+-- Utilise unaccent pour supprimer tous les accents automatiquement.
+-- Exemple: "Économie" → "economie", "Santé" → "sante"
+-- Nécessaire car le LLM retourne des tags accentués mais la table tags
+-- utilise des slugs ASCII comme clés primaires pour éviter les problèmes d'encodage.
 CREATE EXTENSION IF NOT EXISTS unaccent;--> statement-breakpoint
 INSERT INTO "law_tags" ("law_id", "tag_slug")
 SELECT

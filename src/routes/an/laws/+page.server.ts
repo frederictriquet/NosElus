@@ -91,7 +91,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			.offset(offset)
 	]);
 
-	// Load tags for displayed laws (batch)
+	// Load tags for displayed laws (batch, avoids N+1 queries)
+	// Pattern: charge tous les tags des lois affichées en une seule requête,
+	// puis regroupe par lawId côté application
 	const lawIds = lawsList.map((l) => l.id);
 	const lawTagsData =
 		lawIds.length > 0

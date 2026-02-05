@@ -11,15 +11,43 @@ import { laws, lawSummaries, lawTags, tags } from '../../../db/schema';
 import { eq, isNull, isNotNull, and, desc, asc } from 'drizzle-orm';
 import type { Law, NewLawSummary, NewLawTag } from '../../../db/schema';
 
-/** Mapping entre le nom affiché au LLM et le slug DB */
+/**
+ * Mapping entre le nom affiché au LLM et le slug DB.
+ *
+ * Nécessaire car le LLM reçoit des noms accentués lowercase ("économie")
+ * mais la DB utilise des slugs ASCII ("economie") comme clés primaires.
+ *
+ * @interface TagMapping
+ */
 export interface TagMapping {
-	slug: string; // "economie" — clé DB
-	name: string; // "Économie" — nom affiché
-	promptName: string; // "économie" — nom lowercase pour le prompt LLM
+	/** Slug ASCII utilisé comme clé primaire DB (ex: "economie") */
+	slug: string;
+	/** Nom affiché avec accents (ex: "Économie") */
+	name: string;
+	/** Nom lowercase pour le prompt LLM (ex: "économie") */
+	promptName: string;
 }
 
 /**
  * Charge les tags disponibles depuis la table `tags` en base de données.
+ *
+ * Cette fonction remplace l'ancien constant `AVAILABLE_TAGS` hardcodé.
+ * Les tags sont chargés dynamiquement pour permettre l'ajout de nouveaux tags
+ * sans modifier le code.
+ *
+ * @returns Liste de mappings tag (slug DB ↔ nom LLM)
+ *
+ * @example
+ * ```typescript
+ * const tags = await getAvailableTags();
+ * // => [
+ * //   { slug: 'economie', name: 'Économie', promptName: 'économie' },
+ * //   { slug: 'sante', name: 'Santé', promptName: 'santé' },
+ * //   ...
+ * // ]
+ * ```
+ *
+ * @see {@link tags} - Table de référence des tags
  */
 export async function getAvailableTags(): Promise<TagMapping[]> {
 	const dbTags = await db
@@ -88,8 +116,22 @@ TON JSON:`;
 }
 
 /**
- * Parse la réponse JSON du modèle.
- * Convertit les noms de tags du LLM (accentués) en slugs DB (sans accents).
+ * Parse la réponse JSON du modèle LLM.
+ *
+ * Le LLM retourne des tags avec accents ("économie", "santé") mais la DB
+ * utilise des slugs ASCII ("economie", "sante"). Cette fonction effectue
+ * la conversion via le mapping fourni.
+ *
+ * @param rawText - Réponse brute du LLM (peut contenir du texte avant/après le JSON)
+ * @param tagMappings - Liste des tags valides avec leurs slugs DB
+ * @returns Analyse parsée avec slugs DB (ou erreur si parsing échoue)
+ *
+ * @example
+ * ```typescript
+ * const raw = '{"resume": "Cette loi...", "tags": ["économie", "santé"]}';
+ * const analysis = parseResponse(raw, tagMappings);
+ * // => { summary: "Cette loi...", tags: ["economie", "sante"] }
+ * ```
  */
 function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis {
 	// Lookup: nom lowercase accentué → slug DB
@@ -144,8 +186,28 @@ function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis 
 }
 
 /**
- * Analyse une loi avec Ollama.
- * @param tagMappings Tags pré-chargés (optionnel, chargés depuis la DB si absent)
+ * Analyse une loi avec Ollama (LLM local).
+ *
+ * Envoie le titre et la description de la loi au modèle LLM qui génère :
+ * - Un résumé accessible au grand public (1-3 phrases)
+ * - Des tags de catégorisation (2-4 tags parmi ceux disponibles)
+ *
+ * @param law - Loi à analyser (seuls title et description sont nécessaires)
+ * @param config - Configuration Ollama (optionnel, utilise DEFAULT_CONFIG sinon)
+ * @param tagMappings - Tags pré-chargés (optionnel, chargés depuis la DB si absent)
+ * @returns Analyse avec résumé et tags (slugs DB)
+ * @throws {Error} Si Ollama n'est pas accessible ou si le timeout est dépassé
+ *
+ * @example
+ * ```typescript
+ * const law = await db.select().from(laws).where(eq(laws.id, 'PRJLANR5L16B001'));
+ * const analysis = await analyzeLaw(law[0]);
+ * console.log(analysis.summary); // "Cette loi augmente le SMIC..."
+ * console.log(analysis.tags);    // ["travail", "economie"]
+ * ```
+ *
+ * @see {@link getAvailableTags} - Charge les tags depuis la DB
+ * @see {@link analyzeLawsBatch} - Pour analyser plusieurs lois en parallèle
  */
 export async function analyzeLaw(
 	law: Pick<Law, 'title' | 'description'>,

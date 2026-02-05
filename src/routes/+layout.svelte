@@ -64,8 +64,15 @@
 </main>
 
 <footer class="footer">
-	<div class="container" style="text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
-		<p>NosElus - Données issues de <a href="https://data.assemblee-nationale.fr" target="_blank">data.assemblee-nationale.fr</a>, <a href="https://data.senat.fr" target="_blank">data.senat.fr</a> et <a href="https://europarl.europa.eu" target="_blank">europarl.europa.eu</a></p>
+	<div class="container footer-content">
+		<p>NosElus - Données issues de <a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener noreferrer">data.assemblee-nationale.fr</a>, <a href="https://data.senat.fr" target="_blank" rel="noopener noreferrer">data.senat.fr</a> et <a href="https://europarl.europa.eu" target="_blank" rel="noopener noreferrer">europarl.europa.eu</a></p>
+		<nav class="footer-links">
+			<a href="/mentions-legales">Mentions légales</a>
+			<span class="footer-separator">·</span>
+			<a href="/politique-de-confidentialite">Politique de confidentialité</a>
+			<span class="footer-separator">·</span>
+			<a href="/sources">Sources</a>
+		</nav>
 	</div>
 </footer>
 
@@ -90,6 +97,32 @@
 		background: var(--color-surface);
 		border-top: 1px solid var(--color-border);
 		padding: 1.5rem 0;
+	}
+
+	.footer-content {
+		text-align: center;
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
+
+	.footer-links {
+		margin-top: 0.5rem;
+		font-size: 0.8125rem;
+	}
+
+	.footer-links a {
+		color: var(--color-text-muted);
+		text-decoration: none;
+	}
+
+	.footer-links a:hover {
+		color: var(--color-primary);
+		text-decoration: underline;
+	}
+
+	.footer-separator {
+		margin: 0 0.375rem;
+		opacity: 0.5;
 	}
 
 	.header-content {

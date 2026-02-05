@@ -118,12 +118,25 @@ La skill `/next` permet de reprendre le workflow après interruption en rappelan
 - Quelle skill a été exécutée en dernier
 - Quelle est la prochaine étape logique
 
+## RÈGLE STRICTE : Pas de Commit Avant /pre-merge
+
+**INTERDICTION ABSOLUE** de proposer un commit, un push ou un merge tant que les étapes suivantes ne sont pas complétées dans l'ordre :
+
+1. `/test-write` ou `/test-run` — Les tests DOIVENT être exécutés après /implement
+2. `/code-review` — Le code DOIT être revu
+3. `/pre-merge` — C'est LA SEULE étape où le commit est créé
+
+**Après /implement**, la SEULE action suivante est de proposer `/test-run` (ou `/test-write` si des tests manquent). Ne JAMAIS résumer les changements en proposant un commit.
+
+**Motif** : Session 2026-02-05, migration PE positions — commit proposé après /implement, avant tests et review. Le workflow n'aurait pas été respecté sans intervention de l'utilisateur.
+
 ## Anti-Pattern à Éviter
 
 ❌ **"Tout d'un coup"** : Coder directement sans analyse ni architecture
 ❌ **"Tests après coup"** : Ajouter les tests uniquement si demandé
 ❌ **"Review optionnelle"** : Merger sans relecture
 ❌ **"Documentation si temps"** : Ne jamais documenter
+❌ **"Commit prématuré"** : Proposer un commit après /implement sans passer par /test et /code-review
 
 ## Métriques de Succès
 

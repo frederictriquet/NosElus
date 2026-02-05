@@ -91,8 +91,9 @@ npm run etl:political-positions -- --chamber=AN
 ### Via Makefile
 
 ```bash
-make etl-political-positions          # Import toutes chambres
-make etl-political-positions ARGS="--dry-run"  # Dry-run
+make etl-seed-pe-positions                    # Seed positions PE (Chapel Hill Expert Survey)
+make etl-political-positions                  # Import positions nationales via ParlGov
+make etl-political-positions ARGS="--dry-run" # Dry-run
 ```
 
 ### Utilisation programmatique
@@ -245,11 +246,13 @@ isNonInscrit({ name: 'Rassemblement National', shortName: 'RN' });
 
 #### `determinePosition(organ, match): number`
 
-Détermine la position politique d'un groupe (0-10 ou 999).
+Détermine la position politique d'un groupe à partir des données ParlGov (0-10 ou 999).
+
+**Note** : Les groupes PE ont leurs positions seedées directement en DB via `scripts/etl/seed-pe-positions.ts`. Cette fonction ne gère que le calcul basé sur ParlGov (partis nationaux).
 
 **Priorité** :
-1. `match.parlGovParty.leftRight` (si match trouvé)
-2. `999` si Non-inscrit
+1. `999` si Non-inscrit
+2. `match.parlGovParty.leftRight` (si match trouvé)
 3. `FAMILY_POSITIONS[familyShort]` (fallback famille)
 4. `5.0` (centre par défaut)
 
@@ -618,6 +621,7 @@ psql -d noselus -c "ALTER TABLE organs ADD COLUMN IF NOT EXISTS political_positi
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 1.3.0 | 2026-02-05 | PE positions migrées vers DB via seed script |
 | 1.2.0 | 2026-02-04 | Documentation complète |
 | 1.1.0 | 2026-02-04 | Fix: Word boundaries pour détection NI |
 | 1.0.0 | 2026-02-04 | Release initiale - 124 tests |

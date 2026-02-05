@@ -108,6 +108,7 @@
 - [x] ETL import automatisé avec CLI flags (--dry-run, --verbose)
 - [x] Migration DB + index politicalPosition
 - [x] 124 tests (100% coverage module ParlGov)
+- [x] Migrer positions PE vers DB (seed script Chapel Hill Expert Survey)
 
 ---
 

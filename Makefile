@@ -4,7 +4,7 @@
 
 .PHONY: help install dev build preview clean \
         db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts etl-political-positions \
+        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-activity-stats etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts etl-political-positions etl-seed-pe-positions \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
         check lint format
@@ -188,6 +188,10 @@ etl-colors: ## Synchronise les couleurs des groupes
 etl-political-positions: ## Import positions politiques depuis ParlGov
 	@echo "$(CYAN)Import des positions politiques (ParlGov)...$(RESET)"
 	node --import tsx scripts/etl/import-political-positions.ts $(ARGS)
+
+etl-seed-pe-positions: ## Seed positions politiques pour les groupes PE
+	@echo "$(CYAN)Seed des positions PE (Chapel Hill Expert Survey)...$(RESET)"
+	node --import tsx scripts/etl/seed-pe-positions.ts
 
 etl-leg14: ## Import législature 14 (2012-2017)
 	@$(MAKE) etl-all ETL_LEGISLATURE=14

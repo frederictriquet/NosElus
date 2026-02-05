@@ -1,66 +1,66 @@
-# Workflow Actif - Migration Positions PE vers DB
+# Workflow Actif — Page Admin Ordonnancement Partis
 
 ## Tâche
-Migrer le mapping hardcodé `EU_GROUP_POSITIONS` (positions politiques groupes PE) vers la base de données
+Créer une page d'administration pour ordonner manuellement les partis politiques sur l'échiquier gauche-droite.
 
 ## Objectif
-Éliminer le hardcoding des positions PE en les stockant dans `organs.political_position`, conformément à la règle `no-hardcoding-rule`.
+Permettre de modifier les positions politiques (`political_position`) des groupes parlementaires via une interface web, avec :
+- Authentification par mot de passe (variable d'environnement)
+- Switch par chambre (AN, PE, SENAT) pour protéger/autoriser l'écrasement ETL
+- Édition des positions par chambre
 
-**Critère de succès** : `EU_GROUP_POSITIONS` n'existe plus dans le code, données en DB, `/pe/carte` fonctionne.
+**Critères de succès** :
+- Page `/admin` protégée par mot de passe
+- Liste des groupes par chambre avec position éditable
+- Switch "protéger contre ETL" par chambre
+- Persistance en base
+- Pages `/an/carte` et `/pe/carte` reflètent les changements
 
 ## Démarré
-2026-02-05 18:05
+2026-02-05 14:00
 
 ## Historique
 | Timestamp | Skill | Status | Notes |
 |-----------|-------|--------|-------|
-| 18:05 | /analyze | ✅ | Problème clarifié, pattern existant identifié |
-| 18:47 | /implement | ✅ | Script seed créé, determinePosition() modifié, Makefile mis à jour |
-| 10:15 | /test-run | ✅ | 198/198 tests passent, script idempotent validé |
-| 10:16 | /code-review | 🔄 | 3 issues : effet de bord ETL, .PHONY, suppression constante |
-| 10:24 | corrections | ✅ | EU_GROUP_POSITIONS supprimé, import protégé, .PHONY corrigé |
-| 10:30 | /document | ✅ | Docs features + README ParlGov mis à jour |
-| 10:30 | /capitalize | ✅ | Leçons sauvegardées dans SERENA |
-| 10:30 | /roadmap-update | ✅ | Section 4.6 mise à jour |
+| 14:00 | /analyze | ✅ | Besoin clarifié, 2 questions résolues (auth + ETL) |
+| 14:30 | /architecture | ✅ | Architecture complète définie |
+| 15:00 | /implement | ✅ | Implémentation terminée (6 commits, build OK) |
 
 ## Phase Actuelle
-/analyze ✅ → /implement ✅ → /test-run ✅ → /code-review ✅ → **/pre-merge**
+/implement ✅
 
 ## Contexte Clé
-- Constante `EU_GROUP_POSITIONS` dans `types.ts` (20 groupes PE)
-- Utilisée dans `determinePosition()` ligne 287
-- Pattern: script seed similaire à `import-external-colors.ts`
-- Colonne DB `political_position` déjà existante (migration 0009)
-- Source académique: Chapel Hill Expert Survey
+- Colonne `organs.political_position` (REAL, 0-10, 999=NI) déjà existante
+- `sortByPoliticalPosition()` dans `src/lib/utils/political-spectrum.ts`
+- Auth : cookie HMAC signé avec ADMIN_PASSWORD
+- Table `admin_settings` avec clés etl_protect_[an|pe|senat]
+- 171 organs total (94 AN, 49 PE, 28 SENAT)
 
 ## Décisions Prises
-- Approche: Script seed SQL/TS (pas de migration complexe)
-- Rejoignable: UPDATE avec WHERE shortName IN (...)
-- Pas d'automatisation Chapel Hill (données manuelles OK)
+- Auth : mot de passe simple en variable d'environnement (pas de système de comptes)
+- ETL : switch par chambre (AN/PE/SENAT) pour autoriser/bloquer l'écrasement des positions manuelles
+- Le switch est persisté en DB (table admin_settings)
+- Interface admin unifiée avec onglets par chambre
 
-## Fichiers Concernés
-### Créés ✅
-- `scripts/etl/seed-pe-positions.ts` - Script de seed pour positions PE
+## Fichiers Créés/Modifiés
+- ✅ `src/lib/server/db/schema/admin-settings.ts` — Table admin_settings
+- ✅ `src/lib/server/auth.ts` — Utilitaires d'authentification HMAC
+- ✅ `src/app.d.ts` — Type Locals.adminAuthenticated
+- ✅ `src/hooks.server.ts` — Vérification cookie admin
+- ✅ `src/routes/admin/+layout.server.ts` — Guard d'authentification
+- ✅ `src/routes/admin/+page.server.ts` — Load + form actions
+- ✅ `src/routes/admin/+page.svelte` — Interface admin (login + éditeur)
+- ✅ `scripts/etl/import-political-positions.ts` — Protection ETL
+- ✅ `.env.example` — Variable ADMIN_PASSWORD
+- ✅ `drizzle/migrations/0010_*.sql` — Migration admin_settings
 
-### Modifiés ✅
-- `src/lib/server/etl/sources/parlgov/matcher.ts` - determinePosition() nettoyé (plus de hardcoding)
-- `src/lib/server/etl/sources/parlgov/types.ts` - EU_GROUP_POSITIONS supprimé
-- `scripts/etl/import-political-positions.ts` - Protection contre écrasement des positions seedées
-- `Makefile` - Target `etl-seed-pe-positions` ajouté + `.PHONY`
-
-## Implémentation Réalisée
-✅ Script `seed-pe-positions.ts` créé (pattern: import-external-colors.ts)
-✅ `EU_GROUP_POSITIONS` supprimé de types.ts (plus de hardcoding)
-✅ `determinePosition()` nettoyé : fonction pure ParlGov sans hardcoding
-✅ `import-political-positions.ts` protégé : ne pas écraser les positions seedées
-✅ Target Makefile `etl-seed-pe-positions` ajouté + `.PHONY` corrigé
-✅ Tous les tests passent (198/198)
-
-## Résultats Tests
-✅ **198/198 tests passent** (100% - aucune régression)
-✅ **19 tests de position** (determinePosition()) - tous passent
-✅ **Script idempotent** - 43 groupes PE confirmés en DB, 2 noms alternatifs manquants
-✅ **Aucune erreur TypeScript**
+## Commits
+1. 64249ff - feat(db): add admin_settings table schema for ETL protection switches
+2. 6ae99d7 - feat(auth): add admin session authentication with HMAC-signed cookies
+3. ea93fd2 - feat(admin): add admin page with login, position editor and ETL protection switches
+4. 2af41ab - feat(etl): respect admin ETL protection switches per chamber
+5. ec5c932 - feat(config): add ADMIN_PASSWORD environment variable
+6. 1c4e6e4 - chore(db): add migration for admin_settings table
 
 ## Prochaine Étape
-**/pre-merge** - Préparer et valider la branche avant merge
+/test-run (vérifier que l'app fonctionne)

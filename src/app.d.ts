@@ -9,6 +9,7 @@ declare global {
 				senat: string | null;
 				pe: string | null;
 			};
+			adminAuthenticated: boolean;
 		}
 		// interface PageData {}
 		// interface PageState {}

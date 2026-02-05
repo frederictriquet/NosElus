@@ -146,6 +146,34 @@ npm run docker:restart   # Redémarre les conteneurs
 
 ---
 
+## 🔐 Administration
+
+La page `/admin` permet de gérer manuellement les positions politiques des groupes parlementaires et de contrôler la protection ETL.
+
+### Configuration
+
+```bash
+# Dans .env
+ADMIN_PASSWORD=votre-mot-de-passe-securise
+```
+
+### Fonctionnalités
+
+- **Édition des positions politiques** par chambre (AN, PE, SENAT)
+- **Filtres par mandature** pour naviguer facilement
+- **Protection ETL** : empêcher l'écrasement automatique des positions manuelles
+- **Authentification HMAC** avec cookie de session sécurisé (24h)
+
+### Accès
+
+1. Démarrer le serveur : `npm run dev`
+2. Accéder à : `http://localhost:5173/admin`
+3. Se connecter avec le mot de passe configuré
+
+📖 **Documentation complète** : [docs/ADMIN.md](docs/ADMIN.md)
+
+---
+
 ## 📁 Structure du projet
 
 ```

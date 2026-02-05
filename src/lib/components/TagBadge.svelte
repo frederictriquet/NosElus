@@ -9,20 +9,10 @@
 
   @component
   @example
-  ```svelte
-  <script>
-    import TagBadge from '$lib/components/TagBadge.svelte';
-    const tag = { slug: 'economie', name: 'Économie', color: '#3b82f6' };
-  </script>
+  Mode 1 (recommandé): <TagBadge {tag} />
+  Mode 2: <TagBadge name="Économie" color="#3b82f6" />
 
-  <!-- Mode 1: avec objet tag -->
-  <TagBadge {tag} />
-
-  <!-- Mode 2: avec props séparées -->
-  <TagBadge name="Économie" color="#3b82f6" />
-  ```
-
-  @see {@link src/lib/server/db/schema/tags.ts} - Table de référence des tags
+  See: src/lib/server/db/schema/tags.ts - Table de référence des tags
 -->
 <script lang="ts">
 	/**

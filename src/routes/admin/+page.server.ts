@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// Charger les groupes parlementaires
-	const groups = await db
+	const allGroups = await db
 		.select({
 			id: organs.id,
 			uid: organs.uid,
@@ -23,12 +23,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 			shortName: organs.shortName,
 			chamber: organs.chamber,
 			legislature: organs.legislature,
+			startDate: organs.startDate,
+			endDate: organs.endDate,
 			politicalPosition: organs.politicalPosition,
 			color: organs.color
 		})
 		.from(organs)
 		.where(eq(organs.type, 'GP'))
 		.orderBy(organs.chamber, organs.politicalPosition);
+
+	// Dédupliquer : quand plusieurs groupes partagent le même sigle
+	// dans la même chambre/législature, garder le plus récent (start_date la plus tardive)
+	const deduped = new Map<string, (typeof allGroups)[0]>();
+	for (const group of allGroups) {
+		const key = `${group.chamber}|${group.legislature || ''}|${group.shortName || group.id}`;
+		const existing = deduped.get(key);
+		if (!existing || (group.startDate && (!existing.startDate || group.startDate > existing.startDate))) {
+			deduped.set(key, group);
+		}
+	}
+	const groups = Array.from(deduped.values());
 
 	// Extraire les mandatures disponibles par chambre
 	const legislaturesPerChamber: Record<string, string[]> = {

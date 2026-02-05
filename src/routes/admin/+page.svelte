@@ -165,19 +165,19 @@
 				<input
 					type="hidden"
 					name="enabled"
-					value={data.etlSettings[`etl_protect_${activeChamber.toLowerCase()}`] ? 'false' : 'true'}
+					value={data.etlSettings?.[`etl_protect_${activeChamber.toLowerCase()}`] ? 'false' : 'true'}
 				/>
 				<label class="switch-label">
 					<input
 						type="checkbox"
-						checked={data.etlSettings[`etl_protect_${activeChamber.toLowerCase()}`]}
+						checked={data.etlSettings?.[`etl_protect_${activeChamber.toLowerCase()}`]}
 						onchange={(e) => e.currentTarget.form?.requestSubmit()}
 					/>
 					<span>Protéger les positions contre l'ETL automatique</span>
 				</label>
 			</form>
 			<p class="help-text">
-				{#if data.etlSettings[`etl_protect_${activeChamber.toLowerCase()}`]}
+				{#if data.etlSettings?.[`etl_protect_${activeChamber.toLowerCase()}`]}
 					✅ Les positions de cette chambre ne seront pas écrasées par l'import automatique ParlGov
 				{:else}
 					⚠️ Les positions de cette chambre peuvent être écrasées par l'import automatique ParlGov
@@ -190,14 +190,14 @@
 			<div class="groups-header">
 				<h2>Groupes parlementaires - {chamberLabels[activeChamber]}</h2>
 
-				{#if data.legislatures[activeChamber]?.length > 0}
+				{#if data.legislatures?.[activeChamber]?.length}
 					<select
 						class="legislature-select"
 						value={selectedLegislature[activeChamber]}
 						onchange={(e) => (selectedLegislature[activeChamber] = e.currentTarget.value)}
 					>
 						<option value="">Tous</option>
-						{#each data.legislatures[activeChamber] as leg}
+						{#each data.legislatures?.[activeChamber] ?? [] as leg}
 							<option value={leg.value}>
 								{activeChamber === 'SENAT' ? leg.label : legislatureLabels[activeChamber](leg.value)}
 							</option>

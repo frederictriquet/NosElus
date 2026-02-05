@@ -15,7 +15,7 @@
 	});
 
 	// Groupes filtrés par mandature
-	const filteredGroups = $derived(() => {
+	const filteredGroups = $derived.by(() => {
 		if (!data.authenticated || !data.groups) return [];
 		const groups = data.groups[activeChamber] ?? [];
 		const leg = selectedLegislature[activeChamber];
@@ -196,10 +196,10 @@
 				{/if}
 			</div>
 
-			{#if filteredGroups().length === 0}
+			{#if filteredGroups.length === 0}
 				<p class="empty-state">Aucun groupe parlementaire pour cette sélection</p>
 			{:else}
-				<p class="groups-count">{filteredGroups().length} groupes</p>
+				<p class="groups-count">{filteredGroups.length} groupes</p>
 				<table class="groups-table">
 					<thead>
 						<tr>
@@ -213,7 +213,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each filteredGroups() as group}
+						{#each filteredGroups as group}
 							<tr>
 								<td>
 									<div class="group-name">
@@ -377,6 +377,12 @@
 	.btn-secondary:hover {
 		background: var(--color-bg);
 		border-color: var(--color-text-muted);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.header-actions {

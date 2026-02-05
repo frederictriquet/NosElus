@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { verifyAdminPassword, generateAdminSessionToken } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { organs, adminSettings } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Si non authentifié, retourner uniquement le flag
@@ -174,29 +174,14 @@ export const actions = {
 		const key = `etl_protect_${chamber.toLowerCase()}`;
 
 		try {
-			// Vérifier si le setting existe
-			const existing = await db
-				.select()
-				.from(adminSettings)
-				.where(eq(adminSettings.key, key))
-				.limit(1);
-
-			if (existing.length > 0) {
-				// Mettre à jour
-				await db
-					.update(adminSettings)
-					.set({
-						value: enabled ? 'true' : 'false',
-						updatedAt: new Date()
-					})
-					.where(eq(adminSettings.key, key));
-			} else {
-				// Insérer
-				await db.insert(adminSettings).values({
-					key,
-					value: enabled ? 'true' : 'false'
+			const newValue = enabled ? 'true' : 'false';
+			await db
+				.insert(adminSettings)
+				.values({ key, value: newValue })
+				.onConflictDoUpdate({
+					target: adminSettings.key,
+					set: { value: newValue, updatedAt: new Date() }
 				});
-			}
 
 			return { success: true };
 		} catch (error) {

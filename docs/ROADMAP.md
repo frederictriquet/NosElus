@@ -131,6 +131,15 @@
 - [ ] Déploiement production
 - [ ] Monitoring et alertes
 
+### 5.4 Administration
+- [x] Page d'administration `/admin` avec authentification
+- [x] Édition manuelle des positions politiques par chambre
+- [x] Protection ETL par chambre (empêcher écrasement automatique)
+- [x] Filtrage par mandature (législatures/termes/renouvellements)
+- [x] Déduplication des groupes dupliqués
+- [x] Gestion spécifique Sénat (groupes actuels vs historiques)
+- [x] Documentation complète (ADMIN.md + JSDoc)
+
 ---
 
 ## Phase 6 - Extensions (23-30 semaines)

@@ -10,6 +10,7 @@ export { lawCosignatories, type LawCosignatory, type NewLawCosignatory } from '.
 export { lawSummaries, type LawSummary, type NewLawSummary } from './law-summaries';
 export { syncMetadata, type SyncMetadata, type NewSyncMetadata } from './sync-metadata';
 export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
+export { adminSettings, type AdminSetting, type NewAdminSetting } from './admin-settings';
 
 // Relations
 export {

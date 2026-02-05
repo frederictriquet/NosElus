@@ -52,7 +52,7 @@
 <div class="law-summary {className}">
 	{#if showAiBadge}
 		<div class="ai-header">
-			<div class="ai-badge" title={model ? `Généré par ${model}` : 'Généré par IA'}>
+			<div class="ai-badge" title={model ? `Généré automatiquement par le modèle ${model}` : 'Contenu généré automatiquement par intelligence artificielle'}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="14"
@@ -68,9 +68,9 @@
 					<circle cx="7.5" cy="14.5" r="1.5"/>
 					<circle cx="16.5" cy="14.5" r="1.5"/>
 				</svg>
-				<span>Résumé IA</span>
+				<span>Généré par IA</span>
 			</div>
-			<span class="ai-disclaimer">Ce résumé peut contenir des erreurs. Consultez le texte complet pour plus de certitude.</span>
+			<span class="ai-disclaimer">Ce résumé a été généré automatiquement par intelligence artificielle. Il peut contenir des inexactitudes.</span>
 		</div>
 	{/if}
 

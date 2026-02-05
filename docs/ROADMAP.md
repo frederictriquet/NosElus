@@ -124,7 +124,7 @@
 ### 5.2 Documentation
 - [ ] Documentation API publique (OpenAPI/Swagger)
 - [ ] Guide utilisateur
-- [ ] Mentions légales et RGPD
+- [x] Mentions légales et RGPD
 
 ### 5.3 Déploiement
 - [ ] Configuration CI/CD

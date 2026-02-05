@@ -439,6 +439,63 @@ main {
 	color: var(--color-text-muted);
 }
 
+/* Legal pages */
+.legal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.legal-section {
+	background: var(--color-surface);
+	border-radius: var(--radius-lg);
+	padding: 1.5rem;
+	box-shadow: var(--shadow-sm);
+}
+
+.legal-section h2 {
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin: 0 0 0.75rem 0;
+	color: var(--color-text);
+}
+
+.legal-section p {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	line-height: 1.6;
+	margin: 0 0 0.5rem 0;
+}
+
+.legal-section p:last-child {
+	margin-bottom: 0;
+}
+
+.legal-section ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.legal-section li {
+	margin-bottom: 0.375rem;
+	line-height: 1.6;
+}
+
+.legal-section a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+
+.legal-section a:hover {
+	text-decoration: underline;
+}
+
+.legal-section strong {
+	color: var(--color-text);
+}
+
 /* Profile page */
 .profile-header {
 	display: flex;

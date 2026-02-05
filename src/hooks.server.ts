@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
+import { verifyAdminSessionToken } from '$lib/server/auth';
 
 // Noms des cookies pour les périodes par chambre
 const PERIOD_COOKIES = {
@@ -27,6 +28,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		senat: event.cookies.get(PERIOD_COOKIES.senat) || null,
 		pe: event.cookies.get(PERIOD_COOKIES.pe) || null
 	};
+
+	// Vérifier l'authentification admin
+	const adminSessionToken = event.cookies.get('noselus-admin-session');
+	event.locals.adminAuthenticated = adminSessionToken
+		? verifyAdminSessionToken(adminSessionToken)
+		: false;
 
 	const pathname = event.url.pathname;
 

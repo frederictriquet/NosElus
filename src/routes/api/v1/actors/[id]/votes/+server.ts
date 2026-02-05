@@ -26,10 +26,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	const whereClause = and(...conditions);
 
 	// Get total count
-	const [{ value: total }] = await db
-		.select({ value: count() })
-		.from(votes)
-		.where(whereClause);
+	const [{ value: total }] = await db.select({ value: count() }).from(votes).where(whereClause);
 
 	// Get paginated votes with scrutin info
 	const actorVotes = await db

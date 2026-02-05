@@ -96,10 +96,7 @@ export async function importVotesFromAN(
 					}
 				}
 			} catch (error) {
-				console.error(
-					`[AN Votes] Error processing scrutin ${scrutin.scrutin.uid}:`,
-					error
-				);
+				console.error(`[AN Votes] Error processing scrutin ${scrutin.scrutin.uid}:`, error);
 				stats.errors++;
 			}
 

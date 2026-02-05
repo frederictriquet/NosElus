@@ -47,10 +47,13 @@ export interface GroupData {
  *
  * @internal
  */
-const positionKeyMap: Record<string, keyof Pick<GroupData, 'pour' | 'contre' | 'abstention' | 'nonVotant'>> = {
-	'Pour': 'pour',
-	'Contre': 'contre',
-	'Abstention': 'abstention',
+const positionKeyMap: Record<
+	string,
+	keyof Pick<GroupData, 'pour' | 'contre' | 'abstention' | 'nonVotant'>
+> = {
+	Pour: 'pour',
+	Contre: 'contre',
+	Abstention: 'abstention',
 	'Non-votant': 'nonVotant'
 };
 
@@ -87,9 +90,7 @@ export const VOTE_POSITIONS = ['Pour', 'Contre', 'Abstention', 'Non-votant'] as 
  * ```
  */
 export function sortAndLimitGroups(groups: GroupData[], maxGroups: number): GroupData[] {
-	return [...groups]
-		.sort((a, b) => b.total - a.total)
-		.slice(0, maxGroups);
+	return [...groups].sort((a, b) => b.total - a.total).slice(0, maxGroups);
 }
 
 /**

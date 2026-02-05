@@ -133,7 +133,10 @@
 		<span class="pagination-info">
 			Page {data.pagination.page} sur {data.pagination.totalPages}
 		</span>
-		<button onclick={() => goToPage(data.pagination.page + 1)} disabled={data.pagination.page >= data.pagination.totalPages}>
+		<button
+			onclick={() => goToPage(data.pagination.page + 1)}
+			disabled={data.pagination.page >= data.pagination.totalPages}
+		>
 			Suivant
 		</button>
 	</div>

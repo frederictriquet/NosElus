@@ -103,9 +103,7 @@ describe('Law Implication Helpers - Integration', () => {
 					const next = result[i + 1].depositDate;
 
 					if (current && next) {
-						expect(new Date(current).getTime()).toBeGreaterThanOrEqual(
-							new Date(next).getTime()
-						);
+						expect(new Date(current).getTime()).toBeGreaterThanOrEqual(new Date(next).getTime());
 					}
 				}
 			}

@@ -75,11 +75,7 @@
 <AsyncCard title="Résumé" promise={data.aiSummary}>
 	{#snippet children(summary)}
 		{#if summary}
-			<LawSummaryCard
-				summary={summary.summary}
-				tags={summary.tags || []}
-				model={summary.model}
-			/>
+			<LawSummaryCard summary={summary.summary} tags={summary.tags || []} model={summary.model} />
 		{:else}
 			<p class="empty-state">Aucun résumé disponible pour ce dossier législatif.</p>
 		{/if}
@@ -102,7 +98,9 @@
 						<div class="stat-card">
 							<div
 								class="stat-value"
-								style="color: {result === 'adopté' ? 'var(--color-success)' : 'var(--color-danger)'};"
+								style="color: {result === 'adopté'
+									? 'var(--color-success)'
+									: 'var(--color-danger)'};"
 							>
 								{count}
 							</div>
@@ -176,16 +174,22 @@
 			{#if contributors.length === 0}
 				<p class="empty-state">Aucun contributeur enregistré</p>
 			{:else}
-				{@const authors = contributors.filter(c => c.role === 'author')}
-				{@const cosignatories = contributors.filter(c => c.role === 'cosignatory')}
+				{@const authors = contributors.filter((c) => c.role === 'author')}
+				{@const cosignatories = contributors.filter((c) => c.role === 'cosignatory')}
 
 				<div class="contributors-section">
 					{#if authors.length > 0}
 						<div class="contributor-group">
-							<h3 class="contributor-group-title">Auteur{authors.length > 1 ? 's' : ''} ({authors.length})</h3>
+							<h3 class="contributor-group-title">
+								Auteur{authors.length > 1 ? 's' : ''} ({authors.length})
+							</h3>
 							<div class="contributor-list">
 								{#each authors as contributor}
-									<a href="/an/deputes/{contributor.actorId}" class="contributor-item" title="Voir le profil du député">
+									<a
+										href="/an/deputes/{contributor.actorId}"
+										class="contributor-item"
+										title="Voir le profil du député"
+									>
 										{contributor.actorName}
 									</a>
 								{/each}
@@ -198,7 +202,11 @@
 							<h3 class="contributor-group-title">Cosignataires ({cosignatories.length})</h3>
 							<div class="contributor-list">
 								{#each cosignatories as contributor}
-									<a href="/an/deputes/{contributor.actorId}" class="contributor-item" title="Voir le profil du député">
+									<a
+										href="/an/deputes/{contributor.actorId}"
+										class="contributor-item"
+										title="Voir le profil du député"
+									>
 										{contributor.actorName}
 									</a>
 								{/each}
@@ -264,7 +272,12 @@
 			<div class="info-row">
 				<dt>Source</dt>
 				<dd>
-					<a href={data.law.sourceUrl} target="_blank" rel="noopener noreferrer" class="external-link">
+					<a
+						href={data.law.sourceUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="external-link"
+					>
 						Voir sur le site de l'AN
 					</a>
 				</dd>

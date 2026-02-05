@@ -96,7 +96,9 @@
 		white-space: nowrap;
 		opacity: 0;
 		visibility: hidden;
-		transition: opacity 0.2s, visibility 0.2s;
+		transition:
+			opacity 0.2s,
+			visibility 0.2s;
 		z-index: 1000;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 		pointer-events: none;

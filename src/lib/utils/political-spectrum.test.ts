@@ -197,12 +197,32 @@ describe('political-spectrum', () => {
 	describe('real-world scenarios', () => {
 		it('should correctly sort AN groups', () => {
 			const groups = [
-				createOrgan({ id: 'RN', name: 'Rassemblement National', shortName: 'RN', politicalPosition: 8.5 }),
-				createOrgan({ id: 'LFI', name: 'La France Insoumise', shortName: 'LFI-NFP', politicalPosition: 1.5 }),
-				createOrgan({ id: 'GDR', name: 'Gauche démocrate et républicaine', shortName: 'GDR', politicalPosition: 2.0 }),
+				createOrgan({
+					id: 'RN',
+					name: 'Rassemblement National',
+					shortName: 'RN',
+					politicalPosition: 8.5
+				}),
+				createOrgan({
+					id: 'LFI',
+					name: 'La France Insoumise',
+					shortName: 'LFI-NFP',
+					politicalPosition: 1.5
+				}),
+				createOrgan({
+					id: 'GDR',
+					name: 'Gauche démocrate et républicaine',
+					shortName: 'GDR',
+					politicalPosition: 2.0
+				}),
 				createOrgan({ id: 'SOC', name: 'Socialistes', shortName: 'SOC', politicalPosition: 3.0 }),
 				createOrgan({ id: 'RE', name: 'Renaissance', shortName: 'RE', politicalPosition: 5.5 }),
-				createOrgan({ id: 'LR', name: 'Les Républicains', shortName: 'LR', politicalPosition: 7.0 }),
+				createOrgan({
+					id: 'LR',
+					name: 'Les Républicains',
+					shortName: 'LR',
+					politicalPosition: 7.0
+				}),
 				createOrgan({ id: 'NI', name: 'Non-inscrits', shortName: 'NI', politicalPosition: 999 })
 			];
 
@@ -213,9 +233,24 @@ describe('political-spectrum', () => {
 
 		it('should handle PE groups with different naming', () => {
 			const groups = [
-				createOrgan({ id: 'PPE', name: 'Parti Populaire Européen', shortName: 'PPE', politicalPosition: 6.5 }),
-				createOrgan({ id: 'SD', name: 'Socialistes & Démocrates', shortName: 'S&D', politicalPosition: 3.5 }),
-				createOrgan({ id: 'GUE', name: 'Gauche Unitaire Européenne', shortName: 'GUE/NGL', politicalPosition: 1.5 }),
+				createOrgan({
+					id: 'PPE',
+					name: 'Parti Populaire Européen',
+					shortName: 'PPE',
+					politicalPosition: 6.5
+				}),
+				createOrgan({
+					id: 'SD',
+					name: 'Socialistes & Démocrates',
+					shortName: 'S&D',
+					politicalPosition: 3.5
+				}),
+				createOrgan({
+					id: 'GUE',
+					name: 'Gauche Unitaire Européenne',
+					shortName: 'GUE/NGL',
+					politicalPosition: 1.5
+				}),
 				createOrgan({ id: 'NA', name: 'Non-affiliés', shortName: 'NA', politicalPosition: null })
 			];
 

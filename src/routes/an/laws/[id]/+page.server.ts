@@ -8,10 +8,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
 
 	// Get law info
-	const [law] = await db
-		.select()
-		.from(laws)
-		.where(eq(laws.id, params.id));
+	const [law] = await db.select().from(laws).where(eq(laws.id, params.id));
 
 	if (!law) {
 		throw error(404, { message: 'Dossier législatif non trouvé' });

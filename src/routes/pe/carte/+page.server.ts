@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Cette page nécessite un terme spécifique (défaut: terme courant)
 	// "all" n'est pas supporté sur cette page, on utilise la période courante
 	const currentTerm = await getCurrentTerm();
-	const terme = (locals.periods.pe && locals.periods.pe !== 'all') ? locals.periods.pe : currentTerm;
+	const terme = locals.periods.pe && locals.periods.pe !== 'all' ? locals.periods.pe : currentTerm;
 	const termInfo = await getTermDates(terme);
 
 	// Date de référence : aujourd'hui pour terme en cours, date de fin pour les passés
@@ -27,37 +27,40 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.from(mandates)
 			.innerJoin(organs, eq(organs.id, mandates.organId))
 			.innerJoin(actors, eq(actors.id, mandates.actorId))
-			.where(and(
-				eq(mandates.legislature, terme),
-				eq(organs.type, 'GP'),
-				eq(organs.chamber, 'PE'),
-				eq(actors.chamber, 'PE'),
-				like(mandates.organId, 'GPEU-%')
-			))
+			.where(
+				and(
+					eq(mandates.legislature, terme),
+					eq(organs.type, 'GP'),
+					eq(organs.chamber, 'PE'),
+					eq(actors.chamber, 'PE'),
+					like(mandates.organId, 'GPEU-%')
+				)
+			)
 			.groupBy(mandates.organId);
 
-		const organIds = groupMandateCounts.map(g => g.organId);
+		const organIds = groupMandateCounts.map((g) => g.organId);
 
 		// Récupérer les infos des groupes
-		const groups = organIds.length > 0
-			? await db
-				.select({
-					groupId: organs.id,
-					groupName: organs.name,
-					groupShortName: organs.shortName,
-					groupColor: organs.color,
-					politicalPosition: organs.politicalPosition
-				})
-				.from(organs)
-				.where(inArray(organs.id, organIds))
-			: [];
+		const groups =
+			organIds.length > 0
+				? await db
+						.select({
+							groupId: organs.id,
+							groupName: organs.name,
+							groupShortName: organs.shortName,
+							groupColor: organs.color,
+							politicalPosition: organs.politicalPosition
+						})
+						.from(organs)
+						.where(inArray(organs.id, organIds))
+				: [];
 
-		const countByGroup = new Map(groupMandateCounts.map(c => [c.organId, Number(c.mepCount)]));
-		const groupInfoById = new Map(groups.map(g => [g.groupId, g]));
+		const countByGroup = new Map(groupMandateCounts.map((c) => [c.organId, Number(c.mepCount)]));
+		const groupInfoById = new Map(groups.map((g) => [g.groupId, g]));
 
 		// Build group distribution with actual counts
 		const groupDistribution = groupMandateCounts
-			.map(c => {
+			.map((c) => {
 				const info = groupInfoById.get(c.organId);
 				const shortName = info?.groupShortName || c.organId;
 				const fullName = info?.groupName || c.organId;
@@ -72,7 +75,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					politicalPosition
 				};
 			})
-			.filter(g => g.mepCount > 0)
+			.filter((g) => g.mepCount > 0)
 			.sort((a, b) => b.mepCount - a.mepCount);
 
 		const totalMeps = groupDistribution.reduce((sum, g) => sum + g.mepCount, 0);
@@ -85,29 +88,36 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// On a besoin de la distribution pour connaître les groupes
 		const { groupDistribution } = await loadGroupDistribution();
 
-		const mepsByGroup: Record<string, Array<{ id: string; name: string; photoUrl: string | null }>> = {};
+		const mepsByGroup: Record<
+			string,
+			Array<{ id: string; name: string; photoUrl: string | null }>
+		> = {};
 
 		// Charger tous les groupes en parallèle
-		await Promise.all(groupDistribution.map(async (group) => {
-			const groupMembers = await db
-				.select({
-					id: actors.id,
-					name: actors.fullName,
-					photoUrl: actors.photoUrl
-				})
-				.from(actors)
-				.innerJoin(mandates, eq(mandates.actorId, actors.id))
-				.where(and(
-					eq(mandates.organId, group.groupId),
-					eq(mandates.legislature, terme),
-					eq(actors.chamber, 'PE'),
-					or(isNull(mandates.endDate), gte(mandates.endDate, referenceDate))
-				))
-				.orderBy(actors.lastName)
-				.limit(5);
+		await Promise.all(
+			groupDistribution.map(async (group) => {
+				const groupMembers = await db
+					.select({
+						id: actors.id,
+						name: actors.fullName,
+						photoUrl: actors.photoUrl
+					})
+					.from(actors)
+					.innerJoin(mandates, eq(mandates.actorId, actors.id))
+					.where(
+						and(
+							eq(mandates.organId, group.groupId),
+							eq(mandates.legislature, terme),
+							eq(actors.chamber, 'PE'),
+							or(isNull(mandates.endDate), gte(mandates.endDate, referenceDate))
+						)
+					)
+					.orderBy(actors.lastName)
+					.limit(5);
 
-			mepsByGroup[group.groupId] = groupMembers;
-		}));
+				mepsByGroup[group.groupId] = groupMembers;
+			})
+		);
 
 		return mepsByGroup;
 	};

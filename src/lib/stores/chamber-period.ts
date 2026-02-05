@@ -93,7 +93,11 @@ function createChamberPeriodStore() {
 		 * Initialise le store côté client depuis les valeurs serveur
 		 * Appelé une fois au démarrage du client
 		 */
-		hydrateFromServer: (serverPeriods: { an: PeriodValue; senat: PeriodValue; pe: PeriodValue }) => {
+		hydrateFromServer: (serverPeriods: {
+			an: PeriodValue;
+			senat: PeriodValue;
+			pe: PeriodValue;
+		}) => {
 			store.set(serverPeriods);
 		},
 

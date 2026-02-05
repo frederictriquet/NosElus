@@ -19,9 +19,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get renouvellement dates for filtering
-	const periodDates: PeriodDates | null = renouvellement && renouvellement !== 'all'
-		? await getRenouvellementDates(renouvellement)
-		: null;
+	const periodDates: PeriodDates | null =
+		renouvellement && renouvellement !== 'all'
+			? await getRenouvellementDates(renouvellement)
+			: null;
 
 	// Check if senator had an active mandate during this renouvellement period
 	const checkMandate = async (): Promise<boolean> => {
@@ -30,11 +31,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const [mandate] = await db
 			.select({ id: mandates.id })
 			.from(mandates)
-			.where(and(
-				eq(mandates.actorId, params.id),
-				eq(mandates.type, 'senateur'),
-				...buildMandateOverlapConditions(periodDates)
-			))
+			.where(
+				and(
+					eq(mandates.actorId, params.id),
+					eq(mandates.type, 'senateur'),
+					...buildMandateOverlapConditions(periodDates)
+				)
+			)
 			.limit(1);
 
 		return !!mandate;
@@ -73,13 +76,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(
-			and(
-				...groupConditions,
-				eq(organs.type, 'GP'),
-				eq(organs.chamber, 'SENAT')
-			)
-		)
+		.where(and(...groupConditions, eq(organs.type, 'GP'), eq(organs.chamber, 'SENAT')))
 		.orderBy(desc(mandates.startDate))
 		.limit(1);
 

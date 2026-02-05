@@ -1,5 +1,14 @@
 import { error } from '@sveltejs/kit';
-import { db, organs, mandates, actors, scrutins, votes, laws, lawCosignatories } from '$lib/server/db';
+import {
+	db,
+	organs,
+	mandates,
+	actors,
+	scrutins,
+	votes,
+	laws,
+	lawCosignatories
+} from '$lib/server/db';
 import { eq, and, sql, notLike, inArray, count, desc, asc, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
@@ -17,8 +26,7 @@ export function parsePeriodFilters(url: URL): PeriodFilters {
 	const dateTo = url.searchParams.get('dateTo') || null;
 
 	// Validate legislature: must be a number between 1 and 99
-	const validLegislature =
-		legislature && /^\d{1,2}$/.test(legislature) ? legislature : null;
+	const validLegislature = legislature && /^\d{1,2}$/.test(legislature) ? legislature : null;
 
 	// Validate dates (basic ISO format check)
 	const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -149,9 +157,7 @@ export function mapVoteDistribution(
  * Détermine la position majoritaire d'un groupe à partir des données de vote
  * Gère les différents formats (pour/contre ou for/against)
  */
-export function getGroupMajorityPosition(
-	groupData: Record<string, unknown>
-): VotePosition | null {
+export function getGroupMajorityPosition(groupData: Record<string, unknown>): VotePosition | null {
 	if (!groupData) return null;
 
 	// Si une position est explicitement définie
@@ -241,10 +247,7 @@ export async function calculateAutonomyStats(
 		.where(and(...conditions));
 
 	// Calculate divergence by category (TypeScript side)
-	const categoryStats = new Map<
-		string,
-		{ totalVotes: number; divergentVotes: number }
-	>();
+	const categoryStats = new Map<string, { totalVotes: number; divergentVotes: number }>();
 
 	for (const vote of deputyVotes) {
 		if (!vote.groupId || !vote.groupResults || !vote.position) continue;
@@ -470,17 +473,19 @@ export async function getANGroupsWithMemberCount(
 		})
 		.from(mandates)
 		.innerJoin(organs, eq(organs.id, mandates.organId))
-		.where(and(
-			eq(mandates.legislature, legislature),
-			eq(organs.type, 'GP'),
-			notLike(organs.id, 'PO_GP_%') // Exclude artificial groups
-		))
+		.where(
+			and(
+				eq(mandates.legislature, legislature),
+				eq(organs.type, 'GP'),
+				notLike(organs.id, 'PO_GP_%') // Exclude artificial groups
+			)
+		)
 		.groupBy(mandates.organId);
 
-	const organIds = groupMemberCounts.map(g => g.organId);
+	const organIds = groupMemberCounts.map((g) => g.organId);
 	if (organIds.length === 0) return [];
 
-	const countByOrgan = new Map(groupMemberCounts.map(c => [c.organId, Number(c.memberCount)]));
+	const countByOrgan = new Map(groupMemberCounts.map((c) => [c.organId, Number(c.memberCount)]));
 
 	// Get group details
 	const groupDetails = await db
@@ -497,11 +502,11 @@ export async function getANGroupsWithMemberCount(
 
 	// Combine and sort by member count (descending)
 	return groupDetails
-		.map(g => ({
+		.map((g) => ({
 			...g,
 			memberCount: countByOrgan.get(g.id) || 0
 		}))
-		.filter(g => g.memberCount > 0)
+		.filter((g) => g.memberCount > 0)
 		.sort((a, b) => b.memberCount - a.memberCount);
 }
 
@@ -516,9 +521,7 @@ export interface PeriodDates {
  * Construit les conditions SQL pour filtrer les mandats qui chevauchent une période.
  * Un mandat chevauche une période si : startDate <= period.end ET (endDate IS NULL OR endDate >= period.start)
  */
-export function buildMandateOverlapConditions(
-	periodDates: PeriodDates | null
-): SQL[] {
+export function buildMandateOverlapConditions(periodDates: PeriodDates | null): SQL[] {
 	if (!periodDates) return [];
 
 	const { start, end } = periodDates;
@@ -582,7 +585,7 @@ export async function getSenatGroupsWithMemberCount(
 		.groupBy(organs.id, organs.name, organs.shortName, organs.color, organs.politicalPosition);
 
 	return groupsWithMembers
-		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))
+		.map((g) => ({ ...g, memberCount: Number(g.memberCount) }))
 		.sort((a, b) => b.memberCount - a.memberCount);
 }
 
@@ -593,10 +596,7 @@ export async function getSenatGroupMemberIds(
 	groupId: string,
 	periodDates: PeriodDates | null
 ): Promise<string[]> {
-	const memberConditions: SQL[] = [
-		eq(mandates.organId, groupId),
-		eq(actors.chamber, 'SENAT')
-	];
+	const memberConditions: SQL[] = [eq(mandates.organId, groupId), eq(actors.chamber, 'SENAT')];
 
 	if (periodDates) {
 		memberConditions.push(...buildMandateOverlapConditions(periodDates));
@@ -608,7 +608,7 @@ export async function getSenatGroupMemberIds(
 		.innerJoin(mandates, eq(mandates.actorId, actors.id))
 		.where(and(...memberConditions));
 
-	return memberIds.map(m => m.id);
+	return memberIds.map((m) => m.id);
 }
 
 /**
@@ -686,7 +686,7 @@ export async function getPEGroupsWithMemberCount(
 		.groupBy(organs.id, organs.name, organs.shortName, organs.color, organs.politicalPosition);
 
 	return groupsWithMembers
-		.map(g => ({ ...g, memberCount: Number(g.memberCount) }))
+		.map((g) => ({ ...g, memberCount: Number(g.memberCount) }))
 		.sort((a, b) => b.memberCount - a.memberCount);
 }
 
@@ -698,10 +698,7 @@ export async function getPEGroupMemberIds(
 	terme: string | null,
 	periodDates: PeriodDates | null
 ): Promise<string[]> {
-	const memberConditions: SQL[] = [
-		eq(mandates.organId, groupId),
-		eq(actors.chamber, 'PE')
-	];
+	const memberConditions: SQL[] = [eq(mandates.organId, groupId), eq(actors.chamber, 'PE')];
 
 	if (terme && terme !== 'all' && periodDates) {
 		memberConditions.push(...buildPEMandateConditions(terme, periodDates));
@@ -713,7 +710,7 @@ export async function getPEGroupMemberIds(
 		.innerJoin(mandates, eq(mandates.actorId, actors.id))
 		.where(and(...memberConditions));
 
-	return memberIds.map(m => m.id);
+	return memberIds.map((m) => m.id);
 }
 
 // ===== Scrutins Helpers =====
@@ -748,9 +745,7 @@ export interface ScrutinCategoryWithCount {
  * const categories = await getScrutinCategories(eq(scrutins.legislature, '17'));
  * ```
  */
-export async function getScrutinCategories(
-	whereClause?: SQL
-): Promise<ScrutinCategoryWithCount[]> {
+export async function getScrutinCategories(whereClause?: SQL): Promise<ScrutinCategoryWithCount[]> {
 	const result = await db
 		.select({
 			category: scrutins.category,
@@ -1129,7 +1124,7 @@ export async function getActorLawsImplication(
 		.orderBy(desc(laws.depositDate), asc(lawCosignatories.signatureOrder))
 		.limit(limit);
 
-	return results.map(r => ({
+	return results.map((r) => ({
 		...r,
 		role: r.role as 'author' | 'cosignatory'
 	}));
@@ -1165,7 +1160,7 @@ export async function getLawContributors(lawId: string): Promise<LawContributor[
 		.where(eq(lawCosignatories.lawId, lawId))
 		.orderBy(asc(lawCosignatories.signatureOrder), asc(actors.lastName));
 
-	return results.map(r => ({
+	return results.map((r) => ({
 		actorId: r.actorId,
 		actorName: `${r.firstName} ${r.lastName}`,
 		role: r.role as 'author' | 'cosignatory',

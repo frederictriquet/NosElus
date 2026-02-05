@@ -32,7 +32,10 @@
 		{/each}
 	</div>
 {:then distributionData}
-	{@const totalVotes = distributionData.distribution.pour + distributionData.distribution.contre + distributionData.distribution.abstention}
+	{@const totalVotes =
+		distributionData.distribution.pour +
+		distributionData.distribution.contre +
+		distributionData.distribution.abstention}
 	<div class="stats-grid" style="margin-bottom: 1.5rem;">
 		<div class="stat-card">
 			<div class="stat-value">{distributionData.totalVotes.toLocaleString('fr-FR')}</div>
@@ -46,7 +49,9 @@
 		</div>
 		<div class="stat-card">
 			<div class="stat-value" style="color: var(--color-danger);">
-				{totalVotes > 0 ? ((distributionData.distribution.contre / totalVotes) * 100).toFixed(0) : 0}%
+				{totalVotes > 0
+					? ((distributionData.distribution.contre / totalVotes) * 100).toFixed(0)
+					: 0}%
 			</div>
 			<div class="stat-label">Votes contre</div>
 		</div>
@@ -130,7 +135,9 @@
 							<div class="vote-header">
 								<div class="vote-title">{vote.scrutinTitle}</div>
 								<div class="vote-meta">
-									<span class="vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span>
+									<span class="vote-date"
+										>{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span
+									>
 									{#if vote.category}
 										<span class="vote-category">{vote.category}</span>
 									{/if}
@@ -192,7 +199,8 @@
 		margin: 0;
 	}
 
-	dt, dd {
+	dt,
+	dd {
 		margin: 0;
 	}
 
@@ -207,7 +215,12 @@
 	.skeleton-value {
 		width: 80px;
 		height: 32px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: 4px;
@@ -216,7 +229,12 @@
 	.skeleton-label {
 		width: 60px;
 		height: 16px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: 4px;

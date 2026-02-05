@@ -49,8 +49,8 @@ interface ParlTrackMEP {
 	UserID: number;
 	Name: {
 		full: string;
-		sur?: string | null;  // First name
-		family?: string | null;  // Last name
+		sur?: string | null; // First name
+		family?: string | null; // Last name
 		aliases?: string[];
 		title?: string;
 	};
@@ -165,9 +165,7 @@ async function downloadMepsDump(): Promise<ParlTrackMEP[]> {
 function isFrenchMepCurrentTerm(mep: ParlTrackMEP): boolean {
 	if (!mep.Constituencies) return false;
 
-	return mep.Constituencies.some(c =>
-		c && c.country === 'France' && c.term === CURRENT_TERM
-	);
+	return mep.Constituencies.some((c) => c && c.country === 'France' && c.term === CURRENT_TERM);
 }
 
 /**
@@ -178,7 +176,7 @@ function getCurrentGroup(mep: ParlTrackMEP): ParlTrackGroup | null {
 
 	// Find the most recent group (no end date or end date in the future)
 	const now = new Date();
-	const currentGroups = mep.Groups.filter(g => {
+	const currentGroups = mep.Groups.filter((g) => {
 		if (!g) return false;
 		if (!g.end) return true;
 		return new Date(g.end) > now;
@@ -188,8 +186,8 @@ function getCurrentGroup(mep: ParlTrackMEP): ParlTrackGroup | null {
 		// Return the most recent ended group
 		const validGroups = mep.Groups.filter((g): g is ParlTrackGroup => g !== null);
 		if (validGroups.length === 0) return null;
-		return validGroups.sort((a, b) =>
-			new Date(b.end || '9999').getTime() - new Date(a.end || '9999').getTime()
+		return validGroups.sort(
+			(a, b) => new Date(b.end || '9999').getTime() - new Date(a.end || '9999').getTime()
 		)[0];
 	}
 
@@ -212,8 +210,8 @@ function mapMepToActor(mep: ParlTrackMEP): NewActor {
 	}
 
 	// Get current party as profession
-	const currentConstituency = mep.Constituencies?.find(c =>
-		c && c.country === 'France' && c.term === CURRENT_TERM
+	const currentConstituency = mep.Constituencies?.find(
+		(c) => c && c.country === 'France' && c.term === CURRENT_TERM
 	);
 
 	return {
@@ -227,7 +225,7 @@ function mapMepToActor(mep: ParlTrackMEP): NewActor {
 		birthPlace: mep.Birth?.place || null,
 		profession: currentConstituency?.party || null,
 		photoUrl: mep.Photo || null,
-		chamber: 'PE'  // Parlement Européen
+		chamber: 'PE' // Parlement Européen
 	};
 }
 
@@ -284,8 +282,8 @@ function createGroupMandate(mep: ParlTrackMEP): NewMandate | null {
 	}
 
 	// Get constituency for current term
-	const constituency = mep.Constituencies?.find(c =>
-		c && c.country === 'France' && c.term === CURRENT_TERM
+	const constituency = mep.Constituencies?.find(
+		(c) => c && c.country === 'France' && c.term === CURRENT_TERM
 	);
 
 	return {
@@ -311,8 +309,8 @@ function createGroupMandate(mep: ParlTrackMEP): NewMandate | null {
 function isFrenchMepHistorical(mep: ParlTrackMEP): boolean {
 	if (!mep.Constituencies) return false;
 
-	return mep.Constituencies.some(c =>
-		c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM
+	return mep.Constituencies.some(
+		(c) => c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM
 	);
 }
 
@@ -322,11 +320,13 @@ function isFrenchMepHistorical(mep: ParlTrackMEP): boolean {
 function getFrenchTerms(mep: ParlTrackMEP): number[] {
 	if (!mep.Constituencies) return [];
 
-	return [...new Set(
-		mep.Constituencies
-			.filter(c => c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM)
-			.map(c => c.term)
-	)].sort();
+	return [
+		...new Set(
+			mep.Constituencies.filter(
+				(c) => c && c.country === 'France' && c.term >= HISTORICAL_MIN_TERM
+			).map((c) => c.term)
+		)
+	].sort();
 }
 
 /**
@@ -347,7 +347,8 @@ function extractAllGroups(meps: ParlTrackMEP[]): NewOrgan[] {
 
 			// Parse group dates
 			const groupStart = group.start ? new Date(group.start) : null;
-			const groupEnd = group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
+			const groupEnd =
+				group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
 
 			// Check which terms this group membership covers
 			for (const term of frenchTerms) {
@@ -358,10 +359,8 @@ function extractAllGroups(meps: ParlTrackMEP[]): NewOrgan[] {
 				const termEnd = termDates.end ? new Date(termDates.end) : new Date();
 
 				// Check if group membership overlaps with term
-				const overlaps = (
-					(!groupStart || groupStart <= termEnd) &&
-					(!groupEnd || groupEnd >= termStart)
-				);
+				const overlaps =
+					(!groupStart || groupStart <= termEnd) && (!groupEnd || groupEnd >= termStart);
 
 				if (!overlaps) continue;
 
@@ -403,7 +402,8 @@ function createAllGroupMandates(mep: ParlTrackMEP): NewMandate[] {
 
 		// Parse group dates
 		const groupStart = group.start ? new Date(group.start) : null;
-		const groupEndRaw = group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
+		const groupEndRaw =
+			group.end && group.end !== '9999-12-31T00:00:00' ? new Date(group.end) : null;
 
 		// Check which terms this group membership covers
 		for (const term of frenchTerms) {
@@ -414,10 +414,8 @@ function createAllGroupMandates(mep: ParlTrackMEP): NewMandate[] {
 			const termEnd = termDates.end ? new Date(termDates.end) : new Date();
 
 			// Check if group membership overlaps with term
-			const overlaps = (
-				(!groupStart || groupStart <= termEnd) &&
-				(!groupEndRaw || groupEndRaw >= termStart)
-			);
+			const overlaps =
+				(!groupStart || groupStart <= termEnd) && (!groupEndRaw || groupEndRaw >= termStart);
 
 			if (!overlaps) continue;
 
@@ -428,8 +426,8 @@ function createAllGroupMandates(mep: ParlTrackMEP): NewMandate[] {
 			const organId = generateGroupId(`${group.groupid}-${term}`);
 
 			// Find constituency for this term
-			const constituency = mep.Constituencies?.find(c =>
-				c && c.country === 'France' && c.term === term
+			const constituency = mep.Constituencies?.find(
+				(c) => c && c.country === 'France' && c.term === term
 			);
 
 			// Generate mandate ID (must fit in 50 chars)
@@ -472,7 +470,7 @@ function mapHistoricalMepToActor(mep: ParlTrackMEP): NewActor {
 	}
 
 	// Get most recent party
-	const frenchConstituencies = mep.Constituencies?.filter(c => c && c.country === 'France') || [];
+	const frenchConstituencies = mep.Constituencies?.filter((c) => c && c.country === 'France') || [];
 	const mostRecent = frenchConstituencies.sort((a, b) => b.term - a.term)[0];
 
 	return {
@@ -660,10 +658,7 @@ export async function importEuroparlMeps(config: ETLConfig): Promise<ImportStats
 			// First, delete old PE mandates and groups to avoid ID conflicts
 			// (IDs are generated via hash and may differ from previous imports)
 			await db.delete(mandates).where(like(mandates.organId, 'GPEU-%'));
-			await db.delete(organs).where(and(
-				eq(organs.chamber, 'PE'),
-				eq(organs.type, 'GP')
-			));
+			await db.delete(organs).where(and(eq(organs.chamber, 'PE'), eq(organs.type, 'GP')));
 			console.log('[EuroParl MEPs] Cleaned old PE groups and mandates');
 
 			// Insert fresh groups

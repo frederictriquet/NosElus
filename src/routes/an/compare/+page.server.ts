@@ -20,18 +20,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	}
 
 	// Get all deputies for selection (filtered by legislature if specified)
-	const allDeputies = deputyIds && deputyIds.length > 0
-		? await db
-			.select({ id: actors.id, name: actors.fullName })
-			.from(actors)
-			.where(inArray(actors.id, deputyIds))
-			.orderBy(actors.lastName)
-		: deputyIds === null
+	const allDeputies =
+		deputyIds && deputyIds.length > 0
 			? await db
-				.select({ id: actors.id, name: actors.fullName })
-				.from(actors)
-				.orderBy(actors.lastName)
-			: [];
+					.select({ id: actors.id, name: actors.fullName })
+					.from(actors)
+					.where(inArray(actors.id, deputyIds))
+					.orderBy(actors.lastName)
+			: deputyIds === null
+				? await db
+						.select({ id: actors.id, name: actors.fullName })
+						.from(actors)
+						.orderBy(actors.lastName)
+				: [];
 
 	const filters = {
 		legislature,
@@ -128,82 +129,85 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		}
 
 		// Run all independent queries in parallel
-		const [
-			groupsData,
-			[votes1Count],
-			[votes2Count],
-			dist1,
-			dist2,
-			commonVotes,
-			disagreements
-		] = await Promise.all([
-			// Groups for both deputies (order by startDate DESC to get most recent)
-			db
-				.select({
-					actorId: mandates.actorId,
-					groupId: organs.id,
-					groupName: organs.name,
-					groupShortName: organs.shortName,
-					groupColor: organs.color,
-					startDate: mandates.startDate
-				})
-				.from(mandates)
-				.innerJoin(organs, eq(mandates.organId, organs.id))
-				.where(sql`${mandates.actorId} IN ${[deputy1Id, deputy2Id]} AND ${organs.type} = 'GP'`)
-				.orderBy(desc(mandates.startDate)),
-
-			// Vote counts
-			filteredScrutinIds !== null && filteredScrutinIds.length === 0
-				? [{ value: 0 }]
-				: db.select({ value: count() }).from(votes).where(buildVoteConditions(deputy1Id)),
-
-			filteredScrutinIds !== null && filteredScrutinIds.length === 0
-				? [{ value: 0 }]
-				: db.select({ value: count() }).from(votes).where(buildVoteConditions(deputy2Id)),
-
-			// Distributions
-			getDistribution(deputy1Id),
-			getDistribution(deputy2Id),
-
-			// Common votes
-			filteredScrutinIds !== null && filteredScrutinIds.length === 0
-				? []
-				: db
+		const [groupsData, [votes1Count], [votes2Count], dist1, dist2, commonVotes, disagreements] =
+			await Promise.all([
+				// Groups for both deputies (order by startDate DESC to get most recent)
+				db
 					.select({
-						scrutinId: votes.scrutinId,
-						position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
-						position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+						actorId: mandates.actorId,
+						groupId: organs.id,
+						groupName: organs.name,
+						groupShortName: organs.shortName,
+						groupColor: organs.color,
+						startDate: mandates.startDate
 					})
-					.from(votes)
-					.where(and(...commonVotesConditions))
-					.groupBy(votes.scrutinId)
-					.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`),
+					.from(mandates)
+					.innerJoin(organs, eq(mandates.organId, organs.id))
+					.where(sql`${mandates.actorId} IN ${[deputy1Id, deputy2Id]} AND ${organs.type} = 'GP'`)
+					.orderBy(desc(mandates.startDate)),
 
-			// Disagreements
-			filteredScrutinIds !== null && filteredScrutinIds.length === 0
-				? []
-				: db
-					.select({
-						scrutinId: scrutins.id,
-						scrutinTitle: scrutins.title,
-						scrutinDate: scrutins.date,
-						position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
-						position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
-					})
-					.from(votes)
-					.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-					.where(and(...disagreementsConditions))
-					.groupBy(scrutins.id, scrutins.title, scrutins.date)
-					.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2 AND MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END) != MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`)
-					.orderBy(sql`${scrutins.date} DESC`)
-					.limit(10)
-		]);
+				// Vote counts
+				filteredScrutinIds !== null && filteredScrutinIds.length === 0
+					? [{ value: 0 }]
+					: db.select({ value: count() }).from(votes).where(buildVoteConditions(deputy1Id)),
+
+				filteredScrutinIds !== null && filteredScrutinIds.length === 0
+					? [{ value: 0 }]
+					: db.select({ value: count() }).from(votes).where(buildVoteConditions(deputy2Id)),
+
+				// Distributions
+				getDistribution(deputy1Id),
+				getDistribution(deputy2Id),
+
+				// Common votes
+				filteredScrutinIds !== null && filteredScrutinIds.length === 0
+					? []
+					: db
+							.select({
+								scrutinId: votes.scrutinId,
+								position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
+								position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+							})
+							.from(votes)
+							.where(and(...commonVotesConditions))
+							.groupBy(votes.scrutinId)
+							.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`),
+
+				// Disagreements
+				filteredScrutinIds !== null && filteredScrutinIds.length === 0
+					? []
+					: db
+							.select({
+								scrutinId: scrutins.id,
+								scrutinTitle: scrutins.title,
+								scrutinDate: scrutins.date,
+								position1: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END)`,
+								position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+							})
+							.from(votes)
+							.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
+							.where(and(...disagreementsConditions))
+							.groupBy(scrutins.id, scrutins.title, scrutins.date)
+							.having(
+								sql`COUNT(DISTINCT ${votes.actorId}) = 2 AND MAX(CASE WHEN ${votes.actorId} = ${deputy1Id} THEN ${votes.position} END) != MAX(CASE WHEN ${votes.actorId} = ${deputy2Id} THEN ${votes.position} END)`
+							)
+							.orderBy(sql`${scrutins.date} DESC`)
+							.limit(10)
+			]);
 
 		// Process groups - first entry for each actor wins (most recent due to ordering)
-		const groupByActor = new Map<string, { id: string; name: string | null; shortName: string | null; color: string | null }>();
+		const groupByActor = new Map<
+			string,
+			{ id: string; name: string | null; shortName: string | null; color: string | null }
+		>();
 		for (const g of groupsData) {
 			if (!groupByActor.has(g.actorId) && g.groupId) {
-				groupByActor.set(g.actorId, { id: g.groupId, name: g.groupName, shortName: g.groupShortName, color: g.groupColor });
+				groupByActor.set(g.actorId, {
+					id: g.groupId,
+					name: g.groupName,
+					shortName: g.groupShortName,
+					color: g.groupColor
+				});
 			}
 		}
 
@@ -228,9 +232,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			totalDistance += getVoteDistance(v.position1, v.position2);
 		}
 
-		const agreementRate = commonVotes.length > 0
-			? (sameVotes / commonVotes.length) * 100
-			: 0;
+		const agreementRate = commonVotes.length > 0 ? (sameVotes / commonVotes.length) * 100 : 0;
 
 		// Political distance: normalized 0-100 (0 = identical, 100 = completely opposed)
 		const maxDistance = commonVotes.length * 2;

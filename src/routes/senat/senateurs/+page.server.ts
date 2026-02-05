@@ -19,7 +19,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const conditions: SQL[] = [eq(actors.chamber, 'SENAT')];
 
 	if (search) {
-		conditions.push(or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!);
+		conditions.push(
+			or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!
+		);
 	}
 
 	// If renouvellement is specified, filter senators who had an active mandate during that period
@@ -139,4 +141,4 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			renouvellement
 		}
 	};
-};;
+};

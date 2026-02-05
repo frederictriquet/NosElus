@@ -45,7 +45,7 @@ export async function importDeputesFromNosdeputes(config: ETLConfig): Promise<Im
 	// Import mandates (linking deputies to their groups)
 	console.log('[NosDéputés] Creating mandates for group memberships...');
 	const mappedMandates = deputes
-		.map(d => mapDeputeMandate(d, config.legislature))
+		.map((d) => mapDeputeMandate(d, config.legislature))
 		.filter((m): m is NonNullable<typeof m> => m !== null);
 
 	if (mappedMandates.length > 0) {
@@ -73,7 +73,10 @@ export async function importDeputesFromNosdeputes(config: ETLConfig): Promise<Im
 	return stats;
 }
 
-export async function importGroupesFromNosdeputes(config: ETLConfig, legislatureNumber?: string): Promise<ImportStats> {
+export async function importGroupesFromNosdeputes(
+	config: ETLConfig,
+	legislatureNumber?: string
+): Promise<ImportStats> {
 	const stats = createImportStats();
 
 	console.log('[NosDéputés] Fetching groupes parlementaires...');
@@ -84,7 +87,7 @@ export async function importGroupesFromNosdeputes(config: ETLConfig, legislature
 
 	// Use legislatureNumber if provided, otherwise derive from config.legislature
 	const actualLegislature = legislatureNumber || config.legislature;
-	const mappedOrgans = groupes.map(g => mapGroupe(g, actualLegislature));
+	const mappedOrgans = groupes.map((g) => mapGroupe(g, actualLegislature));
 
 	try {
 		await db
@@ -122,7 +125,7 @@ export async function importScrutinsFromNosdeputes(config: ETLConfig): Promise<I
 	const batchSize = config.batchSize;
 	for (let i = 0; i < scrutinsList.length; i += batchSize) {
 		const batch = scrutinsList.slice(i, i + batchSize);
-		const mappedScrutins = batch.map(s => mapScrutin(s, config.legislature));
+		const mappedScrutins = batch.map((s) => mapScrutin(s, config.legislature));
 
 		try {
 			await db
@@ -190,7 +193,10 @@ export async function importVotesFromNosdeputes(
 		const scrutinId = `VTANR5L${config.legislature}-${scrutin.numero}`;
 
 		try {
-			const scrutinVotes = await fetchScrutinVotes(parseInt(scrutin.numero, 10), config.legislature);
+			const scrutinVotes = await fetchScrutinVotes(
+				parseInt(scrutin.numero, 10),
+				config.legislature
+			);
 
 			if (scrutinVotes.length > 0) {
 				const mappedVotes = scrutinVotes

@@ -88,9 +88,7 @@
 
 			// Deduplicate by ID to avoid Svelte each_key_duplicate error
 			const existingIds = new Set(senators.map((s) => s.id));
-			const newSenators = newData.senators.filter(
-				(s: { id: string }) => !existingIds.has(s.id)
-			);
+			const newSenators = newData.senators.filter((s: { id: string }) => !existingIds.has(s.id));
 			senators = [...senators, ...newSenators];
 			currentPage = newData.pagination.page;
 		} catch (e) {

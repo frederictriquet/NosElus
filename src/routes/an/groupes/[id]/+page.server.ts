@@ -10,10 +10,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const legislature = locals.periods.an;
 
 	// Get group info (synchronous - needed for 404 and page structure)
-	const [group] = await db
-		.select()
-		.from(organs)
-		.where(eq(organs.id, params.id));
+	const [group] = await db.select().from(organs).where(eq(organs.id, params.id));
 
 	if (!group) {
 		throw error(404, { message: 'Groupe non trouvé' });
@@ -31,7 +28,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			)
 		);
 
-	const relatedGroupIds = relatedGroups.map(g => g.id);
+	const relatedGroupIds = relatedGroups.map((g) => g.id);
 
 	// Build vote conditions helper
 	const buildVoteConditions = (): SQL[] => {
@@ -131,9 +128,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	};
 
 	// Get period dates for the chart
-	const periodDates = legislature && legislature !== 'all'
-		? await getLegislatureDates(legislature)
-		: null;
+	const periodDates =
+		legislature && legislature !== 'all' ? await getLegislatureDates(legislature) : null;
 
 	return {
 		// Synchronous data

@@ -20,7 +20,8 @@
 {#if !data.hadMandateDuringPeriod && data.filters.terme && data.filters.terme !== 'all'}
 	<div class="period-warning">
 		<p>
-			<strong>{data.actor.fullName}</strong> n'était pas eurodéputé·e durant le {data.filters.terme}e terme du Parlement européen.
+			<strong>{data.actor.fullName}</strong> n'était pas eurodéputé·e durant le {data.filters
+				.terme}e terme du Parlement européen.
 		</p>
 		<p class="warning-hint">Changez de terme pour voir son activité parlementaire.</p>
 	</div>
@@ -51,206 +52,206 @@
 	<ActivityStatsCard stats={data.activityStats} source="HowTheyVote.eu" chamberType="pe" />
 
 	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
-	{#snippet children(voteStats)}
-		{#if voteStats.voteCount === 0}
-			<p class="empty-state">Aucun vote enregistré</p>
-			<p class="coming-soon">
-				Les votes seront disponibles après import via <code>make etl-europarl-votes</code>
-			</p>
-		{:else}
-			<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
-				{voteStats.voteCount} votes enregistrés
-			</p>
-
-			{@const totalVotes =
-				voteStats.distribution.pour +
-				voteStats.distribution.contre +
-				voteStats.distribution.abstention +
-				voteStats.distribution['non-votant']}
-			{#if totalVotes > 0}
-				<div class="vote-bar" style="height: 24px; border-radius: 12px;">
-					<div
-						class="vote-bar-for"
-						style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"
-					></div>
-					<div
-						class="vote-bar-against"
-						style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"
-					></div>
-					<div
-						class="vote-bar-abstention"
-						style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"
-					></div>
-					{#if voteStats.distribution['non-votant'] > 0}
-						<div
-							class="vote-bar-nonvotant"
-							style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"
-						></div>
-					{/if}
-				</div>
-				<div
-					style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
-				>
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
-							{voteStats.distribution.pour}
-						</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
-					</div>
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
-							{voteStats.distribution.contre}
-						</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
-					</div>
-					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
-							{voteStats.distribution.abstention}
-						</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
-					</div>
-					{#if voteStats.distribution['non-votant'] > 0}
-						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
-								{voteStats.distribution['non-votant']}
-							</div>
-							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
-						</div>
-					{/if}
-				</div>
-
-				{#await data.groupAlignment then groupAlignment}
-					<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
-				{/await}
-			{/if}
-		{/if}
-	{/snippet}
-</AsyncCard>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
-		{#snippet children(recentVotes)}
-			{#if recentVotes.length === 0}
+		{#snippet children(voteStats)}
+			{#if voteStats.voteCount === 0}
 				<p class="empty-state">Aucun vote enregistré</p>
+				<p class="coming-soon">
+					Les votes seront disponibles après import via <code>make etl-europarl-votes</code>
+				</p>
 			{:else}
-				<div class="votes-list">
-					{#each recentVotes as vote}
-						<div class="vote-item">
-							<span
-								class="vote-position"
-								class:pour={vote.position === 'pour'}
-								class:contre={vote.position === 'contre'}
-								class:abstention={vote.position === 'abstention'}
-							>
-								{vote.position}
-							</span>
-							<div class="vote-info">
-								<div class="vote-title">
-									{vote.scrutinTitle?.slice(0, 80)}{(vote.scrutinTitle?.length || 0) > 80
-										? '...'
-										: ''}
+				<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+					{voteStats.voteCount} votes enregistrés
+				</p>
+
+				{@const totalVotes =
+					voteStats.distribution.pour +
+					voteStats.distribution.contre +
+					voteStats.distribution.abstention +
+					voteStats.distribution['non-votant']}
+				{#if totalVotes > 0}
+					<div class="vote-bar" style="height: 24px; border-radius: 12px;">
+						<div
+							class="vote-bar-for"
+							style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"
+						></div>
+						<div
+							class="vote-bar-against"
+							style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"
+						></div>
+						<div
+							class="vote-bar-abstention"
+							style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"
+						></div>
+						{#if voteStats.distribution['non-votant'] > 0}
+							<div
+								class="vote-bar-nonvotant"
+								style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"
+							></div>
+						{/if}
+					</div>
+					<div
+						style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
+					>
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+								{voteStats.distribution.pour}
+							</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
+						</div>
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+								{voteStats.distribution.contre}
+							</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
+						</div>
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+								{voteStats.distribution.abstention}
+							</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
+						</div>
+						{#if voteStats.distribution['non-votant'] > 0}
+							<div>
+								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+									{voteStats.distribution['non-votant']}
 								</div>
-								<div class="vote-date">
-									{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}
+								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
+							</div>
+						{/if}
+					</div>
+
+					{#await data.groupAlignment then groupAlignment}
+						<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
+					{/await}
+				{/if}
+			{/if}
+		{/snippet}
+	</AsyncCard>
+
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
+			{#snippet children(recentVotes)}
+				{#if recentVotes.length === 0}
+					<p class="empty-state">Aucun vote enregistré</p>
+				{:else}
+					<div class="votes-list">
+						{#each recentVotes as vote}
+							<div class="vote-item">
+								<span
+									class="vote-position"
+									class:pour={vote.position === 'pour'}
+									class:contre={vote.position === 'contre'}
+									class:abstention={vote.position === 'abstention'}
+								>
+									{vote.position}
+								</span>
+								<div class="vote-info">
+									<div class="vote-title">
+										{vote.scrutinTitle?.slice(0, 80)}{(vote.scrutinTitle?.length || 0) > 80
+											? '...'
+											: ''}
+									</div>
+									<div class="vote-date">
+										{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}
+									</div>
 								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard
+			title="Évolution des votes"
+			subtitle="Répartition des votes par mois"
+			promise={data.monthlyEvolution}
+			minHeight="220px"
+		>
+			{#snippet children(monthlyEvolution)}
+				<VoteEvolutionChart
+					data={monthlyEvolution}
+					periodStart={data.periodDates?.start}
+					periodEnd={data.periodDates?.end}
+				/>
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<div class="content-section">
+		{#if groupMandates.length > 0}
+			<div class="card">
+				<h2>Groupe politique</h2>
+				<div class="mandates-list">
+					{#each groupMandates as mandate}
+						<div class="mandate-item">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									Depuis {new Date(mandate.startDate).toLocaleDateString('fr-FR')}
+								{/if}
+								{#if mandate.endDate}
+									- {new Date(mandate.endDate).toLocaleDateString('fr-FR')}
+								{/if}
 							</div>
 						</div>
 					{/each}
 				</div>
-			{/if}
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard
-		title="Évolution des votes"
-		subtitle="Répartition des votes par mois"
-		promise={data.monthlyEvolution}
-		minHeight="220px"
-	>
-		{#snippet children(monthlyEvolution)}
-			<VoteEvolutionChart
-				data={monthlyEvolution}
-				periodStart={data.periodDates?.start}
-				periodEnd={data.periodDates?.end}
-			/>
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div class="content-section">
-	{#if groupMandates.length > 0}
-		<div class="card">
-			<h2>Groupe politique</h2>
-			<div class="mandates-list">
-				{#each groupMandates as mandate}
-					<div class="mandate-item">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
-							{/if}
-						</div>
-						{#if mandate.quality}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-						<div class="mandate-dates">
-							{#if mandate.startDate}
-								Depuis {new Date(mandate.startDate).toLocaleDateString('fr-FR')}
-							{/if}
-							{#if mandate.endDate}
-								- {new Date(mandate.endDate).toLocaleDateString('fr-FR')}
-							{/if}
-						</div>
-					</div>
-				{/each}
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	{#if committeeMandates.length > 0}
-		<div class="card">
-			<h2>Commissions</h2>
-			<div class="mandates-list">
-				{#each committeeMandates as mandate}
-					<div class="mandate-item">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
+		{#if committeeMandates.length > 0}
+			<div class="card">
+				<h2>Commissions</h2>
+				<div class="mandates-list">
+					{#each committeeMandates as mandate}
+						<div class="mandate-item">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality}
+								<div class="mandate-quality">{mandate.quality}</div>
 							{/if}
 						</div>
-						{#if mandate.quality}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-					</div>
-				{/each}
+					{/each}
+				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	{#if delegationMandates.length > 0}
-		<div class="card">
-			<h2>Délégations</h2>
-			<div class="mandates-list">
-				{#each delegationMandates as mandate}
-					<div class="mandate-item">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
+		{#if delegationMandates.length > 0}
+			<div class="card">
+				<h2>Délégations</h2>
+				<div class="mandates-list">
+					{#each delegationMandates as mandate}
+						<div class="mandate-item">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality}
+								<div class="mandate-quality">{mandate.quality}</div>
 							{/if}
 						</div>
-						{#if mandate.quality}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-					</div>
-				{/each}
+					{/each}
+				</div>
 			</div>
-		</div>
-	{/if}
-</div>
+		{/if}
+	</div>
 {/if}
 
 <style>

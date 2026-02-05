@@ -27,10 +27,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const [mandate] = await db
 			.select({ id: mandates.id })
 			.from(mandates)
-			.where(and(
-				eq(mandates.actorId, params.id),
-				eq(mandates.legislature, terme)
-			))
+			.where(and(eq(mandates.actorId, params.id), eq(mandates.legislature, terme)))
 			.limit(1);
 
 		return !!mandate;
@@ -96,22 +93,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const baseConditions = buildVoteConditions();
 
 		const [[voteCountResult], voteDistribution, [firstVote], [lastVote]] = await Promise.all([
-			db.select({ value: count() })
+			db
+				.select({ value: count() })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 				.where(and(...baseConditions)),
-			db.select({ position: votes.position, count: count() })
+			db
+				.select({ position: votes.position, count: count() })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 				.where(and(...baseConditions))
 				.groupBy(votes.position),
-			db.select({ date: scrutins.date })
+			db
+				.select({ date: scrutins.date })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 				.where(and(...baseConditions))
 				.orderBy(asc(scrutins.date))
 				.limit(1),
-			db.select({ date: scrutins.date })
+			db
+				.select({ date: scrutins.date })
 				.from(votes)
 				.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
 				.where(and(...baseConditions))

@@ -43,53 +43,50 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Load filter options and data in parallel
-	const [typeOptions, statusOptions, availableTags, [{ value: total }], lawsList] = await Promise.all([
-		// Types for filter dropdown
-		db
-			.selectDistinct({ type: laws.type })
-			.from(laws)
-			.where(
-				legislature && legislature !== 'all' ? eq(laws.legislature, legislature) : undefined
-			)
-			.orderBy(laws.type),
+	const [typeOptions, statusOptions, availableTags, [{ value: total }], lawsList] =
+		await Promise.all([
+			// Types for filter dropdown
+			db
+				.selectDistinct({ type: laws.type })
+				.from(laws)
+				.where(legislature && legislature !== 'all' ? eq(laws.legislature, legislature) : undefined)
+				.orderBy(laws.type),
 
-		// Statuses for filter dropdown
-		db
-			.selectDistinct({ status: laws.status })
-			.from(laws)
-			.where(
-				legislature && legislature !== 'all' ? eq(laws.legislature, legislature) : undefined
-			)
-			.orderBy(laws.status),
+			// Statuses for filter dropdown
+			db
+				.selectDistinct({ status: laws.status })
+				.from(laws)
+				.where(legislature && legislature !== 'all' ? eq(laws.legislature, legislature) : undefined)
+				.orderBy(laws.status),
 
-		// All available tags for filter dropdown
-		db
-			.select({ slug: tags.slug, name: tags.name, color: tags.color })
-			.from(tags)
-			.orderBy(asc(tags.name)),
+			// All available tags for filter dropdown
+			db
+				.select({ slug: tags.slug, name: tags.name, color: tags.color })
+				.from(tags)
+				.orderBy(asc(tags.name)),
 
-		// Total count
-		db.select({ value: count() }).from(laws).where(whereClause),
+			// Total count
+			db.select({ value: count() }).from(laws).where(whereClause),
 
-		// Paginated data
-		db
-			.select({
-				id: laws.id,
-				title: laws.title,
-				shortTitle: laws.shortTitle,
-				type: laws.type,
-				status: laws.status,
-				depositDate: laws.depositDate,
-				legislature: laws.legislature,
-				initiator: laws.initiator,
-				theme: laws.theme
-			})
-			.from(laws)
-			.where(whereClause)
-			.orderBy(desc(laws.depositDate))
-			.limit(limit)
-			.offset(offset)
-	]);
+			// Paginated data
+			db
+				.select({
+					id: laws.id,
+					title: laws.title,
+					shortTitle: laws.shortTitle,
+					type: laws.type,
+					status: laws.status,
+					depositDate: laws.depositDate,
+					legislature: laws.legislature,
+					initiator: laws.initiator,
+					theme: laws.theme
+				})
+				.from(laws)
+				.where(whereClause)
+				.orderBy(desc(laws.depositDate))
+				.limit(limit)
+				.offset(offset)
+		]);
 
 	// Load tags for displayed laws (batch, avoids N+1 queries)
 	// Pattern: charge tous les tags des lois affichées en une seule requête,

@@ -228,7 +228,10 @@ async function importHistoricalGroups(groupsData: HistoGroupeAPI[]): Promise<num
 			inserted++;
 		} catch (error) {
 			const err = error as Error & { cause?: Error };
-			console.error(`[Senat History] Error inserting group ${group.id}:`, err.cause?.message || err.message);
+			console.error(
+				`[Senat History] Error inserting group ${group.id}:`,
+				err.cause?.message || err.message
+			);
 		}
 	}
 

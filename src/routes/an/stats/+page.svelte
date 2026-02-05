@@ -40,7 +40,12 @@
 				<div class="stat-label">Votes enregistrés</div>
 			</div>
 			<div class="stat-card">
-				<div class="stat-value">{((scrutinResults.adopté / (scrutinResults.adopté + scrutinResults.rejeté)) * 100).toFixed(0)}%</div>
+				<div class="stat-value">
+					{(
+						(scrutinResults.adopté / (scrutinResults.adopté + scrutinResults.rejeté)) *
+						100
+					).toFixed(0)}%
+				</div>
 				<div class="stat-label">Taux d'adoption</div>
 			</div>
 		</div>
@@ -48,7 +53,12 @@
 {/await}
 
 <div class="card-grid">
-	<AsyncCard title="Types de scrutins" subtitle="Répartition par catégorie sémantique" promise={data.categoryStats} minHeight="180px">
+	<AsyncCard
+		title="Types de scrutins"
+		subtitle="Répartition par catégorie sémantique"
+		promise={data.categoryStats}
+		minHeight="180px"
+	>
 		{#snippet children(categoryStats)}
 			{#if categoryStats.length > 0}
 				{@const total = categoryStats.reduce((sum, c) => sum + c.count, 0)}
@@ -60,7 +70,10 @@
 							<div class="category-bar-container">
 								<div class="category-bar" style="width: {pct}%"></div>
 							</div>
-							<span class="category-value">{cat.count.toLocaleString('fr-FR')} <span class="category-pct">({pct.toFixed(1)}%)</span></span>
+							<span class="category-value"
+								>{cat.count.toLocaleString('fr-FR')}
+								<span class="category-pct">({pct.toFixed(1)}%)</span></span
+							>
 						</a>
 					{/each}
 				</div>
@@ -72,33 +85,65 @@
 
 	<AsyncCard title="Répartition des votes" promise={data.distribution} minHeight="180px">
 		{#snippet children(distribution)}
-			{@const totalDistribution = distribution.pour + distribution.contre + distribution.abstention + (distribution['non-votant'] || 0)}
+			{@const totalDistribution =
+				distribution.pour +
+				distribution.contre +
+				distribution.abstention +
+				(distribution['non-votant'] || 0)}
 			{#if totalDistribution > 0}
 				<div class="vote-bar" style="height: 32px; border-radius: 16px; margin: 1.5rem 0;">
-					<div class="vote-bar-for" style="width: {(distribution.pour / totalDistribution) * 100}%"></div>
-					<div class="vote-bar-against" style="width: {(distribution.contre / totalDistribution) * 100}%"></div>
-					<div class="vote-bar-abstention" style="width: {(distribution.abstention / totalDistribution) * 100}%"></div>
+					<div
+						class="vote-bar-for"
+						style="width: {(distribution.pour / totalDistribution) * 100}%"
+					></div>
+					<div
+						class="vote-bar-against"
+						style="width: {(distribution.contre / totalDistribution) * 100}%"
+					></div>
+					<div
+						class="vote-bar-abstention"
+						style="width: {(distribution.abstention / totalDistribution) * 100}%"
+					></div>
 					{#if distribution['non-votant'] > 0}
-						<div class="vote-bar-nonvotant" style="width: {(distribution['non-votant'] / totalDistribution) * 100}%"></div>
+						<div
+							class="vote-bar-nonvotant"
+							style="width: {(distribution['non-votant'] / totalDistribution) * 100}%"
+						></div>
 					{/if}
 				</div>
 				<div style="display: flex; justify-content: space-around; text-align: center;">
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{((distribution.pour / totalDistribution) * 100).toFixed(1)}%</div>
-						<div style="color: var(--color-text-muted);">Pour ({distribution.pour.toLocaleString('fr-FR')})</div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+							{((distribution.pour / totalDistribution) * 100).toFixed(1)}%
+						</div>
+						<div style="color: var(--color-text-muted);">
+							Pour ({distribution.pour.toLocaleString('fr-FR')})
+						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{((distribution.contre / totalDistribution) * 100).toFixed(1)}%</div>
-						<div style="color: var(--color-text-muted);">Contre ({distribution.contre.toLocaleString('fr-FR')})</div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+							{((distribution.contre / totalDistribution) * 100).toFixed(1)}%
+						</div>
+						<div style="color: var(--color-text-muted);">
+							Contre ({distribution.contre.toLocaleString('fr-FR')})
+						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{((distribution.abstention / totalDistribution) * 100).toFixed(1)}%</div>
-						<div style="color: var(--color-text-muted);">Abstention ({distribution.abstention.toLocaleString('fr-FR')})</div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+							{((distribution.abstention / totalDistribution) * 100).toFixed(1)}%
+						</div>
+						<div style="color: var(--color-text-muted);">
+							Abstention ({distribution.abstention.toLocaleString('fr-FR')})
+						</div>
 					</div>
 					{#if distribution['non-votant'] > 0}
 						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{((distribution['non-votant'] / totalDistribution) * 100).toFixed(1)}%</div>
-							<div style="color: var(--color-text-muted);">Non-votants ({distribution['non-votant'].toLocaleString('fr-FR')})</div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+								{((distribution['non-votant'] / totalDistribution) * 100).toFixed(1)}%
+							</div>
+							<div style="color: var(--color-text-muted);">
+								Non-votants ({distribution['non-votant'].toLocaleString('fr-FR')})
+							</div>
 						</div>
 					{/if}
 				</div>
@@ -113,14 +158,22 @@
 			{@const totalResults = scrutinResults.adopté + scrutinResults.rejeté}
 			{#if totalResults > 0}
 				<div class="results-chart">
-					<div class="result-bar adopted" style="width: {(scrutinResults.adopté / totalResults) * 100}%">
+					<div
+						class="result-bar adopted"
+						style="width: {(scrutinResults.adopté / totalResults) * 100}%"
+					>
 						<span>{scrutinResults.adopté}</span>
 					</div>
-					<div class="result-bar rejected" style="width: {(scrutinResults.rejeté / totalResults) * 100}%">
+					<div
+						class="result-bar rejected"
+						style="width: {(scrutinResults.rejeté / totalResults) * 100}%"
+					>
 						<span>{scrutinResults.rejeté}</span>
 					</div>
 				</div>
-				<div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-text-muted);">
+				<div
+					style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-text-muted);"
+				>
 					<span>Adoptés</span>
 					<span>Rejetés</span>
 				</div>
@@ -137,7 +190,7 @@
 			{#if monthlyActivity.length > 0}
 				<div class="activity-chart">
 					{#each monthlyActivity.slice(-12) as month}
-						{@const maxCount = Math.max(...monthlyActivity.map(m => m.count))}
+						{@const maxCount = Math.max(...monthlyActivity.map((m) => m.count))}
 						<div class="activity-bar-container">
 							<div class="activity-bar" style="height: {(month.count / maxCount) * 100}%"></div>
 							<span class="activity-label">{month.month.slice(5)}</span>
@@ -153,7 +206,11 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Top 10 - Participation aux votes" promise={data.topParticipation} minHeight="400px">
+	<AsyncCard
+		title="Top 10 - Participation aux votes"
+		promise={data.topParticipation}
+		minHeight="400px"
+	>
 		{#snippet children(topParticipation)}
 			{#if topParticipation.length > 0}
 				<div class="ranking-list">
@@ -179,7 +236,7 @@
 <div style="margin-top: 1.5rem;">
 	<AsyncCard title="Votes par groupe parlementaire" promise={data.groupStats} minHeight="300px">
 		{#snippet children(groupStats)}
-			{@const filteredGroups = groupStats.filter(g => g.totalVotes > 0)}
+			{@const filteredGroups = groupStats.filter((g) => g.totalVotes > 0)}
 			{#if filteredGroups.length > 0}
 				<div class="table-container">
 					<table>
@@ -197,14 +254,25 @@
 								<tr>
 									<td>
 										<div style="display: flex; align-items: center; gap: 0.5rem;">
-											<span style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor || '#ccc'}"></span>
+											<span
+												style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor ||
+													'#ccc'}"
+											></span>
 											<GroupName shortName={group.groupShortName} fullName={group.groupName} />
 										</div>
 									</td>
-									<td style="text-align: right; color: var(--color-success);">{group.pourVotes.toLocaleString('fr-FR')}</td>
-									<td style="text-align: right; color: var(--color-danger);">{group.contreVotes.toLocaleString('fr-FR')}</td>
-									<td style="text-align: right; color: var(--color-warning);">{group.abstentionVotes.toLocaleString('fr-FR')}</td>
-									<td style="text-align: right; font-weight: 600;">{group.totalVotes.toLocaleString('fr-FR')}</td>
+									<td style="text-align: right; color: var(--color-success);"
+										>{group.pourVotes.toLocaleString('fr-FR')}</td
+									>
+									<td style="text-align: right; color: var(--color-danger);"
+										>{group.contreVotes.toLocaleString('fr-FR')}</td
+									>
+									<td style="text-align: right; color: var(--color-warning);"
+										>{group.abstentionVotes.toLocaleString('fr-FR')}</td
+									>
+									<td style="text-align: right; font-weight: 600;"
+										>{group.totalVotes.toLocaleString('fr-FR')}</td
+									>
 								</tr>
 							{/each}
 						</tbody>
@@ -218,7 +286,12 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Proximité politique entre groupes" subtitle="Pourcentage de votes identiques entre les groupes parlementaires (sur les 15 derniers scrutins)" promise={data.heatmapAndProximity} minHeight="250px">
+	<AsyncCard
+		title="Proximité politique entre groupes"
+		subtitle="Pourcentage de votes identiques entre les groupes parlementaires (sur les 15 derniers scrutins)"
+		promise={data.heatmapAndProximity}
+		minHeight="250px"
+	>
 		{#snippet children(heatmapAndProximity)}
 			{@const proximityMatrix = heatmapAndProximity.proximityMatrix}
 			{#if proximityMatrix.groups.length > 1}
@@ -267,7 +340,12 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Heatmap des votes récents" subtitle="Position majoritaire de chaque groupe sur les 15 derniers scrutins" promise={data.heatmapAndProximity} minHeight="350px">
+	<AsyncCard
+		title="Heatmap des votes récents"
+		subtitle="Position majoritaire de chaque groupe sur les 15 derniers scrutins"
+		promise={data.heatmapAndProximity}
+		minHeight="350px"
+	>
 		{#snippet children(heatmapAndProximity)}
 			{@const heatmap = heatmapAndProximity.heatmap}
 			{#if heatmap.scrutins.length > 0 && heatmap.groups.length > 0}
@@ -290,7 +368,12 @@
 										<a href="/an/scrutins/{scrutin.id}" title={scrutin.title}>
 											{scrutin.title?.slice(0, 40)}{(scrutin.title?.length || 0) > 40 ? '...' : ''}
 										</a>
-										<span class="scrutin-date">{new Date(scrutin.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+										<span class="scrutin-date"
+											>{new Date(scrutin.date).toLocaleDateString('fr-FR', {
+												day: '2-digit',
+												month: 'short'
+											})}</span
+										>
 									</td>
 									{#each heatmap.groups as group}
 										{@const vote = heatmap.matrix[scrutin.id]?.[group.id]}
@@ -326,7 +409,12 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Alignement avec le gouvernement" subtitle="Taux d'alignement avec la majorité présidentielle (Renaissance, MoDem, Horizons)" promise={data.governmentAlignment} minHeight="250px">
+	<AsyncCard
+		title="Alignement avec le gouvernement"
+		subtitle="Taux d'alignement avec la majorité présidentielle (Renaissance, MoDem, Horizons)"
+		promise={data.governmentAlignment}
+		minHeight="250px"
+	>
 		{#snippet children(governmentAlignment)}
 			{#if governmentAlignment.length > 0}
 				<div class="alignment-list">
@@ -347,7 +435,12 @@
 									style="width: {group.alignmentRate}%"
 								></div>
 							</div>
-							<span class="alignment-value" class:high={group.alignmentRate >= 70} class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70} class:low={group.alignmentRate < 40}>
+							<span
+								class="alignment-value"
+								class:high={group.alignmentRate >= 70}
+								class:medium={group.alignmentRate >= 40 && group.alignmentRate < 70}
+								class:low={group.alignmentRate < 40}
+							>
 								{group.alignmentRate.toFixed(0)}%
 							</span>
 						</div>
@@ -361,7 +454,12 @@
 </div>
 
 <div style="margin-top: 1.5rem;">
-	<AsyncCard title="Évolution des positions dans le temps" subtitle="Répartition des votes par mois" promise={data.positionEvolution} minHeight="250px">
+	<AsyncCard
+		title="Évolution des positions dans le temps"
+		subtitle="Répartition des votes par mois"
+		promise={data.positionEvolution}
+		minHeight="250px"
+	>
 		{#snippet children(positionEvolution)}
 			{#if positionEvolution.length > 0}
 				<div class="evolution-timeline">
@@ -409,7 +507,12 @@
 	.skeleton-value {
 		width: 80px;
 		height: 32px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: 4px;
@@ -418,7 +521,12 @@
 	.skeleton-label {
 		width: 60px;
 		height: 16px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: 4px;
@@ -852,7 +960,9 @@
 		padding: 1.25rem;
 		text-decoration: none;
 		color: inherit;
-		transition: box-shadow 0.2s, transform 0.2s;
+		transition:
+			box-shadow 0.2s,
+			transform 0.2s;
 		border: 1px solid var(--color-border);
 	}
 

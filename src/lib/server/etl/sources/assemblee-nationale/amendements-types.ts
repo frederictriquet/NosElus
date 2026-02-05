@@ -52,10 +52,12 @@ export interface ANAmendement {
 		};
 		corps?: {
 			cartoucheInformatif?: string;
-			contenuAuteur?: ANNullableRef | {
-				dispositif?: string;
-				exposeSommaire?: string;
-			};
+			contenuAuteur?:
+				| ANNullableRef
+				| {
+						dispositif?: string;
+						exposeSommaire?: string;
+				  };
 		};
 		cycleDeVie: {
 			dateDepot?: string;
@@ -72,25 +74,33 @@ export interface ANAmendement {
 				};
 			};
 			dateSort?: ANNullableRef | string;
-			sort?: ANNullableRef | {
-				code?: string;
-				libelle?: string;
-			};
+			sort?:
+				| ANNullableRef
+				| {
+						code?: string;
+						libelle?: string;
+				  };
 		};
 		representations?: {
 			representation?: ANRepresentation | ANRepresentation[];
 		};
 		seanceDiscussionRef?: ANNullableRef | string;
 		article99?: string;
-		loiReference?: ANNullableRef | {
-			numeroLoi?: string;
-		};
-		discussionCommune?: ANNullableRef | {
-			idDiscussionCommune?: string;
-		};
-		discussionIdentique?: ANNullableRef | {
-			idDiscussionIdentique?: string;
-		};
+		loiReference?:
+			| ANNullableRef
+			| {
+					numeroLoi?: string;
+			  };
+		discussionCommune?:
+			| ANNullableRef
+			| {
+					idDiscussionCommune?: string;
+			  };
+		discussionIdentique?:
+			| ANNullableRef
+			| {
+					idDiscussionIdentique?: string;
+			  };
 		accordGouvernementDepotHorsDelai?: string;
 	};
 }
@@ -125,30 +135,30 @@ interface ANRepresentation {
  * Mapping des codes de sort vers les statuts
  */
 export const SORT_CODES: Record<string, string> = {
-	'AC': 'adopté',
-	'RJ': 'rejeté',
-	'RT': 'retiré',
-	'TB': 'tombé',
-	'AN': 'non soutenu',
-	'IR': 'irrecevable',
-	'ND': 'non défendu',
-	'SF': 'sans objet',
-	'IS': 'irrecevable 40', // Irrecevable article 40 Constitution
+	AC: 'adopté',
+	RJ: 'rejeté',
+	RT: 'retiré',
+	TB: 'tombé',
+	AN: 'non soutenu',
+	IR: 'irrecevable',
+	ND: 'non défendu',
+	SF: 'sans objet',
+	IS: 'irrecevable 40' // Irrecevable article 40 Constitution
 };
 
 /**
  * Mapping des codes d'état vers les statuts
  */
 export const ETAT_CODES: Record<string, string> = {
-	'AC': 'adopté',
-	'RJ': 'rejeté',
-	'RT': 'retiré',
-	'TB': 'tombé',
-	'AN': 'non soutenu',
-	'IR': 'irrecevable',
-	'ND': 'non défendu',
-	'SF': 'sans objet',
-	'DE': 'déposé',
-	'EN': 'en cours',
-	'DI': 'discuté',
+	AC: 'adopté',
+	RJ: 'rejeté',
+	RT: 'retiré',
+	TB: 'tombé',
+	AN: 'non soutenu',
+	IR: 'irrecevable',
+	ND: 'non défendu',
+	SF: 'sans objet',
+	DE: 'déposé',
+	EN: 'en cours',
+	DI: 'discuté'
 };

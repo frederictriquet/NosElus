@@ -19,10 +19,11 @@ describe('Security Headers (hooks.server.ts)', () => {
 		request: new Request(`http://localhost${pathname}`)
 	});
 
-	const mockResolve = async () => new Response('OK', {
-		status: 200,
-		headers: new Headers({ 'Content-Type': 'text/html' })
-	});
+	const mockResolve = async () =>
+		new Response('OK', {
+			status: 200,
+			headers: new Headers({ 'Content-Type': 'text/html' })
+		});
 
 	it('should set X-Frame-Options header to DENY', async () => {
 		const event = createMockEvent();

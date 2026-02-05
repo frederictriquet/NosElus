@@ -75,7 +75,12 @@
 </script>
 
 {#if variant === 'thumbnail'}
-	<a {href} class="elected-thumbnail" style={group?.color ? `border-color: ${group.color}` : ''} title="{name}{group?.shortName ? ` (${group.shortName})` : ''}">
+	<a
+		{href}
+		class="elected-thumbnail"
+		style={group?.color ? `border-color: ${group.color}` : ''}
+		title="{name}{group?.shortName ? ` (${group.shortName})` : ''}"
+	>
 		<img src={loadedSrc} alt={name} width="32" height="32" loading="lazy" decoding="async" />
 	</a>
 {:else if variant === 'inline'}
@@ -84,7 +89,15 @@
 			<span class="elected-rank">{rank}</span>
 		{/if}
 		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
-			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+			<img
+				src={loadedSrc}
+				alt={name}
+				class="elected-photo-sm"
+				width="32"
+				height="32"
+				loading="lazy"
+				decoding="async"
+			/>
 		</span>
 		<span class="elected-name">{name}</span>
 		{#if group?.shortName}
@@ -99,7 +112,15 @@
 {:else if variant === 'compact'}
 	<a {href} class="elected-compact">
 		<span class="photo-ring" style={group?.color ? `--ring-color: ${group.color}` : ''}>
-			<img src={loadedSrc} alt={name} class="elected-photo-sm" width="32" height="32" loading="lazy" decoding="async" />
+			<img
+				src={loadedSrc}
+				alt={name}
+				class="elected-photo-sm"
+				width="32"
+				height="32"
+				loading="lazy"
+				decoding="async"
+			/>
 		</span>
 		<div class="elected-compact-info">
 			<span class="elected-name">{name}</span>
@@ -110,8 +131,19 @@
 	</a>
 {:else}
 	<a {href} class="elected-card">
-		<span class="photo-ring photo-ring-lg" style={group?.color ? `--ring-color: ${group.color}` : ''}>
-			<img src={loadedSrc} alt={name} class="elected-photo" width="60" height="60" loading="lazy" decoding="async" />
+		<span
+			class="photo-ring photo-ring-lg"
+			style={group?.color ? `--ring-color: ${group.color}` : ''}
+		>
+			<img
+				src={loadedSrc}
+				alt={name}
+				class="elected-photo"
+				width="60"
+				height="60"
+				loading="lazy"
+				decoding="async"
+			/>
 		</span>
 		<div class="elected-info">
 			<div class="elected-name">{name}</div>

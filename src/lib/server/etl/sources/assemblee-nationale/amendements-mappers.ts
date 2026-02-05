@@ -16,14 +16,22 @@ function determineStatus(amendement: ANAmendement['amendement']): string {
 		const sortCode = cycleDeVie.sort.code;
 		if (sortCode) {
 			switch (sortCode) {
-				case 'AC': return 'adopté';
-				case 'RJ': return 'rejeté';
-				case 'RT': return 'retiré';
-				case 'TB': return 'tombé';
-				case 'AN': return 'non soutenu';
-				case 'ND': return 'non défendu';
-				case 'SF': return 'sans objet';
-				default: return sortCode.toLowerCase();
+				case 'AC':
+					return 'adopté';
+				case 'RJ':
+					return 'rejeté';
+				case 'RT':
+					return 'retiré';
+				case 'TB':
+					return 'tombé';
+				case 'AN':
+					return 'non soutenu';
+				case 'ND':
+					return 'non défendu';
+				case 'SF':
+					return 'sans objet';
+				default:
+					return sortCode.toLowerCase();
 			}
 		}
 	}
@@ -32,18 +40,30 @@ function determineStatus(amendement: ANAmendement['amendement']): string {
 	if (cycleDeVie.etatDesTraitements?.etat?.code) {
 		const etatCode = cycleDeVie.etatDesTraitements.etat.code;
 		switch (etatCode) {
-			case 'AC': return 'adopté';
-			case 'RJ': return 'rejeté';
-			case 'RT': return 'retiré';
-			case 'TB': return 'tombé';
-			case 'IR': return 'irrecevable';
-			case 'AN': return 'non soutenu';
-			case 'ND': return 'non défendu';
-			case 'SF': return 'sans objet';
-			case 'DE': return 'déposé';
-			case 'EN': return 'en cours';
-			case 'DI': return 'discuté';
-			default: return etatCode.toLowerCase();
+			case 'AC':
+				return 'adopté';
+			case 'RJ':
+				return 'rejeté';
+			case 'RT':
+				return 'retiré';
+			case 'TB':
+				return 'tombé';
+			case 'IR':
+				return 'irrecevable';
+			case 'AN':
+				return 'non soutenu';
+			case 'ND':
+				return 'non défendu';
+			case 'SF':
+				return 'sans objet';
+			case 'DE':
+				return 'déposé';
+			case 'EN':
+				return 'en cours';
+			case 'DI':
+				return 'discuté';
+			default:
+				return etatCode.toLowerCase();
 		}
 	}
 
@@ -59,7 +79,11 @@ function extractDispositif(amendement: ANAmendement['amendement']): string | nul
 	if (!corps) return null;
 
 	// Essayer le contenu auteur
-	if (corps.contenuAuteur && typeof corps.contenuAuteur === 'object' && 'dispositif' in corps.contenuAuteur) {
+	if (
+		corps.contenuAuteur &&
+		typeof corps.contenuAuteur === 'object' &&
+		'dispositif' in corps.contenuAuteur
+	) {
 		return corps.contenuAuteur.dispositif || null;
 	}
 
@@ -78,7 +102,11 @@ function extractExposeSommaire(amendement: ANAmendement['amendement']): string |
 	const corps = amendement.corps;
 	if (!corps) return null;
 
-	if (corps.contenuAuteur && typeof corps.contenuAuteur === 'object' && 'exposeSommaire' in corps.contenuAuteur) {
+	if (
+		corps.contenuAuteur &&
+		typeof corps.contenuAuteur === 'object' &&
+		'exposeSommaire' in corps.contenuAuteur
+	) {
 		return corps.contenuAuteur.exposeSommaire || null;
 	}
 
@@ -115,10 +143,14 @@ function extractPosition(amendement: ANAmendement['amendement']): string | null 
 
 	const pos = pointeur.division.avant_A_Apres;
 	switch (pos) {
-		case 'A': return 'sur';
-		case 'AVANT': return 'avant';
-		case 'APRES': return 'après';
-		default: return pos.toLowerCase();
+		case 'A':
+			return 'sur';
+		case 'AVANT':
+			return 'avant';
+		case 'APRES':
+			return 'après';
+		default:
+			return pos.toLowerCase();
 	}
 }
 
@@ -152,9 +184,10 @@ export function mapAmendement(data: ANAmendement): NewAmendment {
 		dispositif: extractDispositif(amendement),
 		exposeSommaire: extractExposeSommaire(amendement),
 		depositDate: amendement.cycleDeVie.dateDepot || null,
-		examDate: amendement.cycleDeVie.dateSort && typeof amendement.cycleDeVie.dateSort === 'string'
-			? amendement.cycleDeVie.dateSort
-			: null,
+		examDate:
+			amendement.cycleDeVie.dateSort && typeof amendement.cycleDeVie.dateSort === 'string'
+				? amendement.cycleDeVie.dateSort
+				: null,
 		sortOrder: amendement.identification.numeroOrdreDepot
 			? parseInt(amendement.identification.numeroOrdreDepot, 10)
 			: null,
@@ -166,7 +199,9 @@ export function mapAmendement(data: ANAmendement): NewAmendment {
  * Extrait les cosignataires d'un amendement
  * Retourne un tableau de {amendementId, acteurRef}
  */
-export function extractCosignataires(data: ANAmendement): Array<{ amendementId: string; actorId: string }> {
+export function extractCosignataires(
+	data: ANAmendement
+): Array<{ amendementId: string; actorId: string }> {
 	const amendement = data.amendement;
 	const cosignataires = amendement.signataires.cosignataires;
 
@@ -176,7 +211,7 @@ export function extractCosignataires(data: ANAmendement): Array<{ amendementId: 
 		? cosignataires.acteurRef
 		: [cosignataires.acteurRef];
 
-	return acteurRefs.map(actorId => ({
+	return acteurRefs.map((actorId) => ({
 		amendementId: amendement.uid,
 		actorId
 	}));

@@ -6,14 +6,15 @@
 				{
 					name: 'Open Data Assemblee Nationale',
 					url: 'https://data.assemblee-nationale.fr/',
-					description: 'Donnees officielles de l\'Assemblee nationale : deputes, scrutins, amendements, dossiers legislatifs',
+					description:
+						"Donnees officielles de l'Assemblee nationale : deputes, scrutins, amendements, dossiers legislatifs",
 					data: ['Deputes', 'Scrutins', 'Votes', 'Amendements', 'Dossiers legislatifs']
 				},
 				{
 					name: 'NosDéputés.fr',
 					url: 'https://www.nosdeputes.fr/',
-					description: 'Statistiques d\'activite parlementaire des deputes',
-					data: ['Statistiques d\'activite', 'Presence', 'Interventions']
+					description: "Statistiques d'activite parlementaire des deputes",
+					data: ["Statistiques d'activite", 'Presence', 'Interventions']
 				}
 			]
 		},
@@ -23,11 +24,12 @@
 				{
 					name: 'data.senat.fr',
 					url: 'https://data.senat.fr/',
-					description: 'Portail open data du Senat : senateurs, amendements, questions, dossiers legislatifs',
+					description:
+						'Portail open data du Senat : senateurs, amendements, questions, dossiers legislatifs',
 					data: ['Senateurs', 'Groupes politiques', 'Commissions', 'Dossiers legislatifs']
 				},
 				{
-					name: 'Calendrier d\'activite (senat.fr)',
+					name: "Calendrier d'activite (senat.fr)",
 					url: 'https://www.senat.fr/calendrier_activite/',
 					description: 'Tableau des activites principales des senateurs',
 					data: ['Presences en seance', 'Presences en commission', 'Questions au gouvernement']
@@ -41,7 +43,7 @@
 				{
 					name: 'NosSénateurs.fr (archive)',
 					url: 'https://archive.nossenateurs.fr/',
-					description: 'Statistiques d\'activite parlementaire des senateurs (archive)',
+					description: "Statistiques d'activite parlementaire des senateurs (archive)",
 					data: ['Semaines de presence', 'Interventions', 'Amendements', 'Questions']
 				}
 			]
@@ -75,7 +77,7 @@
 				{
 					name: 'Datan.fr',
 					url: 'https://datan.fr/',
-					description: 'Plateforme independante de suivi de l\'Assemblee nationale',
+					description: "Plateforme independante de suivi de l'Assemblee nationale",
 					data: ['Analyses de votes', 'Coalitions', 'Statistiques']
 				},
 				{
@@ -87,7 +89,7 @@
 				{
 					name: 'Tricoteuses',
 					url: 'https://www.tricoteuses.fr/',
-					description: 'Bibliotheque TypeScript pour les donnees de l\'Assemblee nationale',
+					description: "Bibliotheque TypeScript pour les donnees de l'Assemblee nationale",
 					data: ['Parsing des donnees AN']
 				}
 			]
@@ -102,7 +104,8 @@
 <div class="page-header">
 	<h1 class="page-title">Sources de donnees</h1>
 	<p class="page-subtitle">
-		NosElus agrege des donnees provenant de multiples sources ouvertes sur les parlementaires francais et europeens
+		NosElus agrege des donnees provenant de multiples sources ouvertes sur les parlementaires
+		francais et europeens
 	</p>
 </div>
 
@@ -116,7 +119,17 @@
 						<h3>
 							<a href={source.url} target="_blank" rel="noopener noreferrer">
 								{source.name}
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
 									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
 									<polyline points="15 3 21 3 21 9" />
 									<line x1="10" x2="21" y1="14" y2="3" />
@@ -139,8 +152,9 @@
 <section class="license-section">
 	<h2>Licences et attributions</h2>
 	<p>
-		Les donnees utilisees par NosElus sont issues de sources ouvertes et sont soumises aux licences de leurs editeurs respectifs.
-		Nous remercions l'ensemble des organisations qui rendent ces donnees publiques.
+		Les donnees utilisees par NosElus sont issues de sources ouvertes et sont soumises aux licences
+		de leurs editeurs respectifs. Nous remercions l'ensemble des organisations qui rendent ces
+		donnees publiques.
 	</p>
 	<ul>
 		<li><strong>Assemblee nationale</strong> - Licence Ouverte / Open Licence</li>
@@ -178,7 +192,9 @@
 		border-radius: var(--radius-lg);
 		padding: 1.25rem;
 		box-shadow: var(--shadow-sm);
-		transition: box-shadow 0.2s, transform 0.2s;
+		transition:
+			box-shadow 0.2s,
+			transform 0.2s;
 	}
 
 	.source-card:hover {

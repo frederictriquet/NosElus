@@ -24,7 +24,10 @@
 		return '';
 	}
 
-	function getPercent(value: number, dist: { pour: number; contre: number; abstention: number; 'non-votant'?: number }) {
+	function getPercent(
+		value: number,
+		dist: { pour: number; contre: number; abstention: number; 'non-votant'?: number }
+	) {
 		const total = dist.pour + dist.contre + dist.abstention + (dist['non-votant'] || 0) || 1;
 		return ((value / total) * 100).toFixed(0);
 	}
@@ -162,7 +165,10 @@
 									</div>
 									{#if comparison.mep1.distribution['non-votant'] > 0}
 										<div class="dist-item nonvotant">
-											{getPercent(comparison.mep1.distribution['non-votant'], comparison.mep1.distribution)}% n.v.
+											{getPercent(
+												comparison.mep1.distribution['non-votant'],
+												comparison.mep1.distribution
+											)}% n.v.
 										</div>
 									{/if}
 								</div>
@@ -208,7 +214,10 @@
 									</div>
 									{#if comparison.mep2.distribution['non-votant'] > 0}
 										<div class="dist-item nonvotant">
-											{getPercent(comparison.mep2.distribution['non-votant'], comparison.mep2.distribution)}% n.v.
+											{getPercent(
+												comparison.mep2.distribution['non-votant'],
+												comparison.mep2.distribution
+											)}% n.v.
 										</div>
 									{/if}
 								</div>

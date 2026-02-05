@@ -72,9 +72,8 @@ export function mapOrgane(organe: ANOrgane): NewOrgan {
 export function mapActeurMandats(acteur: ANActeur): NewMandate[] {
 	const mandats = acteur.acteur.mandats.mandat;
 	const mandatList = Array.isArray(mandats) ? mandats : [mandats];
-	const acteurId = typeof acteur.acteur.uid === 'object'
-		? acteur.acteur.uid['#text']
-		: acteur.acteur.uid;
+	const acteurId =
+		typeof acteur.acteur.uid === 'object' ? acteur.acteur.uid['#text'] : acteur.acteur.uid;
 
 	const result: NewMandate[] = [];
 

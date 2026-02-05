@@ -166,12 +166,7 @@ export function mapVotesFromScrutin(scrutin: Scrutin): NewVote[] {
 	return votes;
 }
 
-function mapVotant(
-	scrutinId: string,
-	votant: Votant,
-	groupId: string,
-	position: string
-): NewVote {
+function mapVotant(scrutinId: string, votant: Votant, groupId: string, position: string): NewVote {
 	return {
 		id: `${scrutinId}_${votant.acteurRef}`,
 		scrutinId,

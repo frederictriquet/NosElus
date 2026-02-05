@@ -4,7 +4,10 @@
 
 <div class="page-header">
 	<h1 class="page-title">Politique de confidentialité</h1>
-	<p class="page-subtitle">Comment NosElus traite les données, conformément au Règlement général sur la protection des données (RGPD)</p>
+	<p class="page-subtitle">
+		Comment NosElus traite les données, conformément au Règlement général sur la protection des
+		données (RGPD)
+	</p>
 </div>
 
 <div class="legal-content">
@@ -12,7 +15,10 @@
 		<h2>Responsable du traitement</h2>
 		<ul>
 			<li><strong>Nom :</strong> Frédéric Triquet</li>
-			<li><strong>Email :</strong> <a href="mailto:frederic.triquet@gmail.com">frederic.triquet@gmail.com</a></li>
+			<li>
+				<strong>Email :</strong>
+				<a href="mailto:frederic.triquet@gmail.com">frederic.triquet@gmail.com</a>
+			</li>
 		</ul>
 	</section>
 
@@ -32,9 +38,8 @@
 	<section class="legal-section">
 		<h2>Cookies</h2>
 		<p>
-			NosElus utilise uniquement des <strong>cookies fonctionnels</strong> pour mémoriser
-			vos préférences de navigation. Aucun cookie publicitaire, de suivi ou d'analyse
-			d'audience n'est utilisé.
+			NosElus utilise uniquement des <strong>cookies fonctionnels</strong> pour mémoriser vos préférences
+			de navigation. Aucun cookie publicitaire, de suivi ou d'analyse d'audience n'est utilisé.
 		</p>
 		<table>
 			<thead>
@@ -64,17 +69,17 @@
 		</table>
 		<p>
 			Ces cookies ne contiennent aucune donnée personnelle. Ils sont de type
-			<code>SameSite=Lax</code> et ne sont pas transmis à des tiers.
-			Vous pouvez les supprimer à tout moment via les paramètres de votre navigateur.
+			<code>SameSite=Lax</code> et ne sont pas transmis à des tiers. Vous pouvez les supprimer à tout
+			moment via les paramètres de votre navigateur.
 		</p>
 	</section>
 
 	<section class="legal-section">
 		<h2>Données des élus parlementaires</h2>
 		<p>
-			NosElus traite des données relatives à l'activité publique des parlementaires
-			français et européens (noms, photos officielles, votes, appartenances à des groupes politiques,
-			travail législatif).
+			NosElus traite des données relatives à l'activité publique des parlementaires français et
+			européens (noms, photos officielles, votes, appartenances à des groupes politiques, travail
+			législatif).
 		</p>
 
 		<h3>Base légale</h3>
@@ -82,38 +87,41 @@
 		<ul>
 			<li>
 				<strong>Article 9(2)(e) du RGPD</strong> : les données traitées sont
-				<em>manifestement rendues publiques</em> par les personnes concernées dans le
-				cadre de leur mandat parlementaire (votes publics, déclarations en séance,
-				travaux législatifs)
+				<em>manifestement rendues publiques</em> par les personnes concernées dans le cadre de leur mandat
+				parlementaire (votes publics, déclarations en séance, travaux législatifs)
 			</li>
 			<li>
-				<strong>Article 9(2)(g) du RGPD</strong> : le traitement est nécessaire pour
-				des motifs d'<em>intérêt public substantiel</em> (transparence démocratique
-				et contrôle citoyen de l'activité parlementaire)
+				<strong>Article 9(2)(g) du RGPD</strong> : le traitement est nécessaire pour des motifs d'<em
+					>intérêt public substantiel</em
+				> (transparence démocratique et contrôle citoyen de l'activité parlementaire)
 			</li>
 			<li>
-				<strong>Article 6(1)(f) du RGPD</strong> : le traitement est nécessaire aux fins
-				des <em>intérêts légitimes</em> poursuivis (information citoyenne), qui ne
-				portent pas atteinte aux droits des personnes concernées, celles-ci exerçant
-				des fonctions publiques
+				<strong>Article 6(1)(f) du RGPD</strong> : le traitement est nécessaire aux fins des
+				<em>intérêts légitimes</em> poursuivis (information citoyenne), qui ne portent pas atteinte aux
+				droits des personnes concernées, celles-ci exerçant des fonctions publiques
 			</li>
 		</ul>
 
 		<h3>Sources des données</h3>
 		<p>
 			Toutes les données proviennent de sources ouvertes et officielles :
-			<a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener noreferrer">Open Data Assemblée nationale</a>,
+			<a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener noreferrer"
+				>Open Data Assemblée nationale</a
+			>,
 			<a href="https://data.senat.fr" target="_blank" rel="noopener noreferrer">Open Data Sénat</a>,
-			<a href="https://data.europarl.europa.eu" target="_blank" rel="noopener noreferrer">Open Data Parlement européen</a>,
-			<a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer">Légifrance</a>.
-			La liste complète est disponible sur la page <a href="/sources">Sources de données</a>.
+			<a href="https://data.europarl.europa.eu" target="_blank" rel="noopener noreferrer"
+				>Open Data Parlement européen</a
+			>,
+			<a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer"
+				>Légifrance</a
+			>. La liste complète est disponible sur la page <a href="/sources">Sources de données</a>.
 		</p>
 
 		<h3>Contenu généré par intelligence artificielle</h3>
 		<p>
-			Certains résumés de textes de lois sont générés automatiquement à l'aide d'un
-			modèle de langage (IA). Ces contenus sont identifiés comme tels sur le site.
-			Ils sont fournis à titre indicatif et ne se substituent pas aux textes officiels.
+			Certains résumés de textes de lois sont générés automatiquement à l'aide d'un modèle de
+			langage (IA). Ces contenus sont identifiés comme tels sur le site. Ils sont fournis à titre
+			indicatif et ne se substituent pas aux textes officiels.
 		</p>
 	</section>
 
@@ -124,15 +132,23 @@
 			suivants :
 		</p>
 		<ul>
-			<li><strong>Droit d'accès</strong> (article 15) : obtenir la confirmation que des données vous concernant sont traitées et en obtenir une copie</li>
-			<li><strong>Droit de rectification</strong> (article 16) : demander la correction de données inexactes</li>
-			<li><strong>Droit d'opposition</strong> (article 21) : s'opposer au traitement pour des motifs tenant à votre situation particulière</li>
+			<li>
+				<strong>Droit d'accès</strong> (article 15) : obtenir la confirmation que des données vous concernant
+				sont traitées et en obtenir une copie
+			</li>
+			<li>
+				<strong>Droit de rectification</strong> (article 16) : demander la correction de données inexactes
+			</li>
+			<li>
+				<strong>Droit d'opposition</strong> (article 21) : s'opposer au traitement pour des motifs tenant
+				à votre situation particulière
+			</li>
 		</ul>
 		<p>
 			NosElus traitant exclusivement des données publiques liées à l'exercice d'un mandat
-			parlementaire, le droit à l'effacement (article 17) peut être limité conformément à
-			l'article 17(3)(a) du RGPD (exercice du droit à la liberté d'expression et d'information)
-			et 17(3)(d) (finalités d'intérêt public).
+			parlementaire, le droit à l'effacement (article 17) peut être limité conformément à l'article
+			17(3)(a) du RGPD (exercice du droit à la liberté d'expression et d'information) et 17(3)(d)
+			(finalités d'intérêt public).
 		</p>
 		<p>
 			Pour exercer vos droits, contactez le responsable du traitement :
@@ -147,9 +163,7 @@
 
 	<section class="legal-section">
 		<h2>Sécurité</h2>
-		<p>
-			NosElus met en œuvre des mesures techniques pour protéger le site et ses utilisateurs :
-		</p>
+		<p>NosElus met en œuvre des mesures techniques pour protéger le site et ses utilisateurs :</p>
 		<ul>
 			<li>Content Security Policy (CSP) avec nonces</li>
 			<li>Protection contre le clickjacking (X-Frame-Options)</li>
@@ -162,8 +176,8 @@
 	<section class="legal-section">
 		<h2>Modifications</h2>
 		<p>
-			Cette politique de confidentialité peut être mise à jour. La date de dernière
-			modification est indiquée ci-dessous.
+			Cette politique de confidentialité peut être mise à jour. La date de dernière modification est
+			indiquée ci-dessous.
 		</p>
 		<p><strong>Dernière mise à jour :</strong> février 2026</p>
 	</section>

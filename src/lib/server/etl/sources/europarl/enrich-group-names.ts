@@ -98,9 +98,7 @@ export async function enrichPEGroupNames(config: ETLConfig): Promise<ImportStats
 		// Check if name needs enrichment
 		const currentName = group.name || '';
 		const needsEnrichment =
-			!group.name ||
-			group.name === group.shortName ||
-			currentName.length <= 15;
+			!group.name || group.name === group.shortName || currentName.length <= 15;
 
 		if (!needsEnrichment) {
 			stats.skipped++;
@@ -111,7 +109,9 @@ export async function enrichPEGroupNames(config: ETLConfig): Promise<ImportStats
 			try {
 				await db.update(organs).set({ name: fullName }).where(eq(organs.id, group.id));
 
-				console.log(`[Enrich Group Names] Updated: ${group.shortName} (${group.name}) -> ${fullName}`);
+				console.log(
+					`[Enrich Group Names] Updated: ${group.shortName} (${group.name}) -> ${fullName}`
+				);
 				stats.updated++;
 			} catch (error) {
 				console.error(`[Enrich Group Names] Error updating ${group.id}:`, error);
@@ -120,7 +120,9 @@ export async function enrichPEGroupNames(config: ETLConfig): Promise<ImportStats
 		} else {
 			// Log skipped for debug
 			if (needsEnrichment && !fullName) {
-				console.log(`[Enrich Group Names] No HTV name found for: ${group.shortName} (${group.name})`);
+				console.log(
+					`[Enrich Group Names] No HTV name found for: ${group.shortName} (${group.name})`
+				);
 			}
 			stats.skipped++;
 		}

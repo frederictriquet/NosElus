@@ -102,8 +102,8 @@ describe('ParlGov Matcher - Best Match', () => {
 			});
 			const parties = [
 				parlGovParties.lfi, // Mauvais match
-				parlGovParties.lr,  // Bon match
-				parlGovParties.rn   // Mauvais match
+				parlGovParties.lr, // Bon match
+				parlGovParties.rn // Mauvais match
 			];
 
 			const result = findBestMatch(organ, parties);
@@ -145,7 +145,7 @@ describe('ParlGov Matcher - Best Match', () => {
 
 		it('should handle empty parties array', () => {
 			const organ = realOrgans.lfi;
-			const parties: typeof parlGovParties.lfi[] = [];
+			const parties: (typeof parlGovParties.lfi)[] = [];
 
 			const result = findBestMatch(organ, parties);
 
@@ -217,7 +217,7 @@ describe('ParlGov Matcher - Best Match', () => {
 
 		it('should separate matched and not matched organs', () => {
 			const organs = [
-				realOrgans.lfi,  // Devrait matcher
+				realOrgans.lfi, // Devrait matcher
 				createTestOrgan({ name: 'Unknown Party', shortName: 'UK' }) // Ne devrait pas matcher
 			];
 			const parties = [parlGovParties.lfi];
@@ -241,7 +241,7 @@ describe('ParlGov Matcher - Best Match', () => {
 		});
 
 		it('should handle empty organs array', () => {
-			const organs: typeof realOrgans.lfi[] = [];
+			const organs: (typeof realOrgans.lfi)[] = [];
 			const parties = [parlGovParties.lfi];
 
 			const result = matchAll(organs, parties);
@@ -252,7 +252,7 @@ describe('ParlGov Matcher - Best Match', () => {
 
 		it('should handle empty parties array', () => {
 			const organs = [realOrgans.lfi, realOrgans.rn];
-			const parties: typeof parlGovParties.lfi[] = [];
+			const parties: (typeof parlGovParties.lfi)[] = [];
 
 			const result = matchAll(organs, parties);
 

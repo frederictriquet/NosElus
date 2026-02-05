@@ -20,7 +20,7 @@ const TEXT_PATTERNS = [
 	// "l'amendement n° XXX ... du/de la [texte] (lecture)"
 	/(?:du |de la |de l')(.+?)\s*\([^)]*lecture[^)]*\)\s*\.?\s*$/i,
 	// "projet de loi [nom]" ou "proposition de loi [nom]"
-	/((?:projet|proposition) de loi[^(]+)/i,
+	/((?:projet|proposition) de loi[^(]+)/i
 ];
 
 /**
@@ -33,7 +33,7 @@ const TEXT_TYPES: Record<string, string> = {
 	'projet de loi': 'PJL',
 	'proposition de loi organique': 'PPLO',
 	'proposition de loi': 'PPL',
-	'proposition de résolution': 'PRES',
+	'proposition de résolution': 'PRES'
 };
 
 /**
@@ -53,16 +53,18 @@ export function extractTextName(title: string): string | null {
  * Normalise le nom d'un texte pour regroupement
  */
 function normalizeTextName(name: string): string {
-	return name
-		.toLowerCase()
-		.trim()
-		// Supprimer les articles initiaux
-		.replace(/^(le |la |l'|les |du |de la |de l')/, '')
-		// Normaliser les espaces
-		.replace(/\s+/g, ' ')
-		// Supprimer la ponctuation finale
-		.replace(/[.,;:]+$/, '')
-		.trim();
+	return (
+		name
+			.toLowerCase()
+			.trim()
+			// Supprimer les articles initiaux
+			.replace(/^(le |la |l'|les |du |de la |de l')/, '')
+			// Normaliser les espaces
+			.replace(/\s+/g, ' ')
+			// Supprimer la ponctuation finale
+			.replace(/[.,;:]+$/, '')
+			.trim()
+	);
 }
 
 /**
@@ -86,7 +88,7 @@ function generateTextId(name: string, legislature: string): string {
 	let hash = 0;
 	for (let i = 0; i < name.length; i++) {
 		const char = name.charCodeAt(i);
-		hash = ((hash << 5) - hash) + char;
+		hash = (hash << 5) - hash + char;
 		hash = hash & hash; // Convert to 32bit integer
 	}
 	const hashStr = Math.abs(hash).toString(36).substring(0, 8);
@@ -117,7 +119,7 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 		scrutinsProcessed: 0,
 		scrutinsLinked: 0,
 		textsCreated: 0,
-		errors: 0,
+		errors: 0
 	};
 
 	console.log(`[Link by Title] Starting for legislature ${legislature}...`);
@@ -127,7 +129,7 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 		.select({
 			id: scrutins.id,
 			title: scrutins.title,
-			date: scrutins.date,
+			date: scrutins.date
 		})
 		.from(scrutins)
 		.where(eq(scrutins.legislature, legislature));
@@ -135,12 +137,15 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 	console.log(`[Link by Title] Found ${unlinkedScrutins.length} scrutins to process`);
 
 	// Grouper par nom de texte
-	const textGroups = new Map<string, {
-		name: string;
-		type: string;
-		scrutinIds: string[];
-		firstDate: string;
-	}>();
+	const textGroups = new Map<
+		string,
+		{
+			name: string;
+			type: string;
+			scrutinIds: string[];
+			firstDate: string;
+		}
+	>();
 
 	for (const scrutin of unlinkedScrutins) {
 		stats.scrutinsProcessed++;
@@ -153,7 +158,7 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 				name: textName,
 				type: detectTextType(textName),
 				scrutinIds: [],
-				firstDate: scrutin.date,
+				firstDate: scrutin.date
 			});
 		}
 
@@ -180,9 +185,10 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 				type: group.type,
 				status: null,
 				depositDate: group.firstDate,
-				initiator: group.type.startsWith('P') && group.type !== 'PPL' && group.type !== 'PPLO'
-					? 'gouvernement'
-					: 'assemblée',
+				initiator:
+					group.type.startsWith('P') && group.type !== 'PPL' && group.type !== 'PPLO'
+						? 'gouvernement'
+						: 'assemblée'
 			};
 
 			await db
@@ -192,8 +198,8 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 					target: laws.id,
 					set: {
 						title: sql`excluded.title`,
-						updatedAt: sql`now()`,
-					},
+						updatedAt: sql`now()`
+					}
 				});
 
 			stats.textsCreated++;
@@ -207,7 +213,6 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 
 				stats.scrutinsLinked++;
 			}
-
 		} catch (error) {
 			console.error(`[Link by Title] Error processing text "${normalizedName}":`, error);
 			stats.errors++;
@@ -215,7 +220,9 @@ export async function linkScrutinsByTitle(legislature: string): Promise<LinkStat
 
 		// Log progress
 		if (stats.textsCreated % 50 === 0) {
-			console.log(`[Link by Title] Progress: ${stats.textsCreated} texts, ${stats.scrutinsLinked} scrutins linked`);
+			console.log(
+				`[Link by Title] Progress: ${stats.textsCreated} texts, ${stats.scrutinsLinked} scrutins linked`
+			);
 		}
 	}
 

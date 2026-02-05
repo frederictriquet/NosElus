@@ -5,6 +5,7 @@ Intégration avec la base de données académique ParlGov pour récupérer autom
 ## Vue d'ensemble
 
 Ce module permet d'éliminer le hardcoding des positions politiques en :
+
 1. Téléchargeant les données depuis [ParlGov.org](https://www.parlgov.org/)
 2. Matchant automatiquement les groupes NosElus avec les partis ParlGov via similarité fuzzy (Jaccard)
 3. Stockant les positions en base de données (`organs.political_position`)
@@ -12,12 +13,14 @@ Ce module permet d'éliminer le hardcoding des positions politiques en :
 ### Problème Résolu
 
 **Avant** : 71 IDs de groupes hardcodés dans `/an/carte` et `/pe/carte`
+
 ```typescript
 // ❌ Hardcoding à maintenir manuellement
 const spectrumOrder = ['PO800538', 'PO800520', ...];
 ```
 
 **Après** : Positions automatiques depuis ParlGov
+
 ```typescript
 // ✅ Données dynamiques depuis la DB
 const sorted = sortByPoliticalPosition(groups);
@@ -100,15 +103,15 @@ make etl-political-positions ARGS="--dry-run" # Dry-run
 
 ```typescript
 import {
-  fetchPartiesForCountries,
-  findBestMatch,
-  determinePosition,
-  sortByPoliticalPosition
+	fetchPartiesForCountries,
+	findBestMatch,
+	determinePosition,
+	sortByPoliticalPosition
 } from '$lib/server/etl/sources/parlgov';
 
 // 1. Récupérer les partis ParlGov
 const parties = await fetchPartiesForCountries({
-  countryCodes: ['FRA']
+	countryCodes: ['FRA']
 });
 
 // 2. Matcher un groupe NosElus
@@ -133,8 +136,8 @@ Télécharge tous les partis depuis ParlGov.
 
 ```typescript
 const parties = await fetchAllParties({
-  timeout: 30000,
-  csvUrl: 'https://...' // optionnel
+	timeout: 30000,
+	csvUrl: 'https://...' // optionnel
 });
 ```
 
@@ -144,7 +147,7 @@ Filtre par codes pays.
 
 ```typescript
 const frParties = await fetchPartiesForCountries({
-  countryCodes: ['FRA', 'EUR']
+	countryCodes: ['FRA', 'EUR']
 });
 ```
 
@@ -164,6 +167,7 @@ const ok = await testConnection();
 Trouve le meilleur match ParlGov pour un groupe NosElus.
 
 **Algorithme** :
+
 1. Essaie `shortName` vs `shortName` (match exact prioritaire)
 2. Essaie `name` vs `nameNative`
 3. Essaie `name` vs `nameEnglish`
@@ -173,15 +177,15 @@ Trouve le meilleur match ParlGov pour un groupe NosElus.
 
 ```typescript
 const match = findBestMatch(organ, parties, {
-  threshold: 0.4,          // Minimum 40% similarité
-  longWordBonus: 0.2,      // Bonus mots ≥8 chars
-  longWordMinLength: 8     // Seuil mot long
+	threshold: 0.4, // Minimum 40% similarité
+	longWordBonus: 0.2, // Bonus mots ≥8 chars
+	longWordMinLength: 8 // Seuil mot long
 });
 
 if (match) {
-  console.log(match.score);          // 0.75
-  console.log(match.matchedOn);      // 'nameNative'
-  console.log(match.parlGovParty);   // { ...party }
+	console.log(match.score); // 0.75
+	console.log(match.matchedOn); // 'nameNative'
+	console.log(match.parlGovParty); // { ...party }
 }
 ```
 
@@ -190,21 +194,16 @@ if (match) {
 Calcule la similarité Jaccard entre deux chaînes (0.0-1.0).
 
 **Features** :
+
 - Normalisation NLP (accents, ponctuation, stop words)
 - Bonus pour mots longs discriminants (8+ caractères)
 - Case-insensitive
 
 ```typescript
-const score = calculateJaccardSimilarity(
-  'La France Insoumise',
-  'La France insoumise'
-);
+const score = calculateJaccardSimilarity('La France Insoumise', 'La France insoumise');
 // → 1.0 (identique après normalisation)
 
-const score2 = calculateJaccardSimilarity(
-  'Rassemblement National',
-  'National Rally'
-);
+const score2 = calculateJaccardSimilarity('Rassemblement National', 'National Rally');
 // → 0.7 (50% Jaccard base + 20% bonus mot long "national")
 ```
 
@@ -213,6 +212,7 @@ const score2 = calculateJaccardSimilarity(
 Normalise un texte pour le matching.
 
 **Transformations** :
+
 - Lowercase
 - Supprime accents (é→e, ç→c)
 - Supprime ponctuation
@@ -229,6 +229,7 @@ normalizeForMatching('La République Française');
 Détecte si un groupe est "Non-inscrit" (NI).
 
 **Détection** :
+
 - ShortName exact : `NI`, `NA`
 - Nom avec word boundaries : `Non-inscrit`, `Non-inscrits`, `Indépendant`
 
@@ -251,6 +252,7 @@ Détermine la position politique d'un groupe à partir des données ParlGov (0-1
 **Note** : Les groupes PE ont leurs positions seedées directement en DB via `scripts/etl/seed-pe-positions.ts`. Cette fonction ne gère que le calcul basé sur ParlGov (partis nationaux).
 
 **Priorité** :
+
 1. `999` si Non-inscrit
 2. `match.parlGovParty.leftRight` (si match trouvé)
 3. `FAMILY_POSITIONS[familyShort]` (fallback famille)
@@ -272,9 +274,9 @@ Trie les groupes de gauche à droite.
 
 ```typescript
 const sorted = sortByPoliticalPosition(groups, {
-  niPosition: 999,        // Position NI (défaut: 999)
-  defaultPosition: 5.0,   // Position inconnue (défaut: 5.0)
-  niIdentifiers: ['NI']   // Custom NI identifiers
+	niPosition: 999, // Position NI (défaut: 999)
+	defaultPosition: 5.0, // Position inconnue (défaut: 5.0)
+	niIdentifiers: ['NI'] // Custom NI identifiers
 });
 ```
 
@@ -288,12 +290,12 @@ const sorted = sortByPoliticalPosition(groups, {
 
 ```typescript
 interface ParlGovParty {
-  countryCode: string;      // 'FRA', 'EUR'
-  shortName: string;        // 'LFI', 'RN'
-  nameEnglish: string;      // 'Unsubmissive France'
-  nameNative: string;       // 'La France insoumise'
-  familyShort: string;      // 'soc', 'com', 'lib', etc.
-  leftRight: number | null; // 0-10 (gauche-droite) ou null
+	countryCode: string; // 'FRA', 'EUR'
+	shortName: string; // 'LFI', 'RN'
+	nameEnglish: string; // 'Unsubmissive France'
+	nameNative: string; // 'La France insoumise'
+	familyShort: string; // 'soc', 'com', 'lib', etc.
+	leftRight: number | null; // 0-10 (gauche-droite) ou null
 }
 ```
 
@@ -301,12 +303,12 @@ interface ParlGovParty {
 
 ```typescript
 interface MatchResult {
-  organId: string;
-  organName: string;
-  organShortName: string | null;
-  parlGovParty: ParlGovParty;
-  score: number;            // 0.0-1.0 (similarité Jaccard)
-  matchedOn: MatchField;    // 'shortName' | 'nameNative' | 'nameEnglish'
+	organId: string;
+	organName: string;
+	organShortName: string | null;
+	parlGovParty: ParlGovParty;
+	score: number; // 0.0-1.0 (similarité Jaccard)
+	matchedOn: MatchField; // 'shortName' | 'nameNative' | 'nameEnglish'
 }
 ```
 
@@ -316,14 +318,14 @@ Positions par défaut des familles politiques (fallback).
 
 ```typescript
 const FAMILY_POSITIONS = {
-  com: 1.5,    // Communist → extrême gauche
-  soc: 3.0,    // Social democracy → gauche
-  eco: 3.5,    // Green/Ecologist → gauche
-  lib: 5.5,    // Liberal → centre-droit
-  con: 7.0,    // Conservative → droite
-  right: 8.5,  // Right-wing → extrême droite
-  spec: 5.0,   // Special issue → centre
-  none: 5.0    // No family → centre
+	com: 1.5, // Communist → extrême gauche
+	soc: 3.0, // Social democracy → gauche
+	eco: 3.5, // Green/Ecologist → gauche
+	lib: 5.5, // Liberal → centre-droit
+	con: 7.0, // Conservative → droite
+	right: 8.5, // Right-wing → extrême droite
+	spec: 5.0, // Special issue → centre
+	none: 5.0 // No family → centre
 };
 ```
 
@@ -363,15 +365,15 @@ const parties = await fetchPartiesForCountries({ countryCodes: ['FRA'] });
 
 // Matcher chaque groupe
 for (const group of groups) {
-  const match = findBestMatch(group, parties);
+	const match = findBestMatch(group, parties);
 
-  if (match) {
-    console.log(`${group.shortName} → ${match.parlGovParty.nameNative}`);
-    console.log(`  Score: ${match.score.toFixed(2)}`);
-    console.log(`  Position: ${match.parlGovParty.leftRight}`);
-  } else {
-    console.log(`${group.shortName} → No match (fallback)`);
-  }
+	if (match) {
+		console.log(`${group.shortName} → ${match.parlGovParty.nameNative}`);
+		console.log(`  Score: ${match.score.toFixed(2)}`);
+		console.log(`  Position: ${match.parlGovParty.leftRight}`);
+	} else {
+		console.log(`${group.shortName} → No match (fallback)`);
+	}
 }
 ```
 
@@ -382,33 +384,33 @@ for (const group of groups) {
 import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
 
 export const load = async () => {
-  const groups = await getANGroupsWithMemberCount(legislature);
-  const sorted = sortByPoliticalPosition(groups);
+	const groups = await getANGroupsWithMemberCount(legislature);
+	const sorted = sortByPoliticalPosition(groups);
 
-  return { groups: sorted };
+	return { groups: sorted };
 };
 ```
 
 ```svelte
 <!-- +page.svelte -->
 <script lang="ts">
-  import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
+	import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
 
-  let { data } = $props();
+	let { data } = $props();
 
-  // Adapter le format pour sortByPoliticalPosition
-  const adapted = data.groups.map(g => ({
-    id: g.groupId,
-    name: g.groupName,
-    shortName: g.groupShortName,
-    politicalPosition: g.politicalPosition
-  }));
+	// Adapter le format pour sortByPoliticalPosition
+	const adapted = data.groups.map((g) => ({
+		id: g.groupId,
+		name: g.groupName,
+		shortName: g.groupShortName,
+		politicalPosition: g.politicalPosition
+	}));
 
-  const sorted = sortByPoliticalPosition(adapted);
+	const sorted = sortByPoliticalPosition(adapted);
 </script>
 
 {#each sorted as group}
-  <div>{group.shortName} - Position: {group.politicalPosition}</div>
+	<div>{group.shortName} - Position: {group.politicalPosition}</div>
 {/each}
 ```
 
@@ -419,14 +421,14 @@ import { calculateJaccardSimilarity } from '$lib/server/etl/sources/parlgov';
 
 // Tester différents seuils
 const tests = [
-  ['La France Insoumise', 'La France insoumise'],
-  ['Rassemblement National', 'National Rally'],
-  ['Les Républicains', 'LR']
+	['La France Insoumise', 'La France insoumise'],
+	['Rassemblement National', 'National Rally'],
+	['Les Républicains', 'LR']
 ];
 
 for (const [s1, s2] of tests) {
-  const score = calculateJaccardSimilarity(s1, s2);
-  console.log(`"${s1}" vs "${s2}": ${score.toFixed(2)}`);
+	const score = calculateJaccardSimilarity(s1, s2);
+	console.log(`"${s1}" vs "${s2}": ${score.toFixed(2)}`);
 }
 
 // Output:
@@ -453,11 +455,11 @@ npm test -- --coverage
 
 ### Couverture
 
-| Fichier | Statements | Branches | Functions | Lines |
-|---------|------------|----------|-----------|-------|
-| client.ts | 100% | 100% | 100% | 100% |
-| matcher.ts | 100% | 100% | 100% | 100% |
-| types.ts | 100% | N/A | N/A | 100% |
+| Fichier    | Statements | Branches | Functions | Lines |
+| ---------- | ---------- | -------- | --------- | ----- |
+| client.ts  | 100%       | 100%     | 100%      | 100%  |
+| matcher.ts | 100%       | 100%     | 100%      | 100%  |
+| types.ts   | 100%       | N/A      | N/A       | 100%  |
 
 **Total** : 124 tests, 100% succès
 
@@ -485,23 +487,23 @@ Aucune variable requise. Le module utilise l'URL publique de ParlGov par défaut
 ```typescript
 // Client HTTP
 interface ParlGovClientConfig {
-  csvUrl?: string;      // Défaut: URL officielle ParlGov
-  timeout?: number;     // Défaut: 30000ms
-  countryCodes?: string[]; // Défaut: ['FRA']
+	csvUrl?: string; // Défaut: URL officielle ParlGov
+	timeout?: number; // Défaut: 30000ms
+	countryCodes?: string[]; // Défaut: ['FRA']
 }
 
 // Matcher Jaccard
 interface MatcherConfig {
-  threshold?: number;          // Défaut: 0.4 (40%)
-  longWordBonus?: number;      // Défaut: 0.2
-  longWordMinLength?: number;  // Défaut: 8
+	threshold?: number; // Défaut: 0.4 (40%)
+	longWordBonus?: number; // Défaut: 0.2
+	longWordMinLength?: number; // Défaut: 8
 }
 
 // Tri politique
 interface SortOptions {
-  niPosition?: number;        // Défaut: 999
-  defaultPosition?: number;   // Défaut: 5.0
-  niIdentifiers?: string[];   // Défaut: ['NI', 'NA', ...]
+	niPosition?: number; // Défaut: 999
+	defaultPosition?: number; // Défaut: 5.0
+	niIdentifiers?: string[]; // Défaut: ['NI', 'NA', ...]
 }
 ```
 
@@ -521,6 +523,7 @@ interface SortOptions {
 **Cause** : Échec de connexion à ParlGov.org ou timeout.
 
 **Solution** :
+
 ```bash
 # Tester la connexion
 npm run etl:political-positions -- --test-connection
@@ -535,6 +538,7 @@ const parties = await fetchAllParties({ timeout: 60000 });
 **Cause** : Noms de groupes trop différents de ParlGov ou nouveaux partis.
 
 **Solution** :
+
 ```bash
 # Vérifier les noms avec --verbose
 npm run etl:political-positions -- --dry-run --verbose
@@ -549,6 +553,7 @@ const match = findBestMatch(organ, parties, { threshold: 0.3 });
 **Cause** : Bug corrigé en v1.1 (word boundaries).
 
 **Solution** :
+
 ```typescript
 // Vérifier version du code avec word boundaries (\b)
 // matcher.ts:257
@@ -560,6 +565,7 @@ const wordRegex = new RegExp(`\\b${niLower}\\b`, 'i');
 **Cause** : Colonne déjà existante.
 
 **Solution** : Migration déjà idempotente avec `IF NOT EXISTS`. Si erreur persiste :
+
 ```bash
 # Vérifier l'état de la colonne
 psql -d noselus -c "SELECT column_name FROM information_schema.columns WHERE table_name='organs' AND column_name='political_position';"
@@ -572,25 +578,25 @@ psql -d noselus -c "ALTER TABLE organs ADD COLUMN IF NOT EXISTS political_positi
 
 ### Pages utilisant ce module
 
-| Page | Description |
-|------|-------------|
-| `/an/carte` | Hémicycle AN - Tri gauche→droite automatique |
-| `/pe/carte` | Hémicycle PE - Tri groupes européens |
-| `/senat/carte` | Future - Positionnement groupes Sénat |
+| Page           | Description                                  |
+| -------------- | -------------------------------------------- |
+| `/an/carte`    | Hémicycle AN - Tri gauche→droite automatique |
+| `/pe/carte`    | Hémicycle PE - Tri groupes européens         |
+| `/senat/carte` | Future - Positionnement groupes Sénat        |
 
 ### Résultats réels (Legislature 17)
 
-| Groupe | Position | Source |
-|--------|----------|--------|
-| LFI-NFP | 1.3 | ParlGov match (95%) |
-| GDR | 1.3 | ParlGov match (92%) |
-| SOC | 3.8 | ParlGov match (88%) |
-| ECO | 2.5 | ParlGov match (85%) |
-| HOR | 6.0 | ParlGov match (78%) |
-| REN | 6.0 | ParlGov match (95%) |
-| LR | 7.4 | ParlGov match (98%) |
-| DR | 8.8 | ParlGov match (90%) |
-| NI | 999.0 | Détection automatique |
+| Groupe  | Position | Source                |
+| ------- | -------- | --------------------- |
+| LFI-NFP | 1.3      | ParlGov match (95%)   |
+| GDR     | 1.3      | ParlGov match (92%)   |
+| SOC     | 3.8      | ParlGov match (88%)   |
+| ECO     | 2.5      | ParlGov match (85%)   |
+| HOR     | 6.0      | ParlGov match (78%)   |
+| REN     | 6.0      | ParlGov match (95%)   |
+| LR      | 7.4      | ParlGov match (98%)   |
+| DR      | 8.8      | ParlGov match (90%)   |
+| NI      | 999.0    | Détection automatique |
 
 **Taux de matching** : ~75% (sans NI)
 
@@ -619,12 +625,12 @@ psql -d noselus -c "ALTER TABLE organs ADD COLUMN IF NOT EXISTS political_positi
 
 ## Changelog
 
-| Version | Date | Changements |
-|---------|------|-------------|
-| 1.3.0 | 2026-02-05 | PE positions migrées vers DB via seed script |
-| 1.2.0 | 2026-02-04 | Documentation complète |
-| 1.1.0 | 2026-02-04 | Fix: Word boundaries pour détection NI |
-| 1.0.0 | 2026-02-04 | Release initiale - 124 tests |
+| Version | Date       | Changements                                  |
+| ------- | ---------- | -------------------------------------------- |
+| 1.3.0   | 2026-02-05 | PE positions migrées vers DB via seed script |
+| 1.2.0   | 2026-02-04 | Documentation complète                       |
+| 1.1.0   | 2026-02-04 | Fix: Word boundaries pour détection NI       |
+| 1.0.0   | 2026-02-04 | Release initiale - 124 tests                 |
 
 ## License
 

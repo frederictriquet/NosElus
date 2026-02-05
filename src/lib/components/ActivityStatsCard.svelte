@@ -42,7 +42,9 @@
 		stats && ((stats.writtenQuestions ?? 0) > 0 || (stats.oralQuestions ?? 0) > 0)
 	);
 
-	const hasAnyData = $derived(showPresence || showInterventions || showLegislative || showQuestions);
+	const hasAnyData = $derived(
+		showPresence || showInterventions || showLegislative || showQuestions
+	);
 </script>
 
 {#if stats && hasAnyData}

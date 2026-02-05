@@ -27,7 +27,9 @@ function getAmendementsDir(legislature: string): string {
 export async function downloadAmendements(legislature: string): Promise<void> {
 	const url = AMENDEMENTS_URLS[legislature];
 	if (!url) {
-		throw new Error(`Unknown legislature: ${legislature}. Available: ${Object.keys(AMENDEMENTS_URLS).join(', ')}`);
+		throw new Error(
+			`Unknown legislature: ${legislature}. Available: ${Object.keys(AMENDEMENTS_URLS).join(', ')}`
+		);
 	}
 
 	// Ensure cache directory exists
@@ -81,7 +83,9 @@ function countJsonFiles(dir: string): number {
  */
 export async function loadAmendements(legislature: string): Promise<ANAmendement[]> {
 	if (!AMENDEMENTS_URLS[legislature]) {
-		throw new Error(`Unknown legislature: ${legislature}. Available: ${Object.keys(AMENDEMENTS_URLS).join(', ')}`);
+		throw new Error(
+			`Unknown legislature: ${legislature}. Available: ${Object.keys(AMENDEMENTS_URLS).join(', ')}`
+		);
 	}
 
 	const dir = getAmendementsDir(legislature);
@@ -92,7 +96,9 @@ export async function loadAmendements(legislature: string): Promise<ANAmendement
 	}
 
 	const totalFiles = countJsonFiles(jsonDir);
-	console.log(`[AN Amendements] Loading ~${totalFiles} amendements for legislature ${legislature}...`);
+	console.log(
+		`[AN Amendements] Loading ~${totalFiles} amendements for legislature ${legislature}...`
+	);
 
 	const amendements: ANAmendement[] = [];
 	let loaded = 0;

@@ -104,11 +104,7 @@ export function normalizeForMatching(text: string): string {
  * @param config - Configuration optionnelle
  * @returns Score entre 0.0 et 1.0
  */
-export function calculateJaccardSimilarity(
-	s1: string,
-	s2: string,
-	config?: MatcherConfig
-): number {
+export function calculateJaccardSimilarity(s1: string, s2: string, config?: MatcherConfig): number {
 	const longWordBonus = config?.longWordBonus ?? DEFAULT_LONG_WORD_BONUS;
 	const longWordMinLength = config?.longWordMinLength ?? DEFAULT_LONG_WORD_MIN_LENGTH;
 

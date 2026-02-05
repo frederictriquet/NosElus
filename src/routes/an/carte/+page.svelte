@@ -65,7 +65,7 @@
 	{@const sortedGroups = sortBySpectrum(groupData.groupDistribution)}
 	{@const totalDeputies = groupData.totalDeputies}
 	{@const majorityThreshold = Math.floor(totalDeputies / 2) + 1}
-	{@const maxGroupSize = Math.max(...sortedGroups.map(g => g.deputyCount), 0)}
+	{@const maxGroupSize = Math.max(...sortedGroups.map((g) => g.deputyCount), 0)}
 	{@const barScaleMax = Math.max(maxGroupSize, majorityThreshold) * 1.05}
 
 	<div class="card" style="margin-bottom: 1.5rem;">
@@ -77,10 +77,12 @@
 		<div class="hemicycle-container">
 			<svg viewBox="0 0 400 220" class="hemicycle-svg">
 				{#each sortedGroups as group, i}
-					{@const startAngle = sortedGroups.slice(0, i).reduce((sum, g) => sum + (g.deputyCount / totalDeputies) * 180, 0)}
+					{@const startAngle = sortedGroups
+						.slice(0, i)
+						.reduce((sum, g) => sum + (g.deputyCount / totalDeputies) * 180, 0)}
 					{@const angle = (group.deputyCount / totalDeputies) * 180}
-					{@const startRad = (180 + startAngle) * Math.PI / 180}
-					{@const endRad = (180 + startAngle + angle) * Math.PI / 180}
+					{@const startRad = ((180 + startAngle) * Math.PI) / 180}
+					{@const endRad = ((180 + startAngle + angle) * Math.PI) / 180}
 					{@const outerRadius = 180}
 					{@const innerRadius = 100}
 					{@const cx = 200}
@@ -146,7 +148,11 @@
 				{/each}
 			</div>
 			{#if totalDeputies > 0}
-				<div class="majority-line" style="left: calc(50px + 0.75rem + (100% - 50px - 0.75rem - 40px - 0.75rem) * {(majorityThreshold / barScaleMax)});">
+				<div
+					class="majority-line"
+					style="left: calc(50px + 0.75rem + (100% - 50px - 0.75rem - 40px - 0.75rem) * {majorityThreshold /
+						barScaleMax});"
+				>
 					<span class="majority-label">Majorité ({majorityThreshold})</span>
 				</div>
 			{/if}
@@ -173,11 +179,17 @@
 										name={deputy.name}
 										photoUrl={deputy.photoUrl}
 										variant="thumbnail"
-										group={{ id: group.groupId, shortName: group.groupShortName, color: group.groupColor }}
+										group={{
+											id: group.groupId,
+											shortName: group.groupShortName,
+											color: group.groupColor
+										}}
 									/>
 								{/each}
 								{#if group.deputyCount > 5}
-									<a href="/an/deputes?groupe={group.groupId}" class="deputy-more">+{group.deputyCount - 5}</a>
+									<a href="/an/deputes?groupe={group.groupId}" class="deputy-more"
+										>+{group.deputyCount - 5}</a
+									>
 								{/if}
 							</div>
 						{/if}
@@ -238,7 +250,9 @@
 	}
 
 	.hemicycle-arc {
-		transition: opacity 0.2s, transform 0.2s;
+		transition:
+			opacity 0.2s,
+			transform 0.2s;
 		cursor: pointer;
 	}
 

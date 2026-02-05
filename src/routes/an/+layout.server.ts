@@ -1,5 +1,9 @@
 import type { LayoutServerLoad } from './$types';
-import { getLegislatures, getCurrentLegislature, isValidLegislature } from '$lib/server/periods/an-legislatures';
+import {
+	getLegislatures,
+	getCurrentLegislature,
+	isValidLegislature
+} from '$lib/server/periods/an-legislatures';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const legislatures = await getLegislatures();

@@ -17,13 +17,22 @@ export const load: PageServerLoad = async () => {
 	] = await Promise.all([
 		// AN
 		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'AN')),
-		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'AN'))),
+		db
+			.select({ value: count() })
+			.from(organs)
+			.where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'AN'))),
 		// Sénat
 		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'SENAT')),
-		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'SENAT'))),
+		db
+			.select({ value: count() })
+			.from(organs)
+			.where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'SENAT'))),
 		// PE
 		db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'PE')),
-		db.select({ value: count() }).from(organs).where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'PE'))),
+		db
+			.select({ value: count() })
+			.from(organs)
+			.where(and(eq(organs.type, 'GP'), eq(organs.chamber, 'PE'))),
 		db.select({ value: count() }).from(scrutins).where(like(scrutins.legislature, 'PE-%')),
 		// Total scrutins
 		db.select({ value: count() }).from(scrutins),

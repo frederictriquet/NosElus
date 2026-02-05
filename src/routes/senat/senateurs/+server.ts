@@ -15,7 +15,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const conditions: SQL[] = [eq(actors.chamber, 'SENAT')];
 
 	if (search) {
-		conditions.push(or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!);
+		conditions.push(
+			or(ilike(actors.fullName, `%${search}%`), ilike(actors.lastName, `%${search}%`))!
+		);
 	}
 
 	const whereClause = and(...conditions);
@@ -45,31 +47,43 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	// Get group for these senators (from mandates - GP = groupe parlementaire)
 	// Order by startDate DESC to get most recent mandate first
-	const senatorIds = senatorsRaw.map(s => s.id);
-	const groupsData = senatorIds.length > 0 ? await db
-		.select({
-			actorId: mandates.actorId,
-			groupId: organs.id,
-			groupName: organs.name,
-			groupShortName: organs.shortName,
-			groupColor: organs.color,
-			startDate: mandates.startDate
-		})
-		.from(mandates)
-		.innerJoin(organs, eq(mandates.organId, organs.id))
-		.where(sql`${mandates.actorId} IN ${senatorIds} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'SENAT'`)
-		.orderBy(desc(mandates.startDate))
-		: [];
+	const senatorIds = senatorsRaw.map((s) => s.id);
+	const groupsData =
+		senatorIds.length > 0
+			? await db
+					.select({
+						actorId: mandates.actorId,
+						groupId: organs.id,
+						groupName: organs.name,
+						groupShortName: organs.shortName,
+						groupColor: organs.color,
+						startDate: mandates.startDate
+					})
+					.from(mandates)
+					.innerJoin(organs, eq(mandates.organId, organs.id))
+					.where(
+						sql`${mandates.actorId} IN ${senatorIds} AND ${organs.type} = 'GP' AND ${organs.chamber} = 'SENAT'`
+					)
+					.orderBy(desc(mandates.startDate))
+			: [];
 
 	// Build lookup map - first entry for each actor wins (most recent due to ordering)
-	const groupByActor = new Map<string, { id: string; name: string | null; shortName: string | null; color: string | null }>();
+	const groupByActor = new Map<
+		string,
+		{ id: string; name: string | null; shortName: string | null; color: string | null }
+	>();
 	for (const g of groupsData) {
 		if (!groupByActor.has(g.actorId) && g.groupId) {
-			groupByActor.set(g.actorId, { id: g.groupId, name: g.groupName, shortName: g.groupShortName, color: g.groupColor });
+			groupByActor.set(g.actorId, {
+				id: g.groupId,
+				name: g.groupName,
+				shortName: g.groupShortName,
+				color: g.groupColor
+			});
 		}
 	}
 
-	const senators = senatorsRaw.map(s => ({
+	const senators = senatorsRaw.map((s) => ({
 		...s,
 		group: groupByActor.get(s.id) || null
 	}));

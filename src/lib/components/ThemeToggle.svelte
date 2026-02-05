@@ -68,7 +68,17 @@
 
 <button class="theme-toggle" onclick={cycleTheme} title="Thème: {label}">
 	{#if icon === 'sun'}
-		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
 			<circle cx="12" cy="12" r="4"></circle>
 			<path d="M12 2v2"></path>
 			<path d="M12 20v2"></path>
@@ -80,17 +90,47 @@
 			<path d="m19.07 4.93-1.41 1.41"></path>
 		</svg>
 	{:else if icon === 'moon'}
-		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
 			<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
 		</svg>
 	{:else if icon === 'contrast'}
-		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
 			<circle cx="12" cy="12" r="10"></circle>
 			<path d="M12 2v20" fill="currentColor"></path>
 			<path d="M12 2a10 10 0 0 1 0 20" fill="currentColor"></path>
 		</svg>
 	{:else}
-		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
 			<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
 			<line x1="8" y1="21" x2="16" y2="21"></line>
 			<line x1="12" y1="17" x2="12" y2="21"></line>

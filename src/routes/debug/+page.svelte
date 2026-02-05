@@ -52,7 +52,7 @@
 						<td class="summary-cell">{law.summary}</td>
 						<td class="tags-cell">
 							{#if Array.isArray(law.tags) && law.tags.length > 0}
-								{law.tags.map(t => t.name).join(', ')}
+								{law.tags.map((t) => t.name).join(', ')}
 							{/if}
 						</td>
 						<td>{law.model}</td>

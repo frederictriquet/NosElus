@@ -7,8 +7,7 @@
 import type { ParlGovParty, ParlGovPartyRaw, ParlGovClientConfig } from './types';
 
 /** URL par défaut du CSV ParlGov */
-const DEFAULT_CSV_URL =
-	'https://www.parlgov.org/data/parlgov-development_csv-utf-8/view_party.csv';
+const DEFAULT_CSV_URL = 'https://www.parlgov.org/data/parlgov-development_csv-utf-8/view_party.csv';
 
 /** Timeout par défaut en ms */
 const DEFAULT_TIMEOUT = 30000;
@@ -154,13 +153,12 @@ export async function fetchAllParties(config?: ParlGovClientConfig): Promise<Par
  * @param countryCodes - Codes pays à inclure (ex: ['FRA', 'EUR'])
  * @returns Partis filtrés
  */
-export function filterByCountry(
-	parties: ParlGovParty[],
-	countryCodes?: string[]
-): ParlGovParty[] {
+export function filterByCountry(parties: ParlGovParty[], countryCodes?: string[]): ParlGovParty[] {
 	const codes = new Set(countryCodes || DEFAULT_COUNTRY_CODES);
 	const filtered = parties.filter((p) => codes.has(p.countryCode));
-	console.log(`[ParlGov] Filtered to ${filtered.length} parties for countries: ${[...codes].join(', ')}`);
+	console.log(
+		`[ParlGov] Filtered to ${filtered.length} parties for countries: ${[...codes].join(', ')}`
+	);
 	return filtered;
 }
 

@@ -12,7 +12,12 @@ import type { NewLaw } from '../../../db';
  */
 function isAdoptionAN(codeActe: CodeActe): boolean {
 	const codeStr = codeActe as string;
-	return codeStr.startsWith('AN') && !codeStr.startsWith('ANLDEF') && !codeStr.startsWith('ANLUNI') && !codeStr.startsWith('ANNLEC');
+	return (
+		codeStr.startsWith('AN') &&
+		!codeStr.startsWith('ANLDEF') &&
+		!codeStr.startsWith('ANLUNI') &&
+		!codeStr.startsWith('ANNLEC')
+	);
 }
 
 /**

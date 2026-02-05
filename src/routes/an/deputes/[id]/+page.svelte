@@ -36,7 +36,8 @@
 {#if !data.hadMandateDuringPeriod && data.filters.legislature && data.filters.legislature !== 'all'}
 	<div class="period-warning">
 		<p>
-			<strong>{data.actor.fullName}</strong> n'était pas député·e durant la {data.filters.legislature}e législature.
+			<strong>{data.actor.fullName}</strong> n'était pas député·e durant la {data.filters
+				.legislature}e législature.
 		</p>
 		<p class="warning-hint">Changez de législature pour voir son activité parlementaire.</p>
 	</div>
@@ -48,12 +49,14 @@
 		civility={data.actor.civility}
 		photoUrl={data.actor.photoUrl}
 		type="depute"
-		group={data.group ? {
-			id: data.group.groupId,
-			name: data.group.groupName,
-			shortName: data.group.groupShortName,
-			color: data.group.groupColor
-		} : null}
+		group={data.group
+			? {
+					id: data.group.groupId,
+					name: data.group.groupName,
+					shortName: data.group.groupShortName,
+					color: data.group.groupColor
+				}
+			: null}
 		profession={data.actor.profession}
 		birthDate={data.actor.birthDate}
 		birthPlace={data.actor.birthPlace}
@@ -65,493 +68,612 @@
 	<ActivityStatsCard stats={data.activityStats} source="NosDéputés.fr" chamberType="an" />
 
 	<AsyncCard title="Statistiques de vote" promise={data.voteStats} minHeight="180px">
-	{#snippet children(voteStats)}
-		<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{voteStats.voteCount} votes enregistrés</p>
+		{#snippet children(voteStats)}
+			<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+				{voteStats.voteCount} votes enregistrés
+			</p>
 
-		{@const totalVotes = voteStats.distribution.pour + voteStats.distribution.contre + voteStats.distribution.abstention + voteStats.distribution['non-votant']}
-		{#if totalVotes > 0}
-			<div class="vote-bar" style="height: 24px; border-radius: 12px;">
-				<div class="vote-bar-for" style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"></div>
-				<div class="vote-bar-against" style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"></div>
-				<div class="vote-bar-abstention" style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"></div>
-				{#if voteStats.distribution['non-votant'] > 0}
-					<div class="vote-bar-nonvotant" style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"></div>
-				{/if}
-			</div>
-			<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;">
-				<div>
-					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{voteStats.distribution.pour}</div>
-					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
+			{@const totalVotes =
+				voteStats.distribution.pour +
+				voteStats.distribution.contre +
+				voteStats.distribution.abstention +
+				voteStats.distribution['non-votant']}
+			{#if totalVotes > 0}
+				<div class="vote-bar" style="height: 24px; border-radius: 12px;">
+					<div
+						class="vote-bar-for"
+						style="width: {(voteStats.distribution.pour / totalVotes) * 100}%"
+					></div>
+					<div
+						class="vote-bar-against"
+						style="width: {(voteStats.distribution.contre / totalVotes) * 100}%"
+					></div>
+					<div
+						class="vote-bar-abstention"
+						style="width: {(voteStats.distribution.abstention / totalVotes) * 100}%"
+					></div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div
+							class="vote-bar-nonvotant"
+							style="width: {(voteStats.distribution['non-votant'] / totalVotes) * 100}%"
+						></div>
+					{/if}
 				</div>
-				<div>
-					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{voteStats.distribution.contre}</div>
-					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
-				</div>
-				<div>
-					<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{voteStats.distribution.abstention}</div>
-					<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
-				</div>
-				{#if voteStats.distribution['non-votant'] > 0}
+				<div
+					style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
+				>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{voteStats.distribution['non-votant']}</div>
-						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
-					</div>
-				{/if}
-			</div>
-
-			{#await data.groupAlignment then groupAlignment}
-				<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
-			{/await}
-		{:else}
-			<p class="empty-state">Aucun vote enregistré</p>
-		{/if}
-	{/snippet}
-</AsyncCard>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard
-		title="Autonomie de vote"
-		subtitle="Divergence par rapport au groupe"
-		promise={data.autonomyStats}
-		minHeight="200px"
-	>
-		{#snippet children(stats)}
-			{#if stats}
-				<div class="stats-grid">
-					<div class="stat-box">
-						<div class="stat-value">{stats.divergenceRate.toFixed(1)}%</div>
-						<div class="stat-label">Taux de divergence</div>
-					</div>
-					<div class="stat-box">
-						<div class="stat-value">{stats.divergentVotes}</div>
-						<div class="stat-label">Votes divergents</div>
-					</div>
-					<div class="stat-box">
-						<div class="stat-value">{stats.totalComparableVotes}</div>
-						<div class="stat-label">Votes analysés</div>
-					</div>
-				</div>
-
-				{#if stats.byCategory.length > 0}
-					<div style="margin-top: 1.5rem;">
-						<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
-							Par catégorie de scrutin
-						</h4>
-						<div class="category-list">
-							{#each stats.byCategory as cat}
-								<div class="category-item">
-									<div class="category-name">{cat.label}</div>
-									<div class="category-stats">
-										<span class="category-rate">{cat.divergenceRate.toFixed(1)}%</span>
-										<span class="category-count">({cat.divergentVotes}/{cat.totalVotes})</span>
-									</div>
-								</div>
-							{/each}
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+							{voteStats.distribution.pour}
 						</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Pour</div>
 					</div>
-				{/if}
-
-				<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
-					Mesure l'écart entre le vote du député et la position majoritaire de son groupe. Base : {stats.totalComparableVotes}
-					vote{stats.totalComparableVotes > 1 ? 's' : ''}.
-				</p>
-			{:else}
-				<p class="empty-state">Données insuffisantes pour calculer l'autonomie de vote</p>
-			{/if}
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard
-		title="Votes serrés"
-		subtitle="Scrutins où chaque voix comptait"
-		promise={data.tightVoteStats}
-		minHeight="200px"
-	>
-		{#snippet children(stats)}
-			{#if stats && stats.totalTightVotes > 0}
-				<div class="stats-grid">
-					<div class="stat-box">
-						<div class="stat-value">{stats.totalTightVotes}</div>
-						<div class="stat-label">Votes serrés</div>
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+							{voteStats.distribution.contre}
+						</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Contre</div>
 					</div>
-					{#if stats.tieVotes > 0}
-						<div class="stat-box">
-							<div class="stat-value" style="color: var(--color-info);">{stats.tieVotes}</div>
-							<div class="stat-label">Égalités</div>
+					<div>
+						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+							{voteStats.distribution.abstention}
+						</div>
+						<div style="font-size: 0.875rem; color: var(--color-text-muted);">Abstention</div>
+					</div>
+					{#if voteStats.distribution['non-votant'] > 0}
+						<div>
+							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+								{voteStats.distribution['non-votant']}
+							</div>
+							<div style="font-size: 0.875rem; color: var(--color-text-muted);">Non-votants</div>
 						</div>
 					{/if}
-					<div class="stat-box">
-						<div class="stat-value" style="color: var(--color-success);">{stats.winningVotes}</div>
-						<div class="stat-label">Camp gagnant</div>
-					</div>
-					<div class="stat-box">
-						<div class="stat-value" style="color: var(--color-danger);">{stats.losingVotes}</div>
-						<div class="stat-label">Camp perdant</div>
-					</div>
 				</div>
 
-				{#if stats.recentTightVotes.length > 0}
-					<div style="margin-top: 1.5rem;">
-						<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
-							Derniers votes serrés
-						</h4>
-						<div class="tight-votes-list">
-							{#each stats.recentTightVotes as vote}
-								<a href="/an/scrutins/{vote.scrutinId}" class="tight-vote-item">
-									<div class="tight-vote-info">
-										<div class="tight-vote-title">
-											{vote.scrutinTitle.slice(0, 100)}{vote.scrutinTitle.length > 100 ? '...' : ''}
-										</div>
-										<div class="tight-vote-meta">
-											<span class="tight-vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span>
-											<span class="tight-vote-position" class:pour={vote.actorPosition === 'pour'} class:contre={vote.actorPosition === 'contre'}>
-												{vote.actorPosition}
-											</span>
-											{#if vote.wasWinning !== null}
-												<span class="tight-vote-result" class:winning={vote.wasWinning} class:losing={!vote.wasWinning}>
-													{vote.wasWinning ? '✓ gagnant' : '✗ perdant'}
-												</span>
-											{/if}
-										</div>
-									</div>
-									<div class="tight-vote-margin">
-										{#if vote.isTie}
-											<span class="tie-badge">Égalité</span>
-										{:else}
-											<span class="margin-badge">±{vote.margin}</span>
-										{/if}
-									</div>
-								</a>
-							{/each}
-						</div>
-					</div>
-				{/if}
-
-				<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
-					Scrutins avec une marge de victoire ≤ 10 voix. Base : {stats.totalTightVotes} scrutin{stats.totalTightVotes > 1 ? 's' : ''}.
-				</p>
+				{#await data.groupAlignment then groupAlignment}
+					<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
+				{/await}
 			{:else}
-				<p class="empty-state">Aucune participation à un vote serré durant cette période</p>
-			{/if}
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
-		{#snippet children(recentVotes)}
-			{#if recentVotes.length === 0}
 				<p class="empty-state">Aucun vote enregistré</p>
-			{:else}
-				<div class="votes-list">
-					{#each recentVotes as vote}
-						<a href="/an/scrutins/{vote.scrutinId}" class="vote-item">
-							<span class="vote-position" class:pour={vote.position === 'pour'} class:contre={vote.position === 'contre'} class:abstention={vote.position === 'abstention'}>
-								{vote.position}
-							</span>
-							<div class="vote-info">
-								<div class="vote-title">{vote.scrutinTitle?.slice(0, 120)}{(vote.scrutinTitle?.length || 0) > 120 ? '...' : ''}</div>
-								<div class="vote-date">{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</div>
-							</div>
-						</a>
-					{/each}
-				</div>
 			{/if}
 		{/snippet}
 	</AsyncCard>
-</div>
 
-<div style="margin-top: 1.5rem;">
-	<AsyncCard title="Évolution des votes" subtitle="Répartition des votes par mois" promise={data.monthlyEvolution} minHeight="220px">
-		{#snippet children(monthlyEvolution)}
-			<VoteEvolutionChart
-				data={monthlyEvolution}
-				height={180}
-				periodStart={data.periodDates?.start}
-				periodEnd={data.periodDates?.end}
-			/>
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<div style="margin-top: 1.5rem;">
-	<AsyncCard title="Parcours parlementaire" promise={data.careerMilestones} minHeight="150px">
-		{#snippet children(careerMilestones)}
-			{#if careerMilestones.length > 0}
-				<div class="career-timeline">
-					{#each careerMilestones as milestone}
-						<div class="timeline-item" class:first={milestone.type === 'first_vote'} class:last={milestone.type === 'last_vote'}>
-							<div class="timeline-marker">
-								{#if milestone.type === 'first_vote'}
-									<span class="marker-icon">&#9654;</span>
-								{:else if milestone.type === 'last_vote'}
-									<span class="marker-icon">&#9632;</span>
-								{:else}
-									<span class="marker-icon">&#9733;</span>
-								{/if}
-							</div>
-							<div class="timeline-content">
-								<div class="timeline-date">{new Date(milestone.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-								<div class="timeline-title">{milestone.title}</div>
-								{#if milestone.description}
-									<div class="timeline-desc">{milestone.description}</div>
-								{/if}
-							</div>
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard
+			title="Autonomie de vote"
+			subtitle="Divergence par rapport au groupe"
+			promise={data.autonomyStats}
+			minHeight="200px"
+		>
+			{#snippet children(stats)}
+				{#if stats}
+					<div class="stats-grid">
+						<div class="stat-box">
+							<div class="stat-value">{stats.divergenceRate.toFixed(1)}%</div>
+							<div class="stat-label">Taux de divergence</div>
 						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="empty-state">Aucune donnée de parcours</p>
-			{/if}
-		{/snippet}
-	</AsyncCard>
-</div>
-
-<!-- Mandate sections -->
-{#await groupMandates then mandates}
-	{#if mandates.length > 0}
-		<section class="card mandates-section">
-			<h2>Groupe politique</h2>
-			<p class="section-subtitle">Historique des appartenances aux groupes parlementaires</p>
-			<div class="mandates-list">
-				{#each mandates as mandate}
-					<div class="mandate-item" class:current={!mandate.endDate}>
-						<div class="mandate-color" style="background: {mandate.organColor || '#888'}"></div>
-						<div class="mandate-content">
-							<div class="mandate-info">
-								<span class="mandate-name">{mandate.organName}</span>
-								{#if mandate.organShortName}
-									<span class="mandate-short">({mandate.organShortName})</span>
-								{/if}
-							</div>
-							{#if mandate.quality && mandate.quality !== 'Membre'}
-								<div class="mandate-quality">{mandate.quality}</div>
-							{/if}
-							<div class="mandate-dates">
-								{#if mandate.startDate}
-									{formatDateShort(mandate.startDate)}
-								{/if}
-								{#if mandate.endDate}
-									→ {formatDateShort(mandate.endDate)}
-								{:else}
-									→ <span class="current-badge">en cours</span>
-								{/if}
-							</div>
+						<div class="stat-box">
+							<div class="stat-value">{stats.divergentVotes}</div>
+							<div class="stat-label">Votes divergents</div>
+						</div>
+						<div class="stat-box">
+							<div class="stat-value">{stats.totalComparableVotes}</div>
+							<div class="stat-label">Votes analysés</div>
 						</div>
 					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-{/await}
 
-{#await committeeMandates then mandates}
-	{#if mandates.length > 0}
-		<section class="card mandates-section">
-			<h2>Commissions</h2>
-			<div class="mandates-list">
-				{#each mandates as mandate}
-					<div class="mandate-item" class:current={!mandate.endDate}>
-						<div class="mandate-content">
-							<div class="mandate-info">
-								<span class="mandate-name">{mandate.organName}</span>
-								{#if mandate.organShortName}
-									<span class="mandate-short">({mandate.organShortName})</span>
-								{/if}
-							</div>
-							{#if mandate.quality && mandate.quality !== 'Membre'}
-								<div class="mandate-quality">{mandate.quality}</div>
-							{/if}
-							<div class="mandate-dates">
-								{#if mandate.startDate}
-									{formatDateShort(mandate.startDate)}
-								{/if}
-								{#if mandate.endDate}
-									→ {formatDateShort(mandate.endDate)}
-								{:else if mandate.startDate}
-									→ <span class="current-badge">en cours</span>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-{/await}
-
-{#await delegationMandates then mandates}
-	{#if mandates.length > 0}
-		<section class="card mandates-section">
-			<h2>Délégations</h2>
-			<div class="mandates-list">
-				{#each mandates as mandate}
-					<div class="mandate-item" class:current={!mandate.endDate}>
-						<div class="mandate-content">
-							<div class="mandate-info">
-								<span class="mandate-name">{mandate.organName}</span>
-								{#if mandate.organShortName}
-									<span class="mandate-short">({mandate.organShortName})</span>
-								{/if}
-							</div>
-							{#if mandate.quality && mandate.quality !== 'Membre'}
-								<div class="mandate-quality">{mandate.quality}</div>
-							{/if}
-							<div class="mandate-dates">
-								{#if mandate.startDate}
-									{formatDateShort(mandate.startDate)}
-								{/if}
-								{#if mandate.endDate}
-									→ {formatDateShort(mandate.endDate)}
-								{:else if mandate.startDate}
-									→ <span class="current-badge">en cours</span>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-{/await}
-
-{#await otherMandates then mandates}
-	{#if mandates.length > 0}
-		<section class="card mandates-section">
-			<h2>Autres fonctions</h2>
-			<div class="mandates-list">
-				{#each mandates as mandate}
-					<div class="mandate-item" class:current={!mandate.endDate}>
-						<div class="mandate-content">
-							<div class="mandate-info">
-								<span class="mandate-name">{mandate.organName}</span>
-								{#if mandate.organShortName}
-									<span class="mandate-short">({mandate.organShortName})</span>
-								{/if}
-							</div>
-							{#if mandate.quality && mandate.quality !== 'Membre'}
-								<div class="mandate-quality">{mandate.quality}</div>
-							{/if}
-							<div class="mandate-dates">
-								{#if mandate.startDate}
-									{formatDateShort(mandate.startDate)}
-								{/if}
-								{#if mandate.endDate}
-									→ {formatDateShort(mandate.endDate)}
-								{:else if mandate.startDate}
-									→ <span class="current-badge">en cours</span>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-{/await}
-
-{#await data.amendmentStats then amendmentStats}
-	{#if amendmentStats.total > 0}
-		<div class="card-grid" style="margin-top: 1.5rem;">
-			<AsyncCard title="Amendements déposés" promise={data.amendmentStats} minHeight="180px">
-				{#snippet children(amendmentStats)}
-					<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">{amendmentStats.total} amendement{amendmentStats.total > 1 ? 's' : ''}</p>
-
-					{@const totalAmendments = amendmentStats.adopte + amendmentStats.rejete + amendmentStats.retire + amendmentStats.tombe + amendmentStats.autre}
-					{#if totalAmendments > 0}
-						<div class="amendment-bar" style="height: 24px; border-radius: 12px;">
-							<div class="amendment-bar-adopte" style="width: {(amendmentStats.adopte / totalAmendments) * 100}%"></div>
-							<div class="amendment-bar-rejete" style="width: {(amendmentStats.rejete / totalAmendments) * 100}%"></div>
-							<div class="amendment-bar-retire" style="width: {(amendmentStats.retire / totalAmendments) * 100}%"></div>
-							<div class="amendment-bar-tombe" style="width: {(amendmentStats.tombe / totalAmendments) * 100}%"></div>
-						</div>
-						<div style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center; flex-wrap: wrap; gap: 0.5rem;">
-							<div>
-								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{amendmentStats.adopte}</div>
-								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Adoptés</div>
-							</div>
-							<div>
-								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">{amendmentStats.rejete}</div>
-								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Rejetés</div>
-							</div>
-							<div>
-								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">{amendmentStats.retire}</div>
-								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Retirés</div>
-							</div>
-							<div>
-								<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">{amendmentStats.tombe}</div>
-								<div style="font-size: 0.875rem; color: var(--color-text-muted);">Tombés</div>
+					{#if stats.byCategory.length > 0}
+						<div style="margin-top: 1.5rem;">
+							<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
+								Par catégorie de scrutin
+							</h4>
+							<div class="category-list">
+								{#each stats.byCategory as cat}
+									<div class="category-item">
+										<div class="category-name">{cat.label}</div>
+										<div class="category-stats">
+											<span class="category-rate">{cat.divergenceRate.toFixed(1)}%</span>
+											<span class="category-count">({cat.divergentVotes}/{cat.totalVotes})</span>
+										</div>
+									</div>
+								{/each}
 							</div>
 						</div>
 					{/if}
-				{/snippet}
-			</AsyncCard>
 
-			<AsyncCard title="Derniers amendements" promise={data.recentAmendments} minHeight="300px">
-				{#snippet children(recentAmendments)}
-					{#if recentAmendments.length === 0}
-						<p class="empty-state">Aucun amendement enregistré</p>
-					{:else}
-						<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-							{#each recentAmendments as amendment}
-								<div class="amendment-item">
-									<span class="amendment-status" class:adopte={amendment.status?.toLowerCase().includes('adopt')} class:rejete={amendment.status?.toLowerCase().includes('rejet')} class:retire={amendment.status?.toLowerCase().includes('retir')} class:tombe={amendment.status?.toLowerCase().includes('tomb')}>
-										{amendment.status || 'En cours'}
-									</span>
-									<div class="amendment-info">
-										<div class="amendment-number">
-											Amendement n°{amendment.number}
-											{#if amendment.article}
-												<span class="amendment-article">sur {amendment.article}</span>
+					<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
+						Mesure l'écart entre le vote du député et la position majoritaire de son groupe. Base : {stats.totalComparableVotes}
+						vote{stats.totalComparableVotes > 1 ? 's' : ''}.
+					</p>
+				{:else}
+					<p class="empty-state">Données insuffisantes pour calculer l'autonomie de vote</p>
+				{/if}
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard
+			title="Votes serrés"
+			subtitle="Scrutins où chaque voix comptait"
+			promise={data.tightVoteStats}
+			minHeight="200px"
+		>
+			{#snippet children(stats)}
+				{#if stats && stats.totalTightVotes > 0}
+					<div class="stats-grid">
+						<div class="stat-box">
+							<div class="stat-value">{stats.totalTightVotes}</div>
+							<div class="stat-label">Votes serrés</div>
+						</div>
+						{#if stats.tieVotes > 0}
+							<div class="stat-box">
+								<div class="stat-value" style="color: var(--color-info);">{stats.tieVotes}</div>
+								<div class="stat-label">Égalités</div>
+							</div>
+						{/if}
+						<div class="stat-box">
+							<div class="stat-value" style="color: var(--color-success);">
+								{stats.winningVotes}
+							</div>
+							<div class="stat-label">Camp gagnant</div>
+						</div>
+						<div class="stat-box">
+							<div class="stat-value" style="color: var(--color-danger);">{stats.losingVotes}</div>
+							<div class="stat-label">Camp perdant</div>
+						</div>
+					</div>
+
+					{#if stats.recentTightVotes.length > 0}
+						<div style="margin-top: 1.5rem;">
+							<h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">
+								Derniers votes serrés
+							</h4>
+							<div class="tight-votes-list">
+								{#each stats.recentTightVotes as vote}
+									<a href="/an/scrutins/{vote.scrutinId}" class="tight-vote-item">
+										<div class="tight-vote-info">
+											<div class="tight-vote-title">
+												{vote.scrutinTitle.slice(0, 100)}{vote.scrutinTitle.length > 100
+													? '...'
+													: ''}
+											</div>
+											<div class="tight-vote-meta">
+												<span class="tight-vote-date"
+													>{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}</span
+												>
+												<span
+													class="tight-vote-position"
+													class:pour={vote.actorPosition === 'pour'}
+													class:contre={vote.actorPosition === 'contre'}
+												>
+													{vote.actorPosition}
+												</span>
+												{#if vote.wasWinning !== null}
+													<span
+														class="tight-vote-result"
+														class:winning={vote.wasWinning}
+														class:losing={!vote.wasWinning}
+													>
+														{vote.wasWinning ? '✓ gagnant' : '✗ perdant'}
+													</span>
+												{/if}
+											</div>
+										</div>
+										<div class="tight-vote-margin">
+											{#if vote.isTie}
+												<span class="tie-badge">Égalité</span>
+											{:else}
+												<span class="margin-badge">±{vote.margin}</span>
 											{/if}
 										</div>
-										{#if amendment.exposeSommaire}
-											<div class="amendment-summary">{amendment.exposeSommaire.slice(0, 100)}{amendment.exposeSommaire.length > 100 ? '...' : ''}</div>
-										{/if}
-										{#if amendment.depositDate}
-											<div class="amendment-date">{new Date(amendment.depositDate).toLocaleDateString('fr-FR')}</div>
-										{/if}
+									</a>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<p style="margin-top: 1rem; font-size: 0.75rem; color: #6b7280;">
+						Scrutins avec une marge de victoire ≤ 10 voix. Base : {stats.totalTightVotes} scrutin{stats.totalTightVotes >
+						1
+							? 's'
+							: ''}.
+					</p>
+				{:else}
+					<p class="empty-state">Aucune participation à un vote serré durant cette période</p>
+				{/if}
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard title="Derniers votes" promise={data.recentVotes} minHeight="300px">
+			{#snippet children(recentVotes)}
+				{#if recentVotes.length === 0}
+					<p class="empty-state">Aucun vote enregistré</p>
+				{:else}
+					<div class="votes-list">
+						{#each recentVotes as vote}
+							<a href="/an/scrutins/{vote.scrutinId}" class="vote-item">
+								<span
+									class="vote-position"
+									class:pour={vote.position === 'pour'}
+									class:contre={vote.position === 'contre'}
+									class:abstention={vote.position === 'abstention'}
+								>
+									{vote.position}
+								</span>
+								<div class="vote-info">
+									<div class="vote-title">
+										{vote.scrutinTitle?.slice(0, 120)}{(vote.scrutinTitle?.length || 0) > 120
+											? '...'
+											: ''}
+									</div>
+									<div class="vote-date">
+										{new Date(vote.scrutinDate).toLocaleDateString('fr-FR')}
 									</div>
 								</div>
-							{/each}
-						</div>
-					{/if}
-				{/snippet}
-			</AsyncCard>
+							</a>
+						{/each}
+					</div>
+				{/if}
+			{/snippet}
+		</AsyncCard>
+	</div>
 
-			<AsyncCard title="Textes signés" promise={data.lawsImplication} minHeight="300px">
-				{#snippet children(lawsImplication)}
-					{#if lawsImplication.length === 0}
-						<p class="empty-state">Aucun texte signé enregistré</p>
-					{:else}
-						<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
-							{lawsImplication.length} texte{lawsImplication.length > 1 ? 's' : ''}
-							({lawsImplication.filter(l => l.role === 'author').length} comme auteur,
-							{lawsImplication.filter(l => l.role === 'cosignatory').length} comme cosignataire)
-						</p>
-						<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-							{#each lawsImplication as law}
-								<a href="/an/laws/{law.lawId}" class="law-item" title="Voir le détail du texte">
-									<span class="law-role" class:author={law.role === 'author'} class:cosignatory={law.role === 'cosignatory'}>
-										{law.role === 'author' ? 'Auteur' : 'Cosignataire'}
-									</span>
-									<div class="law-info">
-										<div class="law-title">{law.lawTitle}</div>
-										{#if law.depositDate}
-											<div class="law-date">{new Date(law.depositDate).toLocaleDateString('fr-FR')}</div>
-										{/if}
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard
+			title="Évolution des votes"
+			subtitle="Répartition des votes par mois"
+			promise={data.monthlyEvolution}
+			minHeight="220px"
+		>
+			{#snippet children(monthlyEvolution)}
+				<VoteEvolutionChart
+					data={monthlyEvolution}
+					height={180}
+					periodStart={data.periodDates?.start}
+					periodEnd={data.periodDates?.end}
+				/>
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<div style="margin-top: 1.5rem;">
+		<AsyncCard title="Parcours parlementaire" promise={data.careerMilestones} minHeight="150px">
+			{#snippet children(careerMilestones)}
+				{#if careerMilestones.length > 0}
+					<div class="career-timeline">
+						{#each careerMilestones as milestone}
+							<div
+								class="timeline-item"
+								class:first={milestone.type === 'first_vote'}
+								class:last={milestone.type === 'last_vote'}
+							>
+								<div class="timeline-marker">
+									{#if milestone.type === 'first_vote'}
+										<span class="marker-icon">&#9654;</span>
+									{:else if milestone.type === 'last_vote'}
+										<span class="marker-icon">&#9632;</span>
+									{:else}
+										<span class="marker-icon">&#9733;</span>
+									{/if}
+								</div>
+								<div class="timeline-content">
+									<div class="timeline-date">
+										{new Date(milestone.date).toLocaleDateString('fr-FR', {
+											day: 'numeric',
+											month: 'long',
+											year: 'numeric'
+										})}
 									</div>
-								</a>
-							{/each}
+									<div class="timeline-title">{milestone.title}</div>
+									{#if milestone.description}
+										<div class="timeline-desc">{milestone.description}</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="empty-state">Aucune donnée de parcours</p>
+				{/if}
+			{/snippet}
+		</AsyncCard>
+	</div>
+
+	<!-- Mandate sections -->
+	{#await groupMandates then mandates}
+		{#if mandates.length > 0}
+			<section class="card mandates-section">
+				<h2>Groupe politique</h2>
+				<p class="section-subtitle">Historique des appartenances aux groupes parlementaires</p>
+				<div class="mandates-list">
+					{#each mandates as mandate}
+						<div class="mandate-item" class:current={!mandate.endDate}>
+							<div class="mandate-color" style="background: {mandate.organColor || '#888'}"></div>
+							<div class="mandate-content">
+								<div class="mandate-info">
+									<span class="mandate-name">{mandate.organName}</span>
+									{#if mandate.organShortName}
+										<span class="mandate-short">({mandate.organShortName})</span>
+									{/if}
+								</div>
+								{#if mandate.quality && mandate.quality !== 'Membre'}
+									<div class="mandate-quality">{mandate.quality}</div>
+								{/if}
+								<div class="mandate-dates">
+									{#if mandate.startDate}
+										{formatDateShort(mandate.startDate)}
+									{/if}
+									{#if mandate.endDate}
+										→ {formatDateShort(mandate.endDate)}
+									{:else}
+										→ <span class="current-badge">en cours</span>
+									{/if}
+								</div>
+							</div>
 						</div>
-					{/if}
-				{/snippet}
-			</AsyncCard>
-		</div>
-	{/if}
-{/await}
+					{/each}
+				</div>
+			</section>
+		{/if}
+	{/await}
+
+	{#await committeeMandates then mandates}
+		{#if mandates.length > 0}
+			<section class="card mandates-section">
+				<h2>Commissions</h2>
+				<div class="mandates-list">
+					{#each mandates as mandate}
+						<div class="mandate-item" class:current={!mandate.endDate}>
+							<div class="mandate-content">
+								<div class="mandate-info">
+									<span class="mandate-name">{mandate.organName}</span>
+									{#if mandate.organShortName}
+										<span class="mandate-short">({mandate.organShortName})</span>
+									{/if}
+								</div>
+								{#if mandate.quality && mandate.quality !== 'Membre'}
+									<div class="mandate-quality">{mandate.quality}</div>
+								{/if}
+								<div class="mandate-dates">
+									{#if mandate.startDate}
+										{formatDateShort(mandate.startDate)}
+									{/if}
+									{#if mandate.endDate}
+										→ {formatDateShort(mandate.endDate)}
+									{:else if mandate.startDate}
+										→ <span class="current-badge">en cours</span>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+	{/await}
+
+	{#await delegationMandates then mandates}
+		{#if mandates.length > 0}
+			<section class="card mandates-section">
+				<h2>Délégations</h2>
+				<div class="mandates-list">
+					{#each mandates as mandate}
+						<div class="mandate-item" class:current={!mandate.endDate}>
+							<div class="mandate-content">
+								<div class="mandate-info">
+									<span class="mandate-name">{mandate.organName}</span>
+									{#if mandate.organShortName}
+										<span class="mandate-short">({mandate.organShortName})</span>
+									{/if}
+								</div>
+								{#if mandate.quality && mandate.quality !== 'Membre'}
+									<div class="mandate-quality">{mandate.quality}</div>
+								{/if}
+								<div class="mandate-dates">
+									{#if mandate.startDate}
+										{formatDateShort(mandate.startDate)}
+									{/if}
+									{#if mandate.endDate}
+										→ {formatDateShort(mandate.endDate)}
+									{:else if mandate.startDate}
+										→ <span class="current-badge">en cours</span>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+	{/await}
+
+	{#await otherMandates then mandates}
+		{#if mandates.length > 0}
+			<section class="card mandates-section">
+				<h2>Autres fonctions</h2>
+				<div class="mandates-list">
+					{#each mandates as mandate}
+						<div class="mandate-item" class:current={!mandate.endDate}>
+							<div class="mandate-content">
+								<div class="mandate-info">
+									<span class="mandate-name">{mandate.organName}</span>
+									{#if mandate.organShortName}
+										<span class="mandate-short">({mandate.organShortName})</span>
+									{/if}
+								</div>
+								{#if mandate.quality && mandate.quality !== 'Membre'}
+									<div class="mandate-quality">{mandate.quality}</div>
+								{/if}
+								<div class="mandate-dates">
+									{#if mandate.startDate}
+										{formatDateShort(mandate.startDate)}
+									{/if}
+									{#if mandate.endDate}
+										→ {formatDateShort(mandate.endDate)}
+									{:else if mandate.startDate}
+										→ <span class="current-badge">en cours</span>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+	{/await}
+
+	{#await data.amendmentStats then amendmentStats}
+		{#if amendmentStats.total > 0}
+			<div class="card-grid" style="margin-top: 1.5rem;">
+				<AsyncCard title="Amendements déposés" promise={data.amendmentStats} minHeight="180px">
+					{#snippet children(amendmentStats)}
+						<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+							{amendmentStats.total} amendement{amendmentStats.total > 1 ? 's' : ''}
+						</p>
+
+						{@const totalAmendments =
+							amendmentStats.adopte +
+							amendmentStats.rejete +
+							amendmentStats.retire +
+							amendmentStats.tombe +
+							amendmentStats.autre}
+						{#if totalAmendments > 0}
+							<div class="amendment-bar" style="height: 24px; border-radius: 12px;">
+								<div
+									class="amendment-bar-adopte"
+									style="width: {(amendmentStats.adopte / totalAmendments) * 100}%"
+								></div>
+								<div
+									class="amendment-bar-rejete"
+									style="width: {(amendmentStats.rejete / totalAmendments) * 100}%"
+								></div>
+								<div
+									class="amendment-bar-retire"
+									style="width: {(amendmentStats.retire / totalAmendments) * 100}%"
+								></div>
+								<div
+									class="amendment-bar-tombe"
+									style="width: {(amendmentStats.tombe / totalAmendments) * 100}%"
+								></div>
+							</div>
+							<div
+								style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center; flex-wrap: wrap; gap: 0.5rem;"
+							>
+								<div>
+									<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+										{amendmentStats.adopte}
+									</div>
+									<div style="font-size: 0.875rem; color: var(--color-text-muted);">Adoptés</div>
+								</div>
+								<div>
+									<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+										{amendmentStats.rejete}
+									</div>
+									<div style="font-size: 0.875rem; color: var(--color-text-muted);">Rejetés</div>
+								</div>
+								<div>
+									<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+										{amendmentStats.retire}
+									</div>
+									<div style="font-size: 0.875rem; color: var(--color-text-muted);">Retirés</div>
+								</div>
+								<div>
+									<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+										{amendmentStats.tombe}
+									</div>
+									<div style="font-size: 0.875rem; color: var(--color-text-muted);">Tombés</div>
+								</div>
+							</div>
+						{/if}
+					{/snippet}
+				</AsyncCard>
+
+				<AsyncCard title="Derniers amendements" promise={data.recentAmendments} minHeight="300px">
+					{#snippet children(recentAmendments)}
+						{#if recentAmendments.length === 0}
+							<p class="empty-state">Aucun amendement enregistré</p>
+						{:else}
+							<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+								{#each recentAmendments as amendment}
+									<div class="amendment-item">
+										<span
+											class="amendment-status"
+											class:adopte={amendment.status?.toLowerCase().includes('adopt')}
+											class:rejete={amendment.status?.toLowerCase().includes('rejet')}
+											class:retire={amendment.status?.toLowerCase().includes('retir')}
+											class:tombe={amendment.status?.toLowerCase().includes('tomb')}
+										>
+											{amendment.status || 'En cours'}
+										</span>
+										<div class="amendment-info">
+											<div class="amendment-number">
+												Amendement n°{amendment.number}
+												{#if amendment.article}
+													<span class="amendment-article">sur {amendment.article}</span>
+												{/if}
+											</div>
+											{#if amendment.exposeSommaire}
+												<div class="amendment-summary">
+													{amendment.exposeSommaire.slice(0, 100)}{amendment.exposeSommaire.length >
+													100
+														? '...'
+														: ''}
+												</div>
+											{/if}
+											{#if amendment.depositDate}
+												<div class="amendment-date">
+													{new Date(amendment.depositDate).toLocaleDateString('fr-FR')}
+												</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					{/snippet}
+				</AsyncCard>
+
+				<AsyncCard title="Textes signés" promise={data.lawsImplication} minHeight="300px">
+					{#snippet children(lawsImplication)}
+						{#if lawsImplication.length === 0}
+							<p class="empty-state">Aucun texte signé enregistré</p>
+						{:else}
+							<p style="color: var(--color-text-muted); margin: 0.5rem 0 1rem;">
+								{lawsImplication.length} texte{lawsImplication.length > 1 ? 's' : ''}
+								({lawsImplication.filter((l) => l.role === 'author').length} comme auteur,
+								{lawsImplication.filter((l) => l.role === 'cosignatory').length} comme cosignataire)
+							</p>
+							<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+								{#each lawsImplication as law}
+									<a href="/an/laws/{law.lawId}" class="law-item" title="Voir le détail du texte">
+										<span
+											class="law-role"
+											class:author={law.role === 'author'}
+											class:cosignatory={law.role === 'cosignatory'}
+										>
+											{law.role === 'author' ? 'Auteur' : 'Cosignataire'}
+										</span>
+										<div class="law-info">
+											<div class="law-title">{law.lawTitle}</div>
+											{#if law.depositDate}
+												<div class="law-date">
+													{new Date(law.depositDate).toLocaleDateString('fr-FR')}
+												</div>
+											{/if}
+										</div>
+									</a>
+								{/each}
+							</div>
+						{/if}
+					{/snippet}
+				</AsyncCard>
+			</div>
+		{/if}
+	{/await}
 {/if}
 
 <style>
@@ -671,7 +793,9 @@
 		padding: 0.75rem;
 		border-radius: var(--radius);
 		background: var(--color-bg);
-		transition: background 0.2s, box-shadow 0.2s;
+		transition:
+			background 0.2s,
+			box-shadow 0.2s;
 	}
 
 	.vote-item:hover {

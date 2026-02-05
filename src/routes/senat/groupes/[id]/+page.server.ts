@@ -3,7 +3,11 @@ import { db, organs, actors, actorStats } from '$lib/server/db';
 import { eq, and, sql, inArray, desc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getRenouvellementDates } from '$lib/server/periods/senat-renouvellements';
-import { getSenatGroupMemberIds, getYearsInPeriod, type PeriodDates } from '$lib/server/api/helpers';
+import {
+	getSenatGroupMemberIds,
+	getYearsInPeriod,
+	type PeriodDates
+} from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const renouvellement = locals.periods.senat;
@@ -97,10 +101,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				commissionPresences: sql<number>`SUM(${actorStats.commissionPresences})`
 			})
 			.from(actors)
-			.leftJoin(actorStats, and(
-				eq(actorStats.actorId, actors.id),
-				periodFilter
-			))
+			.leftJoin(actorStats, and(eq(actorStats.actorId, actors.id), periodFilter))
 			.where(inArray(actors.id, memberIds))
 			.groupBy(actors.id, actors.fullName, actors.lastName, actors.photoUrl)
 			.orderBy(desc(sql`SUM(${actorStats.hemicycleInterventions})`))

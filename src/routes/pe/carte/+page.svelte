@@ -42,7 +42,9 @@
 
 <div class="page-header">
 	<h1 class="page-title">Carte politique</h1>
-	<p class="page-subtitle">Répartition des forces politiques au Parlement européen (eurodéputés français)</p>
+	<p class="page-subtitle">
+		Répartition des forces politiques au Parlement européen (eurodéputés français)
+	</p>
 </div>
 
 {#await data.groupData}
@@ -64,7 +66,7 @@
 {:then groupData}
 	{@const sortedGroups = sortBySpectrum(groupData.groupDistribution)}
 	{@const totalMeps = groupData.totalMeps}
-	{@const maxGroupSize = Math.max(...sortedGroups.map(g => g.mepCount), 0)}
+	{@const maxGroupSize = Math.max(...sortedGroups.map((g) => g.mepCount), 0)}
 	{@const barScaleMax = maxGroupSize * 1.05}
 
 	<div class="card" style="margin-bottom: 1.5rem;">
@@ -76,10 +78,12 @@
 		<div class="hemicycle-container">
 			<svg viewBox="0 0 400 220" class="hemicycle-svg">
 				{#each sortedGroups as group, i}
-					{@const startAngle = sortedGroups.slice(0, i).reduce((sum, g) => sum + (g.mepCount / totalMeps) * 180, 0)}
+					{@const startAngle = sortedGroups
+						.slice(0, i)
+						.reduce((sum, g) => sum + (g.mepCount / totalMeps) * 180, 0)}
 					{@const angle = (group.mepCount / totalMeps) * 180}
-					{@const startRad = (180 + startAngle) * Math.PI / 180}
-					{@const endRad = (180 + startAngle + angle) * Math.PI / 180}
+					{@const startRad = ((180 + startAngle) * Math.PI) / 180}
+					{@const endRad = ((180 + startAngle + angle) * Math.PI) / 180}
 					{@const outerRadius = 180}
 					{@const innerRadius = 100}
 					{@const cx = 200}
@@ -171,11 +175,17 @@
 										photoUrl={mep.photoUrl}
 										variant="thumbnail"
 										type="eurodepute"
-										group={{ id: group.groupId, shortName: group.groupShortName, color: group.groupColor }}
+										group={{
+											id: group.groupId,
+											shortName: group.groupShortName,
+											color: group.groupColor
+										}}
 									/>
 								{/each}
 								{#if group.mepCount > 5}
-									<a href="/pe/eurodeputes?groupe={group.groupId}" class="mep-more">+{group.mepCount - 5}</a>
+									<a href="/pe/eurodeputes?groupe={group.groupId}" class="mep-more"
+										>+{group.mepCount - 5}</a
+									>
 								{/if}
 							</div>
 						{/if}
@@ -236,7 +246,9 @@
 	}
 
 	.hemicycle-arc {
-		transition: opacity 0.2s, transform 0.2s;
+		transition:
+			opacity 0.2s,
+			transform 0.2s;
 		cursor: pointer;
 	}
 

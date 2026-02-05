@@ -63,9 +63,7 @@ async function findActorIdByName(
 	}
 
 	// Try without accents
-	const normalizedKeyNoAccent = normalizedKey
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '');
+	const normalizedKeyNoAccent = normalizedKey.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 	for (const [key, id] of senatorMap.entries()) {
 		const keyNoAccent = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');

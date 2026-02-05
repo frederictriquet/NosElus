@@ -114,7 +114,8 @@
 		margin: 0;
 	}
 
-	dt, dd {
+	dt,
+	dd {
 		margin: 0;
 	}
 

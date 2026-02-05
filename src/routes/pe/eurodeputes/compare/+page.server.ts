@@ -31,13 +31,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			);
 		const mepIds = activeMandates.map((m) => m.actorId);
 
-		allMeps = mepIds.length > 0
-			? await db
-				.select({ id: actors.id, name: actors.fullName })
-				.from(actors)
-				.where(and(eq(actors.chamber, 'PE'), inArray(actors.id, mepIds)))
-				.orderBy(actors.lastName)
-			: [];
+		allMeps =
+			mepIds.length > 0
+				? await db
+						.select({ id: actors.id, name: actors.fullName })
+						.from(actors)
+						.where(and(eq(actors.chamber, 'PE'), inArray(actors.id, mepIds)))
+						.orderBy(actors.lastName)
+				: [];
 	} else {
 		allMeps = await db
 			.select({ id: actors.id, name: actors.fullName })
@@ -74,23 +75,34 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		}
 
 		// Get PE scrutins, filtered by term if specified
-		const peScrutins = terme && terme !== 'all'
-			? await db
-				.select({ id: scrutins.id })
-				.from(scrutins)
-				.where(eq(scrutins.legislature, `PE-${terme}`))
-			: await db
-				.select({ id: scrutins.id })
-				.from(scrutins)
-				.where(like(scrutins.legislature, 'PE-%'));
+		const peScrutins =
+			terme && terme !== 'all'
+				? await db
+						.select({ id: scrutins.id })
+						.from(scrutins)
+						.where(eq(scrutins.legislature, `PE-${terme}`))
+				: await db
+						.select({ id: scrutins.id })
+						.from(scrutins)
+						.where(like(scrutins.legislature, 'PE-%'));
 
 		const peScrutinIds = peScrutins.map((s) => s.id);
 
 		if (peScrutinIds.length === 0) {
 			// No PE votes yet
 			return {
-				mep1: { ...mep1, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 } },
-				mep2: { ...mep2, group: null, voteCount: 0, distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 } },
+				mep1: {
+					...mep1,
+					group: null,
+					voteCount: 0,
+					distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 }
+				},
+				mep2: {
+					...mep2,
+					group: null,
+					voteCount: 0,
+					distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 }
+				},
 				commonVotes: 0,
 				sameVotes: 0,
 				differentVotes: 0,
@@ -161,7 +173,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 						position2: sql<string>`MAX(CASE WHEN ${votes.actorId} = ${mep2Id} THEN ${votes.position} END)`
 					})
 					.from(votes)
-					.where(and(inArray(votes.actorId, [mep1Id, mep2Id]), inArray(votes.scrutinId, peScrutinIds)))
+					.where(
+						and(inArray(votes.actorId, [mep1Id, mep2Id]), inArray(votes.scrutinId, peScrutinIds))
+					)
 					.groupBy(votes.scrutinId)
 					.having(sql`COUNT(DISTINCT ${votes.actorId}) = 2`),
 
@@ -176,9 +190,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 					})
 					.from(votes)
 					.innerJoin(scrutins, eq(votes.scrutinId, scrutins.id))
-					.where(
-						and(inArray(votes.actorId, [mep1Id, mep2Id]), like(scrutins.legislature, 'PE-%'))
-					)
+					.where(and(inArray(votes.actorId, [mep1Id, mep2Id]), like(scrutins.legislature, 'PE-%')))
 					.groupBy(scrutins.id, scrutins.title, scrutins.date)
 					.having(
 						sql`COUNT(DISTINCT ${votes.actorId}) = 2 AND MAX(CASE WHEN ${votes.actorId} = ${mep1Id} THEN ${votes.position} END) != MAX(CASE WHEN ${votes.actorId} = ${mep2Id} THEN ${votes.position} END)`

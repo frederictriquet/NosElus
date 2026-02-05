@@ -30,7 +30,7 @@ describe('GroupVotesStackedBar', () => {
 
 			const result = sortAndLimitGroups(groups, 10);
 
-			expect(result.map(g => g.id)).toEqual(['B', 'C', 'A']);
+			expect(result.map((g) => g.id)).toEqual(['B', 'C', 'A']);
 		});
 
 		it('should limit to maxGroups', () => {
@@ -45,7 +45,7 @@ describe('GroupVotesStackedBar', () => {
 			const result = sortAndLimitGroups(groups, 3);
 
 			expect(result.length).toBe(3);
-			expect(result.map(g => g.id)).toEqual(['A', 'B', 'C']);
+			expect(result.map((g) => g.id)).toEqual(['A', 'B', 'C']);
 		});
 
 		it('should handle empty array', () => {
@@ -148,7 +148,7 @@ describe('GroupVotesStackedBar', () => {
 
 			expect(result).not.toBeNull();
 			expect(result!.dataForStack.length).toBe(4);
-			expect(result!.dataForStack.map(d => d.label)).toEqual([
+			expect(result!.dataForStack.map((d) => d.label)).toEqual([
 				'Pour',
 				'Contre',
 				'Abstention',
@@ -178,12 +178,12 @@ describe('GroupVotesStackedBar', () => {
 
 			const result = prepareByPositionData(groups, 10);
 
-			const pourBar = result!.dataForStack.find(d => d.label === 'Pour');
+			const pourBar = result!.dataForStack.find((d) => d.label === 'Pour');
 			expect(pourBar!['LFI']).toBe(50);
 			expect(pourBar!['RN']).toBe(30);
 			expect(pourBar!['total']).toBe(80);
 
-			const contreBar = result!.dataForStack.find(d => d.label === 'Contre');
+			const contreBar = result!.dataForStack.find((d) => d.label === 'Contre');
 			expect(contreBar!['LFI']).toBe(10);
 			expect(contreBar!['RN']).toBe(40);
 			expect(contreBar!['total']).toBe(50);
@@ -245,7 +245,18 @@ describe('GroupVotesStackedBar', () => {
 			expect(result!.groupNames.length).toBe(10);
 			expect(result!.sortedGroups.length).toBe(10);
 			// Should include top 10 groups
-			expect(result!.groupNames).toEqual(['G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9']);
+			expect(result!.groupNames).toEqual([
+				'G0',
+				'G1',
+				'G2',
+				'G3',
+				'G4',
+				'G5',
+				'G6',
+				'G7',
+				'G8',
+				'G9'
+			]);
 		});
 	});
 
@@ -295,8 +306,8 @@ describe('GroupVotesStackedBar', () => {
 
 			const result = prepareByPositionData(groups, 10);
 
-			const pourBar = result!.dataForStack.find(d => d.label === 'Pour');
-			const contreBar = result!.dataForStack.find(d => d.label === 'Contre');
+			const pourBar = result!.dataForStack.find((d) => d.label === 'Pour');
+			const contreBar = result!.dataForStack.find((d) => d.label === 'Contre');
 
 			expect(pourBar!['total']).toBe(100);
 			expect(contreBar!['total']).toBe(0);

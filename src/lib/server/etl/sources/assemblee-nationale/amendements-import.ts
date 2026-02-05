@@ -19,13 +19,17 @@ export async function importAmendementsFromAN(
 	const stats = createImportStats();
 	const targetLegislatures = legislature ? [legislature] : getAvailableAmendementsLegislatures();
 
-	console.log(`[AN Amendements] Starting import for legislatures: ${targetLegislatures.join(', ')}`);
+	console.log(
+		`[AN Amendements] Starting import for legislatures: ${targetLegislatures.join(', ')}`
+	);
 
 	for (const leg of targetLegislatures) {
 		console.log(`\n[AN Amendements] Processing legislature ${leg}...`);
 
 		const rawAmendements = await loadAmendements(leg);
-		console.log(`[AN Amendements] Loaded ${rawAmendements.length} amendements for legislature ${leg}`);
+		console.log(
+			`[AN Amendements] Loaded ${rawAmendements.length} amendements for legislature ${leg}`
+		);
 
 		stats.total += rawAmendements.length;
 
@@ -33,7 +37,7 @@ export async function importAmendementsFromAN(
 		const mappedAmendements = rawAmendements.map(mapAmendement);
 
 		// Filter out amendments without valid IDs
-		const validAmendements = mappedAmendements.filter(a => a.id && a.number);
+		const validAmendements = mappedAmendements.filter((a) => a.id && a.number);
 		const skipped = mappedAmendements.length - validAmendements.length;
 		stats.skipped += skipped;
 

@@ -24,7 +24,10 @@
 		return '';
 	}
 
-	function getPercent(value: number, dist: { pour: number; contre: number; abstention: number; 'non-votant'?: number }) {
+	function getPercent(
+		value: number,
+		dist: { pour: number; contre: number; abstention: number; 'non-votant'?: number }
+	) {
 		const total = dist.pour + dist.contre + dist.abstention + (dist['non-votant'] || 0) || 1;
 		return ((value / total) * 100).toFixed(0);
 	}
@@ -38,7 +41,6 @@
 	<h1 class="page-title">Comparateur de députés</h1>
 	<p class="page-subtitle">Comparez les votes de deux députés</p>
 </div>
-
 
 <div class="card" style="margin-bottom: 2rem;">
 	<div class="compare-selectors">
@@ -63,7 +65,11 @@
 		</div>
 	</div>
 	<div style="text-align: center; margin-top: 1.5rem;">
-		<button class="btn btn-primary" onclick={compare} disabled={!deputy1 || !deputy2 || deputy1 === deputy2}>
+		<button
+			class="btn btn-primary"
+			onclick={compare}
+			disabled={!deputy1 || !deputy2 || deputy1 === deputy2}
+		>
 			Comparer
 		</button>
 	</div>
@@ -101,7 +107,12 @@
 		{#if comparison}
 			<div class="metrics-row">
 				<div class="agreement-card">
-					<div class="agreement-value" class:high={comparison.agreementRate >= 70} class:medium={comparison.agreementRate >= 40 && comparison.agreementRate < 70} class:low={comparison.agreementRate < 40}>
+					<div
+						class="agreement-value"
+						class:high={comparison.agreementRate >= 70}
+						class:medium={comparison.agreementRate >= 40 && comparison.agreementRate < 70}
+						class:low={comparison.agreementRate < 40}
+					>
 						{comparison.agreementRate.toFixed(1)}%
 					</div>
 					<div class="agreement-label">de votes identiques</div>
@@ -110,7 +121,12 @@
 					</div>
 				</div>
 				<div class="agreement-card distance-card">
-					<div class="distance-value" class:close={comparison.politicalDistance < 20} class:moderate={comparison.politicalDistance >= 20 && comparison.politicalDistance < 50} class:far={comparison.politicalDistance >= 50}>
+					<div
+						class="distance-value"
+						class:close={comparison.politicalDistance < 20}
+						class:moderate={comparison.politicalDistance >= 20 && comparison.politicalDistance < 50}
+						class:far={comparison.politicalDistance >= 50}
+					>
 						{comparison.politicalDistance.toFixed(1)}
 					</div>
 					<div class="agreement-label">distance politique</div>
@@ -141,11 +157,31 @@
 					>
 						{#snippet children()}
 							<div class="comparison-dist">
-								<div class="dist-item pour">{getPercent(comparison.deputy1.distribution.pour, comparison.deputy1.distribution)}% pour</div>
-								<div class="dist-item contre">{getPercent(comparison.deputy1.distribution.contre, comparison.deputy1.distribution)}% contre</div>
-								<div class="dist-item abstention">{getPercent(comparison.deputy1.distribution.abstention, comparison.deputy1.distribution)}% abs.</div>
+								<div class="dist-item pour">
+									{getPercent(
+										comparison.deputy1.distribution.pour,
+										comparison.deputy1.distribution
+									)}% pour
+								</div>
+								<div class="dist-item contre">
+									{getPercent(
+										comparison.deputy1.distribution.contre,
+										comparison.deputy1.distribution
+									)}% contre
+								</div>
+								<div class="dist-item abstention">
+									{getPercent(
+										comparison.deputy1.distribution.abstention,
+										comparison.deputy1.distribution
+									)}% abs.
+								</div>
 								{#if comparison.deputy1.distribution['non-votant'] > 0}
-									<div class="dist-item nonvotant">{getPercent(comparison.deputy1.distribution['non-votant'], comparison.deputy1.distribution)}% n.v.</div>
+									<div class="dist-item nonvotant">
+										{getPercent(
+											comparison.deputy1.distribution['non-votant'],
+											comparison.deputy1.distribution
+										)}% n.v.
+									</div>
 								{/if}
 							</div>
 						{/snippet}
@@ -173,11 +209,31 @@
 					>
 						{#snippet children()}
 							<div class="comparison-dist">
-								<div class="dist-item pour">{getPercent(comparison.deputy2.distribution.pour, comparison.deputy2.distribution)}% pour</div>
-								<div class="dist-item contre">{getPercent(comparison.deputy2.distribution.contre, comparison.deputy2.distribution)}% contre</div>
-								<div class="dist-item abstention">{getPercent(comparison.deputy2.distribution.abstention, comparison.deputy2.distribution)}% abs.</div>
+								<div class="dist-item pour">
+									{getPercent(
+										comparison.deputy2.distribution.pour,
+										comparison.deputy2.distribution
+									)}% pour
+								</div>
+								<div class="dist-item contre">
+									{getPercent(
+										comparison.deputy2.distribution.contre,
+										comparison.deputy2.distribution
+									)}% contre
+								</div>
+								<div class="dist-item abstention">
+									{getPercent(
+										comparison.deputy2.distribution.abstention,
+										comparison.deputy2.distribution
+									)}% abs.
+								</div>
 								{#if comparison.deputy2.distribution['non-votant'] > 0}
-									<div class="dist-item nonvotant">{getPercent(comparison.deputy2.distribution['non-votant'], comparison.deputy2.distribution)}% n.v.</div>
+									<div class="dist-item nonvotant">
+										{getPercent(
+											comparison.deputy2.distribution['non-votant'],
+											comparison.deputy2.distribution
+										)}% n.v.
+									</div>
 								{/if}
 							</div>
 						{/snippet}
@@ -197,8 +253,14 @@
 									<span class="vote-badge {getPositionClass(d.position2)}">{d.position2}</span>
 								</div>
 								<div class="disagreement-info">
-									<div class="disagreement-title">{d.scrutinTitle?.slice(0, 100)}{(d.scrutinTitle?.length || 0) > 100 ? '...' : ''}</div>
-									<div class="disagreement-date">{new Date(d.scrutinDate).toLocaleDateString('fr-FR')}</div>
+									<div class="disagreement-title">
+										{d.scrutinTitle?.slice(0, 100)}{(d.scrutinTitle?.length || 0) > 100
+											? '...'
+											: ''}
+									</div>
+									<div class="disagreement-date">
+										{new Date(d.scrutinDate).toLocaleDateString('fr-FR')}
+									</div>
 								</div>
 							</a>
 						{/each}
@@ -239,7 +301,12 @@
 	.skeleton-value {
 		width: 120px;
 		height: 48px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: var(--radius);
@@ -248,7 +315,12 @@
 	.skeleton-value-small {
 		width: 60px;
 		height: 32px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: var(--radius);
@@ -257,7 +329,12 @@
 	.skeleton-label {
 		width: 100px;
 		height: 20px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: var(--radius);
@@ -266,7 +343,12 @@
 	.skeleton-card {
 		width: 100%;
 		height: 200px;
-		background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-border) 25%,
+			var(--color-bg) 50%,
+			var(--color-border) 75%
+		);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite;
 		border-radius: var(--radius-lg);

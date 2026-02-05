@@ -8,10 +8,10 @@ Ce composant affiche des graphiques en barres empilées (stacked bar charts) pou
 
 ### Deux modes d'affichage
 
-| Mode | Description | Axe X | Empilement | Couleurs |
-|------|-------------|-------|------------|----------|
-| **by-group** | Vue par groupe politique | Groupes (LFI, RN, etc.) | Positions de vote | Positions (vert/rouge/jaune/gris) |
-| **by-position** | Vue par position de vote | Positions (Pour/Contre/etc.) | Groupes politiques | Groupes (couleurs des partis) |
+| Mode            | Description              | Axe X                        | Empilement         | Couleurs                          |
+| --------------- | ------------------------ | ---------------------------- | ------------------ | --------------------------------- |
+| **by-group**    | Vue par groupe politique | Groupes (LFI, RN, etc.)      | Positions de vote  | Positions (vert/rouge/jaune/gris) |
+| **by-position** | Vue par position de vote | Positions (Pour/Contre/etc.) | Groupes politiques | Groupes (couleurs des partis)     |
 
 ## Installation
 
@@ -21,43 +21,39 @@ Aucune installation requise - composant interne du projet NosElus.
 
 ```svelte
 <script lang="ts">
-  import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
-  import type { GroupData } from '$lib/components/GroupVotesStackedBar.utils';
+	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
+	import type { GroupData } from '$lib/components/GroupVotesStackedBar.utils';
 
-  // Données de vote chargées depuis le serveur
-  let groups: GroupData[] = $props();
+	// Données de vote chargées depuis le serveur
+	let groups: GroupData[] = $props();
 </script>
 
 <!-- Mode "by-group" -->
-<GroupVotesStackedBar
-  {groups}
-  mode="by-group"
-  height={220}
-/>
+<GroupVotesStackedBar {groups} mode="by-group" height={220} />
 ```
 
 ## Props
 
-| Prop | Type | Défaut | Description |
-|------|------|--------|-------------|
-| `groups` | `GroupData[]` | **requis** | Tableau des groupes politiques avec leurs votes |
-| `mode` | `'by-group' \| 'by-position'` | **requis** | Mode d'affichage du graphique |
-| `height` | `number` | `250` | Hauteur du graphique en pixels |
-| `maxGroups` | `number` | `10` | Nombre maximum de groupes à afficher (trié par total décroissant) |
+| Prop        | Type                          | Défaut     | Description                                                       |
+| ----------- | ----------------------------- | ---------- | ----------------------------------------------------------------- |
+| `groups`    | `GroupData[]`                 | **requis** | Tableau des groupes politiques avec leurs votes                   |
+| `mode`      | `'by-group' \| 'by-position'` | **requis** | Mode d'affichage du graphique                                     |
+| `height`    | `number`                      | `250`      | Hauteur du graphique en pixels                                    |
+| `maxGroups` | `number`                      | `10`       | Nombre maximum de groupes à afficher (trié par total décroissant) |
 
 ### Interface GroupData
 
 ```typescript
 interface GroupData {
-  id: string;              // Identifiant unique (ex: "PO123456")
-  name: string;            // Nom complet (ex: "La France Insoumise - NFP")
-  shortName: string | null; // Nom court (ex: "LFI-NFP")
-  color: string | null;    // Couleur hexadécimale (ex: "#C9462C")
-  pour: number;            // Nombre de votes "Pour"
-  contre: number;          // Nombre de votes "Contre"
-  abstention: number;      // Nombre d'abstentions
-  nonVotant: number;       // Nombre de non-votants
-  total: number;           // Total des votes
+	id: string; // Identifiant unique (ex: "PO123456")
+	name: string; // Nom complet (ex: "La France Insoumise - NFP")
+	shortName: string | null; // Nom court (ex: "LFI-NFP")
+	color: string | null; // Couleur hexadécimale (ex: "#C9462C")
+	pour: number; // Nombre de votes "Pour"
+	contre: number; // Nombre de votes "Contre"
+	abstention: number; // Nombre d'abstentions
+	nonVotant: number; // Nombre de non-votants
+	total: number; // Total des votes
 }
 ```
 
@@ -69,34 +65,34 @@ Pattern recommandé pour les pages avec chargement asynchrone :
 
 ```svelte
 <script lang="ts">
-  import AsyncCard from '$lib/components/AsyncCard.svelte';
-  import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
+	import AsyncCard from '$lib/components/AsyncCard.svelte';
+	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 
-  let data = $props(); // Depuis +page.server.ts
+	let data = $props(); // Depuis +page.server.ts
 </script>
 
 <div class="charts-row">
-  <!-- Graphique par groupe -->
-  <AsyncCard title="Votes par groupe" promise={data.groupBreakdown}>
-    {#snippet children(groups)}
-      <GroupVotesStackedBar {groups} mode="by-group" height={220} />
-    {/snippet}
-  </AsyncCard>
+	<!-- Graphique par groupe -->
+	<AsyncCard title="Votes par groupe" promise={data.groupBreakdown}>
+		{#snippet children(groups)}
+			<GroupVotesStackedBar {groups} mode="by-group" height={220} />
+		{/snippet}
+	</AsyncCard>
 
-  <!-- Graphique par position -->
-  <AsyncCard title="Répartition par position" promise={data.groupBreakdown}>
-    {#snippet children(groups)}
-      <GroupVotesStackedBar {groups} mode="by-position" height={220} />
-    {/snippet}
-  </AsyncCard>
+	<!-- Graphique par position -->
+	<AsyncCard title="Répartition par position" promise={data.groupBreakdown}>
+		{#snippet children(groups)}
+			<GroupVotesStackedBar {groups} mode="by-position" height={220} />
+		{/snippet}
+	</AsyncCard>
 </div>
 
 <style>
-  .charts-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
+	.charts-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+	}
 </style>
 ```
 
@@ -105,15 +101,11 @@ Pattern recommandé pour les pages avec chargement asynchrone :
 Affiche une barre par groupe politique, avec les positions de vote empilées :
 
 ```svelte
-<GroupVotesStackedBar
-  {groups}
-  mode="by-group"
-  height={300}
-  maxGroups={8}
-/>
+<GroupVotesStackedBar {groups} mode="by-group" height={300} maxGroups={8} />
 ```
 
 **Rendu** :
+
 - Axe X : LFI | RN | Renaissance | ... (jusqu'à 8 groupes)
 - Axe Y : Nombre de votes (0 → max)
 - Empilement : Pour (vert) → Contre (rouge) → Abstention (jaune) → Non-votant (gris)
@@ -124,15 +116,11 @@ Affiche une barre par groupe politique, avec les positions de vote empilées :
 Affiche une barre par position de vote, avec les groupes politiques empilés :
 
 ```svelte
-<GroupVotesStackedBar
-  {groups}
-  mode="by-position"
-  height={300}
-  maxGroups={10}
-/>
+<GroupVotesStackedBar {groups} mode="by-position" height={300} maxGroups={10} />
 ```
 
 **Rendu** :
+
 - Axe X : Pour | Contre | Abstention | Non-votant
 - Axe Y : Nombre de votes (0 → max)
 - Empilement : Groupes politiques dans leurs couleurs respectives
@@ -143,12 +131,7 @@ Affiche une barre par position de vote, avec les groupes politiques empilés :
 Pour les scrutins avec de nombreux petits groupes :
 
 ```svelte
-<GroupVotesStackedBar
-  {groups}
-  mode="by-position"
-  height={250}
-  maxGroups={5}
-/>
+<GroupVotesStackedBar {groups} mode="by-position" height={250} maxGroups={5} />
 ```
 
 Seuls les 5 groupes avec le plus de votes totaux seront affichés.
@@ -161,14 +144,14 @@ Exemple de fonction `load` dans `+page.server.ts` :
 import { loadGroupVoteBreakdown } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params }) => {
-  const loadGroupBreakdown = async () => {
-    return await loadGroupVoteBreakdown(params.id, params.legislature);
-  };
+	const loadGroupBreakdown = async () => {
+		return await loadGroupVoteBreakdown(params.id, params.legislature);
+	};
 
-  return {
-    // Promise streamée (pas de await ici)
-    groupBreakdown: loadGroupBreakdown()
-  };
+	return {
+		// Promise streamée (pas de await ici)
+		groupBreakdown: loadGroupBreakdown()
+	};
 };
 ```
 
@@ -186,11 +169,11 @@ src/lib/components/
 
 ### Séparation des responsabilités
 
-| Fichier | Rôle | Dépendances |
-|---------|------|-------------|
-| `.svelte` | Rendu UI, intégration LayerCake | Svelte, LayerCake, D3 |
+| Fichier     | Rôle                              | Dépendances           |
+| ----------- | --------------------------------- | --------------------- |
+| `.svelte`   | Rendu UI, intégration LayerCake   | Svelte, LayerCake, D3 |
 | `.utils.ts` | Transformation des données (pure) | TypeScript uniquement |
-| `.test.ts` | Tests unitaires de la logique | Vitest, utilitaires |
+| `.test.ts`  | Tests unitaires de la logique     | Vitest, utilitaires   |
 
 ### Flux de données
 
@@ -218,6 +201,7 @@ npm run test -- GroupVotesStackedBar.test.ts
 ```
 
 **Couverture** :
+
 - ✅ Tri et limitation des groupes
 - ✅ Mode by-group (4 tests)
 - ✅ Mode by-position (6 tests)
@@ -231,12 +215,12 @@ Les couleurs sont définies dans le composant via des variables CSS :
 
 ```svelte
 <script>
-  const positionColors = {
-    pour: 'var(--color-success, #4ade80)',      // Vert
-    contre: 'var(--color-danger, #f87171)',     // Rouge
-    abstention: 'var(--color-warning, #fbbf24)', // Jaune
-    nonVotant: 'var(--color-text-muted, #9ca3af)' // Gris
-  };
+	const positionColors = {
+		pour: 'var(--color-success, #4ade80)', // Vert
+		contre: 'var(--color-danger, #f87171)', // Rouge
+		abstention: 'var(--color-warning, #fbbf24)', // Jaune
+		nonVotant: 'var(--color-text-muted, #9ca3af)' // Gris
+	};
 </script>
 ```
 
@@ -244,10 +228,10 @@ Pour personnaliser, définir les variables CSS dans votre thème :
 
 ```css
 :root {
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
-  --color-text-muted: #6b7280;
+	--color-success: #10b981;
+	--color-danger: #ef4444;
+	--color-warning: #f59e0b;
+	--color-text-muted: #6b7280;
 }
 ```
 
@@ -259,6 +243,7 @@ En mode by-position, le composant utilise ces couleurs automatiquement.
 ## Standards du projet
 
 Ce composant respecte :
+
 - ✅ **layercake-charts-rule** : Utilise LayerCake + ColumnStacked existant
 - ✅ **std-reusable-components** : Props typées, réutilisable, testé
 - ✅ **group-colors-rule** : Utilise les couleurs des groupes en DB
@@ -268,9 +253,9 @@ Ce composant respecte :
 
 ### Pages utilisant ce composant
 
-| Page | Mode(s) | Description |
-|------|---------|-------------|
-| `/an/scrutins/[id]` | both | Détail d'un scrutin à l'Assemblée nationale |
+| Page                | Mode(s) | Description                                 |
+| ------------------- | ------- | ------------------------------------------- |
+| `/an/scrutins/[id]` | both    | Détail d'un scrutin à l'Assemblée nationale |
 
 ### Évolutions possibles
 
@@ -286,11 +271,12 @@ Ce composant respecte :
 **Cause** : Le tableau `groups` est vide ou tous les groupes ont `total: 0`.
 
 **Solution** :
+
 ```svelte
 {#if groups.length > 0}
-  <GroupVotesStackedBar {groups} mode="by-group" />
+	<GroupVotesStackedBar {groups} mode="by-group" />
 {:else}
-  <p>Aucune donnée de vote disponible</p>
+	<p>Aucune donnée de vote disponible</p>
 {/if}
 ```
 
@@ -299,6 +285,7 @@ Ce composant respecte :
 **Cause** : Trop de groupes affichés (noms longs).
 
 **Solution** : Réduire `maxGroups` :
+
 ```svelte
 <GroupVotesStackedBar {groups} mode="by-position" maxGroups={6} />
 ```
@@ -308,6 +295,7 @@ Ce composant respecte :
 **Cause** : Variable CSS non définie ou données `color: null`.
 
 **Solution** :
+
 1. Vérifier que les variables CSS sont définies dans votre thème
 2. Vérifier que les groupes ont une couleur en base : `SELECT id, color FROM organs;`
 
@@ -319,10 +307,10 @@ Ce composant respecte :
 
 ## Changelog
 
-| Version | Date | Changements |
-|---------|------|-------------|
-| 1.0.0 | 2026-02-04 | Version initiale avec deux modes |
-| 1.1.0 | 2026-02-04 | Extraction des utilitaires + documentation complète |
+| Version | Date       | Changements                                         |
+| ------- | ---------- | --------------------------------------------------- |
+| 1.0.0   | 2026-02-04 | Version initiale avec deux modes                    |
+| 1.1.0   | 2026-02-04 | Extraction des utilitaires + documentation complète |
 
 ## License
 

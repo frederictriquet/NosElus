@@ -263,7 +263,10 @@ export async function importSenatActivityStats(config: ETLConfig): Promise<Impor
 				oralQuestions: allStats.questionsGouvernement
 			});
 		} catch (error) {
-			console.error(`[Senat Activity Stats] Error fetching activity for ${senator.matricule}:`, error);
+			console.error(
+				`[Senat Activity Stats] Error fetching activity for ${senator.matricule}:`,
+				error
+			);
 			stats.errors++;
 		}
 

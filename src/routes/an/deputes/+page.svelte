@@ -88,9 +88,7 @@
 
 			// Deduplicate by ID to avoid Svelte each_key_duplicate error
 			const existingIds = new Set(deputies.map((d) => d.id));
-			const newDeputies = newData.deputies.filter(
-				(d: { id: string }) => !existingIds.has(d.id)
-			);
+			const newDeputies = newData.deputies.filter((d: { id: string }) => !existingIds.has(d.id));
 			deputies = [...deputies, ...newDeputies];
 			currentPage = newData.pagination.page;
 		} catch (e) {

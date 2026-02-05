@@ -35,7 +35,8 @@
 {#if !data.hadMandateDuringPeriod && data.filters.renouvellement && data.filters.renouvellement !== 'all'}
 	<div class="period-warning">
 		<p>
-			<strong>{data.actor.fullName}</strong> n'était pas sénateur·rice lors du renouvellement de {data.filters.renouvellement}.
+			<strong>{data.actor.fullName}</strong> n'était pas sénateur·rice lors du renouvellement de {data
+				.filters.renouvellement}.
 		</p>
 		<p class="warning-hint">Changez de période pour voir son activité parlementaire.</p>
 	</div>
@@ -67,226 +68,224 @@
 			{#if groupAlignment}
 				<GroupAlignmentCard alignment={groupAlignment} group={data.group} />
 			{:else}
-				<p class="no-data">
-					Les données de votes du Sénat ne sont pas encore disponibles.
-				</p>
+				<p class="no-data">Les données de votes du Sénat ne sont pas encore disponibles.</p>
 			{/if}
 		</section>
 	{/await}
 
 	<ActivityStatsCard stats={data.activityStats} source="senat.fr" chamberType="senat" />
 
-<div class="info-cards">
-	<section class="card">
-		<h2>Informations</h2>
-		<dl class="info-list">
-			<div class="info-item">
-				<dt>Chambre</dt>
-				<dd>Sénat</dd>
-			</div>
-			{#if data.senatorMandate}
+	<div class="info-cards">
+		<section class="card">
+			<h2>Informations</h2>
+			<dl class="info-list">
 				<div class="info-item">
-					<dt>Mandat</dt>
-					<dd>
-						{#if data.senatorMandate.startDate}
-							Depuis {formatDate(data.senatorMandate.startDate)}
-						{/if}
-						{#if data.senatorMandate.endDate}
-							<span class="mandate-end">jusqu'au {formatDate(data.senatorMandate.endDate)}</span>
-						{:else}
-							<span class="mandate-current">(en cours)</span>
-						{/if}
-					</dd>
+					<dt>Chambre</dt>
+					<dd>Sénat</dd>
 				</div>
-			{/if}
-			{#if data.group?.constituency || data.senatorMandate?.constituency}
-				<div class="info-item">
-					<dt>Circonscription</dt>
-					<dd>{data.group?.constituency || data.senatorMandate?.constituency}</dd>
-				</div>
-			{/if}
-			{#if data.actor.profession}
-				<div class="info-item">
-					<dt>Profession</dt>
-					<dd>{data.actor.profession}</dd>
-				</div>
-			{/if}
-			{#if data.actor.birthDate}
-				<div class="info-item">
-					<dt>Naissance</dt>
-					<dd>
-						{formatDate(data.actor.birthDate)}
-						{#if data.actor.birthPlace}
-							<span class="birth-place">à {data.actor.birthPlace}</span>
-						{/if}
-					</dd>
-				</div>
-			{/if}
-		</dl>
-	</section>
-
-	<section class="card">
-		<h2>Liens externes</h2>
-		<div class="external-links">
-			<a
-				href="https://www.senat.fr/senateur/{data.actor.uid?.toLowerCase() ?? ''}.html"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="external-link"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
-						points="15 3 21 3 21 9"
-					/><line x1="10" x2="21" y1="14" y2="3" /></svg
-				>
-				Fiche sur senat.fr
-			</a>
-		</div>
-	</section>
-</div>
-
-{#if groupMandates.length > 0}
-	<section class="card mandates-section">
-		<h2>Groupe politique</h2>
-		<p class="section-subtitle">Historique des appartenances aux groupes parlementaires</p>
-		<div class="mandates-list">
-			{#each groupMandates as mandate, index}
-				<div class="mandate-item" class:current={!mandate.endDate}>
-					<div class="mandate-color" style="background: {mandate.organColor || '#888'}"></div>
-					<div class="mandate-content">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
+				{#if data.senatorMandate}
+					<div class="info-item">
+						<dt>Mandat</dt>
+						<dd>
+							{#if data.senatorMandate.startDate}
+								Depuis {formatDate(data.senatorMandate.startDate)}
 							{/if}
-						</div>
-						{#if mandate.quality && mandate.quality !== 'Membre'}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-						<div class="mandate-dates">
-							{#if mandate.startDate}
-								{formatDateShort(mandate.startDate)}
-							{/if}
-							{#if mandate.endDate}
-								→ {formatDateShort(mandate.endDate)}
+							{#if data.senatorMandate.endDate}
+								<span class="mandate-end">jusqu'au {formatDate(data.senatorMandate.endDate)}</span>
 							{:else}
-								→ <span class="current-badge">en cours</span>
+								<span class="mandate-current">(en cours)</span>
 							{/if}
-						</div>
+						</dd>
 					</div>
-				</div>
-			{/each}
-		</div>
-	</section>
-{/if}
+				{/if}
+				{#if data.group?.constituency || data.senatorMandate?.constituency}
+					<div class="info-item">
+						<dt>Circonscription</dt>
+						<dd>{data.group?.constituency || data.senatorMandate?.constituency}</dd>
+					</div>
+				{/if}
+				{#if data.actor.profession}
+					<div class="info-item">
+						<dt>Profession</dt>
+						<dd>{data.actor.profession}</dd>
+					</div>
+				{/if}
+				{#if data.actor.birthDate}
+					<div class="info-item">
+						<dt>Naissance</dt>
+						<dd>
+							{formatDate(data.actor.birthDate)}
+							{#if data.actor.birthPlace}
+								<span class="birth-place">à {data.actor.birthPlace}</span>
+							{/if}
+						</dd>
+					</div>
+				{/if}
+			</dl>
+		</section>
 
-{#if committeeMandates.length > 0}
-	<section class="card mandates-section">
-		<h2>Commissions</h2>
-		<div class="mandates-list">
-			{#each committeeMandates as mandate}
-				<div class="mandate-item" class:current={!mandate.endDate}>
-					<div class="mandate-content">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
-							{/if}
-						</div>
-						{#if mandate.quality && mandate.quality !== 'Membre'}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-						<div class="mandate-dates">
-							{#if mandate.startDate}
-								{formatDateShort(mandate.startDate)}
-							{/if}
-							{#if mandate.endDate}
-								→ {formatDateShort(mandate.endDate)}
-							{:else if mandate.startDate}
-								→ <span class="current-badge">en cours</span>
-							{/if}
-						</div>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</section>
-{/if}
+		<section class="card">
+			<h2>Liens externes</h2>
+			<div class="external-links">
+				<a
+					href="https://www.senat.fr/senateur/{data.actor.uid?.toLowerCase() ?? ''}.html"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="external-link"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
+							points="15 3 21 3 21 9"
+						/><line x1="10" x2="21" y1="14" y2="3" /></svg
+					>
+					Fiche sur senat.fr
+				</a>
+			</div>
+		</section>
+	</div>
 
-{#if delegationMandates.length > 0}
-	<section class="card mandates-section">
-		<h2>Délégations</h2>
-		<div class="mandates-list">
-			{#each delegationMandates as mandate}
-				<div class="mandate-item" class:current={!mandate.endDate}>
-					<div class="mandate-content">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
+	{#if groupMandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Groupe politique</h2>
+			<p class="section-subtitle">Historique des appartenances aux groupes parlementaires</p>
+			<div class="mandates-list">
+				{#each groupMandates as mandate, index}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-color" style="background: {mandate.organColor || '#888'}"></div>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
 							{/if}
-						</div>
-						{#if mandate.quality && mandate.quality !== 'Membre'}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-						<div class="mandate-dates">
-							{#if mandate.startDate}
-								{formatDateShort(mandate.startDate)}
-							{/if}
-							{#if mandate.endDate}
-								→ {formatDateShort(mandate.endDate)}
-							{:else if mandate.startDate}
-								→ <span class="current-badge">en cours</span>
-							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
-	</section>
-{/if}
+				{/each}
+			</div>
+		</section>
+	{/if}
 
-{#if otherMandates.length > 0}
-	<section class="card mandates-section">
-		<h2>Autres fonctions</h2>
-		<div class="mandates-list">
-			{#each otherMandates as mandate}
-				<div class="mandate-item" class:current={!mandate.endDate}>
-					<div class="mandate-content">
-						<div class="mandate-info">
-							<span class="mandate-name">{mandate.organName}</span>
-							{#if mandate.organShortName}
-								<span class="mandate-short">({mandate.organShortName})</span>
+	{#if committeeMandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Commissions</h2>
+			<div class="mandates-list">
+				{#each committeeMandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
 							{/if}
-						</div>
-						{#if mandate.quality && mandate.quality !== 'Membre'}
-							<div class="mandate-quality">{mandate.quality}</div>
-						{/if}
-						<div class="mandate-dates">
-							{#if mandate.startDate}
-								{formatDateShort(mandate.startDate)}
-							{/if}
-							{#if mandate.endDate}
-								→ {formatDateShort(mandate.endDate)}
-							{:else if mandate.startDate}
-								→ <span class="current-badge">en cours</span>
-							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
 						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
-	</section>
-{/if}
+				{/each}
+			</div>
+		</section>
+	{/if}
+
+	{#if delegationMandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Délégations</h2>
+			<div class="mandates-list">
+				{#each delegationMandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
+	{#if otherMandates.length > 0}
+		<section class="card mandates-section">
+			<h2>Autres fonctions</h2>
+			<div class="mandates-list">
+				{#each otherMandates as mandate}
+					<div class="mandate-item" class:current={!mandate.endDate}>
+						<div class="mandate-content">
+							<div class="mandate-info">
+								<span class="mandate-name">{mandate.organName}</span>
+								{#if mandate.organShortName}
+									<span class="mandate-short">({mandate.organShortName})</span>
+								{/if}
+							</div>
+							{#if mandate.quality && mandate.quality !== 'Membre'}
+								<div class="mandate-quality">{mandate.quality}</div>
+							{/if}
+							<div class="mandate-dates">
+								{#if mandate.startDate}
+									{formatDateShort(mandate.startDate)}
+								{/if}
+								{#if mandate.endDate}
+									→ {formatDateShort(mandate.endDate)}
+								{:else if mandate.startDate}
+									→ <span class="current-badge">en cours</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
 {/if}
 
 <style>

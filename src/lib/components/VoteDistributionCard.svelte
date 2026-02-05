@@ -21,11 +21,23 @@
 	<h2>Répartition des votes</h2>
 	{#if totalAvecAbsents > 0}
 		<div class="vote-bar">
-			<div class="vote-bar-for" style="width: {(distribution.pour / totalAvecAbsents) * 100}%"></div>
-			<div class="vote-bar-against" style="width: {(distribution.contre / totalAvecAbsents) * 100}%"></div>
-			<div class="vote-bar-abstention" style="width: {(distribution.abstention / totalAvecAbsents) * 100}%"></div>
+			<div
+				class="vote-bar-for"
+				style="width: {(distribution.pour / totalAvecAbsents) * 100}%"
+			></div>
+			<div
+				class="vote-bar-against"
+				style="width: {(distribution.contre / totalAvecAbsents) * 100}%"
+			></div>
+			<div
+				class="vote-bar-abstention"
+				style="width: {(distribution.abstention / totalAvecAbsents) * 100}%"
+			></div>
 			{#if nonVotants > 0}
-				<div class="vote-bar-nonvotant" style="width: {(nonVotants / totalAvecAbsents) * 100}%"></div>
+				<div
+					class="vote-bar-nonvotant"
+					style="width: {(nonVotants / totalAvecAbsents) * 100}%"
+				></div>
 			{/if}
 		</div>
 		<div class="vote-details">

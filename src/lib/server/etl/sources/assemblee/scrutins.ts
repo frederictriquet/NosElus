@@ -110,7 +110,9 @@ export async function importVotes(config: ETLConfig): Promise<ImportStats> {
 
 		processedScrutins++;
 		if (processedScrutins % 50 === 0) {
-			console.log(`[Votes] Processed ${processedScrutins} scrutins, ${stats.inserted} votes inserted`);
+			console.log(
+				`[Votes] Processed ${processedScrutins} scrutins, ${stats.inserted} votes inserted`
+			);
 		}
 	}
 

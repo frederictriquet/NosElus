@@ -82,10 +82,7 @@ export function isNonInscrit(
  * @param options - Options de configuration
  * @returns Position effective pour le tri
  */
-export function getEffectivePosition(
-	organ: OrganWithPosition,
-	options?: SortOptions
-): number {
+export function getEffectivePosition(organ: OrganWithPosition, options?: SortOptions): number {
 	const niPosition = options?.niPosition ?? DEFAULT_NI_POSITION;
 	const defaultPosition = options?.defaultPosition ?? DEFAULT_POSITION;
 	const niIdentifiers = options?.niIdentifiers ?? DEFAULT_NI_IDENTIFIERS;

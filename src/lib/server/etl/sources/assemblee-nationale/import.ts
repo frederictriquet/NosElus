@@ -178,9 +178,8 @@ export async function importMandatsFromAN(config: ETLConfig): Promise<ImportStat
 			const deputeMandats = mapActeurMandats(depute);
 			allMandates.push(...deputeMandats);
 		} catch (error) {
-			const uid = typeof depute.acteur.uid === 'object'
-				? depute.acteur.uid['#text']
-				: depute.acteur.uid;
+			const uid =
+				typeof depute.acteur.uid === 'object' ? depute.acteur.uid['#text'] : depute.acteur.uid;
 			console.error(`[AN] Error mapping mandates for ${uid}:`, error);
 		}
 	}

@@ -139,7 +139,7 @@ export async function importDossiersAN(
 		dossiersUpdated: 0,
 		documentsProcessed: 0,
 		cosignatoriesCreated: 0,
-		errors: 0,
+		errors: 0
 	};
 
 	console.log(`[Import Dossiers AN] Starting for legislature ${legislature}...`);
@@ -150,7 +150,7 @@ export async function importDossiersAN(
 
 	// Récupérer les acteurs existants pour validation
 	const existingActors = await db.select({ id: actors.id }).from(actors);
-	const actorIds = new Set(existingActors.map(a => a.id));
+	const actorIds = new Set(existingActors.map((a) => a.id));
 	console.log(`[Import Dossiers AN] ${actorIds.size} actors in database`);
 
 	// Phase 1: Importer les dossiers parlementaires
@@ -179,15 +179,16 @@ export async function importDossiersAN(
 				uid: dossier.uid,
 				legislature: dossier.legislature,
 				title: dossier.titreDossier.titre,
-				shortTitle: dossier.titreDossier.titre.length > 100
-					? dossier.titreDossier.titre.substring(0, 97) + '...'
-					: dossier.titreDossier.titre,
+				shortTitle:
+					dossier.titreDossier.titre.length > 100
+						? dossier.titreDossier.titre.substring(0, 97) + '...'
+						: dossier.titreDossier.titre,
 				type: mapProcedureType(dossier.procedureParlementaire),
 				depositDate,
 				initiator: dossier.procedureParlementaire?.libelle.toLowerCase().includes('projet')
 					? 'gouvernement'
 					: 'assemblée',
-				sourceUrl: `https://www.assemblee-nationale.fr/dyn/${legislature}/dossiers/${dossier.uid}`,
+				sourceUrl: `https://www.assemblee-nationale.fr/dyn/${legislature}/dossiers/${dossier.uid}`
 			};
 
 			lawsToInsert.push(newLaw);
@@ -205,12 +206,11 @@ export async function importDossiersAN(
 							lawId: dossier.uid,
 							actorId: acteur.acteurRef,
 							role: 'author',
-							signatureOrder: order++,
+							signatureOrder: order++
 						});
 					}
 				}
 			}
-
 		} catch (error) {
 			console.error(`[Import Dossiers AN] Error processing ${file}:`, error);
 			stats.errors++;
@@ -225,7 +225,7 @@ export async function importDossiersAN(
 	console.log(`[Import Dossiers AN] Phase 2: Processing documents for authors...`);
 
 	const documentFiles = await readdir(documentDir);
-	const dossierIds = new Set(lawsToInsert.map(l => l.id));
+	const dossierIds = new Set(lawsToInsert.map((l) => l.id));
 
 	for (const file of documentFiles) {
 		if (!file.endsWith('.json')) continue;
@@ -253,7 +253,7 @@ export async function importDossiersAN(
 
 						// Vérifier si déjà ajouté
 						const exists = cosignatoriesToInsert.some(
-							c => c.lawId === doc.dossierRef && c.actorId === auteur.acteur!.acteurRef
+							(c) => c.lawId === doc.dossierRef && c.actorId === auteur.acteur!.acteurRef
 						);
 
 						if (!exists) {
@@ -261,13 +261,12 @@ export async function importDossiersAN(
 								lawId: doc.dossierRef!,
 								actorId: auteur.acteur.acteurRef,
 								role,
-								signatureOrder: order++,
+								signatureOrder: order++
 							});
 						}
 					}
 				}
 			}
-
 		} catch (error) {
 			// Silently skip invalid documents
 		}
@@ -296,8 +295,8 @@ export async function importDossiersAN(
 						type: sql`excluded.type`,
 						depositDate: sql`excluded.deposit_date`,
 						sourceUrl: sql`excluded.source_url`,
-						updatedAt: sql`now()`,
-					},
+						updatedAt: sql`now()`
+					}
 				})
 				.returning({ id: laws.id });
 
@@ -309,10 +308,12 @@ export async function importDossiersAN(
 	}
 
 	// Phase 4: Insérer les cosignataires
-	console.log(`[Import Dossiers AN] Phase 4: Inserting ${cosignatoriesToInsert.length} cosignatories...`);
+	console.log(
+		`[Import Dossiers AN] Phase 4: Inserting ${cosignatoriesToInsert.length} cosignatories...`
+	);
 
 	// Supprimer les anciens cosignataires pour cette législature
-	const lawIds = lawsToInsert.map(l => l.id).filter((id): id is string => id !== undefined);
+	const lawIds = lawsToInsert.map((l) => l.id).filter((id): id is string => id !== undefined);
 	if (lawIds.length > 0) {
 		await db.delete(lawCosignatories).where(inArray(lawCosignatories.lawId, lawIds));
 	}

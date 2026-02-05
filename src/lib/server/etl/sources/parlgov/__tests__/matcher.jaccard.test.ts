@@ -56,20 +56,14 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 		});
 
 		it('should ignore French stop words', () => {
-			const score = calculateJaccardSimilarity(
-				'Le Parti Socialiste',
-				'Parti Socialiste'
-			);
+			const score = calculateJaccardSimilarity('Le Parti Socialiste', 'Parti Socialiste');
 
 			// "le" et "parti" sont des stop words, reste "socialiste"
 			expect(score).toBe(1.0);
 		});
 
 		it('should apply bonus for long words (8+ chars)', () => {
-			const score = calculateJaccardSimilarity(
-				'ecologique',
-				'ecologique'
-			);
+			const score = calculateJaccardSimilarity('ecologique', 'ecologique');
 
 			// Base Jaccard = 1.0
 			// Bonus long word = +0.2
@@ -84,10 +78,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 			// Base Jaccard = 1/3 ≈ 0.33
 			// Bonus = +0.2 (long word present)
 			// Total ≈ 0.53
-			const score = calculateJaccardSimilarity(
-				'test republicains',
-				'other republicains'
-			);
+			const score = calculateJaccardSimilarity('test republicains', 'other republicains');
 
 			expect(score).toBeGreaterThan(0.33);
 			expect(score).toBeCloseTo(0.53, 1);
@@ -104,11 +95,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 
 		it('should handle custom long word threshold', () => {
 			const config = { longWordMinLength: 5 };
-			const score = calculateJaccardSimilarity(
-				'test party',
-				'other party',
-				config
-			);
+			const score = calculateJaccardSimilarity('test party', 'other party', config);
 
 			// "party" = 5 chars, atteint le seuil custom
 			// Bonus appliqué
@@ -117,11 +104,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 
 		it('should handle custom long word bonus', () => {
 			const config = { longWordBonus: 0.5 };
-			const score = calculateJaccardSimilarity(
-				'test republican',
-				'other republican',
-				config
-			);
+			const score = calculateJaccardSimilarity('test republican', 'other republican', config);
 
 			// Base ≈ 0.33, bonus custom = 0.5
 			// Total ≈ 0.83
@@ -130,20 +113,13 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 
 		it('should cap score at 1.0 even with large bonus', () => {
 			const config = { longWordBonus: 0.9 };
-			const score = calculateJaccardSimilarity(
-				'test republican',
-				'other republican',
-				config
-			);
+			const score = calculateJaccardSimilarity('test republican', 'other republican', config);
 
 			expect(score).toBeLessThanOrEqual(1.0);
 		});
 
 		it('should handle real party names: LFI exact match', () => {
-			const score = calculateJaccardSimilarity(
-				'La France Insoumise',
-				'La France Insoumise'
-			);
+			const score = calculateJaccardSimilarity('La France Insoumise', 'La France Insoumise');
 
 			expect(score).toBe(1.0);
 		});
@@ -164,10 +140,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 		});
 
 		it('should handle real party names: RN variations', () => {
-			const score = calculateJaccardSimilarity(
-				'Rassemblement National',
-				'National Rally'
-			);
+			const score = calculateJaccardSimilarity('Rassemblement National', 'National Rally');
 
 			// Normalized: "national" vs "national rally" (rassemblement est stop word)
 			// Intersection: {national}
@@ -194,10 +167,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 		});
 
 		it('should handle duplicate words in input', () => {
-			const score = calculateJaccardSimilarity(
-				'test test test',
-				'test other'
-			);
+			const score = calculateJaccardSimilarity('test test test', 'test other');
 
 			// Sets remove duplicates: {test} vs {test, other}
 			// Intersection: {test}
@@ -207,10 +177,7 @@ describe('ParlGov Matcher - Jaccard Similarity', () => {
 		});
 
 		it('should handle word order differences', () => {
-			const score = calculateJaccardSimilarity(
-				'alpha beta gamma',
-				'gamma beta alpha'
-			);
+			const score = calculateJaccardSimilarity('alpha beta gamma', 'gamma beta alpha');
 
 			// Same sets, order doesn't matter
 			expect(score).toBe(1.0);

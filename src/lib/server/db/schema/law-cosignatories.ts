@@ -16,13 +16,13 @@ export const lawCosignatories = pgTable(
 			.notNull()
 			.references(() => actors.id),
 		role: varchar('role', { length: 30 }).notNull(), // 'author' | 'cosignatory' | 'rapporteur'
-		signatureOrder: integer('signature_order'), // Ordre de signature (1 = premier auteur)
+		signatureOrder: integer('signature_order') // Ordre de signature (1 = premier auteur)
 	},
 	(table) => [
 		primaryKey({ columns: [table.lawId, table.actorId] }),
 		index('law_cosignatories_law_idx').on(table.lawId),
 		index('law_cosignatories_actor_idx').on(table.actorId),
-		index('law_cosignatories_role_idx').on(table.role),
+		index('law_cosignatories_role_idx').on(table.role)
 	]
 );
 

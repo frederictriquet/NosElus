@@ -26,13 +26,16 @@
 			<div class="stat-label">Sénateurs</div>
 		</div>
 		{#if groupStats}
-			{@const totalInterventions = (groupStats.hemicycleInterventions || 0) + (groupStats.commissionInterventions || 0)}
+			{@const totalInterventions =
+				(groupStats.hemicycleInterventions || 0) + (groupStats.commissionInterventions || 0)}
 			<div class="stat-card">
 				<div class="stat-value">{totalInterventions.toLocaleString('fr-FR')}</div>
 				<div class="stat-label">Interventions</div>
 			</div>
 			<div class="stat-card">
-				<div class="stat-value">{(groupStats.commissionPresences || 0).toLocaleString('fr-FR')}</div>
+				<div class="stat-value">
+					{(groupStats.commissionPresences || 0).toLocaleString('fr-FR')}
+				</div>
 				<div class="stat-label">Présences en commission</div>
 			</div>
 		{/if}
@@ -40,11 +43,11 @@
 {/await}
 
 {#await data.topMembers then topMembers}
-	{#if topMembers.length > 0 && topMembers.some(m => m.hemicycleInterventions)}
+	{#if topMembers.length > 0 && topMembers.some((m) => m.hemicycleInterventions)}
 		<section class="card" style="margin-top: 1.5rem;">
 			<h2>Sénateurs les plus actifs</h2>
 			<div class="members-list">
-				{#each topMembers.filter(m => m.hemicycleInterventions) as member, i}
+				{#each topMembers.filter((m) => m.hemicycleInterventions) as member, i}
 					<ElectedCard
 						id={member.id}
 						name={member.name}
@@ -62,9 +65,10 @@
 
 {#await data.groupStats then groupStats}
 	{#if groupStats}
-		{@const periodLabel = data.filters.renouvellement && data.filters.renouvellement !== 'all'
-			? `depuis ${data.filters.renouvellement}`
-			: 'toutes périodes'}
+		{@const periodLabel =
+			data.filters.renouvellement && data.filters.renouvellement !== 'all'
+				? `depuis ${data.filters.renouvellement}`
+				: 'toutes périodes'}
 		<section class="card activity-card" style="margin-top: 1.5rem;">
 			<h2>Activité parlementaire du groupe</h2>
 			<p class="section-subtitle">Données agrégées des membres ({periodLabel})</p>
@@ -75,13 +79,17 @@
 						<div class="stat-items">
 							{#if (groupStats.weeksPresent || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.weeksPresent?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.weeksPresent?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">semaines de présence cumulées</span>
 								</div>
 							{/if}
 							{#if (groupStats.commissionPresences || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.commissionPresences?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.commissionPresences?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">présences en commission</span>
 								</div>
 							{/if}
@@ -94,13 +102,17 @@
 						<div class="stat-items">
 							{#if (groupStats.hemicycleInterventions || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.hemicycleInterventions?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.hemicycleInterventions?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">interventions en hémicycle</span>
 								</div>
 							{/if}
 							{#if (groupStats.commissionInterventions || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.commissionInterventions?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.commissionInterventions?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">interventions en commission</span>
 								</div>
 							{/if}
@@ -113,7 +125,9 @@
 						<div class="stat-items">
 							{#if (groupStats.amendmentsSigned || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.amendmentsSigned?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.amendmentsSigned?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">amendements signés</span>
 								</div>
 							{/if}
@@ -132,13 +146,17 @@
 						<div class="stat-items">
 							{#if (groupStats.writtenQuestions || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.writtenQuestions?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.writtenQuestions?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">questions écrites</span>
 								</div>
 							{/if}
 							{#if (groupStats.oralQuestions || 0) > 0}
 								<div class="stat-item">
-									<span class="stat-value-sm">{groupStats.oralQuestions?.toLocaleString('fr-FR')}</span>
+									<span class="stat-value-sm"
+										>{groupStats.oralQuestions?.toLocaleString('fr-FR')}</span
+									>
 									<span class="stat-label-sm">questions orales</span>
 								</div>
 							{/if}
@@ -197,7 +215,10 @@
 
 <div class="info-box" style="margin-top: 1.5rem;">
 	<strong>Votes nominatifs non disponibles</strong>
-	<p>Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable. Seules les statistiques d'activité sont affichées.</p>
+	<p>
+		Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable. Seules les
+		statistiques d'activité sont affichées.
+	</p>
 </div>
 
 <style>
@@ -217,7 +238,8 @@
 		margin: 0;
 	}
 
-	dt, dd {
+	dt,
+	dd {
 		margin: 0;
 	}
 

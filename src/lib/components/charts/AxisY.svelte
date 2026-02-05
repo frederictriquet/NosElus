@@ -34,7 +34,7 @@
 
 		// Filter to integers only if requested
 		if (integerOnly) {
-			values = values.filter(v => Number.isInteger(v));
+			values = values.filter((v) => Number.isInteger(v));
 			// Ensure we have at least 0 and the max
 			if (values.length === 0) {
 				const domain = scale.domain();

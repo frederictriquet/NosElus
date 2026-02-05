@@ -109,7 +109,9 @@
 
 {#if data.results}
 	<div class="results-summary">
-		<span class="results-count">{data.results.total} résultat{data.results.total > 1 ? 's' : ''}</span>
+		<span class="results-count"
+			>{data.results.total} résultat{data.results.total > 1 ? 's' : ''}</span
+		>
 		pour « <strong>{data.query}</strong> »
 	</div>
 
@@ -207,7 +209,9 @@
 {:else}
 	<div class="empty-state">
 		<p>Entrez un terme de recherche</p>
-		<p class="empty-hint">Vous pouvez rechercher par nom d'élu, groupe politique, ou titre de scrutin</p>
+		<p class="empty-hint">
+			Vous pouvez rechercher par nom d'élu, groupe politique, ou titre de scrutin
+		</p>
 	</div>
 {/if}
 

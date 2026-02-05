@@ -4,7 +4,11 @@ import { eq, count, sql, and, inArray, like } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTermDates } from '$lib/server/periods/pe-terms';
 import { calculateMonthlyCohesion } from '$lib/server/utils/cohesion';
-import { mapVoteDistribution, getPEGroupMemberIds, type PeriodDates } from '$lib/server/api/helpers';
+import {
+	mapVoteDistribution,
+	getPEGroupMemberIds,
+	type PeriodDates
+} from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const terme = locals.periods.pe;
@@ -20,19 +24,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get term dates for filtering
-	const periodDates: PeriodDates | null = terme && terme !== 'all' ? await getTermDates(terme) : null;
+	const periodDates: PeriodDates | null =
+		terme && terme !== 'all' ? await getTermDates(terme) : null;
 
 	// Get PE scrutin IDs, filtered by term if specified
 	const getPeScrutinIds = async (): Promise<string[]> => {
-		const peScrutins = terme && terme !== 'all'
-			? await db
-				.select({ id: scrutins.id })
-				.from(scrutins)
-				.where(eq(scrutins.legislature, `PE-${terme}`))
-			: await db
-				.select({ id: scrutins.id })
-				.from(scrutins)
-				.where(like(scrutins.legislature, 'PE-%'));
+		const peScrutins =
+			terme && terme !== 'all'
+				? await db
+						.select({ id: scrutins.id })
+						.from(scrutins)
+						.where(eq(scrutins.legislature, `PE-${terme}`))
+				: await db
+						.select({ id: scrutins.id })
+						.from(scrutins)
+						.where(like(scrutins.legislature, 'PE-%'));
 		return peScrutins.map((s) => s.id);
 	};
 
@@ -41,7 +47,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const peScrutinIds = await getPeScrutinIds();
 
 		if (peScrutinIds.length === 0) {
-			return { distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 }, totalVotes: 0 };
+			return {
+				distribution: { pour: 0, contre: 0, abstention: 0, 'non-votant': 0 },
+				totalVotes: 0
+			};
 		}
 
 		const voteDistribution = await db

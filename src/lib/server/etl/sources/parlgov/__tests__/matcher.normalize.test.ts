@@ -108,7 +108,7 @@ describe('ParlGov Matcher - Text Normalization', () => {
 		});
 
 		it('should handle mixed case with accents and punctuation', () => {
-			const text = 'La République Française, C\'est NOUS!';
+			const text = "La République Française, C'est NOUS!";
 			const result = normalizeForMatching(text);
 
 			// "est" n'est pas dans les stop words

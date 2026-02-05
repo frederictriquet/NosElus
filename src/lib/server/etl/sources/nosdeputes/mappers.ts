@@ -18,7 +18,10 @@ export function mapDepute(depute: NosDeputesDepute): NewActor {
 	};
 }
 
-export function mapDeputeMandate(depute: NosDeputesDepute, legislature: string = '16'): NewMandate | null {
+export function mapDeputeMandate(
+	depute: NosDeputesDepute,
+	legislature: string = '16'
+): NewMandate | null {
 	if (!depute.groupe_sigle) return null;
 
 	const actorId = `PA${depute.id_an || depute.id}`;
@@ -48,7 +51,7 @@ export function mapGroupe(groupe: NosDeputesGroupe, legislature: string = '16'):
 	if (groupe.couleur) {
 		const rgb = groupe.couleur.split(',').map(Number);
 		if (rgb.length === 3) {
-			color = '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
+			color = '#' + rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
 		}
 	}
 
@@ -69,7 +72,7 @@ export function mapGroupe(groupe: NosDeputesGroupe, legislature: string = '16'):
 }
 
 export function mapScrutin(scrutin: NosDeputesScrutin, legislature: string = '16'): NewScrutin {
-	const demandeurs = scrutin.demandeurs?.map(d => d.demandeur).join(', ') || null;
+	const demandeurs = scrutin.demandeurs?.map((d) => d.demandeur).join(', ') || null;
 
 	return {
 		id: `VTANR5L${legislature}-${scrutin.numero}`,

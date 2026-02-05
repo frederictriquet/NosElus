@@ -54,7 +54,11 @@
 			bind:value={searchInput}
 		/>
 	</form>
-	<select class="input" style="width: auto;" onchange={(e) => setFilter('result', e.currentTarget.value)}>
+	<select
+		class="input"
+		style="width: auto;"
+		onchange={(e) => setFilter('result', e.currentTarget.value)}
+	>
 		<option value="">Tous les résultats</option>
 		<option value="adopté" selected={data.filters.result === 'adopté'}>Adoptés</option>
 		<option value="rejeté" selected={data.filters.result === 'rejeté'}>Rejetés</option>
@@ -69,10 +73,19 @@
 	<div style="display: flex; flex-direction: column; gap: 1rem;">
 		{#each data.scrutins as scrutin}
 			{@const total = scrutin.totalFor + scrutin.totalAgainst + scrutin.totalAbstention || 1}
-			<a href="/pe/scrutins/{scrutin.id}" class="scrutin-card" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
+			<a
+				href="/pe/scrutins/{scrutin.id}"
+				class="scrutin-card"
+				class:adopted={scrutin.result === 'adopté'}
+				class:rejected={scrutin.result === 'rejeté'}
+			>
 				<div class="scrutin-header">
 					<span class="scrutin-number">n°{scrutin.number}</span>
-					<span class="scrutin-result" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
+					<span
+						class="scrutin-result"
+						class:adopted={scrutin.result === 'adopté'}
+						class:rejected={scrutin.result === 'rejeté'}
+					>
 						{scrutin.result}
 					</span>
 				</div>
@@ -86,8 +99,14 @@
 				</div>
 				<div class="vote-bar">
 					<div class="vote-bar-for" style="width: {(scrutin.totalFor / total) * 100}%"></div>
-					<div class="vote-bar-against" style="width: {(scrutin.totalAgainst / total) * 100}%"></div>
-					<div class="vote-bar-abstention" style="width: {(scrutin.totalAbstention / total) * 100}%"></div>
+					<div
+						class="vote-bar-against"
+						style="width: {(scrutin.totalAgainst / total) * 100}%"
+					></div>
+					<div
+						class="vote-bar-abstention"
+						style="width: {(scrutin.totalAbstention / total) * 100}%"
+					></div>
 				</div>
 			</a>
 		{/each}
@@ -100,7 +119,10 @@
 		<span class="pagination-info">
 			Page {data.pagination.page} sur {data.pagination.totalPages}
 		</span>
-		<button onclick={() => goToPage(data.pagination.page + 1)} disabled={data.pagination.page >= data.pagination.totalPages}>
+		<button
+			onclick={() => goToPage(data.pagination.page + 1)}
+			disabled={data.pagination.page >= data.pagination.totalPages}
+		>
 			Suivant
 		</button>
 	</div>

@@ -1,7 +1,4 @@
-import {
-	iterLoadAssembleeActeurs,
-	iterLoadAssembleeOrganes
-} from '@tricoteuses/assemblee/loaders';
+import { iterLoadAssembleeActeurs, iterLoadAssembleeOrganes } from '@tricoteuses/assemblee/loaders';
 import type { Acteur, Organe } from '@tricoteuses/assemblee';
 import type { Legislature } from '@tricoteuses/assemblee';
 import { db, actors, organs, mandates } from '../../../db';

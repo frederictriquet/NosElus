@@ -155,4 +155,3 @@ export const FAMILY_POSITIONS: Record<string, number> = {
  * Identifiants courants pour les groupes Non-Inscrits
  */
 export const NI_IDENTIFIERS = ['NI', 'NA', 'Non-inscrit', 'Non-inscrits', 'Indépendant'];
-

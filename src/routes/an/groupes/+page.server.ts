@@ -4,9 +4,8 @@ import { getANGroupsWithMemberCount } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const currentLeg = await getCurrentLegislature();
-	const legislature = locals.periods.an && locals.periods.an !== 'all'
-		? locals.periods.an
-		: currentLeg;
+	const legislature =
+		locals.periods.an && locals.periods.an !== 'all' ? locals.periods.an : currentLeg;
 
 	// Get legislature dates for reference date calculation
 	const legislatureInfo = await getLegislatureDates(legislature);

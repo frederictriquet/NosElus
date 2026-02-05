@@ -165,7 +165,9 @@
 				<input
 					type="hidden"
 					name="enabled"
-					value={data.etlSettings?.[`etl_protect_${activeChamber.toLowerCase()}`] ? 'false' : 'true'}
+					value={data.etlSettings?.[`etl_protect_${activeChamber.toLowerCase()}`]
+						? 'false'
+						: 'true'}
 				/>
 				<label class="switch-label">
 					<input
@@ -199,7 +201,9 @@
 						<option value="">Tous</option>
 						{#each data.legislatures?.[activeChamber] ?? [] as leg}
 							<option value={leg.value}>
-								{activeChamber === 'SENAT' ? leg.label : legislatureLabels[activeChamber](leg.value)}
+								{activeChamber === 'SENAT'
+									? leg.label
+									: legislatureLabels[activeChamber](leg.value)}
 							</option>
 						{/each}
 					</select>

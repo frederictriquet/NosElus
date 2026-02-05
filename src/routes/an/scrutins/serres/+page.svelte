@@ -14,12 +14,12 @@
 
 	const categoryLabels: Record<string, string> = {
 		'vote-final': 'Vote final',
-		'amendement': 'Amendement',
-		'article': 'Article',
-		'procedure': 'Procédure',
-		'budget': 'Budget',
-		'constitutionnel': 'Constitutionnel',
-		'autre': 'Autre'
+		amendement: 'Amendement',
+		article: 'Article',
+		procedure: 'Procédure',
+		budget: 'Budget',
+		constitutionnel: 'Constitutionnel',
+		autre: 'Autre'
 	};
 
 	function formatDate(dateStr: string): string {
@@ -143,7 +143,11 @@
 								{categoryLabels[scrutin.category] || scrutin.category}
 							</span>
 						{/if}
-						<span class="tight-vote-badge" class:tie={scrutin.isTie} title="Marge de {scrutin.margin} voix">
+						<span
+							class="tight-vote-badge"
+							class:tie={scrutin.isTie}
+							title="Marge de {scrutin.margin} voix"
+						>
 							{getTightLabel(scrutin.margin)}
 						</span>
 						{#if scrutin.result}
@@ -169,7 +173,8 @@
 						</div>
 						<div
 							class="result-segment against"
-							style="width: {(scrutin.totalAgainst / (scrutin.totalFor + scrutin.totalAgainst)) * 100}%"
+							style="width: {(scrutin.totalAgainst / (scrutin.totalFor + scrutin.totalAgainst)) *
+								100}%"
 						>
 							<span>{scrutin.totalAgainst} contre</span>
 						</div>
@@ -195,7 +200,10 @@
 			Page {data.pagination.page} sur {data.pagination.totalPages}
 		</span>
 
-		<button onclick={() => changePage(data.pagination.page + 1)} disabled={!data.pagination.hasNext}>
+		<button
+			onclick={() => changePage(data.pagination.page + 1)}
+			disabled={!data.pagination.hasNext}
+		>
 			Suivant →
 		</button>
 	</nav>

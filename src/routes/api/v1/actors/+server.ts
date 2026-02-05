@@ -23,9 +23,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	if (filters.search) {
 		const searchTerm = `%${filters.search}%`;
-		conditions.push(
-			or(ilike(actors.fullName, searchTerm), ilike(actors.lastName, searchTerm))
-		);
+		conditions.push(or(ilike(actors.fullName, searchTerm), ilike(actors.lastName, searchTerm)));
 	}
 
 	// Active = no death date (simplified, in real app would check mandates)
@@ -36,10 +34,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Get total count
-	const [{ value: total }] = await db
-		.select({ value: count() })
-		.from(actors)
-		.where(whereClause);
+	const [{ value: total }] = await db.select({ value: count() }).from(actors).where(whereClause);
 
 	// Determine sort column
 	const sortColumn =

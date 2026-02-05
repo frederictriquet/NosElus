@@ -15,7 +15,9 @@
 				<div class="group-name">{group.name}</div>
 				<div class="group-meta">
 					<span class="group-short">{group.shortName}</span>
-					<span class="group-members">{group.memberCount} membre{group.memberCount > 1 ? 's' : ''}</span>
+					<span class="group-members"
+						>{group.memberCount} membre{group.memberCount > 1 ? 's' : ''}</span
+					>
 				</div>
 			</div>
 		</a>

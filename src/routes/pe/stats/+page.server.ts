@@ -34,9 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const filteredScrutinIds = filteredScrutinsResult.map((s) => s.id);
 
 		const voteWhereClause =
-			filteredScrutinIds.length > 0
-				? inArray(votes.scrutinId, filteredScrutinIds)
-				: sql`1 = 0`;
+			filteredScrutinIds.length > 0 ? inArray(votes.scrutinId, filteredScrutinIds) : sql`1 = 0`;
 
 		const [totalActorsResult, totalVotesResult, totalScrutinsResult] = await Promise.all([
 			db.select({ value: count() }).from(actors).where(eq(actors.chamber, 'PE')),
@@ -146,7 +144,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 						.from(mandates)
 						.innerJoin(organs, eq(mandates.organId, organs.id))
 						.where(
-							and(inArray(mandates.actorId, topMepIds), eq(organs.type, 'GP'), eq(organs.chamber, 'PE'))
+							and(
+								inArray(mandates.actorId, topMepIds),
+								eq(organs.type, 'GP'),
+								eq(organs.chamber, 'PE')
+							)
 						)
 				: [];
 
@@ -208,7 +210,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 				abstentionVotes: sql<number>`count(case when ${votes.position} = 'abstention' then 1 end)`
 			})
 			.from(organs)
-			.leftJoin(votes, and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds)))
+			.leftJoin(
+				votes,
+				and(eq(votes.groupId, organs.id), inArray(votes.scrutinId, filteredScrutinIds))
+			)
 			.where(groupCondition)
 			.groupBy(organs.id, organs.name, organs.shortName, organs.color)
 			.orderBy(desc(count(votes.id)));

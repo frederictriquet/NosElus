@@ -37,10 +37,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Get total count
-	const [{ value: total }] = await db
-		.select({ value: count() })
-		.from(organs)
-		.where(whereClause);
+	const [{ value: total }] = await db.select({ value: count() }).from(organs).where(whereClause);
 
 	// Determine sort column
 	const sortColumn =

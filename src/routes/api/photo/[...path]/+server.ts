@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 		const response = await fetch(sourceUrl, {
 			headers: {
 				'User-Agent': 'NosElus/1.0 (https://noselus.fr)',
-				'Accept': 'image/*'
+				Accept: 'image/*'
 			}
 		});
 

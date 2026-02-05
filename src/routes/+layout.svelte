@@ -39,15 +39,39 @@
 		<div class="header-links">
 			<ThemeToggle />
 			<a href="/sources" class="header-link" class:active={$page.url.pathname === '/sources'}>
-				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="18"
+					height="18"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
 					<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
 					<path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
 					<path d="M3 12A9 3 0 0 0 21 12"></path>
 				</svg>
 				<span class="link-label">Sources</span>
 			</a>
-			<a href="/recherche" class="header-link" class:active={$page.url.pathname.startsWith('/recherche')}>
-				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<a
+				href="/recherche"
+				class="header-link"
+				class:active={$page.url.pathname.startsWith('/recherche')}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="18"
+					height="18"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
 					<circle cx="11" cy="11" r="8"></circle>
 					<path d="m21 21-4.3-4.3"></path>
 				</svg>
@@ -65,7 +89,17 @@
 
 <footer class="footer">
 	<div class="container footer-content">
-		<p>NosElus - Données issues de <a href="https://data.assemblee-nationale.fr" target="_blank" rel="noopener noreferrer">data.assemblee-nationale.fr</a>, <a href="https://data.senat.fr" target="_blank" rel="noopener noreferrer">data.senat.fr</a> et <a href="https://europarl.europa.eu" target="_blank" rel="noopener noreferrer">europarl.europa.eu</a></p>
+		<p>
+			NosElus - Données issues de <a
+				href="https://data.assemblee-nationale.fr"
+				target="_blank"
+				rel="noopener noreferrer">data.assemblee-nationale.fr</a
+			>, <a href="https://data.senat.fr" target="_blank" rel="noopener noreferrer">data.senat.fr</a>
+			et
+			<a href="https://europarl.europa.eu" target="_blank" rel="noopener noreferrer"
+				>europarl.europa.eu</a
+			>
+		</p>
 		<nav class="footer-links">
 			<a href="/mentions-legales">Mentions légales</a>
 			<span class="footer-separator">·</span>

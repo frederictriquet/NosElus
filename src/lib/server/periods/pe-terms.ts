@@ -101,7 +101,9 @@ export async function isValidTerm(value: string | null): Promise<boolean> {
 /**
  * Récupère les dates d'un terme
  */
-export async function getTermDates(term: string): Promise<{ start: string; end: string | null } | null> {
+export async function getTermDates(
+	term: string
+): Promise<{ start: string; end: string | null } | null> {
 	const terms = await getTerms();
 	const t = terms.find((t) => t.value === term);
 	if (!t) return null;

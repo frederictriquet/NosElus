@@ -173,9 +173,7 @@ function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis 
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Erreur inconnue';
 		console.error(`  [Parse] Erreur JSON: ${message}`);
-		console.error(
-			`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`
-		);
+		console.error(`  [Parse] Réponse brute (${rawText.length} chars): ${rawText.slice(0, 200)}...`);
 	}
 
 	return {
@@ -246,10 +244,7 @@ export async function analyzeLaw(
 /**
  * Récupère les lois qui n'ont pas encore été analysées.
  */
-export async function getUnanalyzedLaws(
-	limit: number = 100,
-	legislature?: string
-): Promise<Law[]> {
+export async function getUnanalyzedLaws(limit: number = 100, legislature?: string): Promise<Law[]> {
 	const query = db
 		.select()
 		.from(laws)

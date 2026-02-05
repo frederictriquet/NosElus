@@ -10,10 +10,20 @@
 <div class="chambers-grid">
 	<a href="/an" class="chamber-card an">
 		<div class="chamber-icon">
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M3 21h18"/>
-				<path d="M5 21V7l7-4 7 4v14"/>
-				<path d="M9 21v-8h6v8"/>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="48"
+				height="48"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path d="M3 21h18" />
+				<path d="M5 21V7l7-4 7 4v14" />
+				<path d="M9 21v-8h6v8" />
 			</svg>
 		</div>
 		<h2 class="chamber-title">Assemblée nationale</h2>
@@ -27,10 +37,20 @@
 
 	<a href="/senat" class="chamber-card senat">
 		<div class="chamber-icon">
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"/>
-				<path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-				<path d="M2 12h20"/>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="48"
+				height="48"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<circle cx="12" cy="12" r="10" />
+				<path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+				<path d="M2 12h20" />
 			</svg>
 		</div>
 		<h2 class="chamber-title">Sénat</h2>
@@ -44,10 +64,22 @@
 
 	<a href="/pe" class="chamber-card pe">
 		<div class="chamber-icon">
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"/>
-				<path d="M2 12h20"/>
-				<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="48"
+				height="48"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<circle cx="12" cy="12" r="10" />
+				<path d="M2 12h20" />
+				<path
+					d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+				/>
 			</svg>
 		</div>
 		<h2 class="chamber-title">Parlement européen</h2>
@@ -66,19 +98,36 @@
 		<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
 			{#each data.recentScrutins as scrutin}
 				{@const total = scrutin.totalFor + scrutin.totalAgainst + scrutin.totalAbstention || 1}
-				<a href="/an/scrutins/{scrutin.id}" class="scrutin-card" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
-					<div class="scrutin-title">{scrutin.title.slice(0, 100)}{scrutin.title.length > 100 ? '...' : ''}</div>
+				<a
+					href="/an/scrutins/{scrutin.id}"
+					class="scrutin-card"
+					class:adopted={scrutin.result === 'adopté'}
+					class:rejected={scrutin.result === 'rejeté'}
+				>
+					<div class="scrutin-title">
+						{scrutin.title.slice(0, 100)}{scrutin.title.length > 100 ? '...' : ''}
+					</div>
 					<div class="scrutin-meta">
 						<span>{new Date(scrutin.date).toLocaleDateString('fr-FR')}</span>
-						<span class="scrutin-result" class:adopted={scrutin.result === 'adopté'} class:rejected={scrutin.result === 'rejeté'}>
+						<span
+							class="scrutin-result"
+							class:adopted={scrutin.result === 'adopté'}
+							class:rejected={scrutin.result === 'rejeté'}
+						>
 							{scrutin.result}
 						</span>
 						<span>{scrutin.totalVoters} votants</span>
 					</div>
 					<div class="vote-bar">
 						<div class="vote-bar-for" style="width: {(scrutin.totalFor / total) * 100}%"></div>
-						<div class="vote-bar-against" style="width: {(scrutin.totalAgainst / total) * 100}%"></div>
-						<div class="vote-bar-abstention" style="width: {(scrutin.totalAbstention / total) * 100}%"></div>
+						<div
+							class="vote-bar-against"
+							style="width: {(scrutin.totalAgainst / total) * 100}%"
+						></div>
+						<div
+							class="vote-bar-abstention"
+							style="width: {(scrutin.totalAbstention / total) * 100}%"
+						></div>
 					</div>
 				</a>
 			{/each}
@@ -113,7 +162,9 @@
 		box-shadow: var(--shadow);
 		text-decoration: none;
 		color: inherit;
-		transition: transform 0.2s, box-shadow 0.2s;
+		transition:
+			transform 0.2s,
+			box-shadow 0.2s;
 		border: 2px solid transparent;
 	}
 

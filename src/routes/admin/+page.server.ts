@@ -38,7 +38,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	for (const group of allGroups) {
 		const key = `${group.chamber}|${group.legislature || ''}|${group.shortName || group.id}`;
 		const existing = deduped.get(key);
-		if (!existing || (group.startDate && (!existing.startDate || group.startDate > existing.startDate))) {
+		if (
+			!existing ||
+			(group.startDate && (!existing.startDate || group.startDate > existing.startDate))
+		) {
 			deduped.set(key, group);
 		}
 	}
@@ -50,7 +53,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		PE: [],
 		SENAT: []
 	};
-	const seenLegislatures: Record<string, Set<string>> = { AN: new Set(), PE: new Set(), SENAT: new Set() };
+	const seenLegislatures: Record<string, Set<string>> = {
+		AN: new Set(),
+		PE: new Set(),
+		SENAT: new Set()
+	};
 	for (const group of groups) {
 		const chamber = group.chamber;
 		if (!chamber || !seenLegislatures[chamber]) continue;

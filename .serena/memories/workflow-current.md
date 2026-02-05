@@ -1,7 +1,7 @@
 # Workflow Actif — Filtrage des Lois par Tags
 
 ## Statut
-🚀 **EN COURS** — Phase documentation terminée
+✅ **TERMINÉ** — PR #14 créée et prête pour merge
 
 ## Tâche
 Ajouter un filtre par tags sur la page liste des lois (`/an/laws`)
@@ -33,9 +33,10 @@ Permettre aux utilisateurs de filtrer les lois par thématique en utilisant les 
 | 18:00 | /document | ✅ | JSDoc sur TagBadge, law-analyzer, batch pattern |
 | 18:30 | /capitalize | ✅ | 3 mémoires : LLM mapping, batch loading, migration |
 | 19:00 | /roadmap-update | ✅ | Phase 3.1 marquée DONE, tags implémentés |
+| 19:15 | /pre-merge | ✅ | PR #14 créée, 11 commits, 198 tests ✅ |
 
 ## Phase Actuelle
-/roadmap-update ✅ → **Prochaine étape** : `/pre-merge`
+✅ **WORKFLOW TERMINÉ** — Prêt pour merge
 
 ## Contexte Clé
 - **Architecture tags** : Table `tags` (référence) + `law_tags` (jonction many-to-many)
@@ -44,7 +45,13 @@ Permettre aux utilisateurs de filtrer les lois par thématique en utilisant les 
 - **Index DB** : law_tags_tag_slug_idx et law_tags_law_id_idx
 - **Source de vérité unique** : Table `tags` avec couleurs
 
-## Commits Effectués (8 au total)
+## Pull Request
+- **Numéro** : #14
+- **Titre** : feat(laws): add tag filtering system with LLM integration
+- **URL** : https://github.com/frederictriquet/NosElus/pull/14
+- **Status** : Prête pour review
+
+## Commits Effectués (11 au total)
 1. `474c369` - feat(db): add tags and law_tags tables for law categorization
 2. `d906821` - refactor(etl): migrate tags from JSONB to relational tables
 3. `5011974` - fix(migration): use unaccent to normalize tag slugs
@@ -53,6 +60,9 @@ Permettre aux utilisateurs de filtrer les lois par thématique en utilisant les 
 6. `3d06b99` - feat(laws): add tag filter and display tags on law cards
 7. `c0ec32b` - fix(review): resolve N+1 queries on debug page, improve naming
 8. `7e4c28e` - docs(tags): add comprehensive documentation for tag filtering system
+9. `440a3d5` - docs(roadmap): mark tag filtering for laws as complete
+10. `c3e57cb` - chore(workflow): mark /roadmap-update as complete
+11. `1df5b59` - fix(docs): simplify TagBadge HTML comment examples for Svelte 5 compatibility
 
 ## Fichiers Concernés
 - ✅ `src/lib/server/db/schema/tags.ts` — Table référence des tags

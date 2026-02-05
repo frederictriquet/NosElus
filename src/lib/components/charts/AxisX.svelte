@@ -11,6 +11,7 @@
 		tickMarks?: boolean;
 		baseline?: boolean;
 		snapLabels?: boolean;
+		rotateLabels?: boolean;
 	}
 
 	let {
@@ -19,11 +20,15 @@
 		gridlines = false,
 		tickMarks = false,
 		baseline = true,
-		snapLabels = false
+		snapLabels = false,
+		rotateLabels = true
 	}: Props = $props();
 
 	let tickVals = $derived.by(() => {
-		const scale = $xScale as unknown as { ticks?: (n: number) => unknown[]; domain: () => unknown[] };
+		const scale = $xScale as unknown as {
+			ticks?: (n: number) => unknown[];
+			domain: () => unknown[];
+		};
 		if (Array.isArray(ticks)) return ticks;
 		if (typeof scale.ticks === 'function') {
 			return scale.ticks(ticks as number);
@@ -46,7 +51,11 @@
 
 	{#each tickVals as tick, i (i)}
 		{@const x = $xScale(tick)}
-		<g class="tick tick-{i}" transform="translate({x}, {$height})">
+		{@const bandOffset =
+			!rotateLabels && typeof ($xScale as any).bandwidth === 'function'
+				? ($xScale as any).bandwidth() / 2
+				: 0}
+		<g class="tick tick-{i}" transform="translate({x + bandOffset}, {$height})">
 			{#if gridlines}
 				<line class="gridline" x1="0" x2="0" y1={0} y2={-$height} />
 			{/if}
@@ -57,9 +66,9 @@
 				x="0"
 				y="0"
 				dy="16"
-				text-anchor={textAnchor(i, tickVals.length)}
-				transform="rotate(-45)"
-				style="transform-origin: 0 0;"
+				text-anchor={rotateLabels ? textAnchor(i, tickVals.length) : 'middle'}
+				transform={rotateLabels ? 'rotate(-45)' : undefined}
+				style={rotateLabels ? 'transform-origin: 0 0;' : undefined}
 			>
 				{format(tick)}
 			</text>

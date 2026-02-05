@@ -39,9 +39,11 @@
 		height?: number;
 		/** Nombre maximum de groupes à afficher (défaut: 10, les plus gros d'abord) */
 		maxGroups?: number;
+		/** Rotation des labels de l'axe X à -45° (défaut: true) */
+		rotateLabels?: boolean;
 	}
 
-	let { groups, mode, height = 250, maxGroups = 10 }: Props = $props();
+	let { groups, mode, height = 250, maxGroups = 10, rotateLabels = true }: Props = $props();
 
 	// Couleurs pour les positions de vote
 	const positionColors = {
@@ -59,7 +61,12 @@
 		if (!prepared) return null;
 
 		const { seriesNames, dataForStack } = prepared;
-		const seriesColors = [positionColors.pour, positionColors.contre, positionColors.abstention, positionColors.nonVotant];
+		const seriesColors = [
+			positionColors.pour,
+			positionColors.contre,
+			positionColors.abstention,
+			positionColors.nonVotant
+		];
 
 		const stackFn = stack<(typeof dataForStack)[0]>().keys(seriesNames);
 		const stacked = stackFn(dataForStack);
@@ -82,7 +89,14 @@
 		const stacked = stackFn(dataForStack);
 		const xDomain = [...VOTE_POSITIONS];
 
-		return { stacked, xDomain, seriesNames: groupNames, seriesColors: groupColors, dataForStack, sortedGroups };
+		return {
+			stacked,
+			xDomain,
+			seriesNames: groupNames,
+			seriesColors: groupColors,
+			dataForStack,
+			sortedGroups
+		};
 	});
 
 	const chartData = $derived(mode === 'by-group' ? byGroupData : byPositionData);
@@ -93,7 +107,7 @@
 	{#if hasData && chartData}
 		<div class="chart-container">
 			<LayerCake
-				padding={{ top: 10, right: 10, bottom: 50, left: 40 }}
+				padding={{ top: 10, right: 10, bottom: rotateLabels ? 50 : 30, left: 40 }}
 				x={(d: { data: { label: string } }) => d.data.label}
 				y={[0, 1]}
 				z="key"
@@ -108,7 +122,7 @@
 			>
 				<Svg>
 					<AxisY ticks={4} format={(d) => String(d)} integerOnly />
-					<AxisX ticks={chartData.xDomain} gridlines />
+					<AxisX ticks={chartData.xDomain} gridlines {rotateLabels} />
 					<ColumnStacked />
 				</Svg>
 			</LayerCake>

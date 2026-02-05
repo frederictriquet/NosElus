@@ -41,7 +41,9 @@
 	<div class="scrutin-badges">
 		<span class="scrutin-number">Scrutin n°{data.scrutin.number}</span>
 		{#if data.scrutin.category}
-			<span class="category-badge">{categoryLabels[data.scrutin.category] || data.scrutin.category}</span>
+			<span class="category-badge"
+				>{categoryLabels[data.scrutin.category] || data.scrutin.category}</span
+			>
 		{/if}
 		{#if data.scrutin.result}
 			<span
@@ -72,12 +74,26 @@
 		<section class="card law-link-card">
 			<h2>Dossier législatif</h2>
 			<p class="matching-disclaimer">
-				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
 					<circle cx="12" cy="12" r="10"></circle>
 					<line x1="12" y1="16" x2="12" y2="12"></line>
 					<line x1="12" y1="8" x2="12.01" y2="8"></line>
 				</svg>
-				<span>Ce dossier est associé automatiquement par similarité de titre, car les données officielles ne fournissent pas de lien direct entre scrutins et textes de loi. Il est possible que ce ne soit pas exactement le bon texte.</span>
+				<span
+					>Ce dossier est associé automatiquement par similarité de titre, car les données
+					officielles ne fournissent pas de lien direct entre scrutins et textes de loi. Il est
+					possible que ce ne soit pas exactement le bon texte.</span
+				>
 			</p>
 			<a href="/an/laws/{law.id}" class="law-link">
 				<div class="law-type">{typeLabels[law.type] || law.type}</div>
@@ -106,7 +122,18 @@
 				<details class="law-details">
 					<summary class="law-details-toggle">
 						<span>Voir le texte complet</span>
-						<svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<svg
+							class="chevron"
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
 							<polyline points="6 9 12 15 18 9"></polyline>
 						</svg>
 					</summary>
@@ -123,9 +150,24 @@
 
 						<h3>Source officielle</h3>
 						{#if law.sourceUrl}
-							<a href={law.sourceUrl} target="_blank" rel="noopener noreferrer" class="law-source-link">
+							<a
+								href={law.sourceUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="law-source-link"
+							>
 								Voir sur le site de l'Assemblée nationale
-								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
 									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
 									<polyline points="15 3 21 3 21 9"></polyline>
 									<line x1="10" y1="14" x2="21" y2="3"></line>
@@ -142,7 +184,17 @@
 		<section class="card law-link-card no-law-card">
 			<h2>Dossier législatif</h2>
 			<div class="no-law-notice">
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
 					<circle cx="12" cy="12" r="10"></circle>
 					<line x1="12" y1="16" x2="12" y2="12"></line>
 					<line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -150,17 +202,26 @@
 				<div class="no-law-content">
 					<p class="no-law-title">Aucun dossier législatif associé</p>
 					<p class="no-law-explanation">
-						Ce scrutin n'a pas pu être automatiquement associé à un dossier législatif.
-						Cela peut arriver pour plusieurs raisons :
+						Ce scrutin n'a pas pu être automatiquement associé à un dossier législatif. Cela peut
+						arriver pour plusieurs raisons :
 					</p>
 					<ul class="no-law-reasons">
-						<li>Le scrutin porte sur une motion de procédure ou un amendement sans dossier principal identifiable</li>
-						<li>Le titre du scrutin ne correspond pas assez aux titres des dossiers législatifs connus</li>
+						<li>
+							Le scrutin porte sur une motion de procédure ou un amendement sans dossier principal
+							identifiable
+						</li>
+						<li>
+							Le titre du scrutin ne correspond pas assez aux titres des dossiers législatifs connus
+						</li>
 						<li>Le dossier législatif n'est pas encore disponible dans notre base de données</li>
 					</ul>
 					<p class="no-law-suggestion">
 						Vous pouvez rechercher le texte concerné sur
-						<a href="https://www.assemblee-nationale.fr/dyn/{data.scrutin.legislature}/dossiers" target="_blank" rel="noopener noreferrer">
+						<a
+							href="https://www.assemblee-nationale.fr/dyn/{data.scrutin.legislature}/dossiers"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
 							le site de l'Assemblée nationale
 						</a>.
 					</p>
@@ -214,7 +275,7 @@
 
 	<AsyncCard title="Répartition par position" promise={data.groupBreakdown} minHeight="280px">
 		{#snippet children(groups)}
-			<GroupVotesStackedBar {groups} mode="by-position" height={220} />
+			<GroupVotesStackedBar {groups} mode="by-position" height={220} rotateLabels={false} />
 		{/snippet}
 	</AsyncCard>
 </div>
@@ -228,7 +289,11 @@
 			{:else}
 				<div class="voters-grid">
 					{#each voters as voter}
-						<a href="/an/deputes/{voter.actorId}" class="voter-card" data-position={voter.position?.toLowerCase()}>
+						<a
+							href="/an/deputes/{voter.actorId}"
+							class="voter-card"
+							data-position={voter.position?.toLowerCase()}
+						>
 							{#if voter.actorPhoto}
 								<img src={voter.actorPhoto} alt="" class="voter-photo" />
 							{:else}

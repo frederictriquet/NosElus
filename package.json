@@ -55,6 +55,9 @@
 		"etl:analyze-laws": "node --import tsx scripts/etl/analyze-laws.ts",
 		"etl:law-texts": "node --import tsx scripts/etl/import-law-texts-piste.ts",
 		"etl:download": "node --import tsx scripts/etl/download-data.ts",
+		"lint": "npm run lint:format && npm run lint:types",
+		"lint:format": "prettier --check \"src/**/*.{js,ts,svelte,css,md,json}\"",
+		"lint:types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"lint-staged": "lint-staged",
 		"commitlint": "commitlint"
 	},

@@ -7,7 +7,7 @@ const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 heures
  * Vérifie si le mot de passe admin est configuré
  */
 export function isAdminPasswordConfigured(): boolean {
-	return !!ADMIN_PASSWORD && ADMIN_PASSWORD.length >= 8;
+	return !!ADMIN_PASSWORD;
 }
 
 /**

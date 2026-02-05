@@ -17,8 +17,8 @@
  */
 
 import { parseArgs } from 'node:util';
-import { db, organs } from '../../src/lib/server/db';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { db, organs, adminSettings } from '../../src/lib/server/db';
+import { eq, and, isNotNull, like } from 'drizzle-orm';
 import {
 	fetchPartiesForCountries,
 	testConnection,
@@ -192,22 +192,59 @@ async function main() {
 		console.log(`  Matched: ${stats.matched}/${stats.organsProcessed}`);
 		console.log(`  Using fallback: ${stats.notMatched}`);
 
-		// 4. Update database
+		// 4. Charger les settings de protection ETL
 		console.log('');
-		console.log('[4/4] Updating database...');
+		console.log('[4/4] Checking ETL protection settings...');
+
+		const protectSettings = await db
+			.select()
+			.from(adminSettings)
+			.where(like(adminSettings.key, 'etl_protect_%'));
+
+		const protectedChambers = new Set(
+			protectSettings
+				.filter((s) => s.value === 'true')
+				.map((s) => s.key.replace('etl_protect_', '').toUpperCase())
+		);
+
+		if (protectedChambers.size > 0) {
+			console.log(`  Protected chambers: ${Array.from(protectedChambers).join(', ')}`);
+		} else {
+			console.log('  No chambers protected');
+		}
+
+		// Filtrer les résultats pour exclure les chambres protégées
+		const updatableResults = results.filter((r) => {
+			if (protectedChambers.has(r.organ.chamber)) {
+				logVerbose(
+					`  ⊘ ${r.organ.shortName || r.organ.name.slice(0, 20)} → Protected by admin (chamber ${r.organ.chamber})`
+				);
+				stats.notMatched++; // Compter comme non traité
+				return false;
+			}
+			return true;
+		});
+
+		console.log(
+			`  Will update ${updatableResults.length}/${results.length} organs (${results.length - updatableResults.length} protected)`
+		);
+
+		// 5. Update database
+		console.log('');
+		console.log('[5/5] Updating database...');
 
 		if (config.dryRun) {
 			console.log('  DRY-RUN mode: Skipping database updates');
 			console.log('');
 			console.log('  Would update:');
 
-			for (const { organ, position } of results) {
+			for (const { organ, position } of updatableResults) {
 				console.log(`    ${organ.id} (${organ.shortName || organ.name.slice(0, 15)}) → ${position.toFixed(1)}`);
 			}
 
-			stats.updated = results.length;
+			stats.updated = updatableResults.length;
 		} else {
-			for (const { organ, position } of results) {
+			for (const { organ, position } of updatableResults) {
 				try {
 					await db
 						.update(organs)

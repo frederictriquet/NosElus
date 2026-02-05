@@ -13,7 +13,7 @@
  *   3. Ollama lancé: ollama serve
  */
 
-import { analyzeLawsBatch, analyzeLaw, saveLawAnalysis, AVAILABLE_TAGS } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+import { analyzeLawsBatch, analyzeLaw, saveLawAnalysis, getAvailableTags } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
 import { db } from '../../src/lib/server/db/index.js';
 import { laws, lawSummaries } from '../../src/lib/server/db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -67,7 +67,10 @@ function parseArgs(argv: string[]): Args {
 	return args;
 }
 
-function printHelp() {
+async function printHelp() {
+	const tagMappings = await getAvailableTags();
+	const tagNames = tagMappings.map((t) => t.promptName).join(', ');
+
 	console.log(`
 Usage: npm run etl:analyze-laws -- [options]
 
@@ -79,8 +82,8 @@ Options:
   -n, --dry-run         Mode simulation, n'écrit pas en base
   -h, --help            Affiche cette aide
 
-Tags disponibles:
-  ${AVAILABLE_TAGS.join(', ')}
+Tags disponibles (depuis la DB):
+  ${tagNames}
 
 Exemples:
   npm run etl:analyze-laws                      # Analyse 100 lois
@@ -110,7 +113,7 @@ async function main() {
 	const args = parseArgs(process.argv.slice(2));
 
 	if (args.help) {
-		printHelp();
+		await printHelp();
 		process.exit(0);
 	}
 
@@ -145,8 +148,11 @@ async function main() {
 		console.log('');
 
 		try {
-			// Récupérer la loi
-			const [law] = await db.select().from(laws).where(eq(laws.id, args.reanalyze));
+			// Récupérer la loi et les tags en parallèle
+			const [[law], tagMappings] = await Promise.all([
+				db.select().from(laws).where(eq(laws.id, args.reanalyze)),
+				getAvailableTags()
+			]);
 			if (!law) {
 				console.error(`Erreur: Loi ${args.reanalyze} non trouvée`);
 				process.exit(1);
@@ -159,6 +165,7 @@ async function main() {
 
 			console.log(`Titre: ${law.title.slice(0, 60)}...`);
 			console.log(`Texte: ${law.description.length} caractères`);
+			console.log(`Tags disponibles: ${tagMappings.map((t) => t.promptName).join(', ')}`);
 			console.log('');
 
 			// Supprimer l'ancien résumé s'il existe
@@ -167,7 +174,7 @@ async function main() {
 
 			// Analyser
 			console.log('Analyse en cours...');
-			const analysis = await analyzeLaw(law, { model: args.model });
+			const analysis = await analyzeLaw(law, { model: args.model }, tagMappings);
 
 			if (analysis.summary.startsWith('Erreur:')) {
 				console.error(`Erreur: ${analysis.summary}`);

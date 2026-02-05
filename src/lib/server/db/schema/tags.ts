@@ -2,7 +2,7 @@ import { pgTable, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * Table de référence des tags disponibles pour catégoriser les lois.
- * Tags fixes définis dans law-analyzer.ts (AVAILABLE_TAGS).
+ * Source de vérité pour les tags utilisés par le LLM et l'interface.
  */
 export const tags = pgTable('tags', {
 	// Slug unique utilisé comme identifiant (ex: "economie", "environnement")

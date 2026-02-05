@@ -2,7 +2,7 @@ import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { laws, lawSummaries, lawTags, tags } from '$lib/server/db/schema';
-import { eq, desc, isNotNull, isNull, and } from 'drizzle-orm';
+import { eq, desc, isNotNull, isNull, and, inArray } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -27,25 +27,34 @@ export const load: PageServerLoad = async () => {
 		.orderBy(desc(lawSummaries.analyzedAt))
 		.limit(100);
 
-	// Get tags for each law (in parallel)
-	const lawsWithTags = await Promise.all(
-		lawsWithSummaries.map(async (law) => {
-			const lawTagsList = await db
-				.select({
-					slug: tags.slug,
-					name: tags.name,
-					color: tags.color
-				})
-				.from(lawTags)
-				.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
-				.where(eq(lawTags.lawId, law.id));
+	// Get tags for displayed laws (batch, avoids N+1)
+	const lawIds = lawsWithSummaries.map((l) => l.id);
+	const lawTagsData =
+		lawIds.length > 0
+			? await db
+					.select({
+						lawId: lawTags.lawId,
+						slug: tags.slug,
+						name: tags.name,
+						color: tags.color
+					})
+					.from(lawTags)
+					.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
+					.where(inArray(lawTags.lawId, lawIds))
+			: [];
 
-			return {
-				...law,
-				tags: lawTagsList
-			};
-		})
-	);
+	const tagsByLawId = new Map<string, { slug: string; name: string; color: string | null }[]>();
+	for (const row of lawTagsData) {
+		if (!tagsByLawId.has(row.lawId)) {
+			tagsByLawId.set(row.lawId, []);
+		}
+		tagsByLawId.get(row.lawId)!.push({ slug: row.slug, name: row.name, color: row.color });
+	}
+
+	const lawsWithTags = lawsWithSummaries.map((law) => ({
+		...law,
+		tags: tagsByLawId.get(law.id) ?? []
+	}));
 
 	// Laws with full text but no summary
 	const lawsWithTextNoSummary = await db

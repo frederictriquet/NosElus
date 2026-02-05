@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
 	// Load filter options and data in parallel
-	const [types_, statuses_, availableTags, [{ value: total }], lawsList] = await Promise.all([
+	const [typeOptions, statusOptions, availableTags, [{ value: total }], lawsList] = await Promise.all([
 		// Types for filter dropdown
 		db
 			.selectDistinct({ type: laws.type })
@@ -123,8 +123,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	return {
 		laws: lawsWithTags,
-		types: types_.map((t) => t.type).filter(Boolean) as string[],
-		statuses: statuses_.map((s) => s.status).filter(Boolean) as string[],
+		types: typeOptions.map((t) => t.type).filter(Boolean) as string[],
+		statuses: statusOptions.map((s) => s.status).filter(Boolean) as string[],
 		availableTags,
 		pagination: {
 			page,

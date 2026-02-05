@@ -4,14 +4,36 @@ import { env } from '$env/dynamic/private';
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 heures
 
 /**
- * Vérifie si le mot de passe admin est configuré
+ * Vérifie si le mot de passe admin est configuré.
+ *
+ * @returns `true` si la variable d'environnement `ADMIN_PASSWORD` est définie et non vide
+ *
+ * @example
+ * ```typescript
+ * if (!isAdminPasswordConfigured()) {
+ *   return { error: 'Admin non configuré' };
+ * }
+ * ```
  */
 export function isAdminPasswordConfigured(): boolean {
 	return !!env.ADMIN_PASSWORD;
 }
 
 /**
- * Vérifie si le mot de passe fourni correspond au mot de passe admin
+ * Vérifie si le mot de passe fourni correspond au mot de passe admin.
+ *
+ * Utilise une comparaison timing-safe via `timingSafeEqual` pour éviter
+ * les attaques par timing.
+ *
+ * @param password - Le mot de passe à vérifier
+ * @returns `true` si le mot de passe correspond, `false` sinon
+ *
+ * @example
+ * ```typescript
+ * if (verifyAdminPassword(userInput)) {
+ *   // Authentification réussie
+ * }
+ * ```
  */
 export function verifyAdminPassword(password: string): boolean {
 	const adminPassword = env.ADMIN_PASSWORD;
@@ -29,7 +51,20 @@ export function verifyAdminPassword(password: string): boolean {
 }
 
 /**
- * Génère un token de session admin signé
+ * Génère un token de session admin signé avec HMAC-SHA256.
+ *
+ * Le token a le format `{timestamp}.{signature}` où :
+ * - `timestamp` : Date.now() en millisecondes
+ * - `signature` : HMAC-SHA256 du timestamp avec ADMIN_PASSWORD comme clé
+ *
+ * @returns Le token de session au format `timestamp.signature`
+ * @throws {Error} Si ADMIN_PASSWORD n'est pas configuré
+ *
+ * @example
+ * ```typescript
+ * const token = generateAdminSessionToken();
+ * cookies.set('admin-session', token, { httpOnly: true, maxAge: 86400 });
+ * ```
  */
 export function generateAdminSessionToken(): string {
 	const adminPassword = env.ADMIN_PASSWORD;
@@ -44,7 +79,23 @@ export function generateAdminSessionToken(): string {
 }
 
 /**
- * Vérifie la validité d'un token de session admin
+ * Vérifie la validité d'un token de session admin.
+ *
+ * Valide :
+ * - Le format du token (`timestamp.signature`)
+ * - L'expiration (24h depuis le timestamp)
+ * - La signature HMAC avec comparaison timing-safe
+ *
+ * @param token - Le token de session à vérifier
+ * @returns `true` si le token est valide et non expiré, `false` sinon
+ *
+ * @example
+ * ```typescript
+ * const token = cookies.get('admin-session');
+ * if (verifyAdminSessionToken(token)) {
+ *   // Session valide
+ * }
+ * ```
  */
 export function verifyAdminSessionToken(token: string): boolean {
 	const adminPassword = env.ADMIN_PASSWORD;

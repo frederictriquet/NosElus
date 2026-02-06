@@ -18,12 +18,6 @@ rendre toutes les migrations de db idempotentes
 
 
 
-
-dans "Répartition par position" on peut supprimer la rotation des labels (mais pas dans "Votes par groupes")
-
-sur toutes les pages et dans tous les composants ou on affiche le nom court d'un parti, je veux qu'on affiche le nom long lorsque l'on hover avec la souris : inspire-toi de ce qui a été fait dans le composant ElectedCard.svelte au niveau du group-name-hover et fais-en un sous-composant réutilisable
-
-
 l'import des données en base demande beaucoup de travail (récupération de fichiers, consultation de endpoints d'api, et maintenant une phase d'analyse par IA), je voudrais pouvoir préparer toutes les données en local, sur un ordinateur assez puissant pour tout faire, et pouvoir envoyer ces données vers le serveur de prod. Il faudrait que ça puisse fonctionner de manière incrémentale.
 
 

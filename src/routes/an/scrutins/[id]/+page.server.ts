@@ -138,6 +138,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				actorPhoto: actors.photoUrl,
 				position: votes.position,
 				groupName: organs.shortName,
+				groupFullName: organs.name,
 				groupColor: organs.color
 			})
 			.from(votes)

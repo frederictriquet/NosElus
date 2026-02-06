@@ -40,3 +40,6 @@ traefik/acme.json
 data/
 data/cache/
 .cache/
+
+# Serena workflow (temporary)
+.serena/memories/workflow-current.md

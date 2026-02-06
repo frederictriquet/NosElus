@@ -2,6 +2,7 @@
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import LawSummaryCard from '$lib/components/LawSummaryCard.svelte';
 	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
+	import GroupName from '$lib/components/GroupName.svelte';
 
 	let { data } = $props();
 
@@ -269,7 +270,7 @@
 								<div class="voter-name">{voter.actorName}</div>
 								{#if voter.groupName}
 									<div class="voter-group" style="color: {voter.groupColor || 'inherit'}">
-										{voter.groupName}
+										<GroupName shortName={voter.groupName} fullName={voter.groupFullName} />
 									</div>
 								{/if}
 							</div>

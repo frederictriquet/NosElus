@@ -4,46 +4,60 @@
 	import { onMount } from 'svelte';
 	import { quizStore, canGoNext, canGoPrevious, quizCompleted, canAbstain, reserveCount } from '$lib/stores/quiz';
 	import QuizProgress from '$lib/components/QuizProgress.svelte';
+	import QuizSetup from '$lib/components/QuizSetup.svelte';
 	import LawDossierCard from '$lib/components/LawDossierCard.svelte';
 	import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
+	import { selectQuizLaws } from '$lib/utils/quiz-selection';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	// État local
+	// Phase : 'setup' (configuration) ou 'quiz' (questions)
+	let phase = $state<'setup' | 'quiz'>('setup');
 	let initialized = $state(false);
 
-	// Initialiser le quiz au montage
-	onMount(async () => {
-		if (data.laws.length > 0) {
-			quizStore.init(data.laws, data.reserveLaws);
-			initialized = true;
+	// Lois sélectionnées pour le quiz en cours
+	let quizLawCount = $state(0);
 
-			// Charger les votes des groupes en dev pour le panel debug
-			if (dev) {
-				const allLawIds = [...data.laws, ...data.reserveLaws].map((l) => l.id);
-				try {
-					const res = await fetch('/api/quiz/group-votes', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ lawIds: allLawIds })
-					});
-					if (res.ok) {
-						const { groupVotes, groups } = await res.json();
-						debugGroupVotes = groupVotes;
-						debugGroups = groups;
-					}
-				} catch {
-					// silently ignore debug data fetch errors
+	// Vérifier si un quiz est en cours au montage
+	onMount(() => {
+		const stored = localStorage.getItem('noselus-quiz-votes');
+		if (stored) {
+			try {
+				const parsed = JSON.parse(stored);
+				if (parsed.laws?.length > 0 && !parsed.completedAt) {
+					// Quiz en cours → reprendre directement
+					phase = 'quiz';
+					quizLawCount = parsed.laws.length;
+					initialized = true;
+					loadDebugData(parsed.laws.map((l: { id: string }) => l.id));
+					return;
 				}
+			} catch {
+				// localStorage corrompu, on l'ignore
 			}
 		}
+		// Pas de quiz en cours → afficher setup
 	});
+
+	// Démarrer un nouveau quiz depuis la page de configuration
+	function handleStart(selectedTags: Set<string>, quizSize: number) {
+		const { quizLaws, reserveLaws } = selectQuizLaws(data.allLaws, selectedTags, quizSize);
+		quizStore.init(quizLaws, reserveLaws);
+		quizLawCount = quizLaws.length;
+		initialized = true;
+		phase = 'quiz';
+
+		if (dev) {
+			const allLawIds = [...quizLaws, ...reserveLaws].map((l) => l.id);
+			loadDebugData(allLawIds);
+		}
+	}
 
 	// Réactivité sur le store
 	let currentIndex = $state(0);
 	let currentVote = $state<'pour' | 'contre' | null>(null);
-	let laws = $state<import('$lib/stores/quiz').QuizLaw[]>(data.laws);
+	let laws = $state<import('$lib/stores/quiz').QuizLaw[]>([]);
 	let canNext = $state(false);
 	let canPrevious = $state(false);
 	let completed = $state(false);
@@ -57,6 +71,24 @@
 	let debugGroups = $state<DebugGroup[]>([]);
 	let debugGroupVotes = $state<DebugGroupVotes>({});
 	let debugSortMode = $state<'vote' | 'spectrum'>('vote');
+
+	async function loadDebugData(lawIds: string[]) {
+		if (!dev) return;
+		try {
+			const res = await fetch('/api/quiz/group-votes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ lawIds })
+			});
+			if (res.ok) {
+				const { groupVotes, groups } = await res.json();
+				debugGroupVotes = groupVotes;
+				debugGroups = groups;
+			}
+		} catch {
+			// silently ignore debug data fetch errors
+		}
+	}
 
 	const debugCurrentLawVotes = $derived.by(() => {
 		const law = laws[currentIndex];
@@ -79,8 +111,10 @@
 			return sortByPoliticalPosition(withVotes);
 		}
 		return withVotes.sort((a, b) => {
-			if (a.position === b.position) return a.shortName.localeCompare(b.shortName);
-			return a.position === 'pour' ? -1 : 1;
+			const ratioA = a.pour + a.contre > 0 ? a.pour / (a.pour + a.contre) : 0;
+			const ratioB = b.pour + b.contre > 0 ? b.pour / (b.pour + b.contre) : 0;
+			if (ratioA !== ratioB) return ratioB - ratioA;
+			return (b.pour + b.contre) - (a.pour + a.contre);
 		});
 	});
 
@@ -90,11 +124,10 @@
 		currentIndex = state.currentIndex;
 		laws = state.laws;
 
-		// Trouver le vote actuel
 		const currentLaw = state.laws[state.currentIndex];
 		if (currentLaw) {
 			const vote = state.votes.find((v) => v.lawId === currentLaw.id);
-			currentVote = vote?.position || null;
+			currentVote = vote?.position ?? null;
 		}
 	});
 
@@ -148,19 +181,29 @@
 <div class="page-header">
 	<h1 class="page-title">Quiz Politique</h1>
 	<p class="page-subtitle">
-		Votez sur {data.laws.length} lois réelles et découvrez votre alignement avec les groupes parlementaires
+		{#if phase === 'setup'}
+			Découvrez votre alignement avec les groupes parlementaires
+		{:else}
+			Votez sur {quizLawCount} loi{quizLawCount > 1 ? 's' : ''} réelle{quizLawCount > 1 ? 's' : ''} et découvrez votre alignement
+		{/if}
 	</p>
 </div>
 
-{#if !initialized || data.laws.length === 0}
+{#if data.allLaws.length === 0}
 	<div class="card">
 		<p class="error-message">
 			Aucune loi disponible pour le quiz. Veuillez réessayer plus tard.
 		</p>
 	</div>
+{:else if phase === 'setup'}
+	<QuizSetup
+		availableTags={data.availableTags}
+		allLaws={data.allLaws}
+		onStart={handleStart}
+	/>
 {:else}
 	<div class="quiz-container">
-		<QuizProgress current={currentIndex} total={data.laws.length} />
+		<QuizProgress current={currentIndex} total={quizLawCount} />
 
 		{#if currentLaw}
 			<div class="vote-panel">
@@ -191,7 +234,29 @@
 					</button>
 				</div>
 
-				<div class="abstain-section">
+				<div class="navigation-buttons">
+					<button
+						class="nav-btn btn-secondary"
+						disabled={!canPrevious}
+						onclick={handlePrevious}
+						type="button"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polyline points="15 18 9 12 15 6" />
+						</svg>
+						<span>Précédent</span>
+					</button>
+
 					<button
 						class="abstain-btn"
 						disabled={!abstainAllowed}
@@ -203,56 +268,32 @@
 							<span class="reserve-badge">{remainingReserve} restante{remainingReserve > 1 ? 's' : ''}</span>
 						{/if}
 					</button>
+
+					<button
+						class="nav-btn btn-primary"
+						disabled={!canNext}
+						onclick={handleNext}
+						type="button"
+					>
+						<span>{currentIndex === quizLawCount - 1 ? 'Voir les résultats' : 'Suivant'}</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polyline points="9 18 15 12 9 6" />
+						</svg>
+					</button>
 				</div>
 			</div>
 
 			<LawDossierCard law={currentLaw} showDisclaimer={false} />
-
-			<div class="navigation-buttons">
-				<button
-					class="nav-btn btn-secondary"
-					disabled={!canPrevious}
-					onclick={handlePrevious}
-					type="button"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<polyline points="15 18 9 12 15 6" />
-					</svg>
-					<span>Précédent</span>
-				</button>
-
-				<button
-					class="nav-btn btn-primary"
-					disabled={!canNext}
-					onclick={handleNext}
-					type="button"
-				>
-					<span>{currentIndex === data.laws.length - 1 ? 'Voir les résultats' : 'Suivant'}</span>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<polyline points="9 18 15 12 9 6" />
-					</svg>
-				</button>
-			</div>
 		{/if}
 
 		{#if dev && debugCurrentLawVotes.length > 0}
@@ -293,7 +334,7 @@
 				pour calculer votre alignement politique.
 			</p>
 			<p class="info-text disclaimer">
-				ℹ️ Ce quiz est indicatif et basé sur un échantillon de {data.laws.length} lois de la législature
+				ℹ️ Ce quiz est indicatif et basé sur un échantillon de {quizLawCount} lois de la législature
 				17. Il ne remplace pas une analyse politique approfondie.
 			</p>
 		</div>
@@ -378,22 +419,17 @@
 		color: white;
 	}
 
-	.abstain-section {
-		margin-top: 1rem;
-		text-align: center;
-	}
-
 	.abstain-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.375rem;
 		padding: 0.5rem 1rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		background: var(--color-surface);
 		color: var(--color-text-muted);
 		cursor: pointer;
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 		transition: all 0.2s;
 	}
 
@@ -408,8 +444,8 @@
 	}
 
 	.reserve-badge {
-		font-size: 0.75rem;
-		padding: 0.125rem 0.5rem;
+		font-size: 0.6875rem;
+		padding: 0.0625rem 0.375rem;
 		background: var(--color-bg);
 		border-radius: 999px;
 		color: var(--color-text-muted);
@@ -420,7 +456,7 @@
 		display: flex;
 		justify-content: space-between;
 		gap: 1rem;
-		margin-top: 2rem;
+		margin-top: 1.25rem;
 	}
 
 	.nav-btn {
@@ -599,12 +635,16 @@
 			justify-content: center;
 		}
 
-		.btn-secondary {
+		.btn-primary {
+			order: 1;
+		}
+
+		.abstain-btn {
 			order: 2;
 		}
 
-		.btn-primary {
-			order: 1;
+		.btn-secondary {
+			order: 3;
 		}
 	}
 </style>

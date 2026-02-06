@@ -27,7 +27,7 @@
 			<div class="group-info">
 				<div class="group-name">{second.groupShortName}</div>
 				<div class="score">{second.score}%</div>
-				<div class="details">{second.agreements}/{results[0].agreements + results[0].disagreements} accords</div>
+				<div class="details">{second.agreements}/{second.agreements + second.disagreements} accords</div>
 			</div>
 			<div class="platform platform-second">
 				<span class="platform-label">2e</span>
@@ -44,7 +44,7 @@
 			<div class="group-info">
 				<div class="group-name">{first.groupShortName}</div>
 				<div class="score">{first.score}%</div>
-				<div class="details">{first.agreements}/{results[0].agreements + results[0].disagreements} accords</div>
+				<div class="details">{first.agreements}/{first.agreements + first.disagreements} accords</div>
 			</div>
 			<div class="platform platform-first">
 				<span class="platform-label">1er</span>
@@ -59,7 +59,7 @@
 			<div class="group-info">
 				<div class="group-name">{third.groupShortName}</div>
 				<div class="score">{third.score}%</div>
-				<div class="details">{third.agreements}/{results[0].agreements + results[0].disagreements} accords</div>
+				<div class="details">{third.agreements}/{third.agreements + third.disagreements} accords</div>
 			</div>
 			<div class="platform platform-third">
 				<span class="platform-label">3e</span>

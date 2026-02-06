@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { scrutins, organs } from '$lib/server/db/schema';
@@ -29,7 +29,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (!Array.isArray(lawIds) || lawIds.length === 0) {
 			throw error(400, 'lawIds manquant ou invalide');
 		}
-	} catch {
+	} catch (e) {
+		if (isHttpError(e)) throw e;
 		throw error(400, 'Corps de requête invalide');
 	}
 

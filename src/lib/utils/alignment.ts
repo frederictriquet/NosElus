@@ -95,16 +95,18 @@ export function calculateDetailedAlignment(
 ): AlignmentResult {
 	const groupVoteMap = new Map(groupVotes.map((v) => [v.lawId, v.majorityPosition]));
 
-	const details: VoteComparison[] = userVotes.map((uv) => {
-		const groupPosition = groupVoteMap.get(uv.lawId) || 'contre';
-		return {
-			lawId: uv.lawId,
-			lawTitle: lawTitles.get(uv.lawId) || 'Loi inconnue',
-			userPosition: uv.position,
-			groupPosition,
-			agreement: uv.position === groupPosition
-		};
-	});
+	const details: VoteComparison[] = userVotes
+		.filter((uv) => groupVoteMap.has(uv.lawId))
+		.map((uv) => {
+			const groupPosition = groupVoteMap.get(uv.lawId)!;
+			return {
+				lawId: uv.lawId,
+				lawTitle: lawTitles.get(uv.lawId) || 'Loi inconnue',
+				userPosition: uv.position,
+				groupPosition,
+				agreement: uv.position === groupPosition
+			};
+		});
 
 	const agreements = details.filter((d) => d.agreement).length;
 	const disagreements = details.length - agreements;
@@ -113,7 +115,7 @@ export function calculateDetailedAlignment(
 		groupId: groupInfo.id,
 		groupName: groupInfo.name,
 		groupShortName: groupInfo.shortName,
-		score: Math.round((agreements / userVotes.length) * 100),
+		score: details.length > 0 ? Math.round((agreements / details.length) * 100) : 0,
 		agreements,
 		disagreements,
 		details

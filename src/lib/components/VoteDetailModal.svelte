@@ -15,14 +15,26 @@
 	// Séparer accords et désaccords
 	const agreements = $derived(result.details.filter((d) => d.agreement));
 	const disagreements = $derived(result.details.filter((d) => !d.agreement));
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			onClose();
+		}
+	}
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="modal-backdrop" onclick={onClose}>
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-content"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Détail de l'alignement avec {result.groupName}"
+		onclick={(e) => e.stopPropagation()}
+	>
 		<div class="modal-header">
 			<h2>Détail de l'alignement</h2>
 			<button class="close-btn" onclick={onClose} type="button">
@@ -61,7 +73,12 @@
 					<ul class="vote-list">
 						{#each agreements as detail}
 							<li class="vote-item agreement">
-								<div class="law-title">{detail.lawTitle}</div>
+								<div class="law-title">
+									<a href="/an/laws/{detail.lawId}" target="_blank" rel="noopener noreferrer" class="source-link" title="Voir le dossier législatif">
+										{detail.lawTitle}
+										<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+									</a>
+								</div>
 								<div class="positions">
 									<span class="position user">Vous : {detail.userPosition}</span>
 									<span class="position group">{result.groupShortName} : {detail.groupPosition}</span>
@@ -80,7 +97,12 @@
 					<ul class="vote-list">
 						{#each disagreements as detail}
 							<li class="vote-item disagreement">
-								<div class="law-title">{detail.lawTitle}</div>
+								<div class="law-title">
+									<a href="/an/laws/{detail.lawId}" target="_blank" rel="noopener noreferrer" class="source-link" title="Voir le dossier législatif">
+										{detail.lawTitle}
+										<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+									</a>
+								</div>
 								<div class="positions">
 									<span class="position user">Vous : {detail.userPosition}</span>
 									<span class="position group">{result.groupShortName} : {detail.groupPosition}</span>
@@ -245,6 +267,22 @@
 		margin-bottom: 0.5rem;
 		font-size: 0.875rem;
 		color: var(--color-text);
+	}
+
+	.source-link {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	.source-link:hover {
+		text-decoration: underline;
+	}
+
+	.source-link svg {
+		display: inline;
+		vertical-align: middle;
+		margin-left: 0.25rem;
+		opacity: 0.6;
 	}
 
 	.positions {

@@ -21,10 +21,12 @@ import { inArray, eq, and, sql } from 'drizzle-orm';
  */
 export const POST: RequestHandler = async ({ request }) => {
 	let lawIds: string[];
+	let legislature: string;
 
 	try {
 		const body = await request.json();
 		lawIds = body.lawIds;
+		legislature = body.legislature || '17';
 
 		if (!Array.isArray(lawIds) || lawIds.length === 0) {
 			throw error(400, 'lawIds manquant ou invalide');
@@ -44,12 +46,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		.where(
 			and(
 				inArray(scrutins.lawId, lawIds),
-				eq(scrutins.legislature, '17'),
+				eq(scrutins.legislature, legislature),
 				sql`${scrutins.groupResults} IS NOT NULL`
 			)
 		);
 
-	// Récupérer tous les groupes actifs de la L17
+	// Récupérer tous les groupes actifs de la législature
 	const groupsData = await db
 		.select({
 			id: organs.id,
@@ -60,8 +62,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		.from(organs)
 		.where(
 			and(
-				eq(organs.type, 'GP'), // Groupes parlementaires
-				eq(organs.legislature, '17')
+				eq(organs.type, 'GP'),
+				eq(organs.legislature, legislature)
 			)
 		);
 

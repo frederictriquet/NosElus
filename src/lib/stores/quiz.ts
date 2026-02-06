@@ -2,14 +2,13 @@
  * Store Svelte pour gérer l'état du quiz politique.
  *
  * Gère la progression, les votes utilisateur, et la persistence
- * via localStorage.
+ * via localStorage. Paramétrable par chambre via QuizChamberConfig.
  */
 
 import { writable, derived, get } from 'svelte/store';
 import type { UserVote } from '$lib/utils/alignment';
-
-const STORAGE_KEY = 'noselus-quiz-votes';
-const SESSION_KEY = 'noselus-quiz-session';
+import type { QuizChamberConfig } from '$lib/quiz/config';
+import { AN_QUIZ_CONFIG } from '$lib/quiz/config';
 
 export interface QuizLaw {
 	id: string;
@@ -36,10 +35,15 @@ export interface QuizState {
 }
 
 /**
- * Crée le store du quiz avec persistence localStorage.
+ * Crée un ensemble de stores (store principal + stores dérivés) pour un quiz.
+ *
+ * Chaque chambre (AN, PE) obtient ses propres stores avec
+ * des clés localStorage distinctes.
  */
-function createQuizStore() {
-	// Initialiser depuis localStorage si disponible
+export function createChamberQuizStore(config: QuizChamberConfig) {
+	const STORAGE_KEY = config.storageKey;
+	const SESSION_KEY = config.sessionKey;
+
 	const loadFromStorage = (): QuizState | null => {
 		if (typeof window === 'undefined') return null;
 
@@ -73,7 +77,6 @@ function createQuizStore() {
 
 	const { subscribe, set, update } = writable<QuizState>(initialState);
 
-	// Sauvegarder dans localStorage à chaque changement
 	const saveToStorage = (state: QuizState) => {
 		if (typeof window === 'undefined') return;
 		try {
@@ -84,12 +87,9 @@ function createQuizStore() {
 		}
 	};
 
-	return {
+	const store = {
 		subscribe,
 
-		/**
-		 * Initialise un nouveau quiz avec les lois fournies et la réserve.
-		 */
 		init: (laws: QuizLaw[], reserveLaws: QuizLaw[] = []) => {
 			const newState: QuizState = {
 				currentIndex: 0,
@@ -105,15 +105,11 @@ function createQuizStore() {
 			saveToStorage(newState);
 		},
 
-		/**
-		 * Enregistre un vote pour la loi courante.
-		 */
 		vote: (position: 'pour' | 'contre') => {
 			update((state) => {
 				const currentLaw = state.laws[state.currentIndex];
 				if (!currentLaw) return state;
 
-				// Remplacer ou ajouter le vote
 				const existingIndex = state.votes.findIndex((v) => v.lawId === currentLaw.id);
 				const newVotes = [...state.votes];
 
@@ -129,9 +125,6 @@ function createQuizStore() {
 			});
 		},
 
-		/**
-		 * Passe à la loi suivante.
-		 */
 		next: () => {
 			update((state) => {
 				const newIndex = Math.min(state.currentIndex + 1, state.laws.length - 1);
@@ -141,9 +134,6 @@ function createQuizStore() {
 			});
 		},
 
-		/**
-		 * Revient à la loi précédente.
-		 */
 		previous: () => {
 			update((state) => {
 				const newIndex = Math.max(state.currentIndex - 1, 0);
@@ -153,9 +143,6 @@ function createQuizStore() {
 			});
 		},
 
-		/**
-		 * S'abstenir sur la loi courante : la remplace par une loi de réserve.
-		 */
 		abstain: () => {
 			update((state) => {
 				const currentLaw = state.laws[state.currentIndex];
@@ -165,7 +152,6 @@ function createQuizStore() {
 				const newLaws = [...state.laws];
 				newLaws[state.currentIndex] = replacement;
 
-				// Retirer le vote existant pour cette loi si présent
 				const newVotes = state.votes.filter((v) => v.lawId !== currentLaw.id);
 
 				const newState = {
@@ -180,9 +166,6 @@ function createQuizStore() {
 			});
 		},
 
-		/**
-		 * Marque le quiz comme terminé.
-		 */
 		complete: () => {
 			update((state) => {
 				const newState = { ...state, completedAt: new Date() };
@@ -191,9 +174,6 @@ function createQuizStore() {
 			});
 		},
 
-		/**
-		 * Réinitialise complètement le quiz.
-		 */
 		reset: () => {
 			const newState: QuizState = {
 				currentIndex: 0,
@@ -212,72 +192,50 @@ function createQuizStore() {
 			}
 		},
 
-		/**
-		 * Récupère l'état actuel (utile côté serveur).
-		 */
 		get: () => get({ subscribe })
+	};
+
+	return {
+		store,
+		progress: derived(store, ($quiz) => {
+			if ($quiz.laws.length === 0) return 0;
+			return Math.round(($quiz.votes.length / $quiz.laws.length) * 100);
+		}),
+		completed: derived(store, ($quiz) => {
+			return $quiz.votes.length === $quiz.laws.length && $quiz.laws.length > 0;
+		}),
+		canGoNext: derived(store, ($quiz) => {
+			const currentLaw = $quiz.laws[$quiz.currentIndex];
+			if (!currentLaw) return false;
+			return $quiz.votes.some((v) => v.lawId === currentLaw.id);
+		}),
+		canGoPrevious: derived(store, ($quiz) => {
+			return $quiz.currentIndex > 0;
+		}),
+		canAbstain: derived(store, ($quiz) => {
+			return $quiz.reserveLaws.length > 0;
+		}),
+		reserveCount: derived(store, ($quiz) => {
+			return $quiz.reserveLaws.length;
+		})
 	};
 }
 
-export const quizStore = createQuizStore();
+// Singleton AN pour rétro-compatibilité
+const anQuiz = createChamberQuizStore(AN_QUIZ_CONFIG);
+export const quizStore = anQuiz.store;
+export const quizProgress = anQuiz.progress;
+export const quizCompleted = anQuiz.completed;
+export const canGoNext = anQuiz.canGoNext;
+export const canGoPrevious = anQuiz.canGoPrevious;
+export const canAbstain = anQuiz.canAbstain;
+export const reserveCount = anQuiz.reserveCount;
 
-/**
- * Store dérivé : progression du quiz (%).
- */
-export const quizProgress = derived(quizStore, ($quiz) => {
-	if ($quiz.laws.length === 0) return 0;
-	return Math.round(($quiz.votes.length / $quiz.laws.length) * 100);
-});
-
-/**
- * Store dérivé : quiz terminé ?
- */
-export const quizCompleted = derived(quizStore, ($quiz) => {
-	return $quiz.votes.length === $quiz.laws.length && $quiz.laws.length > 0;
-});
-
-/**
- * Store dérivé : peut aller à la suivante ?
- */
-export const canGoNext = derived(quizStore, ($quiz) => {
-	// Peut avancer si un vote existe pour la loi courante
-	const currentLaw = $quiz.laws[$quiz.currentIndex];
-	if (!currentLaw) return false;
-	return $quiz.votes.some((v) => v.lawId === currentLaw.id);
-});
-
-/**
- * Store dérivé : peut revenir en arrière ?
- */
-export const canGoPrevious = derived(quizStore, ($quiz) => {
-	return $quiz.currentIndex > 0;
-});
-
-/**
- * Store dérivé : peut s'abstenir ? (réserve non vide)
- */
-export const canAbstain = derived(quizStore, ($quiz) => {
-	return $quiz.reserveLaws.length > 0;
-});
-
-/**
- * Store dérivé : nombre de lois de réserve restantes.
- */
-export const reserveCount = derived(quizStore, ($quiz) => {
-	return $quiz.reserveLaws.length;
-});
-
-/**
- * Génère un ID de session unique.
- */
 function generateSessionId(): string {
 	return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-/**
- * Récupère l'ID de session depuis localStorage (côté client).
- */
-export function getSessionId(): string | null {
+export function getSessionId(config: QuizChamberConfig = AN_QUIZ_CONFIG): string | null {
 	if (typeof window === 'undefined') return null;
-	return localStorage.getItem(SESSION_KEY);
+	return localStorage.getItem(config.sessionKey);
 }

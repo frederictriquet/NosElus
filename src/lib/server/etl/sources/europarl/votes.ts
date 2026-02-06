@@ -364,6 +364,8 @@ export async function importEuroparlVotes(config: ETLConfig): Promise<ImportStat
 							totalAbstention: sql`excluded.total_abstention`,
 							totalNonVoting: sql`excluded.total_non_voting`,
 							result: sql`excluded.result`,
+							groupResults: sql`excluded.group_results`,
+							lawId: sql`excluded.law_id`,
 							updatedAt: sql`now()`
 						}
 					});

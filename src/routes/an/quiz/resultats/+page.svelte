@@ -14,6 +14,7 @@
 
 	let results = $state<AlignmentResult[]>([]);
 	let userVotes = $state<UserVote[]>([]);
+	let abstentionCount = $state(0);
 	let loading = $state(true);
 	let errorMessage = $state<string | null>(null);
 	let selectedGroup = $state<AlignmentResult | null>(null);
@@ -38,6 +39,7 @@
 			}
 
 			userVotes = quizState.votes;
+			abstentionCount = (quizState.abstainedLawIds || []).length;
 			const laws = quizState.laws;
 			const lawIds = userVotes.map((v: UserVote) => v.lawId);
 
@@ -242,7 +244,7 @@
 			<div class="disclaimer">
 				<p>
 					ℹ️ <strong>Note</strong> : Ce quiz est indicatif et basé sur {userVotes.length} lois de la
-					législature 17. L'alignement est calculé en comparant vos votes avec les votes majoritaires de
+					législature 17{#if abstentionCount > 0} ({abstentionCount} question{abstentionCount > 1 ? 's' : ''} passée{abstentionCount > 1 ? 's' : ''}){/if}. L'alignement est calculé en comparant vos votes avec les votes majoritaires de
 					chaque groupe parlementaire (algorithme de similarité de Jaccard).
 				</p>
 			</div>

@@ -7,15 +7,15 @@ import { eq, inArray, sql, and, desc } from 'drizzle-orm';
  * Sélectionne les lois pour le quiz politique.
  *
  * Implémente l'algorithme de sélection mixte (ADR-006) :
- * - Filtre : lois avec résumé IA + au moins 3 scrutins (lois débattues)
+ * - Filtre : lois avec résumé IA + au moins 1 scrutin
  * - Stratification : diversité thématique via tags
  * - Randomisation : sélection aléatoire dans chaque groupe de tags
  *
- * @returns 15 lois avec résumés, tags, et métadonnées
+ * @returns 15 lois pour le quiz + lois de réserve pour l'abstention
  */
 export const load: PageServerLoad = async () => {
 	const QUIZ_SIZE = 15;
-	const MIN_SCRUTINS = 3;
+	const MIN_SCRUTINS = 1;
 	const LEGISLATURE = '17';
 
 	// 1. Récupérer toutes les lois éligibles avec leur nombre de scrutins
@@ -24,19 +24,24 @@ export const load: PageServerLoad = async () => {
 			id: laws.id,
 			title: laws.title,
 			shortTitle: laws.shortTitle,
+			type: laws.type,
+			status: laws.status,
+			description: laws.description,
+			sourceUrl: laws.sourceUrl,
 			summary: lawSummaries.summary,
+			summaryModel: lawSummaries.model,
 			scrutinCount: sql<number>`COUNT(DISTINCT ${scrutins.id})::int`
 		})
 		.from(laws)
 		.innerJoin(lawSummaries, eq(laws.id, lawSummaries.lawId))
 		.innerJoin(scrutins, eq(laws.id, scrutins.lawId))
 		.where(eq(laws.legislature, LEGISLATURE))
-		.groupBy(laws.id, lawSummaries.summary)
+		.groupBy(laws.id, lawSummaries.summary, lawSummaries.model)
 		.having(sql`COUNT(DISTINCT ${scrutins.id}) >= ${MIN_SCRUTINS}`)
 		.orderBy(desc(sql`COUNT(DISTINCT ${scrutins.id})`));
 
 	if (eligibleLaws.length === 0) {
-		return { laws: [] };
+		return { laws: [], reserveLaws: [] };
 	}
 
 	// 2. Récupérer les tags pour toutes les lois éligibles
@@ -66,44 +71,53 @@ export const load: PageServerLoad = async () => {
 		}
 	}
 
-	// 4. Stratifier : prendre des lois de chaque tag aléatoirement
+	// 4. Stratifier : prendre des lois de chaque tag avec priorité équilibrée
 	const selectedLaws: typeof eligibleLaws = [];
 	const tagArray = Array.from(lawsByTag.entries());
 
-	// Calculer combien de lois par tag (équilibré)
+	// Première passe : prendre équitablement pour le quiz
 	const lawsPerTag = Math.ceil(QUIZ_SIZE / tagArray.length);
 
 	for (const [, tagLaws] of tagArray) {
-		// Mélanger et prendre N lois de ce tag
 		const shuffled = tagLaws.sort(() => Math.random() - 0.5);
 		selectedLaws.push(...shuffled.slice(0, lawsPerTag));
-
-		// Arrêter si on a assez de lois
-		if (selectedLaws.length >= QUIZ_SIZE) break;
 	}
 
-	// 5. Limiter à QUIZ_SIZE et mélanger une dernière fois
-	const finalSelection = selectedLaws.slice(0, QUIZ_SIZE).sort(() => Math.random() - 0.5);
+	// Mélanger toutes les lois sélectionnées
+	const allShuffled = selectedLaws.sort(() => Math.random() - 0.5);
+
+	// Ajouter les lois restantes (non sélectionnées) comme réserve supplémentaire
+	const selectedIds = new Set(allShuffled.map((l) => l.id));
+	const remainingLaws = eligibleLaws.filter((l) => !selectedIds.has(l.id));
+	const allLaws = [...allShuffled, ...remainingLaws.sort(() => Math.random() - 0.5)];
+
+	// 5. Séparer en quiz (15 premières) et réserve (le reste)
+	const quizLaws = allLaws.slice(0, QUIZ_SIZE);
+	const reservePool = allLaws.slice(QUIZ_SIZE);
 
 	// 6. Enrichir avec les tags
-	const finalLawIds = finalSelection.map((l) => l.id);
-	const finalTagsData = lawTagsData.filter((lt) => finalLawIds.includes(lt.lawId));
-
-	const lawsWithTags = finalSelection.map((law) => ({
-		id: law.id,
-		title: law.title,
-		shortTitle: law.shortTitle,
-		summary: law.summary,
-		tags: finalTagsData
-			.filter((lt) => lt.lawId === law.id)
-			.map((lt) => ({
-				slug: lt.slug,
-				name: lt.name,
-				color: lt.color
-			}))
-	}));
+	const enrichWithTags = (lawList: typeof eligibleLaws) =>
+		lawList.map((law) => ({
+			id: law.id,
+			title: law.title,
+			shortTitle: law.shortTitle,
+			type: law.type,
+			status: law.status,
+			description: law.description,
+			sourceUrl: law.sourceUrl,
+			summary: law.summary,
+			summaryModel: law.summaryModel,
+			tags: lawTagsData
+				.filter((lt) => lt.lawId === law.id)
+				.map((lt) => ({
+					slug: lt.slug,
+					name: lt.name,
+					color: lt.color
+				}))
+		}));
 
 	return {
-		laws: lawsWithTags
+		laws: enrichWithTags(quizLaws),
+		reserveLaws: enrichWithTags(reservePool)
 	};
 };

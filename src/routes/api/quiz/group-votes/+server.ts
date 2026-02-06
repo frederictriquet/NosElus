@@ -53,7 +53,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		.select({
 			id: organs.id,
 			name: organs.name,
-			shortName: organs.shortName
+			shortName: organs.shortName,
+			politicalPosition: organs.politicalPosition
 		})
 		.from(organs)
 		.where(
@@ -66,7 +67,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Structure pour stocker les votes par groupe et par loi
 	const groupVotes: Record<
 		string,
-		Record<string, { majorityPosition: 'pour' | 'contre' }>
+		Record<string, { majorityPosition: 'pour' | 'contre'; pour: number; contre: number }>
 	> = {};
 
 	// Initialiser la structure
@@ -96,7 +97,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			// Stocker (un scrutin par loi, on prend le premier trouvé)
 			// TODO : Si plusieurs scrutins par loi, prendre le scrutin "vote final"
 			if (!groupVotes[groupId][scrutin.lawId]) {
-				groupVotes[groupId][scrutin.lawId] = { majorityPosition };
+				groupVotes[groupId][scrutin.lawId] = { majorityPosition, pour, contre };
 			}
 		}
 	}

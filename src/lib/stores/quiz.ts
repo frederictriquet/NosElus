@@ -15,7 +15,12 @@ export interface QuizLaw {
 	id: string;
 	title: string;
 	shortTitle: string | null;
+	type: string;
+	status: string | null;
+	description: string | null;
+	sourceUrl: string | null;
 	summary: string;
+	summaryModel: string | null;
 	tags: { slug: string; name: string; color: string | null }[];
 }
 
@@ -23,6 +28,8 @@ export interface QuizState {
 	currentIndex: number;
 	votes: UserVote[];
 	laws: QuizLaw[];
+	reserveLaws: QuizLaw[];
+	abstainedLawIds: string[];
 	sessionId: string;
 	startedAt: Date | null;
 	completedAt: Date | null;
@@ -43,6 +50,8 @@ function createQuizStore() {
 			const parsed = JSON.parse(stored);
 			return {
 				...parsed,
+				reserveLaws: parsed.reserveLaws || [],
+				abstainedLawIds: parsed.abstainedLawIds || [],
 				startedAt: parsed.startedAt ? new Date(parsed.startedAt) : null,
 				completedAt: parsed.completedAt ? new Date(parsed.completedAt) : null
 			};
@@ -55,6 +64,8 @@ function createQuizStore() {
 		currentIndex: 0,
 		votes: [],
 		laws: [],
+		reserveLaws: [],
+		abstainedLawIds: [],
 		sessionId: '',
 		startedAt: null,
 		completedAt: null
@@ -77,13 +88,15 @@ function createQuizStore() {
 		subscribe,
 
 		/**
-		 * Initialise un nouveau quiz avec les lois fournies.
+		 * Initialise un nouveau quiz avec les lois fournies et la réserve.
 		 */
-		init: (laws: QuizLaw[]) => {
+		init: (laws: QuizLaw[], reserveLaws: QuizLaw[] = []) => {
 			const newState: QuizState = {
 				currentIndex: 0,
 				votes: [],
 				laws,
+				reserveLaws,
+				abstainedLawIds: [],
 				sessionId: generateSessionId(),
 				startedAt: new Date(),
 				completedAt: null
@@ -141,6 +154,33 @@ function createQuizStore() {
 		},
 
 		/**
+		 * S'abstenir sur la loi courante : la remplace par une loi de réserve.
+		 */
+		abstain: () => {
+			update((state) => {
+				const currentLaw = state.laws[state.currentIndex];
+				if (!currentLaw || state.reserveLaws.length === 0) return state;
+
+				const [replacement, ...remainingReserve] = state.reserveLaws;
+				const newLaws = [...state.laws];
+				newLaws[state.currentIndex] = replacement;
+
+				// Retirer le vote existant pour cette loi si présent
+				const newVotes = state.votes.filter((v) => v.lawId !== currentLaw.id);
+
+				const newState = {
+					...state,
+					laws: newLaws,
+					reserveLaws: remainingReserve,
+					abstainedLawIds: [...state.abstainedLawIds, currentLaw.id],
+					votes: newVotes
+				};
+				saveToStorage(newState);
+				return newState;
+			});
+		},
+
+		/**
 		 * Marque le quiz comme terminé.
 		 */
 		complete: () => {
@@ -159,6 +199,8 @@ function createQuizStore() {
 				currentIndex: 0,
 				votes: [],
 				laws: [],
+				reserveLaws: [],
+				abstainedLawIds: [],
 				sessionId: '',
 				startedAt: null,
 				completedAt: null
@@ -209,6 +251,20 @@ export const canGoNext = derived(quizStore, ($quiz) => {
  */
 export const canGoPrevious = derived(quizStore, ($quiz) => {
 	return $quiz.currentIndex > 0;
+});
+
+/**
+ * Store dérivé : peut s'abstenir ? (réserve non vide)
+ */
+export const canAbstain = derived(quizStore, ($quiz) => {
+	return $quiz.reserveLaws.length > 0;
+});
+
+/**
+ * Store dérivé : nombre de lois de réserve restantes.
+ */
+export const reserveCount = derived(quizStore, ($quiz) => {
+	return $quiz.reserveLaws.length;
 });
 
 /**

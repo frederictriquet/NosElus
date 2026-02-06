@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { quizStore, canGoNext, canGoPrevious, quizCompleted } from '$lib/stores/quiz';
+	import { quizStore, canGoNext, canGoPrevious, quizCompleted, canAbstain, reserveCount } from '$lib/stores/quiz';
 	import QuizProgress from '$lib/components/QuizProgress.svelte';
-	import QuizLawCard from '$lib/components/QuizLawCard.svelte';
+	import LawDossierCard from '$lib/components/LawDossierCard.svelte';
+	import { sortByPoliticalPosition } from '$lib/utils/political-spectrum';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -12,20 +14,75 @@
 	let initialized = $state(false);
 
 	// Initialiser le quiz au montage
-	onMount(() => {
+	onMount(async () => {
 		if (data.laws.length > 0) {
-			quizStore.init(data.laws);
+			quizStore.init(data.laws, data.reserveLaws);
 			initialized = true;
+
+			// Charger les votes des groupes en dev pour le panel debug
+			if (dev) {
+				const allLawIds = [...data.laws, ...data.reserveLaws].map((l) => l.id);
+				try {
+					const res = await fetch('/api/quiz/group-votes', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ lawIds: allLawIds })
+					});
+					if (res.ok) {
+						const { groupVotes, groups } = await res.json();
+						debugGroupVotes = groupVotes;
+						debugGroups = groups;
+					}
+				} catch {
+					// silently ignore debug data fetch errors
+				}
+			}
 		}
 	});
 
 	// Réactivité sur le store
 	let currentIndex = $state(0);
 	let currentVote = $state<'pour' | 'contre' | null>(null);
-	let laws = $state(data.laws);
+	let laws = $state<import('$lib/stores/quiz').QuizLaw[]>(data.laws);
 	let canNext = $state(false);
 	let canPrevious = $state(false);
 	let completed = $state(false);
+	let abstainAllowed = $state(false);
+	let remainingReserve = $state(0);
+
+	// Debug : votes des groupes (dev uniquement)
+	type DebugGroup = { id: string; name: string; shortName: string | null; politicalPosition: number | null };
+	type DebugLawVote = { majorityPosition: 'pour' | 'contre'; pour: number; contre: number };
+	type DebugGroupVotes = Record<string, Record<string, DebugLawVote>>;
+	let debugGroups = $state<DebugGroup[]>([]);
+	let debugGroupVotes = $state<DebugGroupVotes>({});
+	let debugSortMode = $state<'vote' | 'spectrum'>('vote');
+
+	const debugCurrentLawVotes = $derived.by(() => {
+		const law = laws[currentIndex];
+		if (!law || debugGroups.length === 0) return [];
+
+		const withVotes = debugGroups
+			.map((g) => {
+				const vote = debugGroupVotes[g.id]?.[law.id];
+				return {
+					...g,
+					shortName: g.shortName || g.name,
+					position: vote?.majorityPosition ?? null,
+					pour: vote?.pour ?? 0,
+					contre: vote?.contre ?? 0
+				};
+			})
+			.filter((g) => g.position !== null);
+
+		if (debugSortMode === 'spectrum') {
+			return sortByPoliticalPosition(withVotes);
+		}
+		return withVotes.sort((a, b) => {
+			if (a.position === b.position) return a.shortName.localeCompare(b.shortName);
+			return a.position === 'pour' ? -1 : 1;
+		});
+	});
 
 	// Synchroniser avec le store
 	$effect(() => {
@@ -45,6 +102,8 @@
 		canNext = $canGoNext;
 		canPrevious = $canGoPrevious;
 		completed = $quizCompleted;
+		abstainAllowed = $canAbstain;
+		remainingReserve = $reserveCount;
 	});
 
 	// Redirection automatique vers résultats si quiz terminé
@@ -57,6 +116,10 @@
 
 	const handleVote = (position: 'pour' | 'contre') => {
 		quizStore.vote(position);
+	};
+
+	const handleAbstain = () => {
+		quizStore.abstain();
 	};
 
 	const handleNext = () => {
@@ -100,7 +163,50 @@
 		<QuizProgress current={currentIndex} total={data.laws.length} />
 
 		{#if currentLaw}
-			<QuizLawCard law={currentLaw} {currentVote} onVote={handleVote} />
+			<div class="vote-panel">
+				<div class="vote-buttons">
+					<button
+						class="vote-btn vote-pour"
+						class:selected={currentVote === 'pour'}
+						onclick={() => handleVote('pour')}
+						type="button"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						<span>Pour</span>
+					</button>
+
+					<button
+						class="vote-btn vote-contre"
+						class:selected={currentVote === 'contre'}
+						onclick={() => handleVote('contre')}
+						type="button"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="18" x2="6" y1="6" y2="18" />
+							<line x1="6" x2="18" y1="6" y2="18" />
+						</svg>
+						<span>Contre</span>
+					</button>
+				</div>
+
+				<div class="abstain-section">
+					<button
+						class="abstain-btn"
+						disabled={!abstainAllowed}
+						onclick={handleAbstain}
+						type="button"
+					>
+						<span>Passer cette question</span>
+						{#if remainingReserve > 0}
+							<span class="reserve-badge">{remainingReserve} restante{remainingReserve > 1 ? 's' : ''}</span>
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			<LawDossierCard law={currentLaw} showDisclaimer={false} />
 
 			<div class="navigation-buttons">
 				<button
@@ -149,10 +255,42 @@
 			</div>
 		{/if}
 
+		{#if dev && debugCurrentLawVotes.length > 0}
+			<details class="debug-panel">
+				<summary class="debug-toggle">DEBUG : votes des groupes</summary>
+				<div class="debug-content">
+					<div class="debug-sort-controls">
+						<span class="debug-sort-label">Tri :</span>
+						<button
+							class="debug-sort-btn"
+							class:active={debugSortMode === 'vote'}
+							onclick={() => debugSortMode = 'vote'}
+							type="button"
+						>Pour / Contre</button>
+						<button
+							class="debug-sort-btn"
+							class:active={debugSortMode === 'spectrum'}
+							onclick={() => debugSortMode = 'spectrum'}
+							type="button"
+						>Gauche → Droite</button>
+					</div>
+					<div class="debug-grid">
+						{#each debugCurrentLawVotes as g}
+							<span class="debug-group" class:debug-pour={g.position === 'pour'} class:debug-contre={g.position === 'contre'}>
+								<span class="debug-group-name">{g.shortName}</span>
+								<span class="debug-group-counts">{g.pour}↑ {g.contre}↓</span>
+							</span>
+						{/each}
+					</div>
+				</div>
+			</details>
+		{/if}
+
 		<div class="quiz-info">
 			<p class="info-text">
-				💡 <strong>Comment ça marche ?</strong> Votez "pour" ou "contre" chaque loi. À la fin, nous
-				comparerons vos votes avec ceux des groupes parlementaires pour calculer votre alignement politique.
+				💡 <strong>Comment ça marche ?</strong> Votez "pour" ou "contre" chaque loi, ou passez la question
+				pour obtenir une autre loi. À la fin, nous comparerons vos votes avec ceux des groupes parlementaires
+				pour calculer votre alignement politique.
 			</p>
 			<p class="info-text disclaimer">
 				ℹ️ Ce quiz est indicatif et basé sur un échantillon de {data.laws.length} lois de la législature
@@ -168,6 +306,116 @@
 		margin: 0 auto;
 	}
 
+	/* Vote buttons */
+	.vote-panel {
+		background: var(--color-surface);
+		border-radius: var(--radius-lg);
+		padding: 1.5rem;
+		box-shadow: var(--shadow);
+	}
+
+	.vote-buttons {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.vote-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 1.25rem;
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface);
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.vote-btn:hover {
+		border-color: var(--color-primary);
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.vote-btn svg {
+		width: 32px;
+		height: 32px;
+	}
+
+	.vote-pour {
+		color: #10b981;
+	}
+
+	.vote-pour:hover {
+		background: #10b98110;
+		border-color: #10b981;
+	}
+
+	.vote-pour.selected {
+		background: #10b981;
+		border-color: #10b981;
+		color: white;
+	}
+
+	.vote-contre {
+		color: #ef4444;
+	}
+
+	.vote-contre:hover {
+		background: #ef444410;
+		border-color: #ef4444;
+	}
+
+	.vote-contre.selected {
+		background: #ef4444;
+		border-color: #ef4444;
+		color: white;
+	}
+
+	.abstain-section {
+		margin-top: 1rem;
+		text-align: center;
+	}
+
+	.abstain-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: all 0.2s;
+	}
+
+	.abstain-btn:hover:not(:disabled) {
+		border-color: var(--color-text-muted);
+		background: var(--color-bg);
+	}
+
+	.abstain-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.reserve-badge {
+		font-size: 0.75rem;
+		padding: 0.125rem 0.5rem;
+		background: var(--color-bg);
+		border-radius: 999px;
+		color: var(--color-text-muted);
+	}
+
+	/* Navigation */
 	.navigation-buttons {
 		display: flex;
 		justify-content: space-between;
@@ -243,7 +491,105 @@
 		padding: 2rem;
 	}
 
+	/* Debug panel (dev only) */
+	.debug-panel {
+		margin-top: 1.5rem;
+		border: 1px dashed #f59e0b;
+		border-radius: var(--radius);
+		background: #fefce8;
+		font-size: 0.75rem;
+	}
+
+	.debug-toggle {
+		padding: 0.5rem 0.75rem;
+		cursor: pointer;
+		font-weight: 600;
+		color: #92400e;
+		list-style: none;
+	}
+
+	.debug-toggle::-webkit-details-marker {
+		display: none;
+	}
+
+	.debug-content {
+		padding: 0.5rem 0.75rem 0.75rem;
+		border-top: 1px dashed #f59e0b;
+	}
+
+	.debug-sort-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.debug-sort-label {
+		font-weight: 600;
+		color: #92400e;
+	}
+
+	.debug-sort-btn {
+		padding: 0.125rem 0.5rem;
+		border: 1px solid #f59e0b;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: #92400e;
+		cursor: pointer;
+		font-size: 0.75rem;
+	}
+
+	.debug-sort-btn.active {
+		background: #f59e0b;
+		color: white;
+	}
+
+	.debug-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+	}
+
+	.debug-group {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.125rem 0.5rem;
+		border-radius: var(--radius-sm);
+		font-weight: 500;
+		font-family: var(--font-mono);
+	}
+
+	.debug-group-counts {
+		opacity: 0.7;
+		font-size: 0.625rem;
+	}
+
+	.debug-pour {
+		background: #d1fae5;
+		color: #065f46;
+	}
+
+	.debug-contre {
+		background: #fee2e2;
+		color: #991b1b;
+	}
+
 	@media (max-width: 640px) {
+		.vote-buttons {
+			gap: 0.75rem;
+		}
+
+		.vote-btn {
+			padding: 1rem;
+			font-size: 0.875rem;
+		}
+
+		.vote-btn svg {
+			width: 24px;
+			height: 24px;
+		}
+
 		.navigation-buttons {
 			flex-direction: column;
 		}

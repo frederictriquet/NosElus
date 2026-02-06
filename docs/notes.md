@@ -2,9 +2,6 @@ on me montre une liste de textes, je réponds pour/contre
 et ça me donne ma tendance politique
 
 
-réussir à classifier les textes par grands thèmes, comprendre de quoi ça parle, par ex : un texte parle d'avortement, mais il peut soit restreindre soit augmenter les droits, donc il faut le prendre en compte car ce n'est pas pareil de voter pour ou contre le texte
-
-
 
 
 
@@ -15,16 +12,12 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 
 
 
-il faudrait pouvoir accéder aux propositions de loi par thèmes, par dates -> on accède aux lois dont les sujets peuvent nous intéresser et voir qui vote quoi sur ces lois
-
-où sont stockés les tags des articles ? dans une table de tags ? -> donner la possibilité de filter sur les tags quand on cherche des articles
 
 rendre toutes les migrations de db idempotentes
 
 
-faire un stacked bar pour la répartition des votes
 
-sur /an/scrutin/xxx on peut enlever stats-grid puisqu'on a la répartition des votes
+
 
 dans "Répartition par position" on peut supprimer la rotation des labels (mais pas dans "Votes par groupes")
 

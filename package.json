@@ -28,7 +28,7 @@
 		"docker:down": "docker compose down",
 		"docker:logs": "docker compose logs -f",
 		"docker:restart": "docker compose restart",
-		"db:generate": "drizzle-kit generate",
+		"db:generate": "drizzle-kit generate && node scripts/make-idempotent.js",
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",

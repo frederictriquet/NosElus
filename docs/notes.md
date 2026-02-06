@@ -21,6 +21,8 @@ rendre toutes les migrations de db idempotentes
 l'import des données en base demande beaucoup de travail (récupération de fichiers, consultation de endpoints d'api, et maintenant une phase d'analyse par IA), je voudrais pouvoir préparer toutes les données en local, sur un ordinateur assez puissant pour tout faire, et pouvoir envoyer ces données vers le serveur de prod. Il faudrait que ça puisse fonctionner de manière incrémentale.
 
 
+
+
 make etl-law-texts
 make etl-analyze-laws ARGS="--limit 5"
 

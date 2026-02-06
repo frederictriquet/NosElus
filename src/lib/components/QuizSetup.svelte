@@ -132,8 +132,8 @@
 	<div class="setup-card">
 		<h2 class="setup-title">Configurer votre quiz</h2>
 		<p class="setup-description">
-			Choisissez les thèmes qui vous intéressent et le nombre de questions.
-			Vos réponses seront comparées aux votes des groupes parlementaires.
+			Choisissez les thèmes qui vous intéressent et le nombre de questions. Vos réponses seront
+			comparées aux votes des groupes parlementaires.
 		</p>
 
 		<!-- Sélection des thèmes -->
@@ -187,7 +187,9 @@
 				{#if selectedSlugs.size === 0}
 					Sélectionnez au moins un thème
 				{:else}
-					{filteredLawCount} loi{filteredLawCount > 1 ? 's' : ''} disponible{filteredLawCount > 1 ? 's' : ''} pour les thèmes sélectionnés
+					{filteredLawCount} loi{filteredLawCount > 1 ? 's' : ''} disponible{filteredLawCount > 1
+						? 's'
+						: ''} pour les thèmes sélectionnés
 				{/if}
 			</p>
 			<button

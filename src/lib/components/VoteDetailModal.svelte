@@ -74,14 +74,40 @@
 						{#each agreements as detail}
 							<li class="vote-item agreement">
 								<div class="law-title">
-									<a href="/an/laws/{detail.lawId}" target="_blank" rel="noopener noreferrer" class="source-link" title="Voir le dossier législatif">
+									<a
+										href="/an/laws/{detail.lawId}"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="source-link"
+										title="Voir le dossier législatif"
+									>
 										{detail.lawTitle}
-										<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											><path
+												d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+											/><polyline points="15 3 21 3 21 9" /><line
+												x1="10"
+												x2="21"
+												y1="14"
+												y2="3"
+											/></svg
+										>
 									</a>
 								</div>
 								<div class="positions">
 									<span class="position user">Vous : {detail.userPosition}</span>
-									<span class="position group">{result.groupShortName} : {detail.groupPosition}</span>
+									<span class="position group"
+										>{result.groupShortName} : {detail.groupPosition}</span
+									>
 								</div>
 							</li>
 						{/each}
@@ -98,14 +124,40 @@
 						{#each disagreements as detail}
 							<li class="vote-item disagreement">
 								<div class="law-title">
-									<a href="/an/laws/{detail.lawId}" target="_blank" rel="noopener noreferrer" class="source-link" title="Voir le dossier législatif">
+									<a
+										href="/an/laws/{detail.lawId}"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="source-link"
+										title="Voir le dossier législatif"
+									>
 										{detail.lawTitle}
-										<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											><path
+												d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+											/><polyline points="15 3 21 3 21 9" /><line
+												x1="10"
+												x2="21"
+												y1="14"
+												y2="3"
+											/></svg
+										>
 									</a>
 								</div>
 								<div class="positions">
 									<span class="position user">Vous : {detail.userPosition}</span>
-									<span class="position group">{result.groupShortName} : {detail.groupPosition}</span>
+									<span class="position group"
+										>{result.groupShortName} : {detail.groupPosition}</span
+									>
 								</div>
 							</li>
 						{/each}

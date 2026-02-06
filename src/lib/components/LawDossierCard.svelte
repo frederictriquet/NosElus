@@ -41,28 +41,28 @@
 	<section class="card law-link-card {className}">
 		<h2>Dossier législatif</h2>
 		{#if showDisclaimer}
-		<p class="matching-disclaimer">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="14"
-				height="14"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<circle cx="12" cy="12" r="10"></circle>
-				<line x1="12" y1="16" x2="12" y2="12"></line>
-				<line x1="12" y1="8" x2="12.01" y2="8"></line>
-			</svg>
-			<span
-				>Ce dossier est associé automatiquement par similarité de titre, car les données
-				officielles ne fournissent pas de lien direct entre scrutins et textes de loi. Il est
-				possible que ce ne soit pas exactement le bon texte.</span
-			>
-		</p>
+			<p class="matching-disclaimer">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="16" x2="12" y2="12"></line>
+					<line x1="12" y1="8" x2="12.01" y2="8"></line>
+				</svg>
+				<span
+					>Ce dossier est associé automatiquement par similarité de titre, car les données
+					officielles ne fournissent pas de lien direct entre scrutins et textes de loi. Il est
+					possible que ce ne soit pas exactement le bon texte.</span
+				>
+			</p>
 		{/if}
 		<a href="/an/laws/{law.id}" class="law-link">
 			<div class="law-type">{typeLabels[law.type] || law.type}</div>

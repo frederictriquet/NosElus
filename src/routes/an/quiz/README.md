@@ -5,17 +5,18 @@ Interface permettant aux citoyens de voter sur de vraies lois de l'Assemblée na
 ## Vue d'ensemble
 
 Le module quiz politique permet aux utilisateurs de :
+
 1. **Configurer** leur quiz en sélectionnant des thèmes et un nombre de questions
 2. **Voter** "pour" ou "contre" sur des lois réelles (avec option "passer")
 3. **Découvrir** leur alignement avec les groupes via un score de similarité (Jaccard)
 
 ### Cas d'usage principaux
 
-| Cas | Description |
-|-----|-------------|
-| Découverte citoyenne | Comprendre sa position politique sur des lois concrètes |
-| Éducation civique | Visualiser comment les groupes votent sur différents thèmes |
-| Comparaison | Identifier les groupes les plus alignés avec ses valeurs |
+| Cas                  | Description                                                 |
+| -------------------- | ----------------------------------------------------------- |
+| Découverte citoyenne | Comprendre sa position politique sur des lois concrètes     |
+| Éducation civique    | Visualiser comment les groupes votent sur différents thèmes |
+| Comparaison          | Identifier les groupes les plus alignés avec ses valeurs    |
 
 ## Architecture
 
@@ -35,40 +36,43 @@ Le module quiz politique permet aux utilisateurs de :
 
 ### Fichiers
 
-| Fichier | Responsabilité |
-|---------|----------------|
-| **Routes** | |
-| `+page.server.ts` | Charge toutes les lois éligibles + tags avec compteurs |
-| `+page.svelte` | Orchestration phases setup/quiz, navigation, debug panel |
-| `resultats/+page.svelte` | Calcul et affichage des résultats d'alignement |
-| **Composants** | |
-| `QuizSetup.svelte` | Interface de configuration (tags, taille) |
-| `QuizProgress.svelte` | Barre de progression visuelle |
-| `AlignmentPodium.svelte` | Podium top 3 des résultats |
-| `VoteDetailModal.svelte` | Modal détail accords/désaccords par loi |
-| **Utilitaires** | |
-| `quiz-selection.ts` | Filtrage et stratification client des lois |
-| `alignment.ts` | Calcul de similarité (Jaccard) et tri des résultats |
-| **Store** | |
-| `quiz.ts` | État global : votes, lois, index, localStorage |
-| **API** | |
-| `api/quiz/group-votes/+server.ts` | Votes des groupes pour les lois sélectionnées |
+| Fichier                           | Responsabilité                                           |
+| --------------------------------- | -------------------------------------------------------- |
+| **Routes**                        |                                                          |
+| `+page.server.ts`                 | Charge toutes les lois éligibles + tags avec compteurs   |
+| `+page.svelte`                    | Orchestration phases setup/quiz, navigation, debug panel |
+| `resultats/+page.svelte`          | Calcul et affichage des résultats d'alignement           |
+| **Composants**                    |                                                          |
+| `QuizSetup.svelte`                | Interface de configuration (tags, taille)                |
+| `QuizProgress.svelte`             | Barre de progression visuelle                            |
+| `AlignmentPodium.svelte`          | Podium top 3 des résultats                               |
+| `VoteDetailModal.svelte`          | Modal détail accords/désaccords par loi                  |
+| **Utilitaires**                   |                                                          |
+| `quiz-selection.ts`               | Filtrage et stratification client des lois               |
+| `alignment.ts`                    | Calcul de similarité (Jaccard) et tri des résultats      |
+| **Store**                         |                                                          |
+| `quiz.ts`                         | État global : votes, lois, index, localStorage           |
+| **API**                           |                                                          |
+| `api/quiz/group-votes/+server.ts` | Votes des groupes pour les lois sélectionnées            |
 
 ### Séparation des responsabilités
 
 **Serveur** (`+page.server.ts`) :
+
 - Requête DB : lois éligibles (≥1 scrutin, legislature 17, avec résumé IA)
 - Requête DB : tags disponibles avec compteurs
 - Enrichissement : association lois ↔ tags
 - **PAS de stratification** (déléguée au client)
 
 **Client** (`quiz-selection.ts`) :
+
 - Filtrage par tags sélectionnés (logique OR)
 - Stratification par tag principal (échantillonnage équitable)
 - Shuffle Fisher-Yates (distribution uniforme)
 - Split quiz/réserve
 
 **Store** (`quiz.ts`) :
+
 - Persistance localStorage (`noselus-quiz-votes`)
 - Navigation (next, previous, abstain)
 - Validation (canGoNext, canAbstain)
@@ -95,17 +99,18 @@ L'utilisateur arrive sur la page de setup (si aucun quiz en cours dans localStor
 
 ```svelte
 <QuizSetup
-  availableTags={data.availableTags}
-  allLaws={data.allLaws}
-  onStart={(selectedTags, quizSize) => {
-    const { quizLaws, reserveLaws } = selectQuizLaws(data.allLaws, selectedTags, quizSize);
-    quizStore.init(quizLaws, reserveLaws);
-    phase = 'quiz';
-  }}
+	availableTags={data.availableTags}
+	allLaws={data.allLaws}
+	onStart={(selectedTags, quizSize) => {
+		const { quizLaws, reserveLaws } = selectQuizLaws(data.allLaws, selectedTags, quizSize);
+		quizStore.init(quizLaws, reserveLaws);
+		phase = 'quiz';
+	}}
 />
 ```
 
 **Fonctionnalités** :
+
 - Tous les tags cochés par défaut
 - Compteur temps réel : "X lois disponibles"
 - Boutons [5] [10] [15] [20] dynamiquement bornés
@@ -116,28 +121,31 @@ L'utilisateur arrive sur la page de setup (si aucun quiz en cours dans localStor
 Après avoir cliqué "Commencer", l'utilisateur vote sur chaque loi.
 
 **Composants affichés** :
+
 ```svelte
 <QuizProgress current={currentIndex} total={quizLawCount} />
 
 <div class="vote-panel">
-  <button class="vote-pour" onclick={() => quizStore.vote('pour')}>Pour</button>
-  <button class="vote-contre" onclick={() => quizStore.vote('contre')}>Contre</button>
+	<button class="vote-pour" onclick={() => quizStore.vote('pour')}>Pour</button>
+	<button class="vote-contre" onclick={() => quizStore.vote('contre')}>Contre</button>
 
-  <button class="abstain-btn" onclick={() => quizStore.abstain()}>
-    Passer cette question
-    <span class="reserve-badge">{$reserveCount} restantes</span>
-  </button>
+	<button class="abstain-btn" onclick={() => quizStore.abstain()}>
+		Passer cette question
+		<span class="reserve-badge">{$reserveCount} restantes</span>
+	</button>
 </div>
 
 <LawDossierCard law={currentLaw} showDisclaimer={false} />
 ```
 
 **Navigation** :
+
 - Précédent (désactivé si index = 0)
 - Suivant (activé après vote, texte "Voir les résultats" à la dernière question)
 - Passer (remplace par une loi de réserve si disponible)
 
 **Persistance** :
+
 - Chaque vote est sauvegardé dans localStorage
 - Rechargement de page → reprise du quiz au même index
 
@@ -148,19 +156,22 @@ Après avoir cliqué "Commencer", l'utilisateur vote sur chaque loi.
 Affiche l'alignement avec chaque groupe parlementaire.
 
 **Calcul** :
+
 ```typescript
 // Jaccard similarity
-score = (accords / (accords + désaccords)) * 100
+score = (accords / (accords + désaccords)) * 100;
 
 // Exemple : 8 accords, 2 désaccords → 80%
 ```
 
 **Composants** :
+
 - `AlignmentPodium` : Top 3 avec visualisation
 - Tableau complet : tous les groupes triés par score
 - `VoteDetailModal` (au clic) : détail loi par loi avec liens `/an/laws/{id}`
 
 **Actions** :
+
 - Bouton "Recommencer" : efface localStorage et retourne au setup
 
 ## API
@@ -170,6 +181,7 @@ score = (accords / (accords + désaccords)) * 100
 Retourne les votes des groupes pour une liste de lois.
 
 **Request** :
+
 ```json
 POST /api/quiz/group-votes
 {
@@ -178,6 +190,7 @@ POST /api/quiz/group-votes
 ```
 
 **Response** :
+
 ```json
 {
   "groupVotes": {
@@ -206,21 +219,23 @@ POST /api/quiz/group-votes
 
 ### Variables d'environnement
 
-| Variable | Requis | Description |
-|----------|--------|-------------|
-| `DATABASE_URL` | ✅ | URL PostgreSQL pour les requêtes de lois et scrutins |
+| Variable       | Requis | Description                                          |
+| -------------- | ------ | ---------------------------------------------------- |
+| `DATABASE_URL` | ✅     | URL PostgreSQL pour les requêtes de lois et scrutins |
 
 ### Constantes configurables
 
 **`quiz-selection.ts`** :
+
 ```typescript
 const QUIZ_SIZES = [5, 10, 15, 20]; // Tailles proposées
 ```
 
 **`+page.server.ts`** :
+
 ```typescript
-const MIN_SCRUTINS = 1;      // Nombre min de scrutins par loi éligible
-const LEGISLATURE = '17';    // Législature courante
+const MIN_SCRUTINS = 1; // Nombre min de scrutins par loi éligible
+const LEGISLATURE = '17'; // Législature courante
 ```
 
 ## Tests
@@ -236,6 +251,7 @@ npm test src/lib/utils/political-spectrum.test.ts
 ```
 
 **Couverture** :
+
 - `quiz-selection.ts` : 23 tests (filtrage, stratification, split, edge cases, randomisation)
 - `alignment.ts` : 24 tests (Jaccard, tri, podium, cas limites)
 
@@ -244,6 +260,7 @@ npm test src/lib/utils/political-spectrum.test.ts
 Checklist disponible : `/tmp/test-checklist.md` (généré pendant le développement)
 
 **Phases à tester** :
+
 1. Setup : tags, tailles, filtrage temps réel
 2. Quiz : navigation, votes, abstention, réserve
 3. Résultats : podium, tableau, modal, liens
@@ -259,16 +276,16 @@ Les composants du quiz utilisent les variables CSS globales du projet :
 
 ```css
 :root {
-  --color-primary: #3b82f6;
-  --color-primary-dark: #2563eb;
-  --color-surface: #ffffff;
-  --color-bg: #f9fafb;
-  --color-border: #e5e7eb;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+	--color-primary: #3b82f6;
+	--color-primary-dark: #2563eb;
+	--color-surface: #ffffff;
+	--color-bg: #f9fafb;
+	--color-border: #e5e7eb;
+	--color-text: #111827;
+	--color-text-muted: #6b7280;
+	--radius: 0.5rem;
+	--radius-lg: 0.75rem;
+	--shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 ```
 
@@ -298,10 +315,10 @@ Modifier `QUIZ_SIZES` dans `quiz-selection.ts` pour changer les options proposé
 
 ### Pages utilisant ce module
 
-| Page | Description |
-|------|-------------|
-| `/an/quiz` | Point d'entrée : setup ou reprise de quiz |
-| `/an/quiz/resultats` | Affichage et analyse des résultats |
+| Page                 | Description                               |
+| -------------------- | ----------------------------------------- |
+| `/an/quiz`           | Point d'entrée : setup ou reprise de quiz |
+| `/an/quiz/resultats` | Affichage et analyse des résultats        |
 
 ### Intégration navigation
 
@@ -310,9 +327,10 @@ Le quiz est accessible depuis la navigation principale de l'Assemblée nationale
 ```svelte
 <!-- src/routes/an/+layout.svelte -->
 <nav>
-  <a href="/an">Accueil</a>
-  <a href="/an/elus">Députés</a>
-  <a href="/an/quiz">Quiz Politique</a> <!-- ← Nouveau -->
+	<a href="/an">Accueil</a>
+	<a href="/an/elus">Députés</a>
+	<a href="/an/quiz">Quiz Politique</a>
+	<!-- ← Nouveau -->
 </nav>
 ```
 
@@ -333,6 +351,7 @@ Le quiz est accessible depuis la navigation principale de l'Assemblée nationale
 **Cause** : localStorage contient un quiz en cours (clé `noselus-quiz-votes`)
 
 **Solution** :
+
 ```javascript
 // Dans la console du navigateur
 localStorage.removeItem('noselus-quiz-votes');
@@ -342,11 +361,13 @@ location.reload();
 ### Problème 2 : Aucune loi disponible
 
 **Cause** :
+
 - Base de données vide pour legislature 17
 - Aucune loi avec ≥1 scrutin
 - Problème de connexion DB
 
 **Solution** :
+
 ```bash
 # Vérifier la base de données
 ./scripts/db-query.sh "SELECT COUNT(*) FROM laws WHERE legislature = '17';"
@@ -365,10 +386,12 @@ location.reload();
 ### Problème 3 : Bouton "Commencer" toujours désactivé
 
 **Cause** :
+
 - Aucun tag sélectionné
 - Bug dans le calcul de `filteredLawCount`
 
 **Solution** :
+
 1. Cliquer sur "Tout cocher" pour sélectionner tous les tags
 2. Vérifier que le compteur affiche "X lois disponibles" (X > 0)
 3. Si le problème persiste, vérifier la console pour erreurs JS
@@ -378,6 +401,7 @@ location.reload();
 **Cause** : Erreur dans `calculateDetailedAlignment` ou données manquantes
 
 **Solution** :
+
 ```typescript
 // Vérifier dans la console
 console.log(result); // Doit contenir { details: [...] }
@@ -406,17 +430,17 @@ console.log(result); // Doit contenir { details: [...] }
 
 ## Changelog
 
-| Version | Date | Changements |
-|---------|------|-------------|
-| 1.0.0 | 2026-02-06 | Création initiale du module quiz politique |
-| | | - Page de configuration avec sélection tags + taille |
-| | | - Phase quiz avec navigation et abstention |
-| | | - Résultats avec podium et modal détail |
-| | | - Persistance localStorage |
-| | | - 23 tests unitaires (quiz-selection) |
-| | | - Fisher-Yates shuffle pour distribution uniforme |
-| | | - Map indexing pour performance (O(n) tags) |
-| | | - Mobile responsive order fixing |
+| Version | Date       | Changements                                          |
+| ------- | ---------- | ---------------------------------------------------- |
+| 1.0.0   | 2026-02-06 | Création initiale du module quiz politique           |
+|         |            | - Page de configuration avec sélection tags + taille |
+|         |            | - Phase quiz avec navigation et abstention           |
+|         |            | - Résultats avec podium et modal détail              |
+|         |            | - Persistance localStorage                           |
+|         |            | - 23 tests unitaires (quiz-selection)                |
+|         |            | - Fisher-Yates shuffle pour distribution uniforme    |
+|         |            | - Map indexing pour performance (O(n) tags)          |
+|         |            | - Mobile responsive order fixing                     |
 
 ## License
 

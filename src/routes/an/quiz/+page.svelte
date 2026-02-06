@@ -2,7 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { quizStore, canGoNext, canGoPrevious, quizCompleted, canAbstain, reserveCount } from '$lib/stores/quiz';
+	import {
+		quizStore,
+		canGoNext,
+		canGoPrevious,
+		quizCompleted,
+		canAbstain,
+		reserveCount
+	} from '$lib/stores/quiz';
 	import QuizProgress from '$lib/components/QuizProgress.svelte';
 	import QuizSetup from '$lib/components/QuizSetup.svelte';
 	import LawDossierCard from '$lib/components/LawDossierCard.svelte';
@@ -65,7 +72,12 @@
 	let remainingReserve = $state(0);
 
 	// Debug : votes des groupes (dev uniquement)
-	type DebugGroup = { id: string; name: string; shortName: string | null; politicalPosition: number | null };
+	type DebugGroup = {
+		id: string;
+		name: string;
+		shortName: string | null;
+		politicalPosition: number | null;
+	};
 	type DebugLawVote = { majorityPosition: 'pour' | 'contre'; pour: number; contre: number };
 	type DebugGroupVotes = Record<string, Record<string, DebugLawVote>>;
 	let debugGroups = $state<DebugGroup[]>([]);
@@ -114,7 +126,7 @@
 			const ratioA = a.pour + a.contre > 0 ? a.pour / (a.pour + a.contre) : 0;
 			const ratioB = b.pour + b.contre > 0 ? b.pour / (b.pour + b.contre) : 0;
 			if (ratioA !== ratioB) return ratioB - ratioA;
-			return (b.pour + b.contre) - (a.pour + a.contre);
+			return b.pour + b.contre - (a.pour + a.contre);
 		});
 	});
 
@@ -184,23 +196,18 @@
 		{#if phase === 'setup'}
 			Découvrez votre alignement avec les groupes parlementaires
 		{:else}
-			Votez sur {quizLawCount} loi{quizLawCount > 1 ? 's' : ''} réelle{quizLawCount > 1 ? 's' : ''} et découvrez votre alignement
+			Votez sur {quizLawCount} loi{quizLawCount > 1 ? 's' : ''} réelle{quizLawCount > 1 ? 's' : ''} et
+			découvrez votre alignement
 		{/if}
 	</p>
 </div>
 
 {#if data.allLaws.length === 0}
 	<div class="card">
-		<p class="error-message">
-			Aucune loi disponible pour le quiz. Veuillez réessayer plus tard.
-		</p>
+		<p class="error-message">Aucune loi disponible pour le quiz. Veuillez réessayer plus tard.</p>
 	</div>
 {:else if phase === 'setup'}
-	<QuizSetup
-		availableTags={data.availableTags}
-		allLaws={data.allLaws}
-		onStart={handleStart}
-	/>
+	<QuizSetup availableTags={data.availableTags} allLaws={data.allLaws} onStart={handleStart} />
 {:else}
 	<div class="quiz-container">
 		<QuizProgress current={currentIndex} total={quizLawCount} />
@@ -214,7 +221,17 @@
 						onclick={() => handleVote('pour')}
 						type="button"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
 							<polyline points="20 6 9 17 4 12" />
 						</svg>
 						<span>Pour</span>
@@ -226,7 +243,17 @@
 						onclick={() => handleVote('contre')}
 						type="button"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
 							<line x1="18" x2="6" y1="6" y2="18" />
 							<line x1="6" x2="18" y1="6" y2="18" />
 						</svg>
@@ -265,7 +292,9 @@
 					>
 						<span>Passer cette question</span>
 						{#if remainingReserve > 0}
-							<span class="reserve-badge">{remainingReserve} restante{remainingReserve > 1 ? 's' : ''}</span>
+							<span class="reserve-badge"
+								>{remainingReserve} restante{remainingReserve > 1 ? 's' : ''}</span
+							>
 						{/if}
 					</button>
 
@@ -305,19 +334,23 @@
 						<button
 							class="debug-sort-btn"
 							class:active={debugSortMode === 'vote'}
-							onclick={() => debugSortMode = 'vote'}
-							type="button"
-						>Pour / Contre</button>
+							onclick={() => (debugSortMode = 'vote')}
+							type="button">Pour / Contre</button
+						>
 						<button
 							class="debug-sort-btn"
 							class:active={debugSortMode === 'spectrum'}
-							onclick={() => debugSortMode = 'spectrum'}
-							type="button"
-						>Gauche → Droite</button>
+							onclick={() => (debugSortMode = 'spectrum')}
+							type="button">Gauche → Droite</button
+						>
 					</div>
 					<div class="debug-grid">
 						{#each debugCurrentLawVotes as g}
-							<span class="debug-group" class:debug-pour={g.position === 'pour'} class:debug-contre={g.position === 'contre'}>
+							<span
+								class="debug-group"
+								class:debug-pour={g.position === 'pour'}
+								class:debug-contre={g.position === 'contre'}
+							>
 								<span class="debug-group-name">{g.shortName}</span>
 								<span class="debug-group-counts">{g.pour}↑ {g.contre}↓</span>
 							</span>
@@ -334,8 +367,8 @@
 				pour calculer votre alignement politique.
 			</p>
 			<p class="info-text disclaimer">
-				ℹ️ Ce quiz est indicatif et basé sur un échantillon de {quizLawCount} lois de la législature
-				17. Il ne remplace pas une analyse politique approfondie.
+				ℹ️ Ce quiz est indicatif et basé sur un échantillon de {quizLawCount} lois de la législature 17.
+				Il ne remplace pas une analyse politique approfondie.
 			</p>
 		</div>
 	</div>

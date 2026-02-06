@@ -43,14 +43,13 @@
 			const laws = quizState.laws;
 			const lawIds = userVotes.map((v: UserVote) => v.lawId);
 
-			// Map des titres pour le détail
+			// Maps des titres et URLs pour le détail
 			const lawTitles = new Map<string, string>(
 				laws.map((law: { id: string; title: string; shortTitle: string | null }) => [
 					law.id,
 					law.shortTitle || law.title
 				])
 			);
-
 			// 2. Appeler l'API pour récupérer les votes des groupes
 			const response = await fetch('/api/quiz/group-votes', {
 				method: 'POST',
@@ -243,9 +242,12 @@
 
 			<div class="disclaimer">
 				<p>
-					ℹ️ <strong>Note</strong> : Ce quiz est indicatif et basé sur {userVotes.length} lois de la
-					législature 17{#if abstentionCount > 0} ({abstentionCount} question{abstentionCount > 1 ? 's' : ''} passée{abstentionCount > 1 ? 's' : ''}){/if}. L'alignement est calculé en comparant vos votes avec les votes majoritaires de
-					chaque groupe parlementaire (algorithme de similarité de Jaccard).
+					ℹ️ <strong>Note</strong> : Ce quiz est indicatif et basé sur {userVotes.length} lois de la législature
+					17{#if abstentionCount > 0}
+						({abstentionCount} question{abstentionCount > 1 ? 's' : ''} passée{abstentionCount > 1
+							? 's'
+							: ''}){/if}. L'alignement est calculé en comparant vos votes avec les votes
+					majoritaires de chaque groupe parlementaire (algorithme de similarité de Jaccard).
 				</p>
 			</div>
 		</section>

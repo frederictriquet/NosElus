@@ -1,11 +1,14 @@
 <script lang="ts">
 	/**
-	 * Barre de progression pour le quiz politique.
-	 * Affiche la progression en pourcentage et nombre de lois votées.
+	 * Props du composant QuizProgress
+	 *
+	 * @interface Props
 	 */
 	interface Props {
-		current: number; // Index actuel (0-based)
-		total: number; // Nombre total de lois
+		/** Index de la question actuelle (0-based) */
+		current: number;
+		/** Nombre total de questions dans le quiz */
+		total: number;
 	}
 
 	let { current = 0, total = 0 }: Props = $props();
@@ -14,11 +17,24 @@
 	const voteCount = $derived(current + 1);
 </script>
 
+<!--
+  QuizProgress - Barre de progression visuelle pour le quiz
+
+  Affiche la progression du quiz en temps réel avec :
+  - Numéro de question actuel (format "Question X sur Y")
+  - Pourcentage de complétion
+  - Barre de progression visuelle avec gradient
+
+  @component
+  @example
+  ```svelte
+  <QuizProgress current={4} total={10} />
+  <!-- Affiche "Question 5 sur 10" + "50%" -->
+``` -->
+
 <div class="quiz-progress">
 	<div class="progress-header">
-		<span class="progress-text"
-			>Question {voteCount} sur {total}</span
-		>
+		<span class="progress-text">Question {voteCount} sur {total}</span>
 		<span class="progress-percent">{progress}%</span>
 	</div>
 	<div class="progress-bar">

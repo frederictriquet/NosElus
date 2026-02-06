@@ -63,10 +63,7 @@ describe('quiz-selection', () => {
 			});
 
 			it('should return empty when no tags match', () => {
-				const laws = createTestLawsWithTags([
-					{ tagSlugs: ['economie'] },
-					{ tagSlugs: ['sante'] }
-				]);
+				const laws = createTestLawsWithTags([{ tagSlugs: ['economie'] }, { tagSlugs: ['sante'] }]);
 
 				const selectedTags = new Set(['education']);
 				const result = selectQuizLaws(laws, selectedTags, 10);
@@ -237,9 +234,7 @@ describe('quiz-selection', () => {
 				const selectedTags = new Set(['economie']);
 
 				// Run multiple times and check for different orders
-				const results = Array.from({ length: 5 }, () =>
-					selectQuizLaws(laws, selectedTags, 10)
-				);
+				const results = Array.from({ length: 5 }, () => selectQuizLaws(laws, selectedTags, 10));
 
 				const orders = results.map((r) => r.quizLaws.map((l) => l.id).join(','));
 

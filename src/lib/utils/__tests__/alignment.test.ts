@@ -21,9 +21,7 @@ describe('alignment', () => {
 		majorityPosition
 	});
 
-	const createAlignmentResult = (
-		overrides: Partial<AlignmentResult> = {}
-	): AlignmentResult => ({
+	const createAlignmentResult = (overrides: Partial<AlignmentResult> = {}): AlignmentResult => ({
 		groupId: 'PO123456',
 		groupName: 'Test Group',
 		groupShortName: 'TEST',
@@ -36,40 +34,22 @@ describe('alignment', () => {
 
 	describe('calculateAlignmentScore', () => {
 		it('should return 100 for complete alignment', () => {
-			const userVotes = [
-				createUserVote('LAW1', 'pour'),
-				createUserVote('LAW2', 'contre')
-			];
-			const groupVotes = [
-				createGroupVote('LAW1', 'pour'),
-				createGroupVote('LAW2', 'contre')
-			];
+			const userVotes = [createUserVote('LAW1', 'pour'), createUserVote('LAW2', 'contre')];
+			const groupVotes = [createGroupVote('LAW1', 'pour'), createGroupVote('LAW2', 'contre')];
 
 			expect(calculateAlignmentScore(userVotes, groupVotes)).toBe(100);
 		});
 
 		it('should return 0 for complete disagreement', () => {
-			const userVotes = [
-				createUserVote('LAW1', 'pour'),
-				createUserVote('LAW2', 'pour')
-			];
-			const groupVotes = [
-				createGroupVote('LAW1', 'contre'),
-				createGroupVote('LAW2', 'contre')
-			];
+			const userVotes = [createUserVote('LAW1', 'pour'), createUserVote('LAW2', 'pour')];
+			const groupVotes = [createGroupVote('LAW1', 'contre'), createGroupVote('LAW2', 'contre')];
 
 			expect(calculateAlignmentScore(userVotes, groupVotes)).toBe(0);
 		});
 
 		it('should return 50 for half alignment', () => {
-			const userVotes = [
-				createUserVote('LAW1', 'pour'),
-				createUserVote('LAW2', 'contre')
-			];
-			const groupVotes = [
-				createGroupVote('LAW1', 'pour'),
-				createGroupVote('LAW2', 'pour')
-			];
+			const userVotes = [createUserVote('LAW1', 'pour'), createUserVote('LAW2', 'contre')];
+			const groupVotes = [createGroupVote('LAW1', 'pour'), createGroupVote('LAW2', 'pour')];
 
 			expect(calculateAlignmentScore(userVotes, groupVotes)).toBe(50);
 		});
@@ -123,14 +103,8 @@ describe('alignment', () => {
 		]);
 
 		it('should calculate detailed alignment with all fields', () => {
-			const userVotes = [
-				createUserVote('LAW1', 'pour'),
-				createUserVote('LAW2', 'contre')
-			];
-			const groupVotes = [
-				createGroupVote('LAW1', 'pour'),
-				createGroupVote('LAW2', 'contre')
-			];
+			const userVotes = [createUserVote('LAW1', 'pour'), createUserVote('LAW2', 'contre')];
+			const groupVotes = [createGroupVote('LAW1', 'pour'), createGroupVote('LAW2', 'contre')];
 
 			const result = calculateDetailedAlignment(userVotes, groupVotes, groupInfo, lawTitles);
 
@@ -201,10 +175,7 @@ describe('alignment', () => {
 		});
 
 		it('should return score 0 when group voted on no laws', () => {
-			const userVotes = [
-				createUserVote('LAW1', 'pour'),
-				createUserVote('LAW2', 'contre')
-			];
+			const userVotes = [createUserVote('LAW1', 'pour'), createUserVote('LAW2', 'contre')];
 			const groupVotes: GroupVote[] = [];
 
 			const result = calculateDetailedAlignment(userVotes, groupVotes, groupInfo, lawTitles);
@@ -252,10 +223,7 @@ describe('alignment', () => {
 		});
 
 		it('should not mutate original array', () => {
-			const results = [
-				createAlignmentResult({ score: 50 }),
-				createAlignmentResult({ score: 80 })
-			];
+			const results = [createAlignmentResult({ score: 50 }), createAlignmentResult({ score: 80 })];
 
 			sortAlignmentResults(results);
 

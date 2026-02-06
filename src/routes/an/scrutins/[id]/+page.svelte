@@ -24,7 +24,6 @@
 			year: 'numeric'
 		});
 	}
-
 </script>
 
 <svelte:head>
@@ -66,7 +65,6 @@
 {#await data.relatedLaw then law}
 	<LawDossierCard {law} legislature={data.scrutin.legislature} />
 {/await}
-
 
 <!-- Stacked bar charts -->
 <div class="charts-row">

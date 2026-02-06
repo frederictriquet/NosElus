@@ -56,10 +56,7 @@ export interface VoteComparison {
  * // => 50 (1 accord sur 2 votes)
  * ```
  */
-export function calculateAlignmentScore(
-	userVotes: UserVote[],
-	groupVotes: GroupVote[]
-): number {
+export function calculateAlignmentScore(userVotes: UserVote[], groupVotes: GroupVote[]): number {
 	if (userVotes.length === 0) return 0;
 
 	// Créer un map pour accès rapide aux votes du groupe

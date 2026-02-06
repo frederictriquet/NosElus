@@ -27,7 +27,9 @@
 			<div class="group-info">
 				<div class="group-name">{second.groupShortName}</div>
 				<div class="score">{second.score}%</div>
-				<div class="details">{second.agreements}/{second.agreements + second.disagreements} accords</div>
+				<div class="details">
+					{second.agreements}/{second.agreements + second.disagreements} accords
+				</div>
 			</div>
 			<div class="platform platform-second">
 				<span class="platform-label">2e</span>
@@ -37,14 +39,24 @@
 		<!-- 1ère place (centre, plus haute) -->
 		<div class="podium-position first">
 			<div class="medal gold">
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-					<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="currentColor"
+				>
+					<path
+						d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+					/>
 				</svg>
 			</div>
 			<div class="group-info">
 				<div class="group-name">{first.groupShortName}</div>
 				<div class="score">{first.score}%</div>
-				<div class="details">{first.agreements}/{first.agreements + first.disagreements} accords</div>
+				<div class="details">
+					{first.agreements}/{first.agreements + first.disagreements} accords
+				</div>
 			</div>
 			<div class="platform platform-first">
 				<span class="platform-label">1er</span>
@@ -59,7 +71,9 @@
 			<div class="group-info">
 				<div class="group-name">{third.groupShortName}</div>
 				<div class="score">{third.score}%</div>
-				<div class="details">{third.agreements}/{third.agreements + third.disagreements} accords</div>
+				<div class="details">
+					{third.agreements}/{third.agreements + third.disagreements} accords
+				</div>
 			</div>
 			<div class="platform platform-third">
 				<span class="platform-label">3e</span>

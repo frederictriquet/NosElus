@@ -77,8 +77,7 @@
 				{
 					name: 'Légifrance (API PISTE)',
 					url: 'https://piste.gouv.fr/',
-					description:
-						'Accès aux textes de loi via la plateforme PISTE du gouvernement français',
+					description: 'Accès aux textes de loi via la plateforme PISTE du gouvernement français',
 					data: ['Textes de loi', 'Codes', 'Dossiers législatifs']
 				},
 				{
@@ -97,7 +96,7 @@
 					name: 'Claude (Anthropic)',
 					url: 'https://www.anthropic.com/',
 					description:
-						"Modèle de langage utilisé pour générer des résumés accessibles des textes de loi et faciliter la compréhension citoyenne",
+						'Modèle de langage utilisé pour générer des résumés accessibles des textes de loi et faciliter la compréhension citoyenne',
 					data: ['Résumés de lois', 'Classification thématique']
 				}
 			]

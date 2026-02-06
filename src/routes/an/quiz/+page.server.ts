@@ -1,20 +1,16 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { laws, lawSummaries, lawTags, tags, scrutins } from '$lib/server/db/schema';
-import { eq, inArray, sql, and, desc } from 'drizzle-orm';
+import { eq, inArray, sql, desc } from 'drizzle-orm';
 
 /**
- * Sélectionne les lois pour le quiz politique.
+ * Charge toutes les lois éligibles au quiz et les tags disponibles.
  *
- * Implémente l'algorithme de sélection mixte (ADR-006) :
- * - Filtre : lois avec résumé IA + au moins 1 scrutin
- * - Stratification : diversité thématique via tags
- * - Randomisation : sélection aléatoire dans chaque groupe de tags
- *
- * @returns 15 lois pour le quiz + lois de réserve pour l'abstention
+ * La stratification (sélection, mélange, split quiz/réserve) est
+ * déléguée au client via `quiz-selection.ts`, pour permettre le
+ * filtrage dynamique par tags dans la page de configuration.
  */
 export const load: PageServerLoad = async () => {
-	const QUIZ_SIZE = 15;
 	const MIN_SCRUTINS = 1;
 	const LEGISLATURE = '17';
 
@@ -41,7 +37,7 @@ export const load: PageServerLoad = async () => {
 		.orderBy(desc(sql`COUNT(DISTINCT ${scrutins.id})`));
 
 	if (eligibleLaws.length === 0) {
-		return { laws: [], reserveLaws: [] };
+		return { allLaws: [], availableTags: [] };
 	}
 
 	// 2. Récupérer les tags pour toutes les lois éligibles
@@ -57,45 +53,30 @@ export const load: PageServerLoad = async () => {
 		.innerJoin(tags, eq(lawTags.tagSlug, tags.slug))
 		.where(inArray(lawTags.lawId, lawIds));
 
-	// 3. Grouper les lois par tag principal (premier tag)
-	const lawsByTag = new Map<string, typeof eligibleLaws>();
-
-	for (const law of eligibleLaws) {
-		const lawTagsList = lawTagsData.filter((lt) => lt.lawId === law.id);
-		if (lawTagsList.length > 0) {
-			const primaryTag = lawTagsList[0].slug;
-			if (!lawsByTag.has(primaryTag)) {
-				lawsByTag.set(primaryTag, []);
-			}
-			lawsByTag.get(primaryTag)!.push(law);
+	// 3. Calculer les tags disponibles avec compteurs
+	const tagCounts = new Map<
+		string,
+		{ slug: string; name: string; color: string | null; lawCount: number }
+	>();
+	for (const lt of lawTagsData) {
+		const existing = tagCounts.get(lt.slug);
+		if (existing) {
+			existing.lawCount++;
+		} else {
+			tagCounts.set(lt.slug, { slug: lt.slug, name: lt.name, color: lt.color, lawCount: 1 });
 		}
 	}
+	const availableTags = Array.from(tagCounts.values()).sort((a, b) => b.lawCount - a.lawCount);
 
-	// 4. Stratifier : prendre des lois de chaque tag avec priorité équilibrée
-	const selectedLaws: typeof eligibleLaws = [];
-	const tagArray = Array.from(lawsByTag.entries());
-
-	// Première passe : prendre équitablement pour le quiz
-	const lawsPerTag = Math.ceil(QUIZ_SIZE / tagArray.length);
-
-	for (const [, tagLaws] of tagArray) {
-		const shuffled = tagLaws.sort(() => Math.random() - 0.5);
-		selectedLaws.push(...shuffled.slice(0, lawsPerTag));
+	// 4. Indexer les tags par loi (O(n) au lieu de O(n*m) avec .filter())
+	const tagsByLawId = new Map<string, { slug: string; name: string; color: string | null }[]>();
+	for (const lt of lawTagsData) {
+		if (!tagsByLawId.has(lt.lawId)) {
+			tagsByLawId.set(lt.lawId, []);
+		}
+		tagsByLawId.get(lt.lawId)!.push({ slug: lt.slug, name: lt.name, color: lt.color });
 	}
 
-	// Mélanger toutes les lois sélectionnées
-	const allShuffled = selectedLaws.sort(() => Math.random() - 0.5);
-
-	// Ajouter les lois restantes (non sélectionnées) comme réserve supplémentaire
-	const selectedIds = new Set(allShuffled.map((l) => l.id));
-	const remainingLaws = eligibleLaws.filter((l) => !selectedIds.has(l.id));
-	const allLaws = [...allShuffled, ...remainingLaws.sort(() => Math.random() - 0.5)];
-
-	// 5. Séparer en quiz (15 premières) et réserve (le reste)
-	const quizLaws = allLaws.slice(0, QUIZ_SIZE);
-	const reservePool = allLaws.slice(QUIZ_SIZE);
-
-	// 6. Enrichir avec les tags
 	const enrichWithTags = (lawList: typeof eligibleLaws) =>
 		lawList.map((law) => ({
 			id: law.id,
@@ -107,17 +88,11 @@ export const load: PageServerLoad = async () => {
 			sourceUrl: law.sourceUrl,
 			summary: law.summary,
 			summaryModel: law.summaryModel,
-			tags: lawTagsData
-				.filter((lt) => lt.lawId === law.id)
-				.map((lt) => ({
-					slug: lt.slug,
-					name: lt.name,
-					color: lt.color
-				}))
+			tags: tagsByLawId.get(law.id) ?? []
 		}));
 
 	return {
-		laws: enrichWithTags(quizLaws),
-		reserveLaws: enrichWithTags(reservePool)
+		allLaws: enrichWithTags(eligibleLaws),
+		availableTags
 	};
 };

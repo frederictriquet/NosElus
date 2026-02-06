@@ -1,6 +1,5 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
-	import VoteDistributionCard from '$lib/components/VoteDistributionCard.svelte';
 	import LawSummaryCard from '$lib/components/LawSummaryCard.svelte';
 	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 
@@ -57,8 +56,8 @@
 		{#if data.isTightVote && data.tightLabel}
 			<span
 				class="tight-vote-badge"
-				class:tie={data.scrutin.margin === 0}
-				title="Marge de {data.scrutin.margin} voix"
+				class:tie={data.margin === 0}
+				title="Marge de {data.margin} voix"
 			>
 				{data.tightLabel}
 			</span>
@@ -231,39 +230,6 @@
 	{/if}
 {/await}
 
-<!-- Results summary -->
-<div class="stats-grid" style="margin-top: 1.5rem;">
-	<div class="stat-card">
-		<div class="stat-value">{data.scrutin.totalVoters}</div>
-		<div class="stat-label">Votants</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value" style="color: var(--color-success);">{data.scrutin.totalFor}</div>
-		<div class="stat-label">Pour</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value" style="color: var(--color-danger);">{data.scrutin.totalAgainst}</div>
-		<div class="stat-label">Contre</div>
-	</div>
-	<div class="stat-card">
-		<div class="stat-value" style="color: var(--color-text-muted);">
-			{data.scrutin.totalAbstention}
-		</div>
-		<div class="stat-label">Abstentions</div>
-	</div>
-</div>
-
-<!-- Vote distribution chart -->
-<div style="margin-top: 1.5rem;">
-	<VoteDistributionCard
-		distribution={{
-			pour: data.scrutin.totalFor,
-			contre: data.scrutin.totalAgainst,
-			abstention: data.scrutin.totalAbstention,
-			'non-votant': data.scrutin.totalNonVoting
-		}}
-	/>
-</div>
 
 <!-- Stacked bar charts -->
 <div class="charts-row">

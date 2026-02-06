@@ -31,4 +31,29 @@
 			</rect>
 		{/each}
 	{/each}
+
+	<!-- Column totals -->
+	{#if $data.length > 0}
+		{@const lastSeries = $data[$data.length - 1]}
+		{#each lastSeries as d}
+			{@const yVals = $yGet(d)}
+			{@const bandwidth = typeof $xScale.bandwidth === 'function' ? $xScale.bandwidth() : 10}
+			<text
+				class="column-total"
+				x={$xGet(d) + bandwidth / 2}
+				y={yVals[1] - 4}
+				text-anchor="middle"
+			>
+				{d.data?.total ?? d[1]}
+			</text>
+		{/each}
+	{/if}
 </g>
+
+<style>
+	.column-total {
+		font-size: 0.6rem;
+		fill: var(--color-text-muted, #6b7280);
+		font-weight: 600;
+	}
+</style>

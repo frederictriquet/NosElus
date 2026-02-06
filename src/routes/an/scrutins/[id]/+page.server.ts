@@ -149,12 +149,14 @@ export const load: PageServerLoad = async ({ params }) => {
 	};
 
 	// Calculate tight vote metadata
-	const isTightVote = scrutin.margin <= DEFAULT_TIGHT_THRESHOLD;
-	const tightLabel = getTightLabel(scrutin.margin);
+	const margin = scrutin.margin;
+	const isTightVote = margin <= DEFAULT_TIGHT_THRESHOLD;
+	const tightLabel = getTightLabel(margin);
 
 	return {
 		// Synchronous data
 		scrutin,
+		margin,
 		isTightVote,
 		tightLabel,
 		// Streamed data

@@ -21,7 +21,8 @@
 		{ href: '/an/stats', label: 'Stats', match: '/an/stats' },
 		{ href: '/an/carte', label: 'Carte', match: '/an/carte' },
 		{ href: '/an/compare', label: 'Comparer', match: '/an/compare' },
-		{ href: '/an/scrutins/serres', label: 'Votes serrés', match: '/an/scrutins/serres' }
+		{ href: '/an/scrutins/serres', label: 'Votes serrés', match: '/an/scrutins/serres' },
+		{ href: '/an/quiz', label: 'Quiz', match: '/an/quiz' }
 	];
 </script>
 

@@ -38,12 +38,7 @@
 		{#each lastSeries as d}
 			{@const yVals = $yGet(d)}
 			{@const bandwidth = typeof $xScale.bandwidth === 'function' ? $xScale.bandwidth() : 10}
-			<text
-				class="column-total"
-				x={$xGet(d) + bandwidth / 2}
-				y={yVals[1] - 4}
-				text-anchor="middle"
-			>
+			<text class="column-total" x={$xGet(d) + bandwidth / 2} y={yVals[1] - 4} text-anchor="middle">
 				{d.data?.total ?? d[1]}
 			</text>
 		{/each}

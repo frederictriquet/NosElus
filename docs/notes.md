@@ -1,8 +1,7 @@
-on me montre une liste de textes, je réponds pour/contre
-et ça me donne ma tendance politique
+j'aimerais une nouvelle fonctionnalité dans laquelle on montre à l'utilisateur une série de textes (d'une législature) pour lesquels on a le résumé, l'analyse IA et les tags ainsi que les votes. L'utilisateur vote pour ou conrte chaque loi, et en fonction de ses votes on lui donne son alignement avec les différents partis politiques
 
 
-
+crée dashboard indiquant pour chaque mandature le nombre de textes de lois, le nombres de textes pour lesquels on a des votes, le nombre de textes analysés par l'IA
 
 
 Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs optimisations sont possibles :
@@ -12,8 +11,13 @@ Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs o
 
 
 
-
-rendre toutes les migrations de db idempotentes
+Limites actuelles (visibles dans le code) :
+  - Pas de pondération : les abstentions et non-votants sont ignorés. Un groupe avec 2 pour / 1 contre / 50
+  abstentions est compté "pour"
+  - En cas d'égalité (pour === contre), c'est "contre" par défaut (le > strict)
+  - S'il y a plusieurs scrutins par loi, seul le premier trouvé est utilisé (il y a d'ailleurs un TODO dans
+  le code : // TODO : Si plusieurs scrutins par loi, prendre le scrutin "vote final")
+  - Les données JSONB groupResults sont pré-calculées à l'import ETL, pas recalculées à la volée
 
 
 

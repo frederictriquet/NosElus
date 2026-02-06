@@ -149,12 +149,21 @@
 - [ ] Suivi d'un député spécifique
 - [ ] Alertes sur nouveaux scrutins
 
-### 6.2 Intégrations
+### 6.2 Quiz politique
+- [x] Configuration page (filtrage tags, sélection taille)
+- [x] Phase quiz avec navigation et abstention
+- [x] Calcul alignement (similarité Jaccard)
+- [x] Résultats avec podium et détail modal
+- [x] Persistance localStorage avec reprise
+- [x] Tests unitaires (23 tests pour stratification)
+- [x] Documentation complète (README 423 lignes + JSDoc)
+
+### 6.3 Intégrations
 - [ ] Légifrance API (textes de loi promulguées)
 - [ ] Export CSV/JSON des données
 - [ ] API publique pour développeurs tiers
 
-### 6.3 Fonctionnalités collaboratives
+### 6.4 Fonctionnalités collaboratives
 - [ ] Annotations utilisateurs (modérées)
 - [ ] Commentaires sur les votes
 - [ ] Partage sur réseaux sociaux

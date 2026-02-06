@@ -13,6 +13,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 | ADR-003 | 2026-02-02 | Récupération du texte complet des lois | 📋 Proposé | 2.1 | `adr-2026-02-02-law-full-text-retrieval.md` |
 | ADR-004 | 2026-02-04 | Automatisation du positionnement politique | 📋 Proposé | - | `adr-2026-02-04-political-positioning-automation.md` |
 | ADR-005 | 2026-02-06 | Migrations de base de données idempotentes | ✅ Accepté | - | `adr-2026-02-06-idempotent-migrations.md` |
+| ADR-006 | 2026-02-06 | Quiz politique interactif | ✅ Accepté | - | `adr-2026-02-06-political-quiz.md` |
 
 ## Par catégorie
 

@@ -99,6 +99,7 @@ export const ETL_CONFIG = {
 	cacheTtl: {
 		meps: 24,
 		votes: 6,
+		laws: 12,
 		senators: 24,
 		deputies: 24
 	}

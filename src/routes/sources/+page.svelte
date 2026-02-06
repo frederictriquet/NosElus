@@ -1,73 +1,104 @@
 <script lang="ts">
 	const sources = [
 		{
-			category: 'Assemblee Nationale',
+			category: 'Assemblée nationale',
 			items: [
 				{
-					name: 'Open Data Assemblee Nationale',
+					name: 'Open Data Assemblée nationale',
 					url: 'https://data.assemblee-nationale.fr/',
 					description:
-						"Donnees officielles de l'Assemblee nationale : deputes, scrutins, amendements, dossiers legislatifs",
-					data: ['Deputes', 'Scrutins', 'Votes', 'Amendements', 'Dossiers legislatifs']
+						"Données officielles de l'Assemblée nationale : députés, scrutins, amendements, dossiers législatifs",
+					data: ['Députés', 'Scrutins', 'Votes', 'Amendements', 'Dossiers législatifs']
 				},
 				{
 					name: 'NosDéputés.fr',
 					url: 'https://www.nosdeputes.fr/',
-					description: "Statistiques d'activite parlementaire des deputes",
-					data: ["Statistiques d'activite", 'Presence', 'Interventions']
+					description: "Statistiques d'activité parlementaire des députés",
+					data: ["Statistiques d'activité", 'Présence', 'Interventions']
 				}
 			]
 		},
 		{
-			category: 'Senat',
+			category: 'Sénat',
 			items: [
 				{
 					name: 'data.senat.fr',
 					url: 'https://data.senat.fr/',
 					description:
-						'Portail open data du Senat : senateurs, amendements, questions, dossiers legislatifs',
-					data: ['Senateurs', 'Groupes politiques', 'Commissions', 'Dossiers legislatifs']
+						'Portail open data du Sénat : sénateurs, amendements, questions, dossiers législatifs',
+					data: ['Sénateurs', 'Groupes politiques', 'Commissions', 'Dossiers législatifs']
 				},
 				{
-					name: "Calendrier d'activite (senat.fr)",
+					name: "Calendrier d'activité (senat.fr)",
 					url: 'https://www.senat.fr/calendrier_activite/',
-					description: 'Tableau des activites principales des senateurs',
-					data: ['Presences en seance', 'Presences en commission', 'Questions au gouvernement']
+					description: 'Tableau des activités principales des sénateurs',
+					data: ['Présences en séance', 'Présences en commission', 'Questions au gouvernement']
 				},
 				{
-					name: 'API Senateurs',
+					name: 'API Sénateurs',
 					url: 'https://www.senat.fr/api-senat/senateurs.json',
-					description: 'API JSON des senateurs en exercice',
-					data: ['Informations senateurs', 'Groupes', 'Commissions']
+					description: 'API JSON des sénateurs en exercice',
+					data: ['Informations sénateurs', 'Groupes', 'Commissions']
 				},
 				{
 					name: 'NosSénateurs.fr (archive)',
 					url: 'https://archive.nossenateurs.fr/',
-					description: "Statistiques d'activite parlementaire des senateurs (archive)",
-					data: ['Semaines de presence', 'Interventions', 'Amendements', 'Questions']
+					description: "Statistiques d'activité parlementaire des sénateurs (archive)",
+					data: ['Semaines de présence', 'Interventions', 'Amendements', 'Questions']
 				}
 			]
 		},
 		{
-			category: 'Parlement Europeen',
+			category: 'Parlement européen',
 			items: [
 				{
 					name: 'ParlTrack',
 					url: 'https://parltrack.org/',
-					description: 'Donnees sur les eurodeputes et leurs activites',
-					data: ['Eurodeputes', 'Groupes politiques', 'Mandats']
+					description: 'Données sur les eurodéputés et leurs activités',
+					data: ['Eurodéputés', 'Groupes politiques', 'Mandats']
 				},
 				{
 					name: 'HowTheyVote.eu',
 					url: 'https://howtheyvote.eu/',
-					description: 'Votes nominatifs du Parlement europeen',
+					description: 'Votes nominatifs du Parlement européen',
 					data: ['Scrutins', 'Votes individuels', 'Positions des groupes']
 				},
 				{
-					name: 'Open Data Parlement Europeen',
+					name: 'Open Data Parlement européen',
 					url: 'https://data.europarl.europa.eu/',
-					description: 'Portail open data officiel du Parlement europeen',
-					data: ['Eurodeputes', 'Documents', 'Procedures']
+					description: 'Portail open data officiel du Parlement européen',
+					data: ['Eurodéputés', 'Documents', 'Procédures']
+				}
+			]
+		},
+		{
+			category: 'Données législatives',
+			items: [
+				{
+					name: 'Légifrance (API PISTE)',
+					url: 'https://piste.gouv.fr/',
+					description:
+						'Accès aux textes de loi via la plateforme PISTE du gouvernement français',
+					data: ['Textes de loi', 'Codes', 'Dossiers législatifs']
+				},
+				{
+					name: 'ParlGov',
+					url: 'https://www.parlgov.org/',
+					description:
+						'Base de données académique internationale sur les partis politiques et leur positionnement idéologique',
+					data: ['Partis politiques', 'Positionnement gauche-droite', 'Élections']
+				}
+			]
+		},
+		{
+			category: 'Intelligence artificielle',
+			items: [
+				{
+					name: 'Claude (Anthropic)',
+					url: 'https://www.anthropic.com/',
+					description:
+						"Modèle de langage utilisé pour générer des résumés accessibles des textes de loi et faciliter la compréhension citoyenne",
+					data: ['Résumés de lois', 'Classification thématique']
 				}
 			]
 		},
@@ -77,20 +108,20 @@
 				{
 					name: 'Datan.fr',
 					url: 'https://datan.fr/',
-					description: "Plateforme independante de suivi de l'Assemblee nationale",
+					description: "Plateforme indépendante de suivi de l'Assemblée nationale",
 					data: ['Analyses de votes', 'Coalitions', 'Statistiques']
 				},
 				{
 					name: 'data.gouv.fr',
 					url: 'https://www.data.gouv.fr/',
-					description: 'Plateforme nationale des donnees ouvertes',
-					data: ['Datasets parlementaires', 'Elections']
+					description: 'Plateforme nationale des données ouvertes',
+					data: ['Datasets parlementaires', 'Élections']
 				},
 				{
 					name: 'Tricoteuses',
 					url: 'https://www.tricoteuses.fr/',
-					description: "Bibliotheque TypeScript pour les donnees de l'Assemblee nationale",
-					data: ['Parsing des donnees AN']
+					description: "Bibliothèque TypeScript pour les données de l'Assemblée nationale",
+					data: ['Parsing des données AN']
 				}
 			]
 		}
@@ -98,14 +129,14 @@
 </script>
 
 <svelte:head>
-	<title>Sources de donnees - NosElus</title>
+	<title>Sources de données - NosÉlus</title>
 </svelte:head>
 
 <div class="page-header">
-	<h1 class="page-title">Sources de donnees</h1>
+	<h1 class="page-title">Sources de données</h1>
 	<p class="page-subtitle">
-		NosElus agrege des donnees provenant de multiples sources ouvertes sur les parlementaires
-		francais et europeens
+		NosÉlus agrège des données provenant de multiples sources ouvertes sur les parlementaires
+		français et européens
 	</p>
 </div>
 
@@ -152,14 +183,16 @@
 <section class="license-section">
 	<h2>Licences et attributions</h2>
 	<p>
-		Les donnees utilisees par NosElus sont issues de sources ouvertes et sont soumises aux licences
-		de leurs editeurs respectifs. Nous remercions l'ensemble des organisations qui rendent ces
-		donnees publiques.
+		Les données utilisées par NosÉlus sont issues de sources ouvertes et sont soumises aux licences
+		de leurs éditeurs respectifs. Nous remercions l'ensemble des organisations qui rendent ces
+		données publiques.
 	</p>
 	<ul>
-		<li><strong>Assemblee nationale</strong> - Licence Ouverte / Open Licence</li>
-		<li><strong>Senat</strong> - Licence propre data.senat.fr</li>
-		<li><strong>Parlement europeen</strong> - European Parliament Legal Notice</li>
+		<li><strong>Assemblée nationale</strong> - Licence Ouverte / Open Licence</li>
+		<li><strong>Sénat</strong> - Licence propre data.senat.fr</li>
+		<li><strong>Parlement européen</strong> - European Parliament Legal Notice</li>
+		<li><strong>Légifrance</strong> - Licence Ouverte Etalab</li>
+		<li><strong>ParlGov</strong> - Creative Commons Attribution</li>
 		<li><strong>HowTheyVote.eu</strong> - Open Database License (ODbL)</li>
 		<li><strong>ParlTrack</strong> - Public Domain</li>
 	</ul>

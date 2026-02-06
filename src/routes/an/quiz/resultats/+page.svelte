@@ -1,24 +1,105 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import AlignmentPodium from '$lib/components/AlignmentPodium.svelte';
 	import VoteDetailModal from '$lib/components/VoteDetailModal.svelte';
-	import { getPodium } from '$lib/utils/alignment';
-	import type { AlignmentResult } from '$lib/utils/alignment';
-	import type { PageData } from './$types';
+	import {
+		calculateDetailedAlignment,
+		sortAlignmentResults,
+		getPodium,
+		type UserVote,
+		type GroupVote,
+		type AlignmentResult
+	} from '$lib/utils/alignment';
 
-	let { data }: { data: PageData } = $props();
-
+	let results = $state<AlignmentResult[]>([]);
+	let userVotes = $state<UserVote[]>([]);
+	let loading = $state(true);
+	let errorMessage = $state<string | null>(null);
 	let selectedGroup = $state<AlignmentResult | null>(null);
 
-	const podium = $derived(getPodium(data.results));
-	const remainingGroups = $derived(data.results.slice(3));
+	const podium = $derived(getPodium(results));
+
+	onMount(async () => {
+		try {
+			// 1. Récupérer les votes depuis localStorage
+			const storedVotes = localStorage.getItem('noselus-quiz-votes');
+			if (!storedVotes) {
+				errorMessage = 'Aucun quiz en cours.';
+				loading = false;
+				return;
+			}
+
+			const quizState = JSON.parse(storedVotes);
+			if (!quizState.votes || quizState.votes.length === 0) {
+				errorMessage = 'Aucun vote enregistré.';
+				loading = false;
+				return;
+			}
+
+			userVotes = quizState.votes;
+			const laws = quizState.laws;
+			const lawIds = userVotes.map((v: UserVote) => v.lawId);
+
+			// Map des titres pour le détail
+			const lawTitles = new Map<string, string>(
+				laws.map((law: { id: string; title: string; shortTitle: string | null }) => [
+					law.id,
+					law.shortTitle || law.title
+				])
+			);
+
+			// 2. Appeler l'API pour récupérer les votes des groupes
+			const response = await fetch('/api/quiz/group-votes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ lawIds })
+			});
+
+			if (!response.ok) {
+				errorMessage = "Erreur lors du calcul de l'alignement.";
+				loading = false;
+				return;
+			}
+
+			const { groupVotes, groups } = await response.json();
+
+			// 3. Calculer l'alignement pour chaque groupe
+			const alignmentResults: AlignmentResult[] = [];
+
+			for (const group of groups) {
+				const groupVotesForLaws: GroupVote[] = lawIds
+					.map((lawId: string) => {
+						const vote = groupVotes[group.id]?.[lawId];
+						if (!vote) return null;
+						return { lawId, majorityPosition: vote.majorityPosition };
+					})
+					.filter((v: GroupVote | null): v is GroupVote => v !== null);
+
+				if (groupVotesForLaws.length > 0) {
+					const result = calculateDetailedAlignment(
+						userVotes,
+						groupVotesForLaws,
+						{ id: group.id, name: group.name, shortName: group.shortName },
+						lawTitles
+					);
+					alignmentResults.push(result);
+				}
+			}
+
+			// 4. Trier et stocker
+			results = sortAlignmentResults(alignmentResults);
+		} catch (err) {
+			console.error('Error loading results:', err);
+			errorMessage = 'Erreur inattendue lors du chargement des résultats.';
+		} finally {
+			loading = false;
+		}
+	});
 
 	const handleRestart = () => {
-		// Effacer localStorage et redémarrer
-		if (typeof window !== 'undefined') {
-			localStorage.removeItem('noselus-quiz-votes');
-			localStorage.removeItem('noselus-quiz-session');
-		}
+		localStorage.removeItem('noselus-quiz-votes');
+		localStorage.removeItem('noselus-quiz-session');
 		goto('/an/quiz');
 	};
 
@@ -47,7 +128,18 @@
 </div>
 
 <div class="results-container">
-	{#if data.results.length === 0}
+	{#if loading}
+		<div class="card loading-state">
+			<div class="spinner"></div>
+			<span>Calcul de votre alignement politique...</span>
+		</div>
+	{:else if errorMessage}
+		<div class="card">
+			<p class="error-message">
+				{errorMessage} <a href="/an/quiz">Lancer le quiz</a>
+			</p>
+		</div>
+	{:else if results.length === 0}
 		<div class="card">
 			<p class="error-message">
 				Aucun résultat à afficher. <a href="/an/quiz">Recommencer le quiz</a>
@@ -81,7 +173,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.results as result, index}
+						{#each results as result, index}
 							<tr
 								class="result-row"
 								class:top-3={index < 3}
@@ -149,9 +241,9 @@
 
 			<div class="disclaimer">
 				<p>
-					ℹ️ <strong>Note</strong> : Ce quiz est indicatif et basé sur {data.userVotes.length} lois de
-					la législature 17. L'alignement est calculé en comparant vos votes avec les votes majoritaires
-					de chaque groupe parlementaire (algorithme de similarité de Jaccard).
+					ℹ️ <strong>Note</strong> : Ce quiz est indicatif et basé sur {userVotes.length} lois de la
+					législature 17. L'alignement est calculé en comparant vos votes avec les votes majoritaires de
+					chaque groupe parlementaire (algorithme de similarité de Jaccard).
 				</p>
 			</div>
 		</section>
@@ -170,6 +262,31 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
+	}
+
+	.loading-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		padding: 3rem;
+		color: var(--color-text-muted);
+	}
+
+	.spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--color-border);
+		border-top-color: var(--color-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.podium-section {

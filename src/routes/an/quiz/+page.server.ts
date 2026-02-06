@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { laws, law_summaries, law_tags, tags, scrutins } from '$lib/server/db/schema';
+import { laws, lawSummaries, lawTags, tags, scrutins } from '$lib/server/db/schema';
 import { eq, inArray, sql, and, desc } from 'drizzle-orm';
 
 /**

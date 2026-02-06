@@ -254,7 +254,11 @@
 
 <!-- Modal détail -->
 {#if selectedGroup}
-	<VoteDetailModal result={selectedGroup} onClose={handleCloseModal} lawBasePath={config.lawBasePath} />
+	<VoteDetailModal
+		result={selectedGroup}
+		onClose={handleCloseModal}
+		lawBasePath={config.lawBasePath}
+	/>
 {/if}
 
 <style>

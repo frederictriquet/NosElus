@@ -60,12 +60,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			politicalPosition: organs.politicalPosition
 		})
 		.from(organs)
-		.where(
-			and(
-				eq(organs.type, 'GP'),
-				eq(organs.legislature, legislature)
-			)
-		);
+		.where(and(eq(organs.type, 'GP'), eq(organs.legislature, legislature)));
 
 	// Structure pour stocker les votes par groupe et par loi
 	const groupVotes: Record<

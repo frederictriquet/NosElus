@@ -26,7 +26,14 @@
 
 	// Créer le store pour cette chambre
 	const quiz = createChamberQuizStore(config);
-	const { store: quizStore, canGoNext, canGoPrevious, completed: quizCompleted, canAbstain, reserveCount } = quiz;
+	const {
+		store: quizStore,
+		canGoNext,
+		canGoPrevious,
+		completed: quizCompleted,
+		canAbstain,
+		reserveCount
+	} = quiz;
 
 	// Phase : 'setup' (configuration) ou 'quiz' (questions)
 	let phase = $state<'setup' | 'quiz'>('setup');

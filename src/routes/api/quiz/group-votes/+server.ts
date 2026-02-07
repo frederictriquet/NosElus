@@ -3,12 +3,13 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { scrutins, organs } from '$lib/server/db/schema';
 import { inArray, eq, and, sql } from 'drizzle-orm';
+import { getOrgansLegislature } from '$lib/quiz/config';
 
 /**
  * API endpoint pour récupérer les votes majoritaires des groupes parlementaires.
  *
  * POST /api/quiz/group-votes
- * Body: { lawIds: string[] }
+ * Body: { lawIds: string[], legislature?: string }
  *
  * Retourne pour chaque groupe et chaque loi :
  * - La position majoritaire (pour/contre)
@@ -21,10 +22,12 @@ import { inArray, eq, and, sql } from 'drizzle-orm';
  */
 export const POST: RequestHandler = async ({ request }) => {
 	let lawIds: string[];
+	let legislature: string;
 
 	try {
 		const body = await request.json();
 		lawIds = body.lawIds;
+		legislature = body.legislature || '17';
 
 		if (!Array.isArray(lawIds) || lawIds.length === 0) {
 			throw error(400, 'lawIds manquant ou invalide');
@@ -44,12 +47,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		.where(
 			and(
 				inArray(scrutins.lawId, lawIds),
-				eq(scrutins.legislature, '17'),
+				eq(scrutins.legislature, legislature),
 				sql`${scrutins.groupResults} IS NOT NULL`
 			)
 		);
 
-	// Récupérer tous les groupes actifs de la L17
+	// Récupérer tous les groupes actifs de la législature
+	const organsLegislature = getOrgansLegislature(legislature);
 	const groupsData = await db
 		.select({
 			id: organs.id,
@@ -58,12 +62,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			politicalPosition: organs.politicalPosition
 		})
 		.from(organs)
-		.where(
-			and(
-				eq(organs.type, 'GP'), // Groupes parlementaires
-				eq(organs.legislature, '17')
-			)
-		);
+		.where(and(eq(organs.type, 'GP'), eq(organs.legislature, organsLegislature)));
 
 	// Structure pour stocker les votes par groupe et par loi
 	const groupVotes: Record<

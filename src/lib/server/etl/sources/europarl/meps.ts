@@ -239,7 +239,8 @@ function extractGroups(meps: ParlTrackMEP[]): NewOrgan[] {
 		const currentGroup = getCurrentGroup(mep);
 		if (!currentGroup) continue;
 
-		const id = generateGroupId(currentGroup.groupid);
+		// Use groupid-term pattern for consistency with historical imports
+		const id = generateGroupId(`${currentGroup.groupid}-${CURRENT_TERM}`);
 		if (groupMap.has(id)) continue;
 
 		// Use ParlTrack Organization field, fallback to groupid
@@ -247,7 +248,7 @@ function extractGroups(meps: ParlTrackMEP[]): NewOrgan[] {
 
 		groupMap.set(id, {
 			id,
-			uid: `EUROPARL-${currentGroup.groupid}`,
+			uid: `EUROPARL-${currentGroup.groupid}-T${CURRENT_TERM}`,
 			type: 'GP',
 			name: fullName,
 			shortName: currentGroup.groupid,
@@ -270,7 +271,8 @@ function createGroupMandate(mep: ParlTrackMEP): NewMandate | null {
 	if (!currentGroup) return null;
 
 	const actorId = generateMepId(mep.UserID);
-	const organId = generateGroupId(currentGroup.groupid);
+	// Use groupid-term pattern for consistency with historical imports
+	const organId = generateGroupId(`${currentGroup.groupid}-${CURRENT_TERM}`);
 
 	// Parse start date
 	let startDate = '2024-07-16'; // Default to term start

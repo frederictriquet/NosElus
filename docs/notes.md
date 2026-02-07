@@ -1,6 +1,11 @@
 j'aimerais une nouvelle fonctionnalité dans laquelle on montre à l'utilisateur une série de textes (d'une législature) pour lesquels on a le résumé, l'analyse IA et les tags ainsi que les votes. L'utilisateur vote pour ou conrte chaque loi, et en fonction de ses votes on lui donne son alignement avec les différents partis politiques
 
+faire un plugin de logs via telegram
 
+http://localhost:5173/an/scrutins/VTANR5L17V4545
+
+traite le TODO de src/routes/api/quiz/group-votes/+server.ts:98
+ 
 crée dashboard indiquant pour chaque mandature le nombre de textes de lois, le nombres de textes pour lesquels on a des votes, le nombre de textes analysés par l'IA
 
 
@@ -49,7 +54,8 @@ docker exec noselus-postgres psql -U noselus -d noselus -c "SELECT '/an/scrutins
 
 make etl-analyze-laws ARGS="--limit 1 -r TXT17639VV1 --model mistral-nemo"
 
-
+make etl-europarl-laws
+make etl-europarl-votes
 
 
 [16/100] Analyzing: TXT171SFCQR - gouvernement et aux amendements identiques suivant...

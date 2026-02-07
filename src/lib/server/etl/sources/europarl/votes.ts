@@ -136,15 +136,65 @@ function generateVoteId(scrutinId: string, actorId: string): string {
 }
 
 /**
+ * Build group results from HTV stats.by_group
+ */
+function buildGroupResults(
+	byGroup: HTVVoteStats['by_group'],
+	groupIdMap: Map<string, string>
+): Record<string, { pour: number; contre: number; abstention: number; nonVotant: number }> | null {
+	if (!byGroup || byGroup.length === 0) return null;
+
+	const results: Record<
+		string,
+		{ pour: number; contre: number; abstention: number; nonVotant: number }
+	> = {};
+
+	for (const groupStat of byGroup) {
+		// Map HTV group code to our group ID
+		const htvCode = groupStat.group.code;
+		const ourShortName = HTV_GROUP_CODE_MAP[htvCode] || htvCode;
+		const groupId = groupIdMap.get(ourShortName);
+
+		if (!groupId) continue; // Skip groups we don't have in DB
+
+		results[groupId] = {
+			pour: groupStat.stats.FOR,
+			contre: groupStat.stats.AGAINST,
+			abstention: groupStat.stats.ABSTENTION,
+			nonVotant: groupStat.stats.DID_NOT_VOTE
+		};
+	}
+
+	return Object.keys(results).length > 0 ? results : null;
+}
+
+/**
+ * Generate law ID for PE laws (must match europarl/laws.ts format)
+ */
+function generateLawId(reference: string, term: number): string {
+	return `LWPE${term}-${reference.replace(/\//g, '-')}`;
+}
+
+/**
  * Map HTV vote to scrutin
  */
-function mapToScrutin(vote: HTVVote, term: number): NewScrutin {
+function mapToScrutin(
+	vote: HTVVote,
+	term: number,
+	groupIdMap: Map<string, string>
+): NewScrutin {
 	const id = generateScrutinId(vote.id, term);
 	const date = vote.timestamp.split('T')[0];
 	const totals = vote.stats.total;
 
 	// Calculate total voters from the counts
 	const totalVoters = totals.FOR + totals.AGAINST + totals.ABSTENTION + totals.DID_NOT_VOTE;
+
+	// Build group results from stats.by_group
+	const groupResults = buildGroupResults(vote.stats.by_group, groupIdMap);
+
+	// Link to law if vote has a procedure reference
+	const lawId = vote.reference ? generateLawId(vote.reference, term) : null;
 
 	return {
 		id,
@@ -160,7 +210,9 @@ function mapToScrutin(vote: HTVVote, term: number): NewScrutin {
 		totalAbstention: totals.ABSTENTION,
 		totalNonVoting: totals.DID_NOT_VOTE,
 		result: vote.result === 'ADOPTED' ? 'adopté' : vote.result === 'REJECTED' ? 'rejeté' : null,
-		description: vote.description || null
+		description: vote.description || null,
+		groupResults,
+		lawId
 	};
 }
 
@@ -248,8 +300,8 @@ export async function importEuroparlVotes(config: ETLConfig): Promise<ImportStat
 			// Fetch detailed vote
 			const voteDetails = await fetchVoteDetails(voteItem.id);
 
-			// Map to scrutin
-			const scrutin = mapToScrutin(voteDetails, currentTerm);
+			// Map to scrutin (with group results)
+			const scrutin = mapToScrutin(voteDetails, currentTerm, groupIdMap);
 			scrutinBatch.push(scrutin);
 
 			// Extract French MEP votes only
@@ -312,6 +364,8 @@ export async function importEuroparlVotes(config: ETLConfig): Promise<ImportStat
 							totalAbstention: sql`excluded.total_abstention`,
 							totalNonVoting: sql`excluded.total_non_voting`,
 							result: sql`excluded.result`,
+							groupResults: sql`excluded.group_results`,
+							lawId: sql`excluded.law_id`,
 							updatedAt: sql`now()`
 						}
 					});

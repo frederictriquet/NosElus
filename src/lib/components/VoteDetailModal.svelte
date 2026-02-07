@@ -8,9 +8,10 @@
 	interface Props {
 		result: AlignmentResult;
 		onClose: () => void;
+		lawBasePath?: string;
 	}
 
-	let { result, onClose }: Props = $props();
+	let { result, onClose, lawBasePath = '/an/laws' }: Props = $props();
 
 	// Séparer accords et désaccords
 	const agreements = $derived(result.details.filter((d) => d.agreement));
@@ -75,7 +76,7 @@
 							<li class="vote-item agreement">
 								<div class="law-title">
 									<a
-										href="/an/laws/{detail.lawId}"
+										href="{lawBasePath}/{detail.lawId}"
 										target="_blank"
 										rel="noopener noreferrer"
 										class="source-link"
@@ -125,7 +126,7 @@
 							<li class="vote-item disagreement">
 								<div class="law-title">
 									<a
-										href="/an/laws/{detail.lawId}"
+										href="{lawBasePath}/{detail.lawId}"
 										target="_blank"
 										rel="noopener noreferrer"
 										class="source-link"

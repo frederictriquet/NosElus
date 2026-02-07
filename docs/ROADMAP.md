@@ -157,6 +157,11 @@
 - [x] Persistance localStorage avec reprise
 - [x] Tests unitaires (23 tests pour stratification)
 - [x] Documentation complète (README 423 lignes + JSDoc)
+- [x] Refactoring multi-chambre (composants partagés QuizPage + QuizResults)
+- [x] Extension Quiz Parlement Européen (/pe/quiz + /pe/quiz/resultats)
+- [x] Tests API + ETL (24 nouveaux tests, 267 total)
+- [x] Documentation guide feature + changelog + JSDoc
+- [x] Capitalisation patterns (factorisation, web scraping, normalization, CLI)
 
 ### 6.3 Intégrations
 - [ ] Légifrance API (textes de loi promulguées)

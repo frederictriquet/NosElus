@@ -33,8 +33,28 @@ export interface QuizTagData {
  * Charge toutes les lois éligibles au quiz et les tags disponibles
  * pour une législature donnée.
  *
+ * **Critères d'éligibilité** :
+ * - Loi a un résumé LLM (`law_summaries.summary`)
+ * - Loi a au moins 1 scrutin avec votes (`scrutins.id`)
+ * - Filtre par législature (AN ou PE)
+ *
+ * **Optimisations performance** :
+ * - Utilise batch loading pour éviter N+1 queries sur les tags
+ * - Charge tous les tags en une requête via `inArray(lawIds)`
+ * - Groupe les tags côté application (Map)
+ *
  * La stratification (sélection, mélange, split quiz/réserve) est
  * déléguée au client via `quiz-selection.ts`.
+ *
+ * @param legislature - Identifiant de législature ('17' pour AN, 'PE-10' pour PE)
+ * @returns Objet contenant toutes les lois éligibles avec leurs tags et la liste des tags disponibles
+ *
+ * @example
+ * ```typescript
+ * const { allLaws, availableTags } = await loadQuizData('PE-10');
+ * console.log(allLaws.length);        // ex: 42 lois PE éligibles
+ * console.log(availableTags.length);  // ex: 8 tags utilisés
+ * ```
  */
 export async function loadQuizData(legislature: string): Promise<{
 	allLaws: QuizLawData[];

@@ -3,12 +3,13 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { scrutins, organs } from '$lib/server/db/schema';
 import { inArray, eq, and, sql } from 'drizzle-orm';
+import { getOrgansLegislature } from '$lib/quiz/config';
 
 /**
  * API endpoint pour récupérer les votes majoritaires des groupes parlementaires.
  *
  * POST /api/quiz/group-votes
- * Body: { lawIds: string[] }
+ * Body: { lawIds: string[], legislature?: string }
  *
  * Retourne pour chaque groupe et chaque loi :
  * - La position majoritaire (pour/contre)
@@ -52,6 +53,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		);
 
 	// Récupérer tous les groupes actifs de la législature
+	const organsLegislature = getOrgansLegislature(legislature);
 	const groupsData = await db
 		.select({
 			id: organs.id,
@@ -60,7 +62,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			politicalPosition: organs.politicalPosition
 		})
 		.from(organs)
-		.where(and(eq(organs.type, 'GP'), eq(organs.legislature, legislature)));
+		.where(and(eq(organs.type, 'GP'), eq(organs.legislature, organsLegislature)));
 
 	// Structure pour stocker les votes par groupe et par loi
 	const groupVotes: Record<

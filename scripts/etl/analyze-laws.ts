@@ -17,6 +17,7 @@ import { analyzeLawsBatch, analyzeLaw, saveLawAnalysis, getAvailableTags } from 
 import { db } from '../../src/lib/server/db/index.js';
 import { laws, lawSummaries } from '../../src/lib/server/db/schema/index.js';
 import { eq } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 interface Args {
 	limit: number;
@@ -194,6 +195,20 @@ async function main() {
 			console.log(`  Résumé: ${analysis.summary}`);
 			console.log(`  Tags: ${analysis.tags.join(', ')}`);
 			console.log('='.repeat(60));
+
+			// Notification Telegram
+			await notifyETLComplete('analyze-laws', {
+				total: 1,
+				inserted: analysis.summary.startsWith('Erreur:') ? 0 : 1,
+				updated: 0,
+				skipped: 0,
+				errors: analysis.summary.startsWith('Erreur:') ? 1 : 0
+			}, {
+				dryRun: args.dryRun,
+				legislature: law.legislature,
+				additionalInfo: { mode: 'reanalyze', lawId: args.reanalyze }
+			});
+
 			process.exit(0);
 		} catch (error) {
 			console.error('Erreur:', error);
@@ -230,6 +245,19 @@ async function main() {
 			console.log(`  Ignorées (dry-run): ${result.skipped}`);
 		}
 		console.log('='.repeat(60));
+
+		// Notification Telegram
+		await notifyETLComplete('analyze-laws', {
+			total: result.total,
+			inserted: result.success,
+			updated: 0,
+			skipped: result.skipped,
+			errors: result.errors
+		}, {
+			dryRun: args.dryRun,
+			legislature: args.legislature,
+			additionalInfo: { model: args.model }
+		});
 
 		process.exit(result.errors > 0 ? 1 : 0);
 	} catch (error) {

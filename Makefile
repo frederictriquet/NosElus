@@ -2,7 +2,7 @@
 # ==================
 # Commandes utiles pour le développement et la gestion des données
 
-.PHONY: help install dev build preview clean \
+.PHONY: help install dev build preview clean clean-cache \
         db-up db-down db-migrate db-push db-studio db-reset \
         etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts etl-political-positions etl-seed-pe-positions \
         docker-build docker-up docker-down docker-logs docker-restart \
@@ -53,6 +53,11 @@ preview: ## Preview du build de production
 
 clean: ## Nettoie les fichiers générés
 	rm -rf .svelte-kit node_modules/.vite build
+
+clean-cache: ## Nettoie uniquement les caches (utile après refactoring)
+	@echo "$(YELLOW)Nettoyage des caches Vite et SvelteKit...$(RESET)"
+	rm -rf .svelte-kit node_modules/.vite
+	@echo "$(GREEN)✓ Cache nettoyé - redémarrez le dev server$(RESET)"
 
 # =============================================================================
 # BASE DE DONNÉES

@@ -97,6 +97,58 @@ async function makeRequest(url: string): Promise<Response> {
 }
 ```
 
+#### 2.3.5 Validation Sémantique des Paramètres API
+
+- [ ] **Vérifier la signification réelle des paramètres** : Lire la doc API, ne pas deviner
+- [ ] **Tester avec/sans filtres** : Comparer résultats pour valider intention
+- [ ] **Documenter l'intention** : Commenter pourquoi ce paramètre est utilisé
+- [ ] **Valider sur données réelles** : Vérifier que filtrage produit résultats attendus
+
+**Problème courant** : Mauvaise interprétation d'un paramètre API.
+
+**Exemple réel (leçon apprise)** :
+```typescript
+// ❌ MAUVAIS : Assumption incorrecte
+// Intention: Filtrer votes des MEPs français
+// Réalité: Filtre votes dont le SUJET géographique concerne la France
+fetchHTV('/votes?geo_areas=FRA')
+// → Retourne 9 votes (votes ABOUT France, pas votes BY French MEPs)
+
+// ✅ BON : Pas de filtre géographique, filtrage fait côté applicatif
+fetchHTV('/votes')
+// → Retourne 2204 votes (tous les votes PE)
+// Le filtrage par MEPs français se fait via les votes individuels
+```
+
+**Pattern de validation** :
+```typescript
+// 1. Tester SANS le filtre
+const allResults = await api.fetch('/endpoint');
+console.log(`Without filter: ${allResults.length} results`);
+
+// 2. Tester AVEC le filtre
+const filteredResults = await api.fetch('/endpoint?filter=value');
+console.log(`With filter: ${filteredResults.length} results`);
+
+// 3. Vérifier manuellement quelques résultats
+const sample = filteredResults.slice(0, 3);
+console.log('Sample results:', sample);
+
+// 4. Valider que le filtre fait ce qu'on pense
+// Ex: Si geo_areas=FRA, vérifier que les résultats concernent la France
+```
+
+**Checklist de validation** :
+- [ ] Documentation API lue et comprise
+- [ ] Test avec/sans filtre effectué
+- [ ] Résultats comparés et validés
+- [ ] Intention du filtre documentée en commentaire
+- [ ] Cas limites testés (ex: filtre qui retourne 0 résultats)
+
+**Voir aussi** :
+- `lessons-learned-2026-02-07-pe-laws-expansion.md` (leçon #1)
+- `adr-2026-02-07-pe-laws-expansion.md` (cas réel geo_areas=FRA)
+
 #### 2.4 Error Handling
 
 - [ ] **Erreurs typées** : Pas de `any`, utiliser types spécifiques

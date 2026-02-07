@@ -15,6 +15,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 | ADR-005 | 2026-02-06 | Migrations de base de données idempotentes | ✅ Accepté | - | `adr-2026-02-06-idempotent-migrations.md` |
 | ADR-006 | 2026-02-06 | Quiz politique interactif | ✅ Accepté | - | `adr-2026-02-06-political-quiz.md` |
 | ADR-007 | 2026-02-07 | Expansion des lois du Parlement Européen | ✅ Accepté | 2.1 | `adr-2026-02-07-pe-laws-expansion.md` |
+| ADR-008 | 2026-02-07 | Notifications Telegram des ETL avec FemtoLogger | ✅ Accepté | Infrastructure | `adr-2026-02-07-femtologger-etl-notifications.md` |
 
 ## Par catégorie
 
@@ -25,6 +26,9 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 
 ### Calculs métier
 - **ADR-002** : Formule votes serrés (margin simple)
+
+### Infrastructure / Monitoring
+- **ADR-008** : Notifications Telegram des ETL (helper centralisé)
 
 ### Sources de données
 - **ADR-004** : ParlGov comme source de positionnement politique

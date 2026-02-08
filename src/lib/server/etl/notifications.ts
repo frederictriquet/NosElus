@@ -26,44 +26,34 @@
  * @see {@link file://./.serena/memories/adr-2026-02-07-femtologger-etl-notifications.md} ADR-008
  */
 
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import type { ImportStats } from './types.js';
+import { FemtoLogger, TelegramTransport } from '@frederictriquet/femtologger';
 
-// Types pour FemtoLogger (à remplacer par l'import réel quand le package sera installé)
-// TODO: Remplacer par: import { FemtoLogger, TelegramTransport } from '@frederictriquet/femtologger';
-interface FemtoLoggerInterface {
-	info(message: string, metadata?: Record<string, unknown>): Promise<void>;
-}
+/**
+ * Charge les variables Telegram depuis .env si elles ne sont pas déjà dans l'environnement.
+ * Parsing minimal : supporte KEY=VALUE et ignore les commentaires (#) et lignes vides.
+ */
+function loadTelegramEnv(): void {
+	if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) return;
 
-interface TelegramTransportConfig {
-	token: string;
-	chatId: string | number;
-	parseMode?: 'HTML' | 'Markdown' | 'MarkdownV2';
-	disableWebPagePreview?: boolean;
-}
-
-// Mock classes temporaires (à supprimer quand FemtoLogger sera installé)
-class TelegramTransport {
-	constructor(config: TelegramTransportConfig) {
-		// Mock implementation
-		console.log('[MOCK] TelegramTransport initialized:', {
-			chatId: config.chatId,
-			parseMode: config.parseMode
-		});
-	}
-}
-
-class FemtoLogger implements FemtoLoggerInterface {
-	constructor(config: { transports: TelegramTransport[] }) {
-		// Mock implementation
-		console.log('[MOCK] FemtoLogger initialized with', config.transports.length, 'transport(s)');
-	}
-
-	async info(message: string, metadata?: Record<string, unknown>): Promise<void> {
-		// Mock implementation
-		console.log('[MOCK] Telegram notification:', message);
-		if (metadata) {
-			console.log('[MOCK] Metadata:', metadata);
+	try {
+		const envPath = resolve(process.cwd(), '.env');
+		const content = readFileSync(envPath, 'utf-8');
+		for (const line of content.split('\n')) {
+			const trimmed = line.trim();
+			if (!trimmed || trimmed.startsWith('#')) continue;
+			const match = trimmed.match(/^(TELEGRAM_\w+)=(.+)$/);
+			if (match) {
+				const [, key, value] = match;
+				if (!process.env[key]) {
+					process.env[key] = value;
+				}
+			}
 		}
+	} catch {
+		// .env non trouvé ou illisible → pas grave, on continue
 	}
 }
 
@@ -95,7 +85,8 @@ function getLogger(): FemtoLogger | null {
 		return loggerInstance;
 	}
 
-	// Lire les credentials depuis l'environnement
+	// Charger .env si nécessaire, puis lire les credentials
+	loadTelegramEnv();
 	const token = process.env.TELEGRAM_BOT_TOKEN;
 	const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -198,7 +189,7 @@ export async function notifyETLComplete(
 		// Legislature info (optionnel)
 		const legislatureInfo = options.legislature ? ` (${options.legislature})` : '';
 
-		// Formatage du message en HTML
+		// Formatage du message en HTML (FemtoLogger v0.1.4+ ne l'échappe plus)
 		const message =
 			`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}\n\n` +
 			`📊 <b>Résultats</b>:\n` +

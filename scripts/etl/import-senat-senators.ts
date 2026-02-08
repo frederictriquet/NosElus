@@ -35,7 +35,9 @@ async function main() {
 		console.log(`  Errors: ${stats.errors}`);
 		console.log('='.repeat(60));
 
-		await notifyETLComplete('import-senat-senators', stats);
+		await notifyETLComplete('import-senat-senators', stats, {
+			dryRun: process.argv.includes('--dry-run')
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

@@ -36,7 +36,9 @@ async function main() {
 		console.log(`  Errors: ${stats.errors}`);
 		console.log('='.repeat(60));
 
-		await notifyETLComplete('import-nossenateurs-stats', stats);
+		await notifyETLComplete('import-nossenateurs-stats', stats, {
+			dryRun: process.argv.includes('--dry-run')
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

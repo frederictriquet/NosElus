@@ -229,6 +229,7 @@ async function main() {
 			errors: Object.values(allStats).reduce((sum, s) => sum + s.errors, 0)
 		};
 		await notifyETLComplete('import-all', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
 			legislature: config.legislature,
 			additionalInfo: { duration, mode: config.incremental ? 'incremental' : 'full' }
 		});

@@ -132,13 +132,17 @@ async function main() {
 	console.log(`  Sans correspondance: ${notFound}`);
 	console.log('='.repeat(60));
 
-	await notifyETLComplete('sync-group-colors', {
-		total: updated + alreadyHasColor + notFound,
-		inserted: 0,
-		updated,
-		skipped: alreadyHasColor + notFound,
-		errors: 0
-	});
+	await notifyETLComplete(
+		'sync-group-colors',
+		{
+			total: updated + alreadyHasColor + notFound,
+			inserted: 0,
+			updated,
+			skipped: alreadyHasColor + notFound,
+			errors: 0
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 
 	process.exit(0);
 }

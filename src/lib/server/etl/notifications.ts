@@ -44,7 +44,7 @@ function loadTelegramEnv(): void {
 		for (const line of content.split('\n')) {
 			const trimmed = line.trim();
 			if (!trimmed || trimmed.startsWith('#')) continue;
-			const match = trimmed.match(/^(TELEGRAM_\w+)=(.+)$/);
+			const match = trimmed.match(/^(TELEGRAM_\w+)=["']?(.+?)["']?$/);
 			if (match) {
 				const [, key, value] = match;
 				if (!process.env[key]) {

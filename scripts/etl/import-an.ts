@@ -154,6 +154,7 @@ async function main() {
 			errors: allStatsArr.reduce((sum, s) => sum + s.errors, 0)
 		};
 		await notifyETLComplete('import-an', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
 			legislature: legislature || config.legislature
 		});
 	}

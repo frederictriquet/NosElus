@@ -140,13 +140,17 @@ async function main() {
 		console.log('   Ces positions seront utilisées quand ces groupes existeront en DB');
 	}
 
-	await notifyETLComplete('seed-pe-positions', {
-		total: result.updated + result.notFound + result.unchanged,
-		inserted: 0,
-		updated: result.updated,
-		skipped: result.unchanged + result.notFound,
-		errors: 0
-	});
+	await notifyETLComplete(
+		'seed-pe-positions',
+		{
+			total: result.updated + result.notFound + result.unchanged,
+			inserted: 0,
+			updated: result.updated,
+			skipped: result.unchanged + result.notFound,
+			errors: 0
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 
 	process.exit(0);
 }

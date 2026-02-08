@@ -70,6 +70,8 @@ async function main() {
 		await mkdir(dataDir, { recursive: true });
 	}
 
+	let errors = 0;
+
 	for (const dataset of DATASETS) {
 		console.log(`\n--- ${dataset.name} ---`);
 
@@ -101,6 +103,7 @@ async function main() {
 				dataset.url.replace('.json.zip', '.xml.zip')
 			];
 
+			let recovered = false;
 			for (const altUrl of altUrls) {
 				if (altUrl !== dataset.url) {
 					console.log(`Tentative avec URL alternative: ${altUrl}`);
@@ -110,11 +113,15 @@ async function main() {
 						await downloadFile(altUrl, altZipPath);
 						await unzipFile(altZipPath, outputDir);
 						await unlink(altZipPath);
+						recovered = true;
 						break;
 					} catch {
 						continue;
 					}
 				}
+			}
+			if (!recovered) {
+				errors++;
 			}
 		}
 	}
@@ -128,13 +135,17 @@ async function main() {
 	console.log('  npm run etl:all');
 	console.log('='.repeat(60));
 
-	await notifyETLComplete('download-data', {
-		total: DATASETS.length,
-		inserted: DATASETS.length,
-		updated: 0,
-		skipped: 0,
-		errors: 0
-	});
+	await notifyETLComplete(
+		'download-data',
+		{
+			total: DATASETS.length,
+			inserted: DATASETS.length - errors,
+			updated: 0,
+			skipped: 0,
+			errors
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 }
 
 main().catch(console.error);

@@ -75,6 +75,7 @@ async function main() {
 			errors: groupesStats.errors + deputesStats.errors + scrutinsStats.errors + votesStats.errors
 		};
 		await notifyETLComplete('import-nosdeputes', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
 			additionalInfo: {
 				groupes: groupesStats.inserted,
 				deputes: deputesStats.inserted,

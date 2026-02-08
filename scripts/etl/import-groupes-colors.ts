@@ -122,13 +122,17 @@ async function main() {
 	console.log(`Durée: ${duration}s`);
 	console.log('='.repeat(60));
 
-	await notifyETLComplete('import-groupes-colors', {
-		total: totalInserted + totalErrors,
-		inserted: totalInserted,
-		updated: 0,
-		skipped: 0,
-		errors: totalErrors
-	});
+	await notifyETLComplete(
+		'import-groupes-colors',
+		{
+			total: totalInserted + totalErrors,
+			inserted: totalInserted,
+			updated: 0,
+			skipped: 0,
+			errors: totalErrors
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 
 	process.exit(totalErrors > 0 ? 1 : 0);
 }

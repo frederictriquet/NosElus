@@ -334,13 +334,17 @@ async function main() {
 	console.log(`  Sans correspondance: ${totalNotFound}`);
 	console.log('='.repeat(60));
 
-	await notifyETLComplete('import-external-colors', {
-		total: totalUpdated + totalNotFound,
-		inserted: 0,
-		updated: totalUpdated,
-		skipped: totalNotFound,
-		errors: 0
-	});
+	await notifyETLComplete(
+		'import-external-colors',
+		{
+			total: totalUpdated + totalNotFound,
+			inserted: 0,
+			updated: totalUpdated,
+			skipped: totalNotFound,
+			errors: 0
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 
 	process.exit(0);
 }

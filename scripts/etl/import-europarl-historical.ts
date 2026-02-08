@@ -37,7 +37,9 @@ async function main() {
 		console.log(`  Erreurs: ${stats.errors}`);
 		console.log('='.repeat(60));
 
-		await notifyETLComplete('import-europarl-historical', stats);
+		await notifyETLComplete('import-europarl-historical', stats, {
+			dryRun: process.argv.includes('--dry-run')
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

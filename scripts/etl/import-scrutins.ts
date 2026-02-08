@@ -97,6 +97,7 @@ async function main() {
 			errors: scrutinsStats.errors + votesStats.errors
 		};
 		await notifyETLComplete('import-scrutins', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
 			legislature: config.legislature,
 			additionalInfo: { scrutins: scrutinsStats.inserted, votes: votesStats.inserted }
 		});

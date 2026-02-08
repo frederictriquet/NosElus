@@ -52,6 +52,7 @@ async function main() {
 		console.log('='.repeat(60));
 
 		await notifyETLComplete('import-amendements', stats, {
+			dryRun: process.argv.includes('--dry-run'),
 			legislature: legislature || 'toutes'
 		});
 

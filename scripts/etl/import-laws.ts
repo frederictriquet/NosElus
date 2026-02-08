@@ -73,6 +73,7 @@ async function main() {
 			errors: lawsStats.errors + linkStats.errors
 		};
 		await notifyETLComplete('import-laws', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
 			legislature: config.legislature,
 			additionalInfo: { laws: lawsStats.inserted, links: linkStats.updated }
 		});

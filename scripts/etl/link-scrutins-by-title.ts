@@ -31,7 +31,7 @@ linkScrutinsByTitle(legislature)
 				skipped: 0,
 				errors: 0
 			},
-			{ legislature }
+			{ legislature, dryRun: process.argv.includes('--dry-run') }
 		);
 
 		process.exit(0);

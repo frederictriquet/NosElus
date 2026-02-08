@@ -1,8 +1,16 @@
-import { importActors, importOrgans, importMandates } from '../../src/lib/server/etl/sources/assemblee/actors.js';
-import { importScrutins, importVotes } from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
+import {
+	importActors,
+	importOrgans,
+	importMandates
+} from '../../src/lib/server/etl/sources/assemblee/actors.js';
+import {
+	importScrutins,
+	importVotes
+} from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
 import { importLaws, linkScrutinsToLaws } from '../../src/lib/server/etl/sources/assemblee/laws.js';
 import { getETLConfig, type ImportStats } from '../../src/lib/server/etl/types.js';
 import { parseArgs, getLastSync, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const SOURCE = 'assemblee';
 
@@ -24,7 +32,9 @@ function printUsage() {
 	console.log('');
 	console.log('Options:');
 	console.log('  --incremental, -i    Only import records modified since last sync');
-	console.log('  --legislature, -l    Legislature to import (default: from ETL_ASSEMBLEE_LEGISLATURE or 16)');
+	console.log(
+		'  --legislature, -l    Legislature to import (default: from ETL_ASSEMBLEE_LEGISLATURE or 16)'
+	);
 	console.log('  --since, -s          Import records modified since this date (ISO format)');
 	console.log('');
 	console.log('Examples:');
@@ -94,7 +104,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const organsStats = await importOrgans(config);
 		allStats.organs = organsStats;
-		console.log(`✓ Organs: ${organsStats.inserted} inserted, ${organsStats.updated} updated, ${organsStats.errors} errors`);
+		console.log(
+			`✓ Organs: ${organsStats.inserted} inserted, ${organsStats.updated} updated, ${organsStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('organs', organsStats, {
 			legislature: config.legislature,
 			status: organsStats.errors > 0 ? 'partial' : 'success'
@@ -106,7 +118,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const actorsStats = await importActors(config);
 		allStats.actors = actorsStats;
-		console.log(`✓ Actors: ${actorsStats.inserted} inserted, ${actorsStats.updated} updated, ${actorsStats.errors} errors`);
+		console.log(
+			`✓ Actors: ${actorsStats.inserted} inserted, ${actorsStats.updated} updated, ${actorsStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('actors', actorsStats, {
 			legislature: config.legislature,
 			status: actorsStats.errors > 0 ? 'partial' : 'success'
@@ -118,7 +132,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const mandatesStats = await importMandates(config);
 		allStats.mandates = mandatesStats;
-		console.log(`✓ Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated, ${mandatesStats.errors} errors`);
+		console.log(
+			`✓ Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated, ${mandatesStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('mandates', mandatesStats, {
 			legislature: config.legislature,
 			status: mandatesStats.errors > 0 ? 'partial' : 'success'
@@ -130,7 +146,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const scrutinsStats = await importScrutins(config);
 		allStats.scrutins = scrutinsStats;
-		console.log(`✓ Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`);
+		console.log(
+			`✓ Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('scrutins', scrutinsStats, {
 			legislature: config.legislature,
 			status: scrutinsStats.errors > 0 ? 'partial' : 'success'
@@ -142,7 +160,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const votesStats = await importVotes(config);
 		allStats.votes = votesStats;
-		console.log(`✓ Votes: ${votesStats.inserted} inserted, ${votesStats.updated} updated, ${votesStats.errors} errors`);
+		console.log(
+			`✓ Votes: ${votesStats.inserted} inserted, ${votesStats.updated} updated, ${votesStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('votes', votesStats, {
 			legislature: config.legislature,
 			status: votesStats.errors > 0 ? 'partial' : 'success'
@@ -154,7 +174,9 @@ async function main() {
 		console.log('='.repeat(40));
 		const lawsStats = await importLaws(config);
 		allStats.laws = lawsStats;
-		console.log(`✓ Laws: ${lawsStats.inserted} inserted, ${lawsStats.updated} updated, ${lawsStats.errors} errors`);
+		console.log(
+			`✓ Laws: ${lawsStats.inserted} inserted, ${lawsStats.updated} updated, ${lawsStats.errors} errors`
+		);
 		await safeUpdateSyncMetadata('laws', lawsStats, {
 			legislature: config.legislature,
 			status: lawsStats.errors > 0 ? 'partial' : 'success'
@@ -166,24 +188,51 @@ async function main() {
 		console.log('='.repeat(40));
 		const linkStats = await linkScrutinsToLaws(config);
 		allStats.scrutinLawLinks = linkStats;
-		console.log(`✓ Links: ${linkStats.updated} scrutins linked, ${linkStats.skipped} not found, ${linkStats.errors} errors`);
+		console.log(
+			`✓ Links: ${linkStats.updated} scrutins linked, ${linkStats.skipped} not found, ${linkStats.errors} errors`
+		);
 
 		const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
 		console.log('\n' + '='.repeat(60));
 		console.log('IMPORT SUMMARY');
 		console.log('='.repeat(60));
-		console.log(`  Organs:   ${organsStats.inserted} inserted, ${organsStats.updated} updated (${organsStats.errors} errors)`);
-		console.log(`  Actors:   ${actorsStats.inserted} inserted, ${actorsStats.updated} updated (${actorsStats.errors} errors)`);
-		console.log(`  Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated (${mandatesStats.errors} errors)`);
-		console.log(`  Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated (${scrutinsStats.errors} errors)`);
-		console.log(`  Votes:    ${votesStats.inserted} inserted, ${votesStats.updated} updated (${votesStats.errors} errors)`);
-		console.log(`  Laws:     ${lawsStats.inserted} inserted, ${lawsStats.updated} updated (${lawsStats.errors} errors)`);
+		console.log(
+			`  Organs:   ${organsStats.inserted} inserted, ${organsStats.updated} updated (${organsStats.errors} errors)`
+		);
+		console.log(
+			`  Actors:   ${actorsStats.inserted} inserted, ${actorsStats.updated} updated (${actorsStats.errors} errors)`
+		);
+		console.log(
+			`  Mandates: ${mandatesStats.inserted} inserted, ${mandatesStats.updated} updated (${mandatesStats.errors} errors)`
+		);
+		console.log(
+			`  Scrutins: ${scrutinsStats.inserted} inserted, ${scrutinsStats.updated} updated (${scrutinsStats.errors} errors)`
+		);
+		console.log(
+			`  Votes:    ${votesStats.inserted} inserted, ${votesStats.updated} updated (${votesStats.errors} errors)`
+		);
+		console.log(
+			`  Laws:     ${lawsStats.inserted} inserted, ${lawsStats.updated} updated (${lawsStats.errors} errors)`
+		);
 		console.log(`  Links:    ${linkStats.updated} scrutins linked to laws`);
 		console.log('');
 		console.log(`Total time: ${duration}s`);
 		console.log(`Mode: ${config.incremental ? 'INCREMENTAL' : 'FULL'}`);
 		console.log('='.repeat(60));
+
+		const combinedStats: ImportStats = {
+			total: Object.values(allStats).reduce((sum, s) => sum + s.total, 0),
+			inserted: Object.values(allStats).reduce((sum, s) => sum + s.inserted, 0),
+			updated: Object.values(allStats).reduce((sum, s) => sum + s.updated, 0),
+			skipped: Object.values(allStats).reduce((sum, s) => sum + s.skipped, 0),
+			errors: Object.values(allStats).reduce((sum, s) => sum + s.errors, 0)
+		};
+		await notifyETLComplete('import-all', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
+			legislature: config.legislature,
+			additionalInfo: { duration, mode: config.incremental ? 'incremental' : 'full' }
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

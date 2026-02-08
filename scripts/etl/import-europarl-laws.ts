@@ -9,9 +9,11 @@
 
 import { importEuroparlLaws } from '../../src/lib/server/etl/sources/europarl/laws';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	const incremental = process.argv.includes('--incremental');
+	const dryRun = process.argv.includes('--dry-run');
 
 	console.log('='.repeat(60));
 	console.log('NosElus ETL - Import des lois/procédures du Parlement Européen');
@@ -42,6 +44,9 @@ async function main() {
 		console.log(`  Insérées/MàJ: ${stats.inserted}`);
 		console.log(`  Erreurs: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		// Notification Telegram
+		await notifyETLComplete('import-europarl-laws', stats, { dryRun });
 	} catch (error) {
 		console.error('Erreur fatale:', error);
 		process.exit(1);

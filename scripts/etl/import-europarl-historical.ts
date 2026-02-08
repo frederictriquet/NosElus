@@ -1,6 +1,7 @@
 import { importEuroparlHistoricalMeps } from '../../src/lib/server/etl/sources/europarl/meps.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const SOURCE = 'europarl';
 
@@ -35,6 +36,10 @@ async function main() {
 		console.log(`  MEPs importés: ${stats.inserted}`);
 		console.log(`  Erreurs: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('import-europarl-historical', stats, {
+			dryRun: process.argv.includes('--dry-run')
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

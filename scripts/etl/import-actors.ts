@@ -1,5 +1,10 @@
-import { importActors, importOrgans, importMandates } from '../../src/lib/server/etl/sources/assemblee/actors.js';
+import {
+	importActors,
+	importOrgans,
+	importMandates
+} from '../../src/lib/server/etl/sources/assemblee/actors.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	console.log('='.repeat(60));
@@ -23,6 +28,8 @@ async function main() {
 		process.exit(1);
 	}
 
+	const dryRun = process.argv.includes('--dry-run');
+
 	try {
 		// Import organs first (needed for mandates foreign keys)
 		console.log('\n--- Importing Organs ---');
@@ -42,6 +49,26 @@ async function main() {
 		console.log('\n='.repeat(60));
 		console.log('Import completed successfully!');
 		console.log('='.repeat(60));
+
+		// Combiner les stats pour la notification
+		const combinedStats = {
+			total: organsStats.total + actorsStats.total + mandatesStats.total,
+			inserted: organsStats.inserted + actorsStats.inserted + mandatesStats.inserted,
+			updated: organsStats.updated + actorsStats.updated + mandatesStats.updated,
+			skipped: organsStats.skipped + actorsStats.skipped + mandatesStats.skipped,
+			errors: organsStats.errors + actorsStats.errors + mandatesStats.errors
+		};
+
+		// Notification Telegram
+		await notifyETLComplete('import-actors', combinedStats, {
+			dryRun,
+			legislature: config.legislature,
+			additionalInfo: {
+				organs: organsStats.inserted,
+				actors: actorsStats.inserted,
+				mandates: mandatesStats.inserted
+			}
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

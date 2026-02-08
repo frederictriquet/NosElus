@@ -1,6 +1,7 @@
 import { db, scrutins } from '../../src/lib/server/db/index.js';
 import { classifyScrutin } from '../../src/lib/server/etl/classify.js';
 import { eq, sql, isNull } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 /**
  * Script de reclassification des scrutins existants.
@@ -68,7 +69,9 @@ async function main() {
 		// Process in batches
 		for (let i = 0; i < allScrutins.length; i += batchSize) {
 			const batch = allScrutins.slice(i, i + batchSize);
-			console.log(`Traitement du batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(allScrutins.length / batchSize)} (${batch.length} scrutins)`);
+			console.log(
+				`Traitement du batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(allScrutins.length / batchSize)} (${batch.length} scrutins)`
+			);
 
 			for (const scrutin of batch) {
 				try {
@@ -94,7 +97,9 @@ async function main() {
 
 			// Progress update
 			const progress = ((i + batch.length) / allScrutins.length) * 100;
-			console.log(`  Progress: ${progress.toFixed(1)}% (${i + batch.length}/${allScrutins.length})`);
+			console.log(
+				`  Progress: ${progress.toFixed(1)}% (${i + batch.length}/${allScrutins.length})`
+			);
 		}
 
 		console.log('');
@@ -115,11 +120,23 @@ async function main() {
 		console.log('');
 
 		if (dryRun) {
-			console.log('⚠️  DRY RUN - Aucune modification n\'a été effectuée en base');
+			console.log("⚠️  DRY RUN - Aucune modification n'a été effectuée en base");
 			console.log('   Relancez sans --dry-run pour appliquer les modifications');
 		} else {
 			console.log('✓ Modifications appliquées en base de données');
 		}
+
+		await notifyETLComplete(
+			'classify-scrutins',
+			{
+				total: stats.total,
+				inserted: 0,
+				updated: stats.updated,
+				skipped: stats.processed - stats.updated,
+				errors: stats.errors
+			},
+			{ dryRun }
+		);
 
 		process.exit(0);
 	} catch (error) {

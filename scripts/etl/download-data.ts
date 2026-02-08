@@ -4,6 +4,7 @@ import { createUnzip } from 'zlib';
 import { pipeline } from 'stream/promises';
 import path from 'path';
 import { execSync } from 'child_process';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const BASE_URL = 'https://data.assemblee-nationale.fr/static/openData/repository';
 const LEGISLATURE = process.env.ETL_ASSEMBLEE_LEGISLATURE || '16';
@@ -69,6 +70,8 @@ async function main() {
 		await mkdir(dataDir, { recursive: true });
 	}
 
+	let errors = 0;
+
 	for (const dataset of DATASETS) {
 		console.log(`\n--- ${dataset.name} ---`);
 
@@ -90,7 +93,6 @@ async function main() {
 			// Supprimer le ZIP
 			await unlink(zipPath);
 			console.log(`  -> ZIP supprimé`);
-
 		} catch (error) {
 			console.error(`Erreur: ${error}`);
 
@@ -101,6 +103,7 @@ async function main() {
 				dataset.url.replace('.json.zip', '.xml.zip')
 			];
 
+			let recovered = false;
 			for (const altUrl of altUrls) {
 				if (altUrl !== dataset.url) {
 					console.log(`Tentative avec URL alternative: ${altUrl}`);
@@ -110,11 +113,15 @@ async function main() {
 						await downloadFile(altUrl, altZipPath);
 						await unzipFile(altZipPath, outputDir);
 						await unlink(altZipPath);
+						recovered = true;
 						break;
 					} catch {
 						continue;
 					}
 				}
+			}
+			if (!recovered) {
+				errors++;
 			}
 		}
 	}
@@ -127,6 +134,18 @@ async function main() {
 	console.log(`  export ETL_DATA_DIR=${dataDir}`);
 	console.log('  npm run etl:all');
 	console.log('='.repeat(60));
+
+	await notifyETLComplete(
+		'download-data',
+		{
+			total: DATASETS.length,
+			inserted: DATASETS.length - errors,
+			updated: 0,
+			skipped: 0,
+			errors
+		},
+		{ dryRun: process.argv.includes('--dry-run') }
+	);
 }
 
 main().catch(console.error);

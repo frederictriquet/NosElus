@@ -28,6 +28,7 @@ import {
 	type ImportStats,
 	type ParlGovParty
 } from '../../src/lib/server/etl/sources/parlgov';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 // Parse CLI arguments
 const { values: args } = parseArgs({
@@ -66,9 +67,8 @@ function printHeader() {
  */
 function printStats(stats: ImportStats) {
 	const duration = (stats.duration / 1000).toFixed(1);
-	const successRate = stats.organsProcessed > 0
-		? ((stats.matched / stats.organsProcessed) * 100).toFixed(1)
-		: '0';
+	const successRate =
+		stats.organsProcessed > 0 ? ((stats.matched / stats.organsProcessed) * 100).toFixed(1) : '0';
 
 	console.log('');
 	console.log('='.repeat(70));
@@ -154,7 +154,7 @@ async function main() {
 		console.log('');
 
 		const results: Array<{
-			organ: typeof groups[0];
+			organ: (typeof groups)[0];
 			match: ReturnType<typeof findBestMatch>;
 			position: number;
 		}> = [];
@@ -178,14 +178,16 @@ async function main() {
 				stats.matched++;
 				logVerbose(
 					`  ✓ ${organ.shortName || organ.name.slice(0, 20)} → ${match.parlGovParty.nameNative} ` +
-					`(score: ${match.score.toFixed(2)}, pos: ${position.toFixed(1)})`
+						`(score: ${match.score.toFixed(2)}, pos: ${position.toFixed(1)})`
 				);
 			} else if (isNonInscrit(organ)) {
 				stats.notMatched++;
 				logVerbose(`  - ${organ.shortName || organ.name.slice(0, 20)} → NI (pos: 999)`);
 			} else {
 				stats.notMatched++;
-				logVerbose(`  ✗ ${organ.shortName || organ.name.slice(0, 20)} → No match (pos: ${position.toFixed(1)})`);
+				logVerbose(
+					`  ✗ ${organ.shortName || organ.name.slice(0, 20)} → No match (pos: ${position.toFixed(1)})`
+				);
 			}
 		}
 
@@ -239,7 +241,9 @@ async function main() {
 			console.log('  Would update:');
 
 			for (const { organ, position } of updatableResults) {
-				console.log(`    ${organ.id} (${organ.shortName || organ.name.slice(0, 15)}) → ${position.toFixed(1)}`);
+				console.log(
+					`    ${organ.id} (${organ.shortName || organ.name.slice(0, 15)}) → ${position.toFixed(1)}`
+				);
 			}
 
 			stats.updated = updatableResults.length;
@@ -263,7 +267,6 @@ async function main() {
 
 			console.log(`  Updated ${stats.updated} organs`);
 		}
-
 	} catch (error) {
 		console.error('FATAL ERROR:', error);
 		stats.errors++;
@@ -271,6 +274,18 @@ async function main() {
 
 	stats.duration = Date.now() - startTime;
 	printStats(stats);
+
+	await notifyETLComplete(
+		'import-political-positions',
+		{
+			total: stats.organsProcessed,
+			inserted: 0,
+			updated: stats.updated,
+			skipped: stats.organsProcessed - stats.updated - stats.errors,
+			errors: stats.errors
+		},
+		{ dryRun: config.dryRun }
+	);
 
 	process.exit(stats.errors > 0 ? 1 : 0);
 }

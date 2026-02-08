@@ -9,6 +9,7 @@
 
 import { importEuroparlVotes } from '../../src/lib/server/etl/sources/europarl/votes';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	const incremental = process.argv.includes('--incremental');
@@ -42,6 +43,10 @@ async function main() {
 		console.log(`  Insérés/MàJ: ${stats.inserted}`);
 		console.log(`  Erreurs: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('import-europarl-votes', stats, {
+			dryRun: process.argv.includes('--dry-run')
+		});
 	} catch (error) {
 		console.error('Erreur fatale:', error);
 		process.exit(1);

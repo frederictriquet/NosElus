@@ -103,6 +103,7 @@
 		"vitest": "^4.0.15"
 	},
 	"dependencies": {
+		"@frederictriquet/femtologger": "^0.1.4",
 		"@tricoteuses/assemblee": "^2.5.31",
 		"d3-scale": "^4.0.2",
 		"d3-shape": "^3.2.0",

@@ -30,6 +30,8 @@ Limites actuelles (visibles dans le code) :
 l'import des données en base demande beaucoup de travail (récupération de fichiers, consultation de endpoints d'api, et maintenant une phase d'analyse par IA), je voudrais pouvoir préparer toutes les données en local, sur un ordinateur assez puissant pour tout faire, et pouvoir envoyer ces données vers le serveur de prod. Il faudrait que ça puisse fonctionner de manière incrémentale.
 
 
+utilise le FemtoLogger https://github.com/frederictriquet/FemtoLogger pour logger des événements dans Telegram.
+Evénements à logger: la fin de n'importe quel ETL
 
 
 make etl-law-texts

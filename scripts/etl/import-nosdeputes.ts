@@ -5,6 +5,7 @@ import {
 	importVotesFromNosdeputes
 } from '../../src/lib/server/etl/sources/nosdeputes/import.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	console.log('='.repeat(60));
@@ -59,6 +60,29 @@ async function main() {
 		console.log('');
 		console.log(`Total time: ${duration}s`);
 		console.log('='.repeat(60));
+
+		const combinedStats = {
+			total: groupesStats.total + deputesStats.total + scrutinsStats.total + votesStats.total,
+			inserted:
+				groupesStats.inserted +
+				deputesStats.inserted +
+				scrutinsStats.inserted +
+				votesStats.inserted,
+			updated:
+				groupesStats.updated + deputesStats.updated + scrutinsStats.updated + votesStats.updated,
+			skipped:
+				groupesStats.skipped + deputesStats.skipped + scrutinsStats.skipped + votesStats.skipped,
+			errors: groupesStats.errors + deputesStats.errors + scrutinsStats.errors + votesStats.errors
+		};
+		await notifyETLComplete('import-nosdeputes', combinedStats, {
+			dryRun: process.argv.includes('--dry-run'),
+			additionalInfo: {
+				groupes: groupesStats.inserted,
+				deputes: deputesStats.inserted,
+				scrutins: scrutinsStats.inserted,
+				votes: votesStats.inserted
+			}
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

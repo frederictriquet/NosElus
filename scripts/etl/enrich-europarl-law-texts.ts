@@ -20,6 +20,7 @@ import {
 	enrichPELawTexts,
 	type EnrichConfig
 } from '../../src/lib/server/etl/sources/europarl/law-texts';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 interface Args {
 	dryRun: boolean;
@@ -115,6 +116,8 @@ async function main() {
 		console.log(`  Ignorées:        ${stats.skipped}`);
 		console.log(`  Erreurs:         ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('enrich-europarl-law-texts', stats, { dryRun: args.dryRun });
 	} catch (error) {
 		console.error('Erreur fatale:', error);
 		process.exit(1);

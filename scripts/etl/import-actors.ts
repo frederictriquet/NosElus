@@ -1,4 +1,8 @@
-import { importActors, importOrgans, importMandates } from '../../src/lib/server/etl/sources/assemblee/actors.js';
+import {
+	importActors,
+	importOrgans,
+	importMandates
+} from '../../src/lib/server/etl/sources/assemblee/actors.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 

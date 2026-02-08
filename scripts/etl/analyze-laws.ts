@@ -13,7 +13,12 @@
  *   3. Ollama lancé: ollama serve
  */
 
-import { analyzeLawsBatch, analyzeLaw, saveLawAnalysis, getAvailableTags } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+import {
+	analyzeLawsBatch,
+	analyzeLaw,
+	saveLawAnalysis,
+	getAvailableTags
+} from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
 import { db } from '../../src/lib/server/db/index.js';
 import { laws, lawSummaries } from '../../src/lib/server/db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -171,7 +176,7 @@ async function main() {
 
 			// Supprimer l'ancien résumé s'il existe
 			await db.delete(lawSummaries).where(eq(lawSummaries.lawId, args.reanalyze));
-			console.log('Ancien résumé supprimé (s\'il existait)');
+			console.log("Ancien résumé supprimé (s'il existait)");
 
 			// Analyser
 			console.log('Analyse en cours...');
@@ -197,17 +202,21 @@ async function main() {
 			console.log('='.repeat(60));
 
 			// Notification Telegram
-			await notifyETLComplete('analyze-laws', {
-				total: 1,
-				inserted: analysis.summary.startsWith('Erreur:') ? 0 : 1,
-				updated: 0,
-				skipped: 0,
-				errors: analysis.summary.startsWith('Erreur:') ? 1 : 0
-			}, {
-				dryRun: args.dryRun,
-				legislature: law.legislature,
-				additionalInfo: { mode: 'reanalyze', lawId: args.reanalyze }
-			});
+			await notifyETLComplete(
+				'analyze-laws',
+				{
+					total: 1,
+					inserted: analysis.summary.startsWith('Erreur:') ? 0 : 1,
+					updated: 0,
+					skipped: 0,
+					errors: analysis.summary.startsWith('Erreur:') ? 1 : 0
+				},
+				{
+					dryRun: args.dryRun,
+					legislature: law.legislature,
+					additionalInfo: { mode: 'reanalyze', lawId: args.reanalyze }
+				}
+			);
 
 			process.exit(0);
 		} catch (error) {
@@ -223,7 +232,7 @@ async function main() {
 		console.log(`  Législature: ${args.legislature}`);
 	}
 	if (args.dryRun) {
-		console.log('  Mode: DRY RUN (pas d\'écriture en base)');
+		console.log("  Mode: DRY RUN (pas d'écriture en base)");
 	}
 	console.log('');
 
@@ -247,17 +256,21 @@ async function main() {
 		console.log('='.repeat(60));
 
 		// Notification Telegram
-		await notifyETLComplete('analyze-laws', {
-			total: result.total,
-			inserted: result.success,
-			updated: 0,
-			skipped: result.skipped,
-			errors: result.errors
-		}, {
-			dryRun: args.dryRun,
-			legislature: args.legislature,
-			additionalInfo: { model: args.model }
-		});
+		await notifyETLComplete(
+			'analyze-laws',
+			{
+				total: result.total,
+				inserted: result.success,
+				updated: 0,
+				skipped: result.skipped,
+				errors: result.errors
+			},
+			{
+				dryRun: args.dryRun,
+				legislature: args.legislature,
+				additionalInfo: { model: args.model }
+			}
+		);
 
 		process.exit(result.errors > 0 ? 1 : 0);
 	} catch (error) {

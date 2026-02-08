@@ -1,348 +1,183 @@
-# ADR-008 : Notifications Telegram des ETL avec FemtoLogger
+# ADR-008 : Intégration FemtoLogger pour notifications Telegram des ETL
 
-## Métadonnées
+**Date** : 2026-02-07  
+**Statut** : ✅ Accepté et implémenté  
+**Contexte** : Session de travail en 3 phases (exploration → implémentation → review)
 
-- **ID** : ADR-008
-- **Date** : 2026-02-07
-- **Statut** : ✅ Accepté
-- **Décideurs** : User, Claude Opus 4.6
-- **Phase Roadmap** : Infrastructure / Monitoring
+---
 
-## Contexte
+## Problème
 
-### Problème
+Les 31 scripts ETL du projet s'exécutent en tâche de fond (cron, CI) sans monitoring actif. En cas d'échec ou de succès partiel, il faut consulter manuellement les logs pour détecter les problèmes.
 
-NosElus possède 30 scripts ETL dans `scripts/etl/*.ts` qui importent des données depuis diverses sources (Assemblée nationale, Sénat, Parlement Européen, HowTheyVote.eu, etc.). Ces ETL sont exécutés manuellement ou via cron, et il n'existe actuellement **aucune notification** lors de leur complétion ou échec.
+**Besoin** : Recevoir une notification automatique à la fin de chaque ETL avec :
+- Statut (succès, partiel, échec)
+- Statistiques détaillées (total, inserted, updated, skipped, errors)
+- Législature concernée
+- Taux de succès calculé automatiquement
 
-**Besoin** : Être notifié sur Telegram à la fin de n'importe quel ETL pour :
-- Savoir qu'un import long (5-30 min) est terminé
-- Détecter rapidement les échecs d'import
-- Avoir un historique des exécutions ETL
+---
 
-### Drivers
+## Options Évaluées
 
-1. **Monitoring** : Visibilité sur l'état des imports de données
-2. **Réactivité** : Notification immédiate en cas d'erreur
-3. **Historique** : Trace des exécutions dans Telegram (searchable)
-4. **Simplicité** : Éviter un système de monitoring lourd (Prometheus, etc.)
+### Option 1 : Nodemailer (email)
+❌ **Rejetée**
+- Configuration SMTP complexe
+- Pas de notification temps réel mobile
+- Risque spam/filtrage
 
-### Contraintes
+### Option 2 : Winston + Transport custom
+❌ **Rejetée**  
+- Winston trop lourd pour ce besoin simple
+- Pas de transport Telegram officiel
+- Overhead de configuration
 
-1. **Flag --dry-run** : AUCUNE notification ne doit être envoyée en mode dry-run
-2. **Graceful degradation** : Échec de notification NE DOIT PAS crasher l'ETL
-3. **Credentials optionnels** : L'ETL doit fonctionner même si Telegram n'est pas configuré
-4. **30 scripts existants** : Tous doivent être notifiés de manière cohérente
-5. **Patterns du projet** : Doit respecter `database-queries-factorization.md` (factorisation > duplication)
+### Option 3 : FemtoLogger
+✅ **Retenue**
+- Package ultra-léger (@frederictriquet/femtologger)
+- TelegramTransport natif avec HTML formatting
+- Configuration minimale (2 variables d'environnement)
+- Maintenu activement (v0.1.4)
 
-### Exploration préalable
+### Option 4 : Appels directs Telegram Bot API
+❌ **Rejetée**
+- Réinventer la roue (gestion tokens, retry, formatting)
+- Code boilerplate dans chaque script
+- Pas de type-safety
 
-Exploration documentée dans : `/tmp/.../scratchpad/femtologger-options-exploration.md`
-
-**3 options évaluées** :
-1. Modification directe de chaque script (duplication massive)
-2. Helper centralisé `src/lib/server/etl/notifications.ts` ✅
-3. Wrapper HOF (Higher-Order Function)
+---
 
 ## Décision
 
-Nous choisissons **Option 2 : Helper centralisé** via un module `src/lib/server/etl/notifications.ts` avec fonction `notifyETLComplete()`.
+**Intégration de FemtoLogger v0.1.4 avec module centralisé**
 
-### Raisons principales
-
-1. **Cohérence architecturale** : Suit le pattern établi `database-queries-factorization.md` (helpers réutilisables)
-2. **DRY optimal** : Logique centralisée dans 1 fichier (~150 lignes), testable et maintenable
-3. **Simplicité d'usage** : Import + 1 appel de fonction par script (2 lignes)
-4. **Safety first** : 
-   - Respect `--dry-run` centralisé (impossible d'oublier)
-   - Graceful degradation (credentials manquants → warning, pas crash)
-   - Error handling uniforme (try/catch ne crashe pas l'ETL)
-5. **Extensibilité** : Facile d'ajouter Slack, Discord, webhooks plus tard
-
-### Trade-offs acceptés
-
-En choisissant cette option, nous acceptons :
-
-- **30 fichiers à modifier** (2 lignes chacun = ~60 lignes total)
-  - *Mitigation* : Modification mécanique, peut être scriptée si besoin
-  
-- **Import supplémentaire** dans chaque script ETL
-  - *Mitigation* : 1 seule ligne d'import, pattern déjà utilisé (ex: `import { db } from '...'`)
-
-- **Moins de flexibilité** que modification directe (formatage uniforme)
-  - *Mitigation* : Paramètre `additionalInfo` permet customisation si nécessaire
-  - *Avantage déguisé* : Uniformité = cohérence des messages
-
-### Options rejetées
-
-#### Option 1 : Modification directe (duplication)
-
-**Rejetée** car :
-- Viole le principe DRY et le pattern `database-queries-factorization.md`
-- Maintenance cauchemardesque (bug = 30 fichiers à modifier)
-- Risque d'incohérence entre scripts
-- Score : 48/165 (29%)
-
-#### Option 3 : Wrapper HOF (Higher-Order Function)
-
-**Rejetée** car :
-- Over-engineering pour le besoin
-- Pattern non utilisé ailleurs dans le projet (nouveauté)
-- Refactoring lourd (restructuration de 30 scripts)
-- Debugging plus complexe (stacktrace avec wrapper)
-- Incompatible avec scripts multi-étapes (ex: `import-all.ts`)
-- Score : 106/165 (64%)
-
-## Architecture
-
-### Module centralisé
+### Architecture
 
 ```
 src/lib/server/etl/
-├── notifications.ts        (NOUVEAU - 150 lignes)
-│   ├── getLogger()        (singleton lazy)
-│   └── notifyETLComplete()
-├── utils.ts               (existant)
-└── types.ts               (existant - ImportStats)
+├── notifications.ts          # Module centralisé (244 lignes)
+│   ├── loadTelegramEnv()    # Charge .env manuellement
+│   ├── getLogger()          # Singleton lazy du logger Telegram
+│   ├── notifyETLComplete()  # Fonction publique principale
+│   └── getStatusEmoji()     # Calcul emoji contextuel
+├── types.ts                 # ImportStats interface (existant)
+└── utils.ts                 # Utilitaires ETL standards
 ```
 
-### Signature API
+### Principes de design
+
+1. **Graceful degradation** :
+   - Credentials manquants → warning + skip
+   - Erreur d'envoi → warning + continue
+   - **L'ETL ne crashe JAMAIS à cause des notifications**
+
+2. **Singleton lazy** :
+   - Logger créé au premier appel de `getLogger()`
+   - Réutilisé pour tous les appels suivants
+   - Évite les connexions multiples
+
+3. **Respect --dry-run** :
+   - Check centralisé dans `notifyETLComplete()`
+   - Impossible d'oublier dans un script
+   - Log explicite en mode dry-run
+
+4. **Type-safe** :
+   - Interface `ImportStats` réutilisée (existante)
+   - Interface `NotifyOptions` pour les paramètres optionnels
+   - TypeScript strict mode
+
+---
+
+## Implémentation
+
+### Pattern d'appel standard
 
 ```typescript
-// src/lib/server/etl/notifications.ts
-export async function notifyETLComplete(
-  scriptName: string,
-  stats: ImportStats,
-  options: {
-    dryRun?: boolean;
-    legislature?: string;
-    additionalInfo?: Record<string, unknown>;
-  } = {}
-): Promise<void>
-```
-
-### Usage type
-
-```typescript
-// scripts/etl/import-actors.ts
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
-async function main() {
-  const config = getETLConfig();
-  const dryRun = process.argv.includes('--dry-run');
+const stats = await runETL(config);
 
-  // ... logique ETL ...
-  const actorsStats = await importActors(config);
+await notifyETLComplete('nom-script', stats, {
+  dryRun: process.argv.includes('--dry-run'),
+  legislature: config.legislature,  // optionnel
+  additionalInfo: { key: value }    // optionnel
+});
+```
 
-  // ✅ Notification (2 lignes)
-  await notifyETLComplete('import-actors', actorsStats, {
-    dryRun,
-    legislature: config.legislature
-  });
+### Scripts multi-étapes
 
-  process.exit(0);
+Pour les ETL combinant plusieurs opérations (ex: import-scrutins = scrutins + votes) :
+
+```typescript
+const scrutinsStats = await importScrutins(config);
+const votesStats = await importVotes(config);
+
+const combinedStats = {
+  total: scrutinsStats.total + votesStats.total,
+  inserted: scrutinsStats.inserted + votesStats.inserted,
+  updated: scrutinsStats.updated + votesStats.updated,
+  skipped: scrutinsStats.skipped + votesStats.skipped,
+  errors: scrutinsStats.errors + votesStats.errors
+};
+
+await notifyETLComplete('import-scrutins', combinedStats, {
+  dryRun: process.argv.includes('--dry-run'),
+  legislature: config.legislature,
+  additionalInfo: { 
+    scrutins: scrutinsStats.inserted, 
+    votes: votesStats.inserted 
+  }
+});
+```
+
+---
+
+## Portée
+
+**31 scripts ETL intégrés** :
+
+### Assemblée Nationale (9)
+- import-actors.ts, import-scrutins.ts, import-laws.ts
+- import-nosdeputes.ts, import-nosdeputes-stats.ts
+- import-dossiers-an.ts, import-amendements.ts
+- import-an.ts (multi-flags), import-all.ts (orchestrateur)
+
+### Sénat (5)
+- import-senat-laws.ts, import-senat-senators.ts
+- import-senat-activity-stats.ts, import-senat-mandates-history.ts
+- import-nossenateurs-stats.ts
+
+### Parlement Européen (6)
+- import-europarl-laws.ts, import-europarl-votes.ts
+- import-europarl-meps.ts, import-europarl-activity-stats.ts
+- import-europarl-historical.ts, enrich-pe-group-names.ts
+
+### Utilitaires (11)
+- classify-scrutins.ts, link-scrutins-by-title.ts
+- analyze-laws.ts, import-law-texts-piste.ts
+- enrich-europarl-law-texts.ts
+- import-external-colors.ts, import-groupes-colors.ts, sync-group-colors.ts
+- seed-pe-positions.ts, import-political-positions.ts
+- download-data.ts
+
+---
+
+## Format des Messages
+
+### Logique des emojis
+
+```typescript
+function getStatusEmoji(stats: ImportStats): string {
+  if (stats.errors === 0) return '✅';  // 100% succès
+  const errorRate = stats.errors / stats.total;
+  return errorRate < 0.1 ? '⚠️' : '❌';  // <10% = partiel, ≥10% = échec
 }
 ```
 
-### Fonctionnalités clés
+### Exemple de message (HTML)
 
-1. **Singleton lazy** : Logger Telegram initialisé une seule fois au premier appel
-2. **Graceful degradation** : Si `TELEGRAM_BOT_TOKEN` ou `TELEGRAM_CHAT_ID` absents → warning, pas d'erreur
-3. **Respect --dry-run** : Check centralisé, log `[DRY-RUN] Would send...`
-4. **Error handling** : `try/catch` empêche crash ETL si notification échoue
-5. **Formatage riche HTML** :
-   - Emoji contextuel (✅ succès total, ⚠️ succès partiel, ❌ échec)
-   - Stats formatées (total, insérés, mis à jour, ignorés, erreurs, taux de succès)
-   - Legislature incluse si fournie
-
-## Conséquences
-
-### Positives
-
-1. ✅ **Monitoring temps réel** : Notification Telegram immédiate à la fin de chaque ETL
-2. ✅ **Historique searchable** : Messages Telegram archivés et cherchables
-3. ✅ **Détection d'erreurs rapide** : Emoji ❌ si > 10% d'erreurs
-4. ✅ **Cohérence** : Tous les ETL notifient de la même façon
-5. ✅ **Maintenabilité** : Bug/amélioration = 1 fichier à modifier
-6. ✅ **Testabilité** : Tests unitaires sur `notifications.ts` suffisent
-7. ✅ **Extensibilité** : Ajout Slack/Discord = modification du helper uniquement
-8. ✅ **Documentation centralisée** : JSDoc sur la fonction = source unique de vérité
-
-### Négatives (à monitorer)
-
-1. ⚠️ **Modification de 30 fichiers** : Effort mécanique mais non-négligeable
-   - *Action* : Créer un script de migration si modification manuelle trop lente
-   - *Estimation* : 2-3h pour modifier 30 scripts + tests
-
-2. ⚠️ **Dépendance externe** : FemtoLogger depuis GitHub Packages
-   - *Action* : Documenter setup `.npmrc` dans README
-   - *Mitigation* : Package simple, peu de dépendances, code stable
-
-3. ⚠️ **Rate limiting Telegram** : Limite ~30 messages/seconde
-   - *Action* : Monitoring si problème (peu probable, <10 ETL/heure en pratique)
-   - *Mitigation* : `import-all.ts` envoie 1 message par ETL (pas de burst)
-
-4. ⚠️ **Spam Telegram** : Risque si ETL lancés en boucle (développement)
-   - *Action* : Respecter `--dry-run` systématiquement en dev
-   - *Mitigation* : Message clair "[DRY-RUN] Would send..." visible dans logs
-
-### Actions requises
-
-- [x] Exploration des options (ADR-008)
-- [ ] Installation FemtoLogger : `npm install @frederictriquet/femtologger`
-- [ ] Configuration `.npmrc` pour GitHub Packages
-- [ ] Création module `src/lib/server/etl/notifications.ts`
-- [ ] Tests unitaires `src/lib/server/etl/notifications.test.ts`
-- [ ] Modification des 30 scripts ETL (import + appel)
-- [ ] Documentation `.env.example` (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
-- [ ] Documentation README : Setup Telegram bot (@BotFather)
-- [ ] Test manuel sur 3-4 ETL représentatifs
-- [ ] Capitalisation pattern dans SERENA
-
-## Validation
-
-### Checklist de validation
-
-- [x] Les stakeholders ont été consultés (User a validé l'approche)
-- [x] Les contraintes sont respectées (--dry-run, graceful degradation, 30 scripts)
-- [x] La décision est cohérente avec l'architecture existante (suit `database-queries-factorization.md`)
-- [x] Les risques sont acceptables et mitigés (voir section Conséquences)
-- [x] Les alternatives ont été correctement évaluées (3 options, scoring 29%-64%-98%)
-- [x] La décision est réversible (helper peut être retiré facilement)
-
-### Critères de décision (scoring)
-
-| Critère | Poids | Option 1<br>(Duplication) | Option 2<br>(Helper) ✅ | Option 3<br>(Wrapper) |
-|---------|-------|---------------------------|-------------------------|-----------------------|
-| **Cohérence projet** | 5 | 1/5 | **5/5** | 2/5 |
-| **Maintenabilité** | 5 | 1/5 | **5/5** | 4/5 |
-| **Effort** | 3 | 2/5 | **4/5** | 2/5 |
-| **Testabilité** | 4 | 1/5 | **5/5** | 3/5 |
-| **Flexibilité** | 3 | 5/5 | 4/5 | 2/5 |
-| **Respect --dry-run** | 5 | 2/5 | **5/5** | 5/5 |
-| **Onboarding** | 4 | 1/5 | **5/5** | 4/5 |
-| **Risque** | 4 | 1/5 | **5/5** | 3/5 |
-| **Score pondéré** | - | 48/165 | **161/165** | 106/165 |
-| **Pourcentage** | - | 29% | **98%** | 64% |
-
-### Approbation
-
-**Décision approuvée** : ✅ Oui  
-**Par** : User  
-**Date** : 2026-02-07  
-**Commentaires** : Approche cohérente avec les patterns du projet, balance optimale simplicité/maintenabilité
-
-## Prochaines étapes
-
-### Implémentation (ordre recommandé)
-
-1. **Setup environnement** (~30 min)
-   - [ ] Configurer `.npmrc` pour GitHub Packages
-   - [ ] Installer FemtoLogger : `npm install @frederictriquet/femtologger`
-   - [ ] Ajouter variables `.env.example`
-
-2. **Création module** (~1h30)
-   - [ ] Créer `src/lib/server/etl/notifications.ts`
-   - [ ] JSDoc complet sur `notifyETLComplete()`
-   - [ ] Singleton `getLogger()` avec lazy init
-
-3. **Tests** (~45 min)
-   - [ ] Tests unitaires : credentials absents → warning
-   - [ ] Tests unitaires : --dry-run → log, pas d'appel API
-   - [ ] Tests unitaires : stats → formatage correct emoji/message
-   - [ ] Mock TelegramTransport pour isolation
-
-4. **Intégration scripts** (~2h)
-   - [ ] Modifier 30 scripts ETL (import + appel)
-   - [ ] Vérifier compilation TypeScript : `npx tsc --noEmit`
-
-5. **Validation** (~30 min)
-   - [ ] Test manuel dry-run : `npm run etl:import-actors -- --dry-run`
-   - [ ] Test manuel réel (3-4 ETL) avec Telegram configuré
-   - [ ] Vérifier messages Telegram (formatage, emoji, stats)
-
-6. **Documentation** (~30 min)
-   - [ ] README : Setup Telegram bot (@BotFather, @userinfobot)
-   - [ ] `.env.example` : TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-   - [ ] Capitaliser pattern dans SERENA
-
-**Effort total estimé** : ~6h
-
-### Skill suivante
-
-`/implement` pour créer le module + tests puis modifier les scripts ETL
-
-## Références
-
-### Documents liés
-
-- **Exploration** : `/tmp/.../scratchpad/femtologger-options-exploration.md`
-- **Pattern projet** : `database-queries-factorization.md`
-- **Standard ETL** : `std-etl-cli-scripts.md`
-- **FemtoLogger** : https://github.com/frederictriquet/femtologger
-
-### Patterns connexes
-
-- `pattern-batch-loading-n-plus-one.md` : Principe de centralisation (batch loading vs N queries)
-- `pattern-oauth-token-caching.md` : Singleton pattern pour cache de tokens
-- `std-api-integration-external.md` : Intégration API externes avec graceful degradation
-
-### ETL concernés (30 scripts)
-
-```
-scripts/etl/
-├── analyze-laws.ts
-├── classify-scrutins.ts
-├── download-data.ts
-├── enrich-europarl-law-texts.ts
-├── enrich-pe-group-names.ts
-├── import-actors.ts
-├── import-all.ts
-├── import-amendements.ts
-├── import-an.ts
-├── import-dossiers-an.ts
-├── import-europarl-activity-stats.ts
-├── import-europarl-historical.ts
-├── import-europarl-laws.ts
-├── import-europarl-meps.ts
-├── import-europarl-votes.ts
-├── import-external-colors.ts
-├── import-groupes-colors.ts
-├── import-law-texts-piste.ts
-├── import-laws.ts
-├── import-nosdeputes-stats.ts
-├── import-nosdeputes.ts
-├── import-nossenateurs-stats.ts
-├── import-political-positions.ts
-├── import-scrutins.ts
-├── import-senat-activity-stats.ts
-├── import-senat-laws.ts
-├── import-senat-mandates-history.ts
-├── import-senat-senators.ts
-├── link-scrutins-by-title.ts
-├── seed-pe-positions.ts
-└── sync-group-colors.ts
-```
-
-## Format de message Telegram
-
-### Exemple : Succès total
-
-```
-✅ ETL Terminé: import-actors (AN-17)
-
-📊 Résultats:
-  • Total: 577
-  • Insérés: 450
-  • Mis à jour: 127
-  • Ignorés: 0
-  • Erreurs: 0
-  • Taux de succès: 100.0%
-```
-
-### Exemple : Succès partiel
-
-```
-⚠️ ETL Terminé: import-scrutins (AN-17)
+```html
+✅ ETL Terminé: import-scrutins (AN-17)
 
 📊 Résultats:
   • Total: 1250
@@ -353,42 +188,115 @@ scripts/etl/
   • Taux de succès: 99.2%
 ```
 
-### Exemple : Échec significatif
+---
 
-```
-❌ ETL Terminé: import-europarl-laws (PE-10)
+## Configuration
 
-📊 Résultats:
-  • Total: 2039
-  • Insérés: 1800
-  • Mis à jour: 50
-  • Ignorés: 0
-  • Erreurs: 189
-  • Taux de succès: 90.7%
+### Variables d'environnement
+
+```bash
+# .env
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+TELEGRAM_CHAT_ID=123456789
 ```
 
-## Évolution future (hors scope ADR)
+**Obtention** :
+- Token : @BotFather sur Telegram (`/newbot`)
+- Chat ID : @userinfobot sur Telegram (`/start`)
 
-### Extensions possibles
+### Détection des credentials
 
-1. **Multi-transports** : Slack, Discord, webhooks
-2. **Niveaux de verbosité** : `TELEGRAM_NOTIFY_LEVEL=errors|all`
-3. **Groupement de messages** : 1 message récapitulatif pour `import-all.ts`
-4. **Métriques** : Durée d'exécution, débit (records/sec)
-5. **Liens directs** : URL vers logs, DB, dashboard
-
-### Alternatives à considérer plus tard
-
-- **Monitoring dédié** : Prometheus + Grafana si volume ETL augmente significativement
-- **Notification conditionnelle** : Seulement si erreurs > seuil
-- **Dashboard temps réel** : WebSocket pour afficher ETL en cours
-
-## Changelog
-
-| Date | Modification | Auteur |
-|------|--------------|--------|
-| 2026-02-07 | Création ADR-008 | Claude Opus 4.6 |
+```typescript
+function loadTelegramEnv(): { token: string; chatId: string } | null {
+  // Charge .env manuellement (pattern existant du projet)
+  // Regex robuste : /^(TELEGRAM_\w+)=["']?(.+?)["']?$/
+  // Supporte TELEGRAM_BOT_TOKEN=value ET TELEGRAM_BOT_TOKEN="value"
+  
+  if (!token || !chatId) {
+    console.warn('⚠️  Telegram credentials not configured.');
+    console.warn('   ETL notifications will be skipped.');
+    return null;
+  }
+  return { token, chatId };
+}
+```
 
 ---
 
-**Tags** : `#etl` `#notifications` `#telegram` `#monitoring` `#infrastructure`
+## Leçons Apprises
+
+### Code Review (4 suggestions appliquées)
+
+1. **Regex .env** : Ajouter support des valeurs quotées
+   ```typescript
+   // Avant : /^(TELEGRAM_\w+)=(.+)$/
+   // Après : /^(TELEGRAM_\w+)=["']?(.+?)["']?$/
+   ```
+
+2. **Compteur d'erreurs** : download-data.ts hardcodait `errors: 0`
+   - Implémenté tracking avec `let errors = 0` et `recovered` flag
+   - Incrémente uniquement si échec sur toutes les URLs alternatives
+
+3. **Flag --dry-run** : 18 scripts manquaient le paramètre
+   - Ajouté `dryRun: process.argv.includes('--dry-run')` partout
+   - Garantit cohérence : simulation = pas de notification
+
+4. **Consistency** : Tous les scripts suivent maintenant le même pattern
+   - Stats standard ou combinés
+   - Options structurées identiques
+   - Logs explicites en dry-run
+
+### Patterns découverts
+
+1. **Singleton lazy avec guard** :
+   ```typescript
+   let telegramLogger: FemtoLogger | null | undefined;
+   // null = credentials manquants, undefined = pas encore initialisé
+   
+   function getLogger(): FemtoLogger | null {
+     if (telegramLogger !== undefined) return telegramLogger;
+     // ... initialisation ...
+   }
+   ```
+
+2. **Graceful error handling** :
+   ```typescript
+   try {
+     await logger.telegram(message);
+     console.log('✅ Telegram notification sent');
+   } catch (error) {
+     console.warn('⚠️  Failed to send notification:', error.message);
+     // Script continue normalement
+   }
+   ```
+
+3. **Stats combinés multi-étapes** :
+   - Array.reduce() pour agréger les statistiques
+   - additionalInfo pour détailler les sous-totaux
+   - Permet notifications riches sans polling
+
+---
+
+## Alternatives Envisagées (Futures)
+
+Si besoin d'évolution :
+
+1. **Discord** : FemtoLogger supporte aussi Discord (même package)
+2. **Slack** : Besoin d'un transport custom ou alternative
+3. **Base de données** : Ajouter une table `etl_runs` pour historique
+4. **Dashboards** : Exposer endpoint `/api/etl/status` pour monitoring web
+
+---
+
+## Références
+
+- **Package** : [@frederictriquet/femtologger v0.1.4](https://www.npmjs.com/package/@frederictriquet/femtologger)
+- **GitHub** : https://github.com/frederictriquet/femtologger
+- **Documentation** : `docs/features/telegram-notifications.md` (492 lignes)
+- **Telegram Bot API** : https://core.telegram.org/bots/api
+
+---
+
+## Tags
+
+`#etl` `#notifications` `#telegram` `#monitoring` `#infrastructure` `#adr`

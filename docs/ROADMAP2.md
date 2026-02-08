@@ -266,6 +266,33 @@
 
 ---
 
+## Infra & Monitoring
+
+### Notifications Telegram des ETL ✅ DONE
+
+| Tâche | Complexité | Statut |
+|-------|------------|--------|
+| Intégrer FemtoLogger pour notifications automatiques des 31 scripts ETL | 🟡 Moyen | ✅ Implémenté |
+| Module centralisé `notifications.ts` avec graceful degradation | 🟡 Moyen | ✅ Complété |
+| Correction regex .env, compteur erreurs, flag dryRun | 🟢 Simple | ✅ Code review appliquée |
+| Documentation complète (setup, API, troubleshooting) | 🟢 Simple | ✅ `docs/features/telegram-notifications.md` (492 lignes) |
+| Capitalisation patterns et leçons apprises | 🟢 Simple | ✅ ADR + Pattern + Lessons SERENA |
+
+**Valeur** : Monitoring temps réel des ETL sans consultation manuelle des logs.
+
+**Implémenté** :
+- FemtoLogger v0.1.4 intégration dans 31 scripts (AN 9, Sénat 5, PE 6, Utilitaires 11)
+- Module `src/lib/server/etl/notifications.ts` (244 lignes) avec singleton lazy
+- Graceful degradation : credentials manquants → warning, pas crash
+- Respect --dry-run : simulation mode sans notification
+- Stats combinés pour ETL multi-étapes
+- Emojis contextuels (✅ succès, ⚠️ partiel, ❌ échec)
+- Configuration : 2 variables d'environnement (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+
+**ADR-008** : Décision technique documentée avec justification FemtoLogger vs alternatives.
+
+---
+
 ## Anti-features (à éviter)
 
 Pour préserver la crédibilité du projet :

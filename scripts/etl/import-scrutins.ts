@@ -1,10 +1,10 @@
-import { importScrutins, importVotes } from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
-import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import {
-	parseArgs,
-	getLastSync,
-	updateSyncMetadata
-} from '../../src/lib/server/etl/utils.js';
+	importScrutins,
+	importVotes
+} from '../../src/lib/server/etl/sources/assemblee/scrutins.js';
+import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { parseArgs, getLastSync, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const SOURCE = 'assemblee';
 
@@ -54,7 +54,9 @@ async function main() {
 		// Import scrutins first
 		console.log('\n--- Importing Scrutins ---');
 		const scrutinsStats = await importScrutins(config);
-		console.log(`Scrutins: ${scrutinsStats.inserted} imported, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`);
+		console.log(
+			`Scrutins: ${scrutinsStats.inserted} imported, ${scrutinsStats.updated} updated, ${scrutinsStats.errors} errors`
+		);
 
 		// Update sync metadata for scrutins (ignore errors if table doesn't exist)
 		try {
@@ -69,7 +71,9 @@ async function main() {
 		// Import votes
 		console.log('\n--- Importing Votes ---');
 		const votesStats = await importVotes(config);
-		console.log(`Votes: ${votesStats.inserted} imported, ${votesStats.updated} updated, ${votesStats.errors} errors`);
+		console.log(
+			`Votes: ${votesStats.inserted} imported, ${votesStats.updated} updated, ${votesStats.errors} errors`
+		);
 
 		// Update sync metadata for votes (ignore errors if table doesn't exist)
 		try {
@@ -84,6 +88,18 @@ async function main() {
 		console.log('\n='.repeat(60));
 		console.log('Import completed successfully!');
 		console.log('='.repeat(60));
+
+		const combinedStats = {
+			total: scrutinsStats.total + votesStats.total,
+			inserted: scrutinsStats.inserted + votesStats.inserted,
+			updated: scrutinsStats.updated + votesStats.updated,
+			skipped: scrutinsStats.skipped + votesStats.skipped,
+			errors: scrutinsStats.errors + votesStats.errors
+		};
+		await notifyETLComplete('import-scrutins', combinedStats, {
+			legislature: config.legislature,
+			additionalInfo: { scrutins: scrutinsStats.inserted, votes: votesStats.inserted }
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 

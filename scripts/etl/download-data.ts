@@ -4,6 +4,7 @@ import { createUnzip } from 'zlib';
 import { pipeline } from 'stream/promises';
 import path from 'path';
 import { execSync } from 'child_process';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const BASE_URL = 'https://data.assemblee-nationale.fr/static/openData/repository';
 const LEGISLATURE = process.env.ETL_ASSEMBLEE_LEGISLATURE || '16';
@@ -90,7 +91,6 @@ async function main() {
 			// Supprimer le ZIP
 			await unlink(zipPath);
 			console.log(`  -> ZIP supprimé`);
-
 		} catch (error) {
 			console.error(`Erreur: ${error}`);
 
@@ -127,6 +127,14 @@ async function main() {
 	console.log(`  export ETL_DATA_DIR=${dataDir}`);
 	console.log('  npm run etl:all');
 	console.log('='.repeat(60));
+
+	await notifyETLComplete('download-data', {
+		total: DATASETS.length,
+		inserted: DATASETS.length,
+		updated: 0,
+		skipped: 0,
+		errors: 0
+	});
 }
 
 main().catch(console.error);

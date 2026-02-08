@@ -13,6 +13,7 @@ import { importGroupesFromNosdeputes } from '../../src/lib/server/etl/sources/no
 import type { ETLConfig } from '../../src/lib/server/etl/types.js';
 import { db, organs } from '../../src/lib/server/db/index.js';
 import { eq, and, isNotNull, sql } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 /**
  * Mapping of legislature numbers to nosdeputes.fr subdomain format
@@ -38,18 +39,10 @@ async function getLegislaturesFromDb(): Promise<string[]> {
 	const result = await db
 		.selectDistinct({ legislature: organs.legislature })
 		.from(organs)
-		.where(
-			and(
-				eq(organs.chamber, 'AN'),
-				eq(organs.type, 'GP'),
-				isNotNull(organs.legislature)
-			)
-		)
+		.where(and(eq(organs.chamber, 'AN'), eq(organs.type, 'GP'), isNotNull(organs.legislature)))
 		.orderBy(sql`${organs.legislature}::int DESC`);
 
-	return result
-		.filter((r) => r.legislature !== null)
-		.map((r) => r.legislature!);
+	return result.filter((r) => r.legislature !== null).map((r) => r.legislature!);
 }
 
 async function main() {
@@ -65,7 +58,7 @@ async function main() {
 	const legislatures = await getLegislaturesFromDb();
 
 	if (legislatures.length === 0) {
-		console.log('⚠ Aucune législature trouvée en base. Exécutez d\'abord l\'import des groupes AN.');
+		console.log("⚠ Aucune législature trouvée en base. Exécutez d'abord l'import des groupes AN.");
 		process.exit(1);
 	}
 
@@ -116,7 +109,9 @@ async function main() {
 	for (const legislature of legislatures) {
 		const result = results[legislature];
 		if (result) {
-			console.log(`  Législature ${legislature}: ${result.inserted} groupes (${result.errors} erreurs)`);
+			console.log(
+				`  Législature ${legislature}: ${result.inserted} groupes (${result.errors} erreurs)`
+			);
 			totalInserted += result.inserted;
 			totalErrors += result.errors;
 		}
@@ -126,6 +121,14 @@ async function main() {
 	console.log(`Total: ${totalInserted} groupes importés, ${totalErrors} erreurs`);
 	console.log(`Durée: ${duration}s`);
 	console.log('='.repeat(60));
+
+	await notifyETLComplete('import-groupes-colors', {
+		total: totalInserted + totalErrors,
+		inserted: totalInserted,
+		updated: 0,
+		skipped: 0,
+		errors: totalErrors
+	});
 
 	process.exit(totalErrors > 0 ? 1 : 0);
 }

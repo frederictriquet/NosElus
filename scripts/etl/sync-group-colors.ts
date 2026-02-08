@@ -9,6 +9,7 @@
 
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and, like, notLike, isNull } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 // Mapping des shortNames nosdeputes.fr -> AN
 // NOTE: Ce mapping est nécessaire car les deux sources utilisent des noms différents
@@ -16,19 +17,19 @@ import { eq, and, like, notLike, isNull } from 'drizzle-orm';
 // ou généré dynamiquement par fuzzy matching.
 const SHORTNAME_ALIASES: Record<string, string[]> = {
 	// 17e législature
-	'MODEM': ['Dem'],
-	'ECO': ['Ecolo - NUPES', 'EcoS'],
-	'LFI': ['LFI - NUPES', 'LFI-NFP'],
-	'REN': ['RE', 'EPR'],
-	'GDR': ['GDR - NUPES'],
+	MODEM: ['Dem'],
+	ECO: ['Ecolo - NUPES', 'EcoS'],
+	LFI: ['LFI - NUPES', 'LFI-NFP'],
+	REN: ['RE', 'EPR'],
+	GDR: ['GDR - NUPES'],
 	// 15e législature
-	'LREM': ['LaREM'],
-	'SRC': ['SOC'],
+	LREM: ['LaREM'],
+	SRC: ['SOC'],
 	// 14e législature
-	'SER': ['SOC'],
-	'ECOLO': ['Écolo'],
+	SER: ['SOC'],
+	ECOLO: ['Écolo'],
 	// 13e législature
-	'S.R.C.': ['SRC'],
+	'S.R.C.': ['SRC']
 };
 
 async function main() {
@@ -38,18 +39,19 @@ async function main() {
 	console.log('');
 
 	// Récupérer tous les groupes
-	const allGroups = await db.select({
-		id: organs.id,
-		shortName: organs.shortName,
-		name: organs.name,
-		legislature: organs.legislature,
-		color: organs.color
-	})
-	.from(organs)
-	.where(eq(organs.type, 'GP'));
+	const allGroups = await db
+		.select({
+			id: organs.id,
+			shortName: organs.shortName,
+			name: organs.name,
+			legislature: organs.legislature,
+			color: organs.color
+		})
+		.from(organs)
+		.where(eq(organs.type, 'GP'));
 
-	const ndGroups = allGroups.filter(g => g.id.startsWith('PO_GP_'));
-	const anGroups = allGroups.filter(g => !g.id.startsWith('PO_GP_'));
+	const ndGroups = allGroups.filter((g) => g.id.startsWith('PO_GP_'));
+	const anGroups = allGroups.filter((g) => !g.id.startsWith('PO_GP_'));
 
 	console.log(`Groupes NosDéputés (PO_GP_*): ${ndGroups.length}`);
 	console.log(`Groupes AN (PO...): ${anGroups.length}`);
@@ -65,9 +67,8 @@ async function main() {
 		// Trouver le groupe AN correspondant
 		const possibleNames = [nd.shortName, ...(SHORTNAME_ALIASES[nd.shortName || ''] || [])];
 
-		const matches = anGroups.filter(an =>
-			an.legislature === nd.legislature &&
-			possibleNames.includes(an.shortName || '')
+		const matches = anGroups.filter(
+			(an) => an.legislature === nd.legislature && possibleNames.includes(an.shortName || '')
 		);
 
 		if (matches.length === 0) {
@@ -84,9 +85,7 @@ async function main() {
 			}
 
 			// Mettre à jour la couleur
-			await db.update(organs)
-				.set({ color: nd.color })
-				.where(eq(organs.id, match.id));
+			await db.update(organs).set({ color: nd.color }).where(eq(organs.id, match.id));
 
 			console.log(`✓ ${match.id} (${match.shortName}) <- ${nd.color} (depuis ${nd.id})`);
 			updated++;
@@ -96,9 +95,8 @@ async function main() {
 	// Chercher aussi les groupes AN sans couleur pour les législatures 12-14
 	console.log('\n--- Groupes AN sans couleur (législatures 12-14) ---\n');
 
-	const anWithoutColor = anGroups.filter(g =>
-		!g.color &&
-		['12', '13', '14'].includes(g.legislature || '')
+	const anWithoutColor = anGroups.filter(
+		(g) => !g.color && ['12', '13', '14'].includes(g.legislature || '')
 	);
 
 	for (const g of anWithoutColor) {
@@ -109,21 +107,20 @@ async function main() {
 
 		possibleNdNames.push(g.shortName || '');
 
-		const ndMatch = ndGroups.find(nd =>
-			nd.color &&
-			nd.legislature === g.legislature &&
-			possibleNdNames.includes(nd.shortName || '')
+		const ndMatch = ndGroups.find(
+			(nd) =>
+				nd.color && nd.legislature === g.legislature && possibleNdNames.includes(nd.shortName || '')
 		);
 
 		if (ndMatch) {
-			await db.update(organs)
-				.set({ color: ndMatch.color })
-				.where(eq(organs.id, g.id));
+			await db.update(organs).set({ color: ndMatch.color }).where(eq(organs.id, g.id));
 			console.log(`✓ ${g.id} (${g.shortName}, leg ${g.legislature}) <- ${ndMatch.color}`);
 			updated++;
 		} else {
 			// Pas de couleur disponible depuis nosdeputes.fr - laisser null
-			console.log(`✗ Sans couleur: ${g.id} (${g.shortName}, leg ${g.legislature}) - aucune source disponible`);
+			console.log(
+				`✗ Sans couleur: ${g.id} (${g.shortName}, leg ${g.legislature}) - aucune source disponible`
+			);
 		}
 	}
 
@@ -134,6 +131,14 @@ async function main() {
 	console.log(`  Déjà avec couleur: ${alreadyHasColor}`);
 	console.log(`  Sans correspondance: ${notFound}`);
 	console.log('='.repeat(60));
+
+	await notifyETLComplete('sync-group-colors', {
+		total: updated + alreadyHasColor + notFound,
+		inserted: 0,
+		updated,
+		skipped: alreadyHasColor + notFound,
+		errors: 0
+	});
 
 	process.exit(0);
 }

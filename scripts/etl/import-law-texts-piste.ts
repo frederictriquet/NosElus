@@ -24,6 +24,7 @@ import {
 } from '../../src/lib/server/etl/sources/legifrance/client.js';
 import { db, laws, scrutins } from '../../src/lib/server/db/index.js';
 import { eq, isNull, and, desc } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 // ============================================================
 // Configuration
@@ -303,7 +304,11 @@ function extractTextFromResponse(response: LegiTexteResponse): string {
  * Extrait le texte des sections récursivement
  */
 function extractSections(
-	sections: Array<{ titre?: string; articles?: Array<{ num?: string; content?: string; texteHtml?: string }>; sections?: typeof sections }>
+	sections: Array<{
+		titre?: string;
+		articles?: Array<{ num?: string; content?: string; texteHtml?: string }>;
+		sections?: typeof sections;
+	}>
 ): string {
 	const parts: string[] = [];
 
@@ -401,12 +406,7 @@ async function getLawsToEnrich(limit: number, withScrutins: boolean) {
 			promulgationDate: laws.promulgationDate
 		})
 		.from(laws)
-		.where(
-			and(
-				eq(laws.status, 'promulgué'),
-				isNull(laws.description)
-			)
-		)
+		.where(and(eq(laws.status, 'promulgué'), isNull(laws.description)))
 		.orderBy(desc(laws.promulgationDate))
 		.limit(limit);
 
@@ -597,9 +597,7 @@ async function main() {
 
 			if (!match.found) {
 				if (match.score !== undefined && match.score > 0) {
-					console.log(
-						`  → Score insuffisant: ${match.score.toFixed(3)} < ${args.threshold}`
-					);
+					console.log(`  → Score insuffisant: ${match.score.toFixed(3)} < ${args.threshold}`);
 					console.log(`    Meilleur candidat: ${match.legifranceTitle?.slice(0, 60)}...`);
 					result.lowScore++;
 				} else {
@@ -663,6 +661,18 @@ async function main() {
 	console.log(`  Non trouvés:        ${result.notFound}`);
 	console.log(`  Erreurs:            ${result.errors}`);
 	console.log('='.repeat(60));
+
+	await notifyETLComplete(
+		'import-law-texts-piste',
+		{
+			total: result.total,
+			inserted: 0,
+			updated: result.success,
+			skipped: result.lowScore + result.notFound,
+			errors: result.errors
+		},
+		{ dryRun: args.dryRun }
+	);
 
 	process.exit(result.errors > 0 ? 1 : 0);
 }

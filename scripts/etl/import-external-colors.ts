@@ -11,6 +11,7 @@
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and, like, isNull } from 'drizzle-orm';
 import { execSync } from 'child_process';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 interface GroupColor {
 	shortName: string;
@@ -54,30 +55,44 @@ async function fetchEuroparlColors(): Promise<GroupColor[]> {
 		const groupPatterns = [
 			{ pattern: /EPP[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'PPE' },
 			{ pattern: /S&amp;D[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'S&D' },
-			{ pattern: /PfE[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'Patriots for Europe Group' },
+			{
+				pattern: /PfE[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s,
+				shortName: 'Patriots for Europe Group'
+			},
 			{ pattern: /ECR[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'ECR' },
 			{ pattern: /Renew[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'RE' },
-			{ pattern: /Greens\/EFA[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'Verts/ALE' },
-			{ pattern: /Left[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'GUE/NGL' },
-			{ pattern: /ESN[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s, shortName: 'Europe of Sovereign Nations Group' },
+			{
+				pattern: /Greens\/EFA[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s,
+				shortName: 'Verts/ALE'
+			},
+			{
+				pattern: /Left[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s,
+				shortName: 'GUE/NGL'
+			},
+			{
+				pattern: /ESN[^<]*<[^>]*>.*?background-color:\s*(#[0-9a-fA-F]{6})/s,
+				shortName: 'Europe of Sovereign Nations Group'
+			}
 		];
 
 		// Alternative: extract all background colors in order
 		// Groups appear in order: EPP, S&D, PfE, ECR, Renew, Greens, Left, ESN, NI
 		const colorMatches = html.match(/background-color:\s*(#[0-9a-fA-F]{6})/g) || [];
-		const uniqueColors = [...new Set(colorMatches.map(m => m.replace('background-color:', '').trim()))];
+		const uniqueColors = [
+			...new Set(colorMatches.map((m) => m.replace('background-color:', '').trim()))
+		];
 
 		// Map colors to groups based on known order from the site
 		const groupOrder = [
-			{ shortName: 'PPE', index: 0 },        // EPP - blue
-			{ shortName: 'S&D', index: 1 },        // S&D - red
-			{ shortName: 'Patriots for Europe Group', index: 2 },  // PfE - dark blue
-			{ shortName: 'ECR', index: 3 },        // ECR - blue
-			{ shortName: 'RE', index: 4 },         // Renew - light blue
-			{ shortName: 'Verts/ALE', index: 5 },  // Greens - green
-			{ shortName: 'GUE/NGL', index: 6 },    // Left - red
-			{ shortName: 'Europe of Sovereign Nations Group', index: 7 },  // ESN - dark gray
-			{ shortName: 'NA', index: 8 },         // NI - gray
+			{ shortName: 'PPE', index: 0 }, // EPP - blue
+			{ shortName: 'S&D', index: 1 }, // S&D - red
+			{ shortName: 'Patriots for Europe Group', index: 2 }, // PfE - dark blue
+			{ shortName: 'ECR', index: 3 }, // ECR - blue
+			{ shortName: 'RE', index: 4 }, // Renew - light blue
+			{ shortName: 'Verts/ALE', index: 5 }, // Greens - green
+			{ shortName: 'GUE/NGL', index: 6 }, // Left - red
+			{ shortName: 'Europe of Sovereign Nations Group', index: 7 }, // ESN - dark gray
+			{ shortName: 'NA', index: 8 } // NI - gray
 		];
 
 		for (const group of groupOrder) {
@@ -150,15 +165,51 @@ async function fetchSenatColors(): Promise<GroupColor[]> {
 		// Fallback: extract individual color patterns using HTML-encoded format
 		if (colors.length === 0) {
 			const patterns = [
-				{ regex: /&quot;id&quot;:&quot;(UMP|LR)&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'LR' },
-				{ regex: /&quot;id&quot;:&quot;SOC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'SOC' },
-				{ regex: /&quot;id&quot;:&quot;UC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'UC' },
-				{ regex: /&quot;id&quot;:&quot;RTLI&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'RTLI' },
-				{ regex: /&quot;id&quot;:&quot;LREM&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'LREM' },
-				{ regex: /&quot;id&quot;:&quot;CRC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'CRC' },
-				{ regex: /&quot;id&quot;:&quot;RDSE&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'RDSE' },
-				{ regex: /&quot;id&quot;:&quot;GEST&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'GEST' },
-				{ regex: /&quot;id&quot;:&quot;NI&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/, shortName: 'NI' },
+				{
+					regex:
+						/&quot;id&quot;:&quot;(UMP|LR)&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'LR'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;SOC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'SOC'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;UC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'UC'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;RTLI&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'RTLI'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;LREM&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'LREM'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;CRC&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'CRC'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;RDSE&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'RDSE'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;GEST&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'GEST'
+				},
+				{
+					regex:
+						/&quot;id&quot;:&quot;NI&quot;[^}]*&quot;color&quot;:&quot;(#[0-9a-fA-F]{6})&quot;/,
+					shortName: 'NI'
+				}
 			];
 
 			for (const { regex, shortName } of patterns) {
@@ -193,34 +244,38 @@ async function updateGroupColors(
 		const matchingGroups = await db
 			.select({ id: organs.id, shortName: organs.shortName, color: organs.color })
 			.from(organs)
-			.where(and(
-				eq(organs.chamber, chamber),
-				eq(organs.type, 'GP'),
-				like(organs.id, `${idPrefix}%`)
-			));
+			.where(
+				and(eq(organs.chamber, chamber), eq(organs.type, 'GP'), like(organs.id, `${idPrefix}%`))
+			);
 
 		// Find groups matching this shortName (exact match first)
-		const exactMatch = matchingGroups.filter(g => g.shortName === shortName);
-		const toUpdate = exactMatch.length > 0 ? exactMatch : matchingGroups.filter(g =>
-			// Only match if shortName is contained as a whole word
-			g.shortName?.toLowerCase() === shortName.toLowerCase()
-		);
+		const exactMatch = matchingGroups.filter((g) => g.shortName === shortName);
+		const toUpdate =
+			exactMatch.length > 0
+				? exactMatch
+				: matchingGroups.filter(
+						(g) =>
+							// Only match if shortName is contained as a whole word
+							g.shortName?.toLowerCase() === shortName.toLowerCase()
+					);
 
 		if (toUpdate.length === 0) {
 			// Try partial match only for PE groups with different naming conventions
-			const partialMatch = chamber === 'PE' ? matchingGroups.filter(g =>
-				g.shortName?.toLowerCase().includes(shortName.toLowerCase()) ||
-				shortName.toLowerCase().includes(g.shortName?.toLowerCase() || '')
-			) : [];
+			const partialMatch =
+				chamber === 'PE'
+					? matchingGroups.filter(
+							(g) =>
+								g.shortName?.toLowerCase().includes(shortName.toLowerCase()) ||
+								shortName.toLowerCase().includes(g.shortName?.toLowerCase() || '')
+						)
+					: [];
 
 			if (partialMatch.length > 0) {
 				for (const group of partialMatch) {
 					if (group.color === color) {
 						console.log(`  = ${group.id} (${group.shortName}) already has ${color}`);
 					} else {
-						await db.update(organs)
-							.set({ color })
-							.where(eq(organs.id, group.id));
+						await db.update(organs).set({ color }).where(eq(organs.id, group.id));
 						console.log(`  ✓ ${group.id} (${group.shortName}) <- ${color}`);
 						updated++;
 					}
@@ -234,9 +289,7 @@ async function updateGroupColors(
 				if (group.color === color) {
 					console.log(`  = ${group.id} (${group.shortName}) already has ${color}`);
 				} else {
-					await db.update(organs)
-						.set({ color })
-						.where(eq(organs.id, group.id));
+					await db.update(organs).set({ color }).where(eq(organs.id, group.id));
 					console.log(`  ✓ ${group.id} (${group.shortName}) <- ${color}`);
 					updated++;
 				}
@@ -280,6 +333,14 @@ async function main() {
 	console.log(`  Couleurs mises à jour: ${totalUpdated}`);
 	console.log(`  Sans correspondance: ${totalNotFound}`);
 	console.log('='.repeat(60));
+
+	await notifyETLComplete('import-external-colors', {
+		total: totalUpdated + totalNotFound,
+		inserted: 0,
+		updated: totalUpdated,
+		skipped: totalNotFound,
+		errors: 0
+	});
 
 	process.exit(0);
 }

@@ -1,6 +1,7 @@
 import { importLaws, linkScrutinsToLaws } from '../../src/lib/server/etl/sources/assemblee/laws.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { parseArgs, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const SOURCE = 'assemblee';
 
@@ -63,6 +64,18 @@ async function main() {
 		console.log('\n='.repeat(60));
 		console.log('Import completed successfully!');
 		console.log('='.repeat(60));
+
+		const combinedStats = {
+			total: lawsStats.total + linkStats.total,
+			inserted: lawsStats.inserted + linkStats.inserted,
+			updated: lawsStats.updated + linkStats.updated,
+			skipped: lawsStats.skipped + linkStats.skipped,
+			errors: lawsStats.errors + linkStats.errors
+		};
+		await notifyETLComplete('import-laws', combinedStats, {
+			legislature: config.legislature,
+			additionalInfo: { laws: lawsStats.inserted, links: linkStats.updated }
+		});
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

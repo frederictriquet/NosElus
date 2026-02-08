@@ -1,6 +1,7 @@
 import { importSenatLaws } from '../../src/lib/server/etl/sources/senat/laws.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 const SOURCE = 'senat';
 
@@ -33,6 +34,8 @@ async function main() {
 		console.log(`  Inserted: ${stats.inserted}`);
 		console.log(`  Errors: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('import-senat-laws', stats);
 	} catch (error) {
 		console.error('Import failed:', error);
 		process.exit(1);

@@ -1,5 +1,6 @@
 import { enrichPEGroupNames } from '../../src/lib/server/etl/sources/europarl/enrich-group-names.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	console.log('='.repeat(60));
@@ -19,6 +20,8 @@ async function main() {
 		console.log(`  Skipped: ${stats.skipped}`);
 		console.log(`  Errors: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('enrich-pe-group-names', stats);
 	} catch (error) {
 		console.error('Enrichment failed:', error);
 		process.exit(1);

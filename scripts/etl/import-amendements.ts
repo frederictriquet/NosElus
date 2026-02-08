@@ -9,6 +9,7 @@
 import { importAmendementsFromAN } from '../../src/lib/server/etl/sources/assemblee-nationale/amendements-import.js';
 import { getAvailableAmendementsLegislatures } from '../../src/lib/server/etl/sources/assemblee-nationale/amendements-loader.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 async function main() {
 	const legislature = process.argv[2];
@@ -49,6 +50,10 @@ async function main() {
 		console.log('');
 		console.log(`Durée: ${duration}s`);
 		console.log('='.repeat(60));
+
+		await notifyETLComplete('import-amendements', stats, {
+			legislature: legislature || 'toutes'
+		});
 
 		process.exit(stats.errors > 0 ? 1 : 0);
 	} catch (error) {

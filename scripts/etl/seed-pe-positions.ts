@@ -11,6 +11,7 @@
 
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and } from 'drizzle-orm';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 interface GroupPosition {
 	shortName: string;
@@ -37,12 +38,16 @@ const PE_GROUP_POSITIONS: GroupPosition[] = [
 
 	// Centre
 	{ shortName: 'RE', position: 5.5, comment: 'Renew Europe' },
-	{ shortName: 'ALDE', position: 5.5, comment: 'Alliance of Liberals and Democrats for Europe (ancien nom)' },
+	{
+		shortName: 'ALDE',
+		position: 5.5,
+		comment: 'Alliance of Liberals and Democrats for Europe (ancien nom)'
+	},
 	{ shortName: 'IND/DEM', position: 5.0, comment: 'Independence/Democracy Group' },
 	{ shortName: 'EFDD', position: 5.5, comment: 'Europe of Freedom and Direct Democracy' },
 
 	// Centre-droit
-	{ shortName: 'PPE', position: 6.5, comment: 'European People\'s Party' },
+	{ shortName: 'PPE', position: 6.5, comment: "European People's Party" },
 	{ shortName: 'PPE-DE', position: 6.5, comment: 'EPP-ED (ancien nom)' },
 
 	// Droite
@@ -53,14 +58,22 @@ const PE_GROUP_POSITIONS: GroupPosition[] = [
 	{ shortName: 'ENF', position: 8.5, comment: 'Europe of Nations and Freedom (prédécesseur ID)' },
 	{ shortName: 'EFD', position: 8.0, comment: 'Europe of Freedom and Democracy' },
 	{ shortName: 'ITS', position: 8.5, comment: 'Identity, Tradition, Sovereignty' },
-	{ shortName: 'Patriots for Europe Group', position: 8.5, comment: 'Patriots for Europe (post-2024)' },
+	{
+		shortName: 'Patriots for Europe Group',
+		position: 8.5,
+		comment: 'Patriots for Europe (post-2024)'
+	},
 	{ shortName: 'Europe of Sovereign Nations Group', position: 9.0, comment: 'ESN (post-2024)' }
 ];
 
 /**
  * Update political positions in database
  */
-async function seedPePositions(): Promise<{ updated: number; notFound: number; unchanged: number }> {
+async function seedPePositions(): Promise<{
+	updated: number;
+	notFound: number;
+	unchanged: number;
+}> {
 	let updated = 0;
 	let notFound = 0;
 	let unchanged = 0;
@@ -75,11 +88,7 @@ async function seedPePositions(): Promise<{ updated: number; notFound: number; u
 				politicalPosition: organs.politicalPosition
 			})
 			.from(organs)
-			.where(and(
-				eq(organs.chamber, 'PE'),
-				eq(organs.type, 'GP'),
-				eq(organs.shortName, shortName)
-			));
+			.where(and(eq(organs.chamber, 'PE'), eq(organs.type, 'GP'), eq(organs.shortName, shortName)));
 
 		if (matchingGroups.length === 0) {
 			console.log(`  ✗ No PE group found with shortName: ${shortName}`);
@@ -93,12 +102,12 @@ async function seedPePositions(): Promise<{ updated: number; notFound: number; u
 				console.log(`  = ${group.id} (${group.shortName}) already has position ${position}`);
 				unchanged++;
 			} else {
-				await db.update(organs)
-					.set({ politicalPosition: position })
-					.where(eq(organs.id, group.id));
+				await db.update(organs).set({ politicalPosition: position }).where(eq(organs.id, group.id));
 
 				const oldPos = group.politicalPosition ?? 'null';
-				console.log(`  ✓ ${group.id} (${group.shortName}): ${oldPos} → ${position}${comment ? ' (' + comment + ')' : ''}`);
+				console.log(
+					`  ✓ ${group.id} (${group.shortName}): ${oldPos} → ${position}${comment ? ' (' + comment + ')' : ''}`
+				);
 				updated++;
 			}
 		}
@@ -130,6 +139,14 @@ async function main() {
 		console.log('\nℹ️  Groupes non trouvés: groupes historiques ou noms alternatifs');
 		console.log('   Ces positions seront utilisées quand ces groupes existeront en DB');
 	}
+
+	await notifyETLComplete('seed-pe-positions', {
+		total: result.updated + result.notFound + result.unchanged,
+		inserted: 0,
+		updated: result.updated,
+		skipped: result.unchanged + result.notFound,
+		errors: 0
+	});
 
 	process.exit(0);
 }

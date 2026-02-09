@@ -2,7 +2,7 @@ import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { laws, lawSummaries, lawTags, tags } from '$lib/server/db/schema';
-import { eq, desc, isNotNull, isNull, and, inArray } from 'drizzle-orm';
+import { eq, desc, isNotNull, isNull, and, inArray, gt, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -65,14 +65,19 @@ export const load: PageServerLoad = async () => {
 		})
 		.from(laws)
 		.leftJoin(lawSummaries, eq(laws.id, lawSummaries.lawId))
-		.where(and(isNotNull(laws.description), isNull(lawSummaries.lawId)))
+		.where(and(gt(sql`length(${laws.description})`, 100), isNull(lawSummaries.lawId)))
 		.orderBy(desc(laws.depositDate))
 		.limit(50);
 
 	// Stats
 	const stats = {
 		totalLaws: (await db.select().from(laws)).length,
-		lawsWithText: (await db.select().from(laws).where(isNotNull(laws.description))).length,
+		lawsWithText: (
+			await db
+				.select()
+				.from(laws)
+				.where(gt(sql`length(${laws.description})`, 100))
+		).length,
 		lawsWithSummary: lawsWithSummaries.length,
 		lawsWithTextNoSummary: lawsWithTextNoSummary.length
 	};

@@ -242,7 +242,30 @@ export async function analyzeLaw(
 }
 
 /**
- * Récupère les lois qui n'ont pas encore été analysées.
+ * Récupère les lois qui n'ont pas encore été analysées par le LLM.
+ *
+ * **Filtre "texte complet"** : Seules les lois avec `length(description) > 100` sont retournées.
+ * Ce seuil garantit qu'on ne génère pas de résumés IA pour de simples labels courts
+ * comme "Proposition de résolution" (25 chars) qui ne contiennent pas de texte analysable.
+ *
+ * **Cohérence dashboard** : Le seuil de 100 chars est aligné avec le dashboard data-quality
+ * (voir `src/routes/stats/data-quality/+page.server.ts:175`).
+ *
+ * @param limit - Nombre maximum de lois à retourner (défaut: 100)
+ * @param legislature - Filtre optionnel par législature (ex: "17", "PE-10", "SE-2023")
+ * @returns Liste des lois avec texte complet sans résumé IA, triées par date de dépôt (desc)
+ *
+ * @example
+ * ```typescript
+ * // Récupérer 50 lois AN non analysées
+ * const laws = await getUnanalyzedLaws(50, '17');
+ *
+ * // Récupérer toutes les lois PE non analysées (devrait retourner [])
+ * const peLaws = await getUnanalyzedLaws(100, 'PE-10');
+ * ```
+ *
+ * @see {@link analyzeLaw} - Analyse une loi avec le LLM
+ * @see {@link analyzeLawsBatch} - Analyse un batch de lois
  */
 export async function getUnanalyzedLaws(limit: number = 100, legislature?: string): Promise<Law[]> {
 	const query = db

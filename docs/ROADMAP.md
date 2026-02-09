@@ -140,6 +140,13 @@
 - [x] Gestion spécifique Sénat (groupes actuels vs historiques)
 - [x] Documentation complète (ADMIN.md + JSDoc)
 
+### 5.5 Data Quality
+- [x] Nettoyage résumés PE sans texte complet (suppression 1190 résumés invalides)
+  - Détection incohérence : ETL utilisait `isNotNull(description)` vs Dashboard `length(description) > 100`
+  - Fix : Alignement critère texte complet à `length > 100` dans ETL + debug page
+  - Tests : 12 tests (6 unit + 6 intégration) pour prévenir récurrence
+  - Apprentissages : Pattern dashboard QA + standard constantes partagées
+
 ---
 
 ## Phase 6 - Extensions (23-30 semaines)

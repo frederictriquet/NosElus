@@ -8,7 +8,7 @@
 
 import { db } from '../../../db';
 import { laws, lawSummaries, lawTags, tags } from '../../../db/schema';
-import { eq, isNull, isNotNull, and, desc, asc } from 'drizzle-orm';
+import { eq, isNull, and, desc, asc, gt, sql } from 'drizzle-orm';
 import type { Law, NewLawSummary, NewLawTag } from '../../../db/schema';
 
 /**
@@ -250,8 +250,9 @@ export async function getUnanalyzedLaws(limit: number = 100, legislature?: strin
 		.from(laws)
 		.where(
 			and(
-				// Seulement les lois avec texte complet
-				isNotNull(laws.description),
+				// Seulement les lois avec texte complet (> 100 chars)
+				// Un simple label comme "Proposition de résolution" (25 chars) n'est pas un texte analysable
+				gt(sql`length(${laws.description})`, 100),
 				// Pas encore analysée
 				isNull(
 					db

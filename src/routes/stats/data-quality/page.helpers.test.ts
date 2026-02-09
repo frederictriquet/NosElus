@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatLegislature, percentage, coverageClass } from './+page.helpers';
+import { formatLegislature, percentage, coverageClass } from './page.helpers';
 
 describe('formatLegislature', () => {
 	describe('Assemblée Nationale', () => {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import type { PageData } from './$types';
-	import { formatLegislature, percentage, coverageClass } from './+page.helpers';
+	import { formatLegislature, percentage, coverageClass } from './page.helpers';
 
 	let { data }: { data: PageData } = $props();
 

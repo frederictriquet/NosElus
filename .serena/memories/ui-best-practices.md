@@ -58,6 +58,9 @@ export const load: PageServerLoad = async ({ url }) => {
 **Sénat (`/senat/`)**
 - À venir
 
+**Stats (`/stats/`)**
+- `/stats/data-quality` ✅ - 3 sections (KPI globaux, couverture élus, tableau mandatures)
+
 ### Pages non candidates
 - `/an/deputes` - Liste paginée avec recherche, pas de panels indépendants
 - `/an/scrutins` - Liste avec filtres, architecture différente

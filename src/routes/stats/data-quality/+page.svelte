@@ -1,13 +1,33 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import type { PageData } from './$types';
-	import { formatLegislature, percentage, coverageClass } from './page.helpers';
+	import {
+		formatLegislature,
+		percentage,
+		coverageClass,
+		COLUMNS,
+		sortLegislatureStats,
+		type SortableColumn
+	} from './page.helpers';
 
 	let { data }: { data: PageData } = $props();
 
 	// Filtre chambre (client-side, pas de rechargement)
 	type ChamberFilter = 'AN' | 'PE' | 'SENAT';
 	let selectedChamber = $state<ChamberFilter>('AN');
+
+	// Tri des colonnes
+	let sortColumn = $state<SortableColumn>('legislature');
+	let sortDirection = $state<'asc' | 'desc'>('asc');
+
+	function handleSort(column: SortableColumn) {
+		if (sortColumn === column) {
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortColumn = column;
+			sortDirection = 'asc';
+		}
+	}
 </script>
 
 <svelte:head>
@@ -137,6 +157,7 @@
 <AsyncCard title="Couverture par mandature" promise={data.legislatureStats} minHeight="300px">
 	{#snippet children(stats)}
 		{@const filtered = stats.filter((s) => s.chamber === selectedChamber)}
+		{@const sorted = sortLegislatureStats(filtered, sortColumn, sortDirection)}
 		{#if filtered.length === 0}
 			<p class="empty-state">Aucune donnée de lois disponible pour cette chambre.</p>
 		{:else}
@@ -144,17 +165,25 @@
 				<table class="data-table">
 					<thead>
 						<tr>
-							<th>Mandature</th>
-							<th class="text-right">Lois</th>
-							<th class="text-right">Avec votes</th>
-							<th class="text-right">Analysées IA</th>
-							<th class="text-right">Avec tags</th>
-							<th class="text-right">Texte complet</th>
-							<th class="text-right">Scrutins</th>
+							{#each COLUMNS as col}
+								<th
+									class="{col.align === 'right' ? 'text-right ' : ''}sortable"
+									class:sorted={sortColumn === col.key}
+									aria-sort={sortColumn === col.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+									tabindex="0"
+									onclick={() => handleSort(col.key)}
+									onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col.key); } }}
+								>
+									{col.label}
+									{#if sortColumn === col.key}
+										<span class="sort-indicator" class:desc={sortDirection === 'desc'}>▲</span>
+									{/if}
+								</th>
+							{/each}
 						</tr>
 					</thead>
 					<tbody>
-						{#each filtered as row}
+						{#each sorted as row}
 							{@const votePct = percentage(row.lawsWithVotes, row.totalLaws)}
 							{@const aiPct = percentage(row.lawsWithSummaries, row.totalLaws)}
 							{@const tagPct = percentage(row.lawsWithTags, row.totalLaws)}
@@ -235,7 +264,7 @@
 	.filter-btn {
 		padding: 0.5rem 1rem;
 		border: 1px solid var(--color-border);
-		background: var(--color-background);
+		background: var(--color-surface);
 		border-radius: 6px;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -244,7 +273,7 @@
 
 	.filter-btn:hover {
 		border-color: var(--color-primary);
-		background: var(--color-background-alt);
+		background: var(--color-bg);
 	}
 
 	.filter-btn.active {
@@ -369,7 +398,7 @@
 	}
 
 	.stat-card {
-		background: var(--color-background);
+		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		padding: 1.25rem;
@@ -386,6 +415,30 @@
 	.stat-label {
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
+	}
+
+	.sortable {
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.sortable:hover {
+		background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+	}
+
+	.sorted {
+		color: var(--color-primary);
+	}
+
+	.sort-indicator {
+		display: inline-block;
+		font-size: 0.625rem;
+		margin-left: 0.25rem;
+		transition: transform 0.2s;
+	}
+
+	.sort-indicator.desc {
+		transform: rotate(180deg);
 	}
 
 	@media (max-width: 768px) {

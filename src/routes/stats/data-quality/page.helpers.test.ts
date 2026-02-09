@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { formatLegislature, percentage, coverageClass } from './page.helpers';
+import {
+	formatLegislature,
+	percentage,
+	coverageClass,
+	extractLegislatureNumber,
+	sortLegislatureStats
+} from './page.helpers';
+import type { LegislatureStats } from './+page.server';
 
 describe('formatLegislature', () => {
 	describe('Assemblée Nationale', () => {
@@ -191,5 +198,104 @@ describe('Integration: percentage + coverageClass', () => {
 	it('should handle edge case: perfect coverage', () => {
 		const pct = percentage(1000, 1000);
 		expect(coverageClass(pct)).toBe('coverage-high');
+	});
+});
+
+describe('extractLegislatureNumber', () => {
+	it('should extract number from AN legislature', () => {
+		expect(extractLegislatureNumber('17')).toBe(17);
+		expect(extractLegislatureNumber('1')).toBe(1);
+		expect(extractLegislatureNumber('16')).toBe(16);
+	});
+
+	it('should extract number from PE legislature', () => {
+		expect(extractLegislatureNumber('PE-10')).toBe(10);
+		expect(extractLegislatureNumber('PE-9')).toBe(9);
+		expect(extractLegislatureNumber('PE-1')).toBe(1);
+	});
+
+	it('should extract number from SE legislature', () => {
+		expect(extractLegislatureNumber('SE-2023')).toBe(2023);
+		expect(extractLegislatureNumber('SE-2020')).toBe(2020);
+	});
+
+	it('should return 0 for strings without numbers', () => {
+		expect(extractLegislatureNumber('')).toBe(0);
+		expect(extractLegislatureNumber('abc')).toBe(0);
+	});
+});
+
+describe('sortLegislatureStats', () => {
+	const makeStat = (overrides: Partial<LegislatureStats> = {}): LegislatureStats => ({
+		legislature: '1',
+		chamber: 'AN',
+		totalLaws: 100,
+		lawsWithVotes: 0,
+		lawsWithSummaries: 0,
+		lawsWithTags: 0,
+		lawsWithDescription: 0,
+		totalScrutins: 0,
+		...overrides
+	});
+
+	const testData = [
+		makeStat({ legislature: '17', totalLaws: 100, lawsWithVotes: 80, lawsWithSummaries: 90, lawsWithTags: 70, lawsWithDescription: 60, totalScrutins: 50 }),
+		makeStat({ legislature: '1', totalLaws: 50, lawsWithVotes: 10, lawsWithSummaries: 5, lawsWithTags: 40, lawsWithDescription: 45, totalScrutins: 200 }),
+		makeStat({ legislature: '10', totalLaws: 200, lawsWithVotes: 150, lawsWithSummaries: 20, lawsWithTags: 10, lawsWithDescription: 30, totalScrutins: 10 }),
+		makeStat({ legislature: '2', totalLaws: 75, lawsWithVotes: 30, lawsWithSummaries: 50, lawsWithTags: 25, lawsWithDescription: 15, totalScrutins: 100 })
+	];
+
+	it('should sort by legislature in natural order (asc)', () => {
+		const result = sortLegislatureStats(testData, 'legislature', 'asc');
+		expect(result.map((r) => r.legislature)).toEqual(['1', '2', '10', '17']);
+	});
+
+	it('should sort by legislature in natural order (desc)', () => {
+		const result = sortLegislatureStats(testData, 'legislature', 'desc');
+		expect(result.map((r) => r.legislature)).toEqual(['17', '10', '2', '1']);
+	});
+
+	it('should sort by totalLaws', () => {
+		const result = sortLegislatureStats(testData, 'totalLaws', 'asc');
+		expect(result.map((r) => r.totalLaws)).toEqual([50, 75, 100, 200]);
+	});
+
+	it('should sort by votes percentage', () => {
+		const result = sortLegislatureStats(testData, 'votes', 'asc');
+		// 1: 10/50=20%, 2: 30/75=40%, 10: 150/200=75%, 17: 80/100=80%
+		expect(result.map((r) => r.legislature)).toEqual(['1', '2', '10', '17']);
+	});
+
+	it('should sort by ai percentage', () => {
+		const result = sortLegislatureStats(testData, 'ai', 'asc');
+		// 10: 20/200=10%, 1: 5/50=10% (equal), 2: 50/75=66.7%, 17: 90/100=90%
+		const legislatures = result.map((r) => r.legislature);
+		// Les deux premiers ont le même pourcentage (10%), ordre entre eux non garanti
+		expect(new Set(legislatures.slice(0, 2))).toEqual(new Set(['1', '10']));
+		expect(legislatures.slice(2)).toEqual(['2', '17']);
+	});
+
+	it('should sort by tags percentage', () => {
+		const result = sortLegislatureStats(testData, 'tags', 'asc');
+		// 10: 10/200=5%, 2: 25/75=33.3%, 17: 70/100=70%, 1: 40/50=80%
+		expect(result.map((r) => r.legislature)).toEqual(['10', '2', '17', '1']);
+	});
+
+	it('should sort by description percentage', () => {
+		const result = sortLegislatureStats(testData, 'description', 'asc');
+		// 10: 30/200=15%, 2: 15/75=20%, 17: 60/100=60%, 1: 45/50=90%
+		expect(result.map((r) => r.legislature)).toEqual(['10', '2', '17', '1']);
+	});
+
+	it('should sort by scrutins', () => {
+		const result = sortLegislatureStats(testData, 'scrutins', 'asc');
+		// 10: 10, 17: 50, 2: 100, 1: 200
+		expect(result.map((r) => r.legislature)).toEqual(['10', '17', '2', '1']);
+	});
+
+	it('should not mutate the original array', () => {
+		const original = [...testData];
+		sortLegislatureStats(testData, 'legislature', 'asc');
+		expect(testData).toEqual(original);
 	});
 });

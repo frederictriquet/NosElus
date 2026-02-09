@@ -7,7 +7,7 @@
         etl-download etl-all etl-incremental \
         etl-an-actors etl-an-scrutins etl-an-laws etl-an-link-laws etl-an-dossiers etl-an-amendements etl-an-nosdeputes \
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
-        etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-pe-enrich-groups \
+        etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
         etl-classify-scrutins etl-analyze-laws etl-law-texts \
         etl-an-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
@@ -181,7 +181,7 @@ etl-europarl-law-texts: ## Enrichit textes des lois PE
 	@echo "$(CYAN)Enrichissement des textes de lois PE...$(RESET)"
 	npm run etl:europarl-law-texts
 
-etl-pe-enrich-groups: ## Enrichit noms des groupes PE
+etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
 	npm run etl:pe-enrich-groups
 

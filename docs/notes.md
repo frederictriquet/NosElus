@@ -1,8 +1,3 @@
-j'aimerais une nouvelle fonctionnalité dans laquelle on montre à l'utilisateur une série de textes (d'une législature) pour lesquels on a le résumé, l'analyse IA et les tags ainsi que les votes. L'utilisateur vote pour ou conrte chaque loi, et en fonction de ses votes on lui donne son alignement avec les différents partis politiques
-
-faire un plugin de logs via telegram
-
-http://localhost:5173/an/scrutins/VTANR5L17V4545
 
 traite le TODO de src/routes/api/quiz/group-votes/+server.ts:98
  

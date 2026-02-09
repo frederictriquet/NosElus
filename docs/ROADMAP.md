@@ -228,7 +228,7 @@
   - Interventions en hémicycle et commission
   - Amendements signés/adoptés, rapports
   - Questions écrites/orales
-- **ETL** : `make etl-nosdeputes-stats`
+- **ETL** : `make etl-an-nosdeputes-stats`
 
 **NosSénateurs.fr (Regards Citoyens)** ⚠️
 - Site toujours inaccessible

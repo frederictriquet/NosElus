@@ -45,11 +45,11 @@
 | Tâche | Complexité | Statut |
 |-------|------------|--------|
 | Modèle de données "dossier législatif" (texte → lectures → votes) | 🟡 Moyen | ✅ `src/lib/server/db/schema/laws.ts` |
-| ETL : lier scrutins aux textes (parsing titres) | 🟢 Simple | ✅ `make etl-link-laws` (97.6% couverture) |
+| ETL : lier scrutins aux textes (parsing titres) | 🟢 Simple | ✅ `make etl-an-link-laws` (97.6% couverture) |
 | UI : page texte avec chronologie (dépôt → adoption) | 🟡 Moyen | ✅ `/an/laws/[id]` |
 | UI : page détail scrutin avec lien vers dossier | 🟢 Simple | ✅ `/an/scrutins/[id]` |
 | UI : liste des dossiers législatifs | 🟢 Simple | ✅ `/an/laws` |
-| ETL : import complet via API AN (dossiers + cosignataires) | 🟡 Moyen | ✅ `make etl-dossiers-an` |
+| ETL : import complet via API AN (dossiers + cosignataires) | 🟡 Moyen | ✅ `make etl-an-dossiers` |
 | UI : visualisation du parcours AN ↔ Sénat ↔ CMP | 🔴 Complexe | ⏳ à faire |
 
 **Valeur** : Sortir du vote isolé, comprendre le processus complet.

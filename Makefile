@@ -3,11 +3,19 @@
 # Commandes utiles pour le développement et la gestion des données
 
 .PHONY: help install dev build preview clean clean-cache \
-        db-up db-down db-migrate db-push db-studio db-reset \
-        etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws etl-senat-senators etl-senat-mandates-history etl-nossenateurs-stats etl-senat-activity-stats etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-external-colors etl-nosdeputes etl-colors etl-classify-scrutins etl-analyze-laws etl-law-texts etl-political-positions etl-seed-pe-positions \
+        db-up db-down db-migrate db-push db-studio db-generate db-reset \
+        etl-download etl-all etl-incremental \
+        etl-an-actors etl-an-scrutins etl-an-laws etl-an-link-laws etl-an-dossiers etl-an-amendements etl-an-nosdeputes \
+        etl-senat-laws etl-senat-senators etl-senat-mandates-history \
+        etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-pe-enrich-groups \
+        etl-classify-scrutins etl-analyze-laws etl-law-texts \
+        etl-an-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
+        etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
+        etl-leg14 etl-leg15 etl-leg16 etl-leg17 etl-all-legislatures \
+        init init-quick \
         docker-build docker-up docker-down docker-logs docker-restart \
         test test-watch test-ui test-e2e test-all \
-        check lint format
+        check lint format status stats
 
 # Variables
 ETL_DATA_DIR ?= ./data/assemblee
@@ -27,8 +35,9 @@ help: ## Affiche cette aide
 	@echo ""
 	@echo "$(CYAN)NosElus - Commandes disponibles$(RESET)"
 	@echo "================================"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(RESET) %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*##"; printf "\n"} \
+		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  $(GREEN)%-30s$(RESET) %s\n", $$1, $$2 } \
+		/^##@/ { printf "\n$(YELLOW)%s$(RESET)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "$(YELLOW)Variables d'environnement:$(RESET)"
 	@echo "  ETL_DATA_DIR      Répertoire des données Assemblée (défaut: ./data/assemblee)"
@@ -38,6 +47,8 @@ help: ## Affiche cette aide
 # =============================================================================
 # INSTALLATION & DÉVELOPPEMENT
 # =============================================================================
+
+##@ Installation & Développement
 
 install: ## Installe les dépendances
 	npm install
@@ -62,6 +73,8 @@ clean-cache: ## Nettoie uniquement les caches (utile après refactoring)
 # =============================================================================
 # BASE DE DONNÉES
 # =============================================================================
+
+##@ Base de données
 
 db-up: ## Démarre PostgreSQL via Docker
 	docker compose up -d db
@@ -93,6 +106,8 @@ db-reset: ## Reset complet de la DB (ATTENTION: destructif!)
 # ETL - Import des données
 # =============================================================================
 
+##@ ETL - Orchestration
+
 etl-download: ## Télécharge les données de l'Assemblée Nationale
 	@echo "$(CYAN)Téléchargement des données...$(RESET)"
 	@mkdir -p $(ETL_DATA_DIR)
@@ -102,26 +117,37 @@ etl-all: ## Import complet (organs, actors, mandates, scrutins, votes)
 	@echo "$(CYAN)Import complet - Legislature $(ETL_LEGISLATURE)$(RESET)"
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:all
 
-etl-incremental: ## Import incrémental (seulement les nouveaux/modifiés)
+etl-incremental: ## Import incrémental (nouveaux/modifiés uniquement)
 	@echo "$(CYAN)Import incrémental - Legislature $(ETL_LEGISLATURE)$(RESET)"
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:all -- --incremental
 
-etl-actors: ## Import des acteurs uniquement
-	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:actors
+##@ ETL - Assemblée Nationale
 
-etl-scrutins: ## Import des scrutins et votes
-	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:scrutins
+etl-an-actors: ## Import des acteurs (députés)
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-actors
 
-etl-laws: ## Import des dossiers législatifs AN
-	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:laws
+etl-an-scrutins: ## Import des scrutins et votes
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-scrutins
 
-etl-link-laws: ## Lie les scrutins aux textes via parsing des titres (MVP)
-	ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:link-laws
+etl-an-laws: ## Import des dossiers législatifs AN
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-laws
 
-etl-dossiers-an: ## Import complet des dossiers législatifs AN avec cosignataires
-	ETL_DATA_DIR=$(ETL_DATA_DIR)/dossiers_legislatifs ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:dossiers-an
+etl-an-link-laws: ## Lie scrutins aux textes (parsing titres)
+	ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-link-laws
 
-etl-senat-laws: ## Import des dossiers législatifs Sénat (DOSLEG)
+etl-an-dossiers: ## Import complet dossiers AN avec cosignataires
+	ETL_DATA_DIR=$(ETL_DATA_DIR)/dossiers_legislatifs ETL_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-dossiers
+
+etl-an-amendements: ## Import des amendements AN
+	@echo "$(CYAN)Import des amendements...$(RESET)"
+	npm run etl:an-amendements
+
+etl-an-nosdeputes: ## Import depuis NosDéputés.fr (API)
+	npm run etl:an-nosdeputes
+
+##@ ETL - Sénat
+
+etl-senat-laws: ## Import dossiers législatifs Sénat (DOSLEG)
 	@echo "$(CYAN)Import des dossiers législatifs du Sénat...$(RESET)"
 	npm run etl:senat-laws
 
@@ -129,82 +155,89 @@ etl-senat-senators: ## Import des sénateurs (API Sénat)
 	@echo "$(CYAN)Import des sénateurs...$(RESET)"
 	npm run etl:senat-senators
 
-etl-senat-mandates-history: ## Import historique des mandats sénatoriaux (data.senat.fr)
+etl-senat-mandates-history: ## Import historique mandats sénatoriaux
 	@echo "$(CYAN)Import historique des mandats sénatoriaux...$(RESET)"
 	npm run etl:senat-mandates-history
 
-etl-nossenateurs-stats: ## Import statistiques d'assiduité sénateurs (NosSénateurs.fr)
-	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
-	npm run etl:nossenateurs-stats
+##@ ETL - Parlement Européen
 
-etl-senat-activity-stats: ## Import statistiques d'activité sénateurs (senat.fr officiel)
-	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
-	npm run etl:senat-activity-stats
+etl-europarl-meps: ## Import eurodéputés français (ParlTrack)
+	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
+	npm run etl:europarl-meps
 
-etl-classify-scrutins: ## Classifier les scrutins existants par catégorie sémantique
+etl-europarl-historical: ## Import historique eurodéputés (2004-présent)
+	@echo "$(CYAN)Import historique des eurodéputés français (2004-présent)...$(RESET)"
+	npm run etl:europarl-historical
+
+etl-europarl-votes: ## Import votes PE (HowTheyVote.eu)
+	@echo "$(CYAN)Import des votes du Parlement Européen...$(RESET)"
+	npm run etl:europarl-votes
+
+etl-europarl-laws: ## Import lois/procédures PE (HowTheyVote.eu)
+	@echo "$(CYAN)Import des lois/procédures du Parlement Européen...$(RESET)"
+	npm run etl:europarl-laws
+
+etl-europarl-law-texts: ## Enrichit textes des lois PE
+	@echo "$(CYAN)Enrichissement des textes de lois PE...$(RESET)"
+	npm run etl:europarl-law-texts
+
+etl-pe-enrich-groups: ## Enrichit noms des groupes PE
+	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
+	npm run etl:pe-enrich-groups
+
+##@ ETL - Enrichissement & Analyse
+
+etl-classify-scrutins: ## Classifier scrutins par catégorie sémantique
 	@echo "$(CYAN)Classification des scrutins...$(RESET)"
 	npm run etl:classify-scrutins
 
-etl-analyze-laws: ## Analyser les lois avec LLM local (Ollama) - résumé et tags
+etl-analyze-laws: ## Analyser lois avec LLM (Ollama)
 	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:analyze-laws -- $(ARGS)
 
-etl-law-texts: ## Import des textes complets de lois via Légifrance PISTE
+etl-law-texts: ## Import textes complets via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: PISTE_CLIENT_ID et PISTE_CLIENT_SECRET dans .env$(RESET)"
 	npm run etl:law-texts -- $(ARGS)
 
-etl-europarl-meps: ## Import des eurodéputés français (ParlTrack)
-	@echo "$(CYAN)Import des eurodéputés français...$(RESET)"
-	npm run etl:europarl-meps
+##@ ETL - Statistiques d'activité
 
-etl-europarl-historical: ## Import historique des eurodéputés (depuis 2004)
-	@echo "$(CYAN)Import historique des eurodéputés français (2004-présent)...$(RESET)"
-	npm run etl:europarl-historical
+etl-an-nosdeputes-stats: ## Statistiques députés (NosDéputés.fr)
+	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
+	npm run etl:an-nosdeputes-stats
 
-etl-europarl-votes: ## Import des votes PE (HowTheyVote.eu)
-	@echo "$(CYAN)Import des votes du Parlement Européen...$(RESET)"
-	npm run etl:europarl-votes
+etl-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
+	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
+	npm run etl:nossenateurs-stats
 
-etl-europarl-laws: ## Import des lois/procédures PE (HowTheyVote.eu)
-	@echo "$(CYAN)Import des lois/procédures du Parlement Européen...$(RESET)"
-	npm run etl:europarl-laws
+etl-senat-activity-stats: ## Statistiques sénateurs (senat.fr officiel)
+	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
+	npm run etl:senat-activity-stats
 
-etl-europarl-activity-stats: ## Import statistiques d'activité MEPs (HowTheyVote.eu)
+etl-europarl-activity-stats: ## Statistiques eurodéputés (HowTheyVote.eu)
 	@echo "$(CYAN)Import statistiques d'activité des eurodéputés...$(RESET)"
 	npm run etl:europarl-activity-stats
 
-etl-europarl-law-texts: ## Enrichit les textes des lois PE (caches HTV + web)
-	@echo "$(CYAN)Enrichissement des textes de lois PE...$(RESET)"
-	npm run etl:europarl-law-texts
+##@ ETL - Configuration & Métadonnées
 
-etl-pe-enrich-groups: ## Enrichit les noms des groupes PE (HowTheyVote.eu)
-	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
-	npm run etl:pe-enrich-groups
+etl-colors: ## Synchronise couleurs des groupes
+	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"
+	npm run etl:colors
 
-etl-external-colors: ## Import des couleurs PE/Sénat depuis sources externes
+etl-external-colors: ## Import couleurs PE/Sénat (sources externes)
 	@echo "$(CYAN)Import des couleurs depuis sources externes...$(RESET)"
 	npm run etl:external-colors
 
-etl-nosdeputes: ## Import depuis NosDéputés.fr (API)
-	npm run etl:nosdeputes
-
-etl-nosdeputes-stats: ## Import statistiques d'activité députés (NosDéputés.fr)
-	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
-	npm run etl:nosdeputes-stats
-
-etl-colors: ## Synchronise les couleurs des groupes
-	@echo "$(CYAN)Synchronisation des couleurs...$(RESET)"
-	node --import tsx scripts/etl/sync-group-colors.ts
-
-etl-political-positions: ## Import positions politiques depuis ParlGov
+etl-political-positions: ## Import positions politiques (ParlGov)
 	@echo "$(CYAN)Import des positions politiques (ParlGov)...$(RESET)"
-	node --import tsx scripts/etl/import-political-positions.ts $(ARGS)
+	npm run etl:political-positions -- $(ARGS)
 
-etl-seed-pe-positions: ## Seed positions politiques pour les groupes PE
+etl-seed-pe-positions: ## Seed positions PE (Chapel Hill Expert Survey)
 	@echo "$(CYAN)Seed des positions PE (Chapel Hill Expert Survey)...$(RESET)"
-	node --import tsx scripts/etl/seed-pe-positions.ts
+	npm run etl:seed-pe-positions
+
+##@ ETL - Législatures historiques
 
 etl-leg14: ## Import législature 14 (2012-2017)
 	@$(MAKE) etl-all ETL_LEGISLATURE=14
@@ -218,7 +251,7 @@ etl-leg16: ## Import législature 16 (2022-2024)
 etl-leg17: ## Import législature 17 (2024-)
 	@$(MAKE) etl-all ETL_LEGISLATURE=17
 
-etl-all-legislatures: ## Import toutes les législatures (14, 15, 16, 17)
+etl-all-legislatures: ## Import toutes législatures (14→17)
 	@echo "$(CYAN)Import législature 14 (XIVe - 2012-2017)...$(RESET)"
 	@$(MAKE) etl-all ETL_LEGISLATURE=14
 	@echo "$(CYAN)Import législature 15 (XVe - 2017-2022)...$(RESET)"
@@ -232,6 +265,8 @@ etl-all-legislatures: ## Import toutes les législatures (14, 15, 16, 17)
 # =============================================================================
 # INIT COMPLÈTE
 # =============================================================================
+
+##@ Initialisation
 
 init: ## Initialisation complète du projet (install, db, data)
 	@echo "$(CYAN)=== Initialisation de NosElus ===$(RESET)"
@@ -264,6 +299,8 @@ init-quick: ## Init rapide sans données (pour dev frontend)
 # DOCKER
 # =============================================================================
 
+##@ Docker
+
 docker-build: ## Build les images Docker
 	npm run docker:build
 
@@ -282,6 +319,8 @@ docker-restart: ## Redémarre les services Docker
 # =============================================================================
 # TESTS
 # =============================================================================
+
+##@ Tests
 
 test: ## Lance les tests unitaires
 	npm run test
@@ -302,6 +341,8 @@ test-all: ## Lance tous les tests
 # QUALITÉ DE CODE
 # =============================================================================
 
+##@ Qualité de code
+
 check: ## Vérifie les types TypeScript
 	npm run check
 
@@ -313,6 +354,8 @@ format: ## Formate le code avec Prettier
 # =============================================================================
 # UTILITAIRES
 # =============================================================================
+
+##@ Utilitaires
 
 status: ## Affiche le statut du projet
 	@echo "$(CYAN)=== Statut NosElus ===$(RESET)"

@@ -259,7 +259,7 @@ Les lois sont ajoutées automatiquement via ETL :
 
 ```bash
 # AN : lois déjà importées automatiquement
-make etl-laws
+make etl-an-laws
 
 # PE : import manuel
 make etl-europarl-laws

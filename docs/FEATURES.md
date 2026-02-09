@@ -187,7 +187,7 @@ Documentation des sources de données
 # Assemblée Nationale
 make etl-all-legislatures     # Import complet (législatures 12-17)
 make etl-incremental          # Import incrémental
-make etl-nosdeputes-stats     # Statistiques d'activité
+make etl-an-nosdeputes-stats  # Statistiques d'activité
 
 # Sénat
 make etl-senat-senators       # Sénateurs et groupes

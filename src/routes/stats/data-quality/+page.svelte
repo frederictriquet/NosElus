@@ -1,51 +1,13 @@
 <script lang="ts">
 	import AsyncCard from '$lib/components/AsyncCard.svelte';
 	import type { PageData } from './$types';
+	import { formatLegislature, percentage, coverageClass } from './+page.helpers';
 
 	let { data }: { data: PageData } = $props();
 
 	// Filtre chambre (client-side, pas de rechargement)
-	type ChamberFilter = 'ALL' | 'AN' | 'PE';
-	let selectedChamber = $state<ChamberFilter>('ALL');
-
-	// Labels des chambres
-	const chamberLabels: Record<string, string> = {
-		AN: 'Assemblée nationale',
-		PE: 'Parlement européen',
-		SENAT: 'Sénat'
-	};
-
-	/**
-	 * Format legislature label selon la chambre
-	 * AN-17 → "17e législature"
-	 * PE-10 → "10e terme"
-	 */
-	function formatLegislature(legislature: string): string {
-		if (legislature.startsWith('PE-')) {
-			const num = legislature.replace('PE-', '');
-			return `${num}e terme`;
-		}
-		return `${legislature}e législature`;
-	}
-
-	/**
-	 * Calcule le pourcentage avec 1 décimale
-	 */
-	function percentage(value: number, total: number): number {
-		return total > 0 ? (value / total) * 100 : 0;
-	}
-
-	/**
-	 * Classe CSS selon le taux de couverture
-	 * >75% → success (vert)
-	 * 25-75% → warning (orange)
-	 * <25% → danger (rouge)
-	 */
-	function coverageClass(pct: number): string {
-		if (pct > 75) return 'coverage-high';
-		if (pct > 25) return 'coverage-medium';
-		return 'coverage-low';
-	}
+	type ChamberFilter = 'AN' | 'PE' | 'SENAT';
+	let selectedChamber = $state<ChamberFilter>('AN');
 </script>
 
 <svelte:head>
@@ -60,53 +22,39 @@
 </div>
 
 <!-- KPIs globaux -->
-{#await data.globalStats}
-	<div class="stats-grid">
-		{#each Array(6) as _}
-			<div class="stat-card loading">
-				<div class="skeleton-value"></div>
-				<div class="skeleton-label"></div>
+<AsyncCard title="Vue d'ensemble" promise={data.globalStats} minHeight="120px">
+	{#snippet children(stats)}
+		<div class="stats-grid">
+			<div class="stat-card">
+				<div class="stat-value">{stats.totalLaws.toLocaleString('fr-FR')}</div>
+				<div class="stat-label">Textes de loi</div>
 			</div>
-		{/each}
-	</div>
-{:then stats}
-	<div class="stats-grid">
-		<div class="stat-card">
-			<div class="stat-value">{stats.totalLaws.toLocaleString('fr-FR')}</div>
-			<div class="stat-label">Textes de loi</div>
+			<div class="stat-card">
+				<div class="stat-value">{stats.totalScrutins.toLocaleString('fr-FR')}</div>
+				<div class="stat-label">Scrutins</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">{stats.totalActors.toLocaleString('fr-FR')}</div>
+				<div class="stat-label">Élus</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">{stats.totalVotes.toLocaleString('fr-FR')}</div>
+				<div class="stat-label">Votes enregistrés</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">{stats.coverageVotes.toFixed(1)}%</div>
+				<div class="stat-label">Lois avec votes</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">{stats.coverageAI.toFixed(1)}%</div>
+				<div class="stat-label">Lois analysées IA</div>
+			</div>
 		</div>
-		<div class="stat-card">
-			<div class="stat-value">{stats.totalScrutins.toLocaleString('fr-FR')}</div>
-			<div class="stat-label">Scrutins</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">{stats.totalActors.toLocaleString('fr-FR')}</div>
-			<div class="stat-label">Élus</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">{stats.totalVotes.toLocaleString('fr-FR')}</div>
-			<div class="stat-label">Votes enregistrés</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">{stats.coverageVotes.toFixed(1)}%</div>
-			<div class="stat-label">Lois avec votes</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">{stats.coverageAI.toFixed(1)}%</div>
-			<div class="stat-label">Lois analysées IA</div>
-		</div>
-	</div>
-{/await}
+	{/snippet}
+</AsyncCard>
 
 <!-- Filtre chambre -->
 <div class="filter-bar">
-	<button
-		class="filter-btn"
-		class:active={selectedChamber === 'ALL'}
-		onclick={() => (selectedChamber = 'ALL')}
-	>
-		Toutes les chambres
-	</button>
 	<button
 		class="filter-btn"
 		class:active={selectedChamber === 'AN'}
@@ -121,22 +69,82 @@
 	>
 		Parlement européen
 	</button>
+	<button
+		class="filter-btn"
+		class:active={selectedChamber === 'SENAT'}
+		onclick={() => (selectedChamber = 'SENAT')}
+	>
+		Sénat
+	</button>
 </div>
+
+<!-- Couverture des élus par chambre -->
+<AsyncCard title="Couverture des élus" promise={data.chamberStats} minHeight="200px">
+	{#snippet children(stats)}
+		{@const current = stats.find((s) => s.chamber === selectedChamber)}
+		{#if !current}
+			<p class="empty-state">Aucune donnée disponible pour ce filtre.</p>
+		{:else}
+			{@const colorPct = percentage(current.groupsWithColor, current.totalGroups)}
+			{@const activityPct = percentage(current.actorsWithStats, current.totalActors)}
+			<div class="chamber-stats-grid">
+				<div class="chamber-stat">
+					<div class="chamber-stat-value">{current.totalActors.toLocaleString('fr-FR')}</div>
+					<div class="chamber-stat-label">Élus</div>
+				</div>
+				<div class="chamber-stat">
+					<div class="chamber-stat-value">{current.totalGroups}</div>
+					<div class="chamber-stat-label">Groupes</div>
+				</div>
+				<div class="chamber-stat">
+					<div class="chamber-stat-value">{current.totalMandates.toLocaleString('fr-FR')}</div>
+					<div class="chamber-stat-label">Mandats</div>
+				</div>
+				<div class="chamber-stat">
+					<div class="coverage-cell">
+						<span class={coverageClass(colorPct)}>
+							{current.groupsWithColor}/{current.totalGroups} ({colorPct.toFixed(0)}%)
+						</span>
+						<div class="progress-bar">
+							<div class="progress-fill {coverageClass(colorPct)}" style="width: {colorPct}%"></div>
+						</div>
+					</div>
+					<div class="chamber-stat-label">Groupes avec couleur</div>
+				</div>
+				<div class="chamber-stat">
+					<div class="coverage-cell">
+						<span class={coverageClass(activityPct)}>
+							{current.actorsWithStats.toLocaleString('fr-FR')}/{current.totalActors.toLocaleString(
+								'fr-FR'
+							)}
+							({activityPct.toFixed(0)}%)
+						</span>
+						<div class="progress-bar">
+							<div
+								class="progress-fill {coverageClass(activityPct)}"
+								style="width: {activityPct}%"
+							></div>
+						</div>
+					</div>
+					<div class="chamber-stat-label">Élus avec stats d'activité</div>
+				</div>
+			</div>
+		{/if}
+	{/snippet}
+</AsyncCard>
 
 <!-- Tableau détaillé par législature -->
 <AsyncCard title="Couverture par mandature" promise={data.legislatureStats} minHeight="300px">
 	{#snippet children(stats)}
-		{@const filtered =
-			selectedChamber === 'ALL' ? stats : stats.filter((s) => s.chamber === selectedChamber)}
+		{@const filtered = stats.filter((s) => s.chamber === selectedChamber)}
 		{#if filtered.length === 0}
-			<p class="empty-state">Aucune donnée disponible pour ce filtre.</p>
+			<p class="empty-state">Aucune donnée de lois disponible pour cette chambre.</p>
 		{:else}
 			<div class="table-wrapper">
 				<table class="data-table">
 					<thead>
 						<tr>
 							<th>Mandature</th>
-							<th>Chambre</th>
 							<th class="text-right">Lois</th>
 							<th class="text-right">Avec votes</th>
 							<th class="text-right">Analysées IA</th>
@@ -153,7 +161,6 @@
 							{@const descPct = percentage(row.lawsWithDescription, row.totalLaws)}
 							<tr>
 								<td><strong>{formatLegislature(row.legislature)}</strong></td>
-								<td>{chamberLabels[row.chamber]}</td>
 								<td class="text-right">{row.totalLaws.toLocaleString('fr-FR')}</td>
 								<td class="text-right">
 									<div class="coverage-cell">
@@ -327,12 +334,38 @@
 		padding: 2rem;
 	}
 
+	.chamber-stats-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 1.25rem;
+	}
+
+	.chamber-stat {
+		text-align: center;
+	}
+
+	.chamber-stat-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--color-primary);
+		margin-bottom: 0.25rem;
+	}
+
+	.chamber-stat-label {
+		font-size: 0.8125rem;
+		color: var(--color-text-muted);
+		margin-top: 0.25rem;
+	}
+
+	.chamber-stat .coverage-cell {
+		align-items: center;
+	}
+
 	/* KPI cards */
 	.stats-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 		gap: 1rem;
-		margin-bottom: 2rem;
 	}
 
 	.stat-card {
@@ -353,53 +386,6 @@
 	.stat-label {
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
-	}
-
-	.stat-card.loading {
-		min-height: 100px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 0.5rem;
-	}
-
-	.skeleton-value {
-		height: 32px;
-		background: linear-gradient(
-			90deg,
-			var(--color-border) 25%,
-			var(--color-background-alt) 50%,
-			var(--color-border) 75%
-		);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: 4px;
-		margin: 0 auto;
-		width: 80%;
-	}
-
-	.skeleton-label {
-		height: 16px;
-		background: linear-gradient(
-			90deg,
-			var(--color-border) 25%,
-			var(--color-background-alt) 50%,
-			var(--color-border) 75%
-		);
-		background-size: 200% 100%;
-		animation: shimmer 1.5s infinite;
-		border-radius: 4px;
-		margin: 0 auto;
-		width: 60%;
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: 200% 0;
-		}
-		100% {
-			background-position: -200% 0;
-		}
 	}
 
 	@media (max-width: 768px) {

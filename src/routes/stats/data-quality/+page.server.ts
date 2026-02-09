@@ -11,8 +11,6 @@ interface LegislatureStats {
 	lawsWithTags: number;
 	lawsWithDescription: number;
 	totalScrutins: number;
-	scrutinsLinked: number;
-	scrutinsCategorized: number;
 }
 
 interface GlobalStats {
@@ -22,6 +20,15 @@ interface GlobalStats {
 	totalVotes: number;
 	coverageVotes: number;
 	coverageAI: number;
+}
+
+interface ChamberStats {
+	chamber: 'AN' | 'PE' | 'SENAT';
+	totalActors: number;
+	totalGroups: number;
+	groupsWithColor: number;
+	totalMandates: number;
+	actorsWithStats: number;
 }
 
 export const load: PageServerLoad = async () => {
@@ -48,15 +55,17 @@ export const load: PageServerLoad = async () => {
 		`);
 
 		const row = result[0];
-		const totalLaws = row.total_laws || 0;
+		const totalLaws = Number(row.total_laws) || 0;
+		const lawsWithVotes = Number(row.laws_with_votes) || 0;
+		const lawsWithSummaries = Number(row.laws_with_summaries) || 0;
 
 		return {
 			totalLaws,
-			totalScrutins: row.total_scrutins || 0,
-			totalActors: row.total_actors || 0,
-			totalVotes: row.total_votes || 0,
-			coverageVotes: totalLaws > 0 ? (row.laws_with_votes / totalLaws) * 100 : 0,
-			coverageAI: totalLaws > 0 ? (row.laws_with_summaries / totalLaws) * 100 : 0
+			totalScrutins: Number(row.total_scrutins) || 0,
+			totalActors: Number(row.total_actors) || 0,
+			totalVotes: Number(row.total_votes) || 0,
+			coverageVotes: totalLaws > 0 ? (lawsWithVotes / totalLaws) * 100 : 0,
+			coverageAI: totalLaws > 0 ? (lawsWithSummaries / totalLaws) * 100 : 0
 		};
 	};
 
@@ -73,8 +82,6 @@ export const load: PageServerLoad = async () => {
 			laws_with_tags: number;
 			laws_with_description: number;
 			total_scrutins: number;
-			scrutins_linked: number;
-			scrutins_categorized: number;
 		}>(sql`
 			WITH law_stats AS (
 				SELECT
@@ -90,9 +97,7 @@ export const load: PageServerLoad = async () => {
 			scrutin_stats AS (
 				SELECT
 					legislature,
-					COUNT(*) as total_scrutins,
-					COUNT(law_id) as scrutins_linked,
-					COUNT(*) FILTER (WHERE category IS NOT NULL) as scrutins_categorized
+					COUNT(*) as total_scrutins
 				FROM scrutins
 				GROUP BY legislature
 			)
@@ -103,9 +108,7 @@ export const load: PageServerLoad = async () => {
 				ls.laws_with_summaries,
 				ls.laws_with_tags,
 				ls.laws_with_description,
-				COALESCE(ss.total_scrutins, 0) as total_scrutins,
-				COALESCE(ss.scrutins_linked, 0) as scrutins_linked,
-				COALESCE(ss.scrutins_categorized, 0) as scrutins_categorized
+				COALESCE(ss.total_scrutins, 0) as total_scrutins
 			FROM law_stats ls
 			LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 			ORDER BY ls.legislature
@@ -122,21 +125,77 @@ export const load: PageServerLoad = async () => {
 			return {
 				legislature,
 				chamber,
-				totalLaws: row.total_laws || 0,
-				lawsWithVotes: row.laws_with_votes || 0,
-				lawsWithSummaries: row.laws_with_summaries || 0,
-				lawsWithTags: row.laws_with_tags || 0,
-				lawsWithDescription: row.laws_with_description || 0,
-				totalScrutins: row.total_scrutins || 0,
-				scrutinsLinked: row.scrutins_linked || 0,
-				scrutinsCategorized: row.scrutins_categorized || 0
+				totalLaws: Number(row.total_laws) || 0,
+				lawsWithVotes: Number(row.laws_with_votes) || 0,
+				lawsWithSummaries: Number(row.laws_with_summaries) || 0,
+				lawsWithTags: Number(row.laws_with_tags) || 0,
+				lawsWithDescription: Number(row.laws_with_description) || 0,
+				totalScrutins: Number(row.total_scrutins) || 0
 			};
 		});
+	};
+
+	/**
+	 * Charge les stats par chambre (élus, groupes, mandats, activité)
+	 * 4 CTEs indépendantes jointes pour éviter le produit cartésien
+	 */
+	const loadChamberStats = async (): Promise<ChamberStats[]> => {
+		const result = await db.execute<{
+			chamber: 'AN' | 'PE' | 'SENAT';
+			total_actors: number;
+			total_groups: number;
+			groups_with_color: number;
+			total_mandates: number;
+			actors_with_stats: number;
+		}>(sql`
+			WITH actor_counts AS (
+				SELECT chamber, COUNT(*) as total_actors
+				FROM actors
+				GROUP BY chamber
+			),
+			group_counts AS (
+				SELECT chamber,
+					COUNT(*) FILTER (WHERE type = 'GP') as total_groups,
+					COUNT(*) FILTER (WHERE type = 'GP' AND color IS NOT NULL) as groups_with_color
+				FROM organs
+				GROUP BY chamber
+			),
+			mandate_counts AS (
+				SELECT o.chamber, COUNT(*) as total_mandates
+				FROM mandates m JOIN organs o ON m.organ_id = o.id
+				GROUP BY o.chamber
+			),
+			activity_counts AS (
+				SELECT a.chamber, COUNT(DISTINCT as2.actor_id) as actors_with_stats
+				FROM actor_stats as2 JOIN actors a ON a.id = as2.actor_id
+				GROUP BY a.chamber
+			)
+			SELECT ac.chamber, ac.total_actors,
+				COALESCE(gc.total_groups, 0) as total_groups,
+				COALESCE(gc.groups_with_color, 0) as groups_with_color,
+				COALESCE(mc.total_mandates, 0) as total_mandates,
+				COALESCE(act.actors_with_stats, 0) as actors_with_stats
+			FROM actor_counts ac
+			LEFT JOIN group_counts gc ON ac.chamber = gc.chamber
+			LEFT JOIN mandate_counts mc ON ac.chamber = mc.chamber
+			LEFT JOIN activity_counts act ON ac.chamber = act.chamber
+			ORDER BY ac.chamber
+		`);
+
+		return result.map((row) => ({
+			chamber: row.chamber,
+			totalActors: Number(row.total_actors) || 0,
+			totalGroups: Number(row.total_groups) || 0,
+			groupsWithColor: Number(row.groups_with_color) || 0,
+			totalMandates: Number(row.total_mandates) || 0,
+			actorsWithStats: Number(row.actors_with_stats) || 0
+		}));
 	};
 
 	// Pattern SvelteKit streaming : retourner des promises non résolues
 	return {
 		globalStats: loadGlobalStats(),
-		legislatureStats: loadLegislatureStats()
+		legislatureStats: loadLegislatureStats(),
+		chamberStats: loadChamberStats()
 	};
 };

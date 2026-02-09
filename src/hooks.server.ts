@@ -9,6 +9,9 @@ const PERIOD_COOKIES = {
 	pe: 'noselus-period-pe'
 } as const;
 
+// Routes globales (pas spécifiques à une chambre) qui ne doivent pas être redirigées
+const GLOBAL_ROUTES = ['/stats/data-quality'];
+
 // Redirections des anciennes URLs vers les nouvelles
 const REDIRECTS: Record<string, string> = {
 	'/deputes': '/an/deputes',
@@ -47,8 +50,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Vérifier les redirections de sous-chemins (ex: /deputes/PA123 -> /an/deputes/PA123)
 	for (const [oldPath, newPath] of Object.entries(REDIRECTS)) {
 		if (pathname.startsWith(oldPath + '/')) {
-			// Exception: ne pas rediriger /stats/data-quality qui est une page globale
-			if (pathname === '/stats/data-quality') {
+			// Ne pas rediriger les routes globales (ex: /stats/data-quality)
+			if (GLOBAL_ROUTES.some((route) => pathname.startsWith(route))) {
 				continue;
 			}
 			const subPath = pathname.slice(oldPath.length);

@@ -47,6 +47,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Vérifier les redirections de sous-chemins (ex: /deputes/PA123 -> /an/deputes/PA123)
 	for (const [oldPath, newPath] of Object.entries(REDIRECTS)) {
 		if (pathname.startsWith(oldPath + '/')) {
+			// Exception: ne pas rediriger /stats/data-quality qui est une page globale
+			if (pathname === '/stats/data-quality') {
+				continue;
+			}
 			const subPath = pathname.slice(oldPath.length);
 			const search = event.url.search;
 			throw redirect(301, newPath + subPath + search);

@@ -158,10 +158,29 @@ const testDb = drizzle(new Database(':memory:'));
 **Avantages** : Plus rapide, isolation totale
 **Inconvénients** : Ne teste pas PostgreSQL réel (différences SQL)
 
+## Convention de Nommage (ajouté 2026-02-09)
+
+- `*.test.ts` = tests unitaires → tournent partout (CI + local)
+- `*.server.test.ts` = tests d'intégration DB → local seulement
+
+**Config vitest.config.ts** :
+```typescript
+exclude: ['src/**/*.server.test.ts', 'node_modules']
+```
+
+Les tests d'intégration sont exclus de `npm run test` par défaut.
+Pour les lancer en local : `npx vitest run src/**/*.server.test.ts`
+
+Voir : `postmortem-2026-02-09-data-quality-ci-incident.md` pour le contexte.
+
 ## Commande
 
 ```bash
-npm test -- helpers.law-implication.test.ts
+# Tests unitaires seulement (CI-safe)
+npm test
+
+# Tests d'intégration DB (local seulement)
+npx vitest run src/**/*.server.test.ts
 ```
 
 ## Références

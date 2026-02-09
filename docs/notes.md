@@ -1,8 +1,7 @@
 
 traite le TODO de src/routes/api/quiz/group-votes/+server.ts:98
  
-crée dashboard indiquant pour chaque mandature le nombre de textes de lois, le nombres de textes pour lesquels on a des votes, le nombre de textes analysés par l'IA
-
+dans le dashboard de stats globales, je vois qu'il y a 100% des textes du parlement européen qui ont été analysés par IA alors qu'il y a 0% des textes complets. Je croyais qu'il était interdit d'analyser des lois sans avoir leur texte complet
 
 Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs optimisations sont possibles :
 1. Court terme : Ajouter loading="lazy" et dimensions fixes aux images

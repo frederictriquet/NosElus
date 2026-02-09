@@ -189,16 +189,25 @@ export async function notifyETLComplete(
 		// Legislature info (optionnel)
 		const legislatureInfo = options.legislature ? ` (${options.legislature})` : '';
 
-		// Formatage du message en HTML (FemtoLogger v0.1.4+ ne l'échappe plus)
+		// Formatage du message en HTML
+		// Note: Telegram HTML ne supporte que <b>, <i>, <code>, <pre>, <a>
+		const cols = [
+			['Total', `${stats.total}`],
+			['Inserés', `${stats.inserted}`],
+			['MàJ', `${stats.updated}`],
+			['Ignorés', `${stats.skipped}`],
+			['Erreur', `${stats.errors}`],
+			['OK', `${successRate}%`]
+		];
+		const widths = cols.map(([h, v]) => Math.max(h.length, v.length));
+		const headerRow = cols.map(([h], i) => h.padStart(widths[i])).join(' │ ');
+		const separator = widths.map((w) => '─'.repeat(w)).join('─┼─');
+		const valueRow = cols.map(([, v], i) => v.padStart(widths[i])).join(' │ ');
+		const table = `${headerRow}\n${separator}\n${valueRow}`;
+
 		const message =
 			`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}\n\n` +
-			`📊 <b>Résultats</b>:\n` +
-			`  • Total: ${stats.total}\n` +
-			`  • Insérés: ${stats.inserted}\n` +
-			`  • Mis à jour: ${stats.updated}\n` +
-			`  • Ignorés: ${stats.skipped}\n` +
-			`  • Erreurs: ${stats.errors}\n` +
-			`  • Taux de succès: ${successRate}%`;
+			`<pre>${table}</pre>`;
 
 		// Métadonnées pour le logger
 		const metadata = {
@@ -209,7 +218,8 @@ export async function notifyETLComplete(
 		};
 
 		// Envoi de la notification
-		await logger.info(message, metadata);
+		// await logger.info(message, metadata);
+		await logger.info(message);
 
 		console.log('✓ Telegram notification sent successfully');
 	} catch (err) {

@@ -54,7 +54,7 @@ Tous les scripts ETL supportent :
 | **Import sénateurs** | `make etl-senat-senators` | Aucun | 348 sénateurs + 9 groupes |
 | **Historique mandats** | `make etl-senat-mandates-history` | `etl-senat-senators` | Mandats sénatoriaux historiques |
 | **Stats sénateurs** | `make etl-senat-activity-stats` | `etl-senat-senators` | Activité depuis senat.fr officiel |
-| **Stats NosSénateurs** | `make etl-nossenateurs-stats` | `etl-senat-senators` | (site fermé, prêt si réouverture) |
+| **Stats NosSénateurs** | `make etl-senat-nossenateurs-stats` | `etl-senat-senators` | (site fermé, prêt si réouverture) |
 
 ⚠️ **Note** : Le Sénat ne publie pas les votes individuels nominatifs. Pas de scrutins importables.
 
@@ -80,8 +80,10 @@ Tous les scripts ETL supportent :
 
 | Objectif | Commande | Prérequis | Résultats |
 |----------|----------|-----------|-----------|
-| **Classifier scrutins** | `make etl-classify-scrutins` | `etl-an-scrutins` ou `etl-europarl-votes` | Catégories sémantiques (via LLM) |
-| **Analyser lois (LLM)** | `make etl-analyze-laws` | `etl-an-laws` ou `etl-europarl-laws` | Analyses texte complet (Ollama) |
+| **Classifier scrutins AN** | `make etl-an-classify-scrutins` | `etl-an-scrutins` | Catégories sémantiques (via LLM) |
+| **Analyser lois AN** | `make etl-an-analyze-laws` | `etl-an-laws` | Analyses texte complet AN (Ollama) |
+| **Analyser lois PE** | `make etl-europarl-analyze-laws` | `etl-europarl-laws` | Analyses texte complet PE (Ollama) |
+| **Analyser toutes les lois** | `make etl-analyze-laws` | `etl-an-laws` + `etl-europarl-laws` | Lance AN + PE |
 
 ---
 
@@ -89,7 +91,7 @@ Tous les scripts ETL supportent :
 
 | Objectif | Commande | Prérequis | Résultats |
 |----------|----------|-----------|-----------|
-| **Textes via Légifrance** | `make etl-law-texts` | `etl-an-laws` | Textes complets via API PISTE |
+| **Textes AN via Légifrance** | `make etl-an-law-texts` | `etl-an-laws` | Textes complets via API PISTE |
 
 ---
 

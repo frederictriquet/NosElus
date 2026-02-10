@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { importEuroparlActivityStats } from '../../src/lib/server/etl/sources/europarl/activity-stats.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { enrichPEGroupNames } from '../../src/lib/server/etl/sources/europarl/enrich-group-names.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';

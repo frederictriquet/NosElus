@@ -216,7 +216,7 @@ describe('ETL Checks - Unit Tests', () => {
 			// Données réalistes pour lois AN
 			expect(critical.total).toBeGreaterThan(1000);
 			expect(critical.chamber).toBe('AN');
-			expect(critical.command).toContain('etl-law-texts');
+			expect(critical.command).toContain('etl-an-law-texts');
 		});
 	});
 

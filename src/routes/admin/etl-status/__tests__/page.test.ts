@@ -149,7 +149,7 @@ describe('ETL Status Page - Client Logic', () => {
 
 	describe('Copy Command Logic', () => {
 		it('should copy command to clipboard (mock)', () => {
-			const command = 'make etl-law-texts';
+			const command = 'make etl-an-law-texts';
 
 			// En test, navigator.clipboard n'existe pas
 			// Mais on peut tester la logique

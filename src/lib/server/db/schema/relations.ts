@@ -10,6 +10,7 @@ import { lawCosignatories } from './law-cosignatories';
 import { lawSummaries } from './law-summaries';
 import { tags } from './tags';
 import { lawTags } from './law-tags';
+import { lawTextSkipList } from './law-text-skip-list';
 
 // Relations pour actors
 export const actorsRelations = relations(actors, ({ many }) => ({
@@ -84,7 +85,11 @@ export const lawsRelations = relations(laws, ({ one, many }) => ({
 		fields: [laws.id],
 		references: [lawSummaries.lawId]
 	}),
-	lawTags: many(lawTags)
+	lawTags: many(lawTags),
+	textSkip: one(lawTextSkipList, {
+		fields: [laws.id],
+		references: [lawTextSkipList.lawId]
+	})
 }));
 
 // Relations pour lawSummaries
@@ -133,5 +138,13 @@ export const lawTagsRelations = relations(lawTags, ({ one }) => ({
 	tag: one(tags, {
 		fields: [lawTags.tagSlug],
 		references: [tags.slug]
+	})
+}));
+
+// Relations pour lawTextSkipList
+export const lawTextSkipListRelations = relations(lawTextSkipList, ({ one }) => ({
+	law: one(laws, {
+		fields: [lawTextSkipList.lawId],
+		references: [laws.id]
 	})
 }));

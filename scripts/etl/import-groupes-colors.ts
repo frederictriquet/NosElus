@@ -9,6 +9,7 @@
  * Usage: npx tsx scripts/etl/import-groupes-colors.ts
  */
 
+import 'dotenv/config';
 import { importGroupesFromNosdeputes } from '../../src/lib/server/etl/sources/nosdeputes/import.js';
 import type { ETLConfig } from '../../src/lib/server/etl/types.js';
 import { db, organs } from '../../src/lib/server/db/index.js';

@@ -8,7 +8,7 @@
 
 import { db } from '../../../db';
 import { laws, lawSummaries, lawTags, tags } from '../../../db/schema';
-import { eq, isNull, and, desc, asc, gt, sql } from 'drizzle-orm';
+import { eq, isNull, and, or, desc, asc, gt, like, sql } from 'drizzle-orm';
 import type { Law, NewLawSummary, NewLawTag } from '../../../db/schema';
 
 /**
@@ -267,25 +267,38 @@ export async function analyzeLaw(
  * @see {@link analyzeLaw} - Analyse une loi avec le LLM
  * @see {@link analyzeLawsBatch} - Analyse un batch de lois
  */
-export async function getUnanalyzedLaws(limit: number = 100, legislature?: string): Promise<Law[]> {
+export async function getUnanalyzedLaws(
+	limit: number = 100,
+	legislature?: string,
+	chamber?: 'AN' | 'PE'
+): Promise<Law[]> {
+	const conditions = [
+		// Seulement les lois avec texte complet (> 100 chars)
+		// Un simple label comme "Proposition de résolution" (25 chars) n'est pas un texte analysable
+		gt(sql`length(${laws.description})`, 100),
+		// Pas encore analysée
+		isNull(
+			db
+				.select({ lawId: lawSummaries.lawId })
+				.from(lawSummaries)
+				.where(eq(lawSummaries.lawId, laws.id))
+				.limit(1)
+		)
+	];
+
+	// Filtre par chambre
+	if (chamber === 'AN') {
+		conditions.push(
+			or(like(laws.legislature, 'AN-%'), sql`${laws.legislature} ~ '^[0-9]+$'`)!
+		);
+	} else if (chamber === 'PE') {
+		conditions.push(like(laws.legislature, 'PE-%'));
+	}
+
 	const query = db
 		.select()
 		.from(laws)
-		.where(
-			and(
-				// Seulement les lois avec texte complet (> 100 chars)
-				// Un simple label comme "Proposition de résolution" (25 chars) n'est pas un texte analysable
-				gt(sql`length(${laws.description})`, 100),
-				// Pas encore analysée
-				isNull(
-					db
-						.select({ lawId: lawSummaries.lawId })
-						.from(lawSummaries)
-						.where(eq(lawSummaries.lawId, laws.id))
-						.limit(1)
-				)
-			)
-		)
+		.where(and(...conditions))
 		.orderBy(desc(laws.depositDate))
 		.limit(limit);
 
@@ -357,14 +370,15 @@ export async function analyzeLawsBatch(
 	options: {
 		limit?: number;
 		legislature?: string;
+		chamber?: 'AN' | 'PE';
 		model?: string;
 		dryRun?: boolean;
 	} = {}
 ): Promise<AnalyzeBatchResult> {
-	const { limit = 100, legislature, model = 'mistral', dryRun = false } = options;
+	const { limit = 100, legislature, chamber, model = 'mistral', dryRun = false } = options;
 
 	const [lawsToAnalyze, tagMappings] = await Promise.all([
-		getUnanalyzedLaws(limit, legislature),
+		getUnanalyzedLaws(limit, legislature, chamber),
 		getAvailableTags()
 	]);
 

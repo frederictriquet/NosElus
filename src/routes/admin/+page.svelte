@@ -125,16 +125,6 @@
 		</div>
 	</div>
 {:else}
-	<!-- Interface admin -->
-	<div class="page-header">
-		<h1 class="page-title">Administration</h1>
-		<div class="header-actions">
-			<form method="POST" action="?/logout" use:enhance>
-				<button type="submit" class="btn-secondary">Déconnexion</button>
-			</form>
-		</div>
-	</div>
-
 	<!-- Onglets chambres -->
 	<div class="tabs">
 		{#each Object.entries(chamberLabels) as [key, label]}
@@ -375,33 +365,6 @@
 	.btn-primary:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-	}
-
-	.btn-secondary {
-		padding: 0.5rem 1rem;
-		background: var(--color-surface);
-		color: var(--color-text);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		font-size: 0.875rem;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.btn-secondary:hover {
-		background: var(--color-bg);
-		border-color: var(--color-text-muted);
-	}
-
-	.page-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.header-actions {
-		display: flex;
-		gap: 0.5rem;
 	}
 
 	.tabs {

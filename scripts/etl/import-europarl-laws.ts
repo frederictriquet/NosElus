@@ -7,6 +7,7 @@
  * Usage: npx tsx scripts/etl/import-europarl-laws.ts [--incremental]
  */
 
+import 'dotenv/config';
 import { importEuroparlLaws } from '../../src/lib/server/etl/sources/europarl/laws';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';

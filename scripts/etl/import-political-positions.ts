@@ -16,6 +16,7 @@
  * @see ADR-004 : adr-2026-02-04-political-positioning-automation.md
  */
 
+import 'dotenv/config';
 import { parseArgs } from 'node:util';
 import { db, organs, adminSettings } from '../../src/lib/server/db';
 import { eq, and, isNotNull, like } from 'drizzle-orm';

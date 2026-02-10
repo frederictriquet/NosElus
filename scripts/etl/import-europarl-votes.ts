@@ -7,6 +7,7 @@
  * Usage: npx tsx scripts/etl/import-europarl-votes.ts [--incremental]
  */
 
+import 'dotenv/config';
 import { importEuroparlVotes } from '../../src/lib/server/etl/sources/europarl/votes';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

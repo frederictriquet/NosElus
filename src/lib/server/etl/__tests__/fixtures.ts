@@ -96,7 +96,7 @@ export const checkFixtures = {
 		current: 1200,
 		total: 3000,
 		pct: 40.0,
-		command: 'make etl-law-texts',
+		command: 'make etl-an-law-texts',
 		chamber: 'AN'
 	}),
 
@@ -135,7 +135,7 @@ export const checkFixtures = {
 		current: 2900,
 		total: 3000,
 		pct: 96.7,
-		command: 'make etl-classify-scrutins',
+		command: 'make etl-an-classify-scrutins',
 		chamber: 'AN'
 	})
 };

@@ -2,6 +2,7 @@
  * Script ETL : Import des dossiers législatifs AN
  */
 
+import 'dotenv/config';
 import { importDossiersAN } from '../../src/lib/server/etl/import-dossiers-an';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 

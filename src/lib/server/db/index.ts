@@ -1,10 +1,12 @@
+import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-// @hardcoded-ok: fallback dev local, DATABASE_URL requis en prod (voir .env.example)
-const connectionString =
-	process.env.DATABASE_URL || 'postgresql://noselus:noselus@localhost:5432/noselus';
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+	throw new Error('DATABASE_URL manquante. Vérifiez votre fichier .env (voir .env.example).');
+}
 
 // Client pour les requêtes
 const client = postgres(connectionString);

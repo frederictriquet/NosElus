@@ -15,6 +15,7 @@
  *   --leg=N       : Filtrer par législature (ex: --leg=17)
  */
 
+import 'dotenv/config';
 import {
 	importOrganesFromAN,
 	importDeputesFromAN,

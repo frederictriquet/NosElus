@@ -171,7 +171,13 @@
 - [x] Capitalisation patterns (factorisation, web scraping, normalization, CLI)
 
 ### 6.3 Intégrations
-- [ ] Légifrance API (textes de loi promulguées)
+- [x] Légifrance API (textes de loi promulguées)
+  - [x] **Page admin de revue manuelle des textes de loi** (2026-02-10)
+    - Page `/admin/law-text-review` pour gérer skip list Légifrance
+    - Approuvation de candidats automatiques ou recherche manuelle
+    - API endpoint `/api/admin/legifrance` (search + preview)
+    - Module partagé `text-matching.ts` pour NLP réutilisable
+    - Documentation complète + JSDoc
 - [ ] Export CSV/JSON des données
 - [ ] API publique pour développeurs tiers
 
@@ -233,7 +239,7 @@
 
 **NosSénateurs.fr (Regards Citoyens)** ⚠️
 - Site toujours inaccessible
-- **ETL prêt** : `make etl-nossenateurs-stats`
+- **ETL prêt** : `make etl-senat-nossenateurs-stats`
 - **Alternative utilisée** : Données d'activité récupérées via senat.fr officiel
 
 **Sénat - Votes nominatifs**

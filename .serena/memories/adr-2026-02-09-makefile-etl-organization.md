@@ -108,14 +108,14 @@ etl-pe-enrich-groups: ## Enrichit les noms des groupes PE
 
 ##@ ETL - Enrichissement & Analyse
 
-etl-classify-scrutins: ## Classifier les scrutins par catégorie sémantique
+etl-an-classify-scrutins: ## Classifier les scrutins AN par catégorie sémantique
 etl-analyze-laws: ## Analyser les lois avec LLM (Ollama)
-etl-law-texts: ## Import textes complets via Légifrance PISTE
+etl-an-law-texts: ## Import textes complets AN via Légifrance PISTE
 
 ##@ ETL - Statistiques d'activité
 
 etl-nosdeputes-stats: ## Statistiques députés (NosDéputés.fr)
-etl-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
+etl-senat-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
 etl-senat-activity-stats: ## Statistiques sénateurs (senat.fr officiel)
 etl-europarl-activity-stats: ## Statistiques eurodéputés (HowTheyVote.eu)
 
@@ -150,8 +150,8 @@ etl-all-legislatures: ## Import toutes les législatures (14→17)
         etl-actors etl-scrutins etl-laws etl-link-laws etl-dossiers-an etl-amendements etl-nosdeputes \
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-pe-enrich-groups \
-        etl-classify-scrutins etl-analyze-laws etl-law-texts \
-        etl-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
+        etl-an-classify-scrutins etl-analyze-laws etl-an-analyze-laws etl-europarl-analyze-laws etl-an-law-texts \
+        etl-nosdeputes-stats etl-senat-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
         etl-leg14 etl-leg15 etl-leg16 etl-leg17 etl-all-legislatures \
         docker-build docker-up docker-down docker-logs docker-restart \

@@ -16,6 +16,7 @@
  *   npm run etl:europarl-law-texts -- --limit 5 --verbose
  */
 
+import 'dotenv/config';
 import {
 	enrichPELawTexts,
 	type EnrichConfig

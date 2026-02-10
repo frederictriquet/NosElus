@@ -377,7 +377,7 @@ PISTE_ENV=production  # or 'sandbox' for testing
 ```makefile
 # Import full law texts from Légifrance PISTE API
 .PHONY: etl-law-texts
-etl-law-texts:
+etl-an-law-texts:
 	@echo "Importing law texts from Légifrance PISTE..."
 	npm run etl:law-texts -- $(filter-out $@,$(MAKECMDGOALS))
 ```

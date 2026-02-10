@@ -8,9 +8,9 @@
         etl-an-actors etl-an-scrutins etl-an-laws etl-an-link-laws etl-an-dossiers etl-an-amendements etl-an-nosdeputes \
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
-        etl-classify-scrutins etl-analyze-laws \
-        etl-law-texts \
-        etl-an-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
+        etl-an-classify-scrutins etl-analyze-laws etl-an-analyze-laws etl-europarl-analyze-laws \
+        etl-an-law-texts \
+        etl-an-nosdeputes-stats etl-senat-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
         etl-leg14 etl-leg15 etl-leg16 etl-leg17 etl-all-legislatures \
         init init-quick \
@@ -186,19 +186,26 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 
 ##@ ETL - Analyse IA (nécessite Ollama)
 
-etl-classify-scrutins: ## Classifier scrutins par catégorie sémantique (LLM)
+etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:classify-scrutins
 
-etl-analyze-laws: ## Analyser lois avec LLM (Ollama)
-	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
+etl-an-analyze-laws: ## Analyser lois AN avec LLM (Ollama)
+	@echo "$(CYAN)Analyse des lois AN avec LLM (Ollama)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
-	npm run etl:analyze-laws -- $(ARGS)
+	npm run etl:analyze-laws -- --chamber AN $(ARGS)
+
+etl-europarl-analyze-laws: ## Analyser lois PE avec LLM (Ollama)
+	@echo "$(CYAN)Analyse des lois PE avec LLM (Ollama)...$(RESET)"
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
+	npm run etl:analyze-laws -- --chamber PE $(ARGS)
+
+etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser toutes les lois avec LLM (Ollama)
 
 ##@ ETL - Enrichissement
 
-etl-law-texts: ## Import textes complets via Légifrance PISTE
+etl-an-law-texts: ## Import textes complets AN via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: PISTE_CLIENT_ID et PISTE_CLIENT_SECRET dans .env$(RESET)"
 	npm run etl:law-texts -- $(ARGS)
@@ -209,7 +216,7 @@ etl-an-nosdeputes-stats: ## Statistiques députés (NosDéputés.fr)
 	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
 	npm run etl:an-nosdeputes-stats
 
-etl-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
+etl-senat-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
 	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
 	npm run etl:nossenateurs-stats
 

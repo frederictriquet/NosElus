@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { mkdir, writeFile, readFile, unlink } from 'fs/promises';
 import { existsSync, createReadStream, createWriteStream } from 'fs';
 import { createUnzip } from 'zlib';

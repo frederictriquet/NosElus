@@ -234,7 +234,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		current: lawsANNoFulltext,
 		total: totalLawsAN,
 		pct: pctANNoFulltext,
-		command: 'make etl-law-texts',
+		command: 'make etl-an-law-texts',
 		chamber: 'AN'
 	});
 
@@ -267,7 +267,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		current: lawsANNoSummary,
 		total: totalLawsANWithText,
 		pct: pctANNoSummary,
-		command: 'make etl-analyze-laws',
+		command: 'make etl-an-analyze-laws',
 		chamber: 'AN'
 	});
 
@@ -284,7 +284,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		current: lawsPENoSummary,
 		total: totalLawsPEWithText,
 		pct: pctPENoSummary,
-		command: 'make etl-analyze-laws',
+		command: 'make etl-europarl-analyze-laws',
 		chamber: 'PE'
 	});
 
@@ -299,7 +299,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		current: lawsANNoTags,
 		total: totalLawsAN,
 		pct: pctANNoTags,
-		command: 'make etl-classify-scrutins',
+		command: 'make etl-an-classify-scrutins',
 		chamber: 'AN'
 	});
 
@@ -343,7 +343,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		id: 'actors-pe-no-stats',
 		label: 'Eurodéputés sans stats activité',
 		description: `${actorsPENoStats} eurodéputés sans statistiques d'activité`,
-		severity: pctPENoStats > 50 ? 'info' : pctPENoStats > 25 ? 'info' : 'ok',
+		severity: pctPENoStats > 50 ? 'warning' : pctPENoStats > 25 ? 'info' : 'ok',
 		current: actorsPENoStats,
 		total: totalActorsPE,
 		pct: pctPENoStats,

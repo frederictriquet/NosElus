@@ -19,12 +19,11 @@ export const load: PageServerLoad = async () => {
 	 * ✅ Correct : `syncStatus: loadSyncStatus()` (promise non résolue)
 	 * ❌ Incorrect : `syncStatus: await loadSyncStatus()` (bloque le loader)
 	 *
-	 * Le composant AsyncCard côté client gère le {#await} et affiche :
+	 * Le template côté client gère le `{#await}` natif et affiche :
 	 * - Skeleton pendant le chargement
 	 * - Contenu une fois la promise résolue
 	 * - Message d'erreur si la promise rejette
 	 *
-	 * @see AsyncCard.svelte pour le rendu côté client
 	 * @see src/routes/stats/data-quality/+page.server.ts pour pattern similaire
 	 */
 	return {

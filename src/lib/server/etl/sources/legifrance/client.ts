@@ -212,6 +212,85 @@ export class LegifranceClient {
 	}
 
 	/**
+	 * Recherche de textes de loi par mots-clés dans le titre.
+	 *
+	 * Utilise l'endpoint `/search` avec :
+	 * - Champ de recherche : `TITLE` (titre des lois)
+	 * - Filtre : `NATURE = LOI`
+	 * - Tri : `PERTINENCE` (résultats les plus pertinents en premier)
+	 *
+	 * **Use case** : Recherche manuelle d'un texte Légifrance depuis l'UI admin
+	 * lorsque le matching automatique par similarité Jaccard a échoué.
+	 *
+	 * @param params - Paramètres de recherche
+	 * @param params.query - Mots-clés de recherche (recherche dans le titre)
+	 * @param params.pageNumber - Numéro de page (défaut: 1)
+	 * @param params.pageSize - Nombre de résultats par page (défaut: 20, max: 100)
+	 * @returns Résultats de recherche avec textIds, titres et métadonnées
+	 *
+	 * @example
+	 * ```typescript
+	 * const client = createLegifranceClient();
+	 * const results = await client.searchByKeyword({
+	 *   query: 'finances agriculture 2025',
+	 *   pageSize: 10
+	 * });
+	 *
+	 * console.log(`${results.totalResultNumber} lois trouvées`);
+	 * results.results.forEach(r => {
+	 *   console.log(`${r.titre} (${r.id})`);
+	 * });
+	 * ```
+	 *
+	 * @throws {Error} Erreur OAuth ou API Légifrance
+	 */
+	async searchByKeyword(params: {
+		query: string;
+		pageNumber?: number;
+		pageSize?: number;
+	}): Promise<LegiSearchResponse> {
+		const { query, pageNumber = 1, pageSize = 20 } = params;
+
+		const response = await this.request<PisteSearchResponse>('/search', {
+			fond: 'LODA_ETAT',
+			recherche: {
+				champs: [
+					{
+						typeChamp: 'TITLE',
+						criteres: [
+							{
+								typeRecherche: 'EXACTE',
+								valeur: query,
+								operateur: 'ET'
+							}
+						]
+					}
+				],
+				filtres: [{ facette: 'NATURE', valeurs: ['LOI'] }],
+				pageNumber,
+				pageSize,
+				operateur: 'ET',
+				typePagination: 'DEFAUT',
+				sort: 'PERTINENCE',
+				fromAdvancedRecherche: false
+			}
+		});
+
+		return {
+			totalResultNumber: response.totalResultNumber,
+			results: response.results.map((r) => ({
+				id: r.titles?.[0]?.id?.split('_')[0] || '',
+				cid: r.titles?.[0]?.cid || '',
+				nor: r.nor,
+				num: r.num,
+				titre: r.titles?.[0]?.title || '',
+				nature: r.nature,
+				etat: r.titles?.[0]?.legalStatus
+			}))
+		};
+	}
+
+	/**
 	 * Test de connexion à l'API
 	 */
 	async testConnection(): Promise<boolean> {

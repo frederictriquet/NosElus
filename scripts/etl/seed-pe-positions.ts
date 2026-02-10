@@ -9,6 +9,7 @@
  * Usage: npx tsx scripts/etl/seed-pe-positions.ts
  */
 
+import 'dotenv/config';
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';

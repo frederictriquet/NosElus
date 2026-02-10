@@ -18,79 +18,19 @@
  *   - Variables d'environnement: PISTE_CLIENT_ID, PISTE_CLIENT_SECRET
  */
 
+import 'dotenv/config';
 import {
 	createLegifranceClient,
 	type LegiTexteResponse
 } from '../../src/lib/server/etl/sources/legifrance/client.js';
-import { db, laws, scrutins } from '../../src/lib/server/db/index.js';
-import { eq, isNull, and, desc } from 'drizzle-orm';
+import {
+	MAX_DESCRIPTION_LENGTH,
+	calculateSimilarity,
+	extractTextFromResponse
+} from '../../src/lib/server/etl/sources/legifrance/text-matching.js';
+import { db, laws, scrutins, lawTextSkipList } from '../../src/lib/server/db/index.js';
+import { eq, isNull, and, desc, sql } from 'drizzle-orm';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
-
-// ============================================================
-// Configuration
-// ============================================================
-
-/** Limite de taille pour le champ description en base (50KB) */
-const MAX_DESCRIPTION_LENGTH = 50000;
-
-const STOP_WORDS = new Set([
-	// Articles et prépositions
-	'le',
-	'la',
-	'les',
-	'un',
-	'une',
-	'des',
-	'du',
-	'de',
-	'au',
-	'aux',
-	'en',
-	'et',
-	'ou',
-	'par',
-	'pour',
-	'sur',
-	'dans',
-	'avec',
-	'sans',
-	'sous',
-	'entre',
-	'vers',
-	'chez',
-	// Mots courants dans les titres de loi
-	'loi',
-	'projet',
-	'proposition',
-	'relative',
-	'relatif',
-	'visant',
-	'portant',
-	'tendant',
-	'modifiant',
-	'complétant',
-	'diverses',
-	'dispositions',
-	'mesures',
-	'article',
-	'articles',
-	'code',
-	'decret',
-	'ordonnance',
-	// Autres
-	'qui',
-	'que',
-	'dont',
-	'sont',
-	'est',
-	'cette',
-	'ces',
-	'ete',
-	'etre',
-	'avoir',
-	'fait',
-	'faire'
-]);
 
 interface Args {
 	limit: number;
@@ -100,6 +40,7 @@ interface Args {
 	threshold: number;
 	verbose: boolean;
 	withScrutins: boolean; // Cibler les lois liées aux scrutins
+	force: boolean; // Ignorer la skip list et re-tenter toutes les lois
 }
 
 function parseArgs(argv: string[]): Args {
@@ -110,7 +51,8 @@ function parseArgs(argv: string[]): Args {
 		help: false,
 		threshold: 0.4, // Score minimum de similarité
 		verbose: false,
-		withScrutins: false
+		withScrutins: false,
+		force: false
 	};
 
 	for (let i = 0; i < argv.length; i++) {
@@ -143,6 +85,10 @@ function parseArgs(argv: string[]): Args {
 			case '-s':
 				args.withScrutins = true;
 				break;
+			case '--force':
+			case '-f':
+				args.force = true;
+				break;
 		}
 	}
 
@@ -158,6 +104,7 @@ Options:
   -t, --test-connection Tester la connexion à l'API PISTE
   -n, --dry-run         Mode simulation, n'écrit pas en base
   -s, --with-scrutins   Cibler les lois liées aux scrutins (prioritaire)
+  -f, --force           Ignorer la skip list et re-tenter toutes les lois
   --threshold <f>       Score de similarité minimum (défaut: 0.4)
   -v, --verbose         Affiche les détails du matching
   -h, --help            Affiche cette aide
@@ -167,207 +114,13 @@ Exemples:
   npm run etl:law-texts -- --limit 10 --dry-run
   npm run etl:law-texts -- --with-scrutins --limit 20
   npm run etl:law-texts -- --threshold 0.5 --verbose
+  npm run etl:law-texts -- --force --limit 10  # Re-tente les lois de la skip list
 
 Configuration requise (.env):
   PISTE_CLIENT_ID=your-oauth-client-id
   PISTE_CLIENT_SECRET=your-oauth-client-secret
   PISTE_ENV=production
 `);
-}
-
-// ============================================================
-// Fonctions de normalisation et similarité
-// ============================================================
-
-/**
- * Normalise un texte : minuscules, sans accents, sans ponctuation
- */
-function normalize(text: string): string {
-	return text
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '') // Supprime les accents
-		.replace(/[^a-z0-9\s]/g, ' ') // Garde lettres, chiffres, espaces
-		.replace(/\s+/g, ' ')
-		.trim();
-}
-
-/**
- * Extrait les mots-clés significatifs d'un titre
- */
-function extractKeywords(title: string): Set<string> {
-	const normalized = normalize(title);
-	const words = normalized.split(' ');
-
-	return new Set(
-		words.filter((word) => {
-			// Garde les mots de plus de 3 lettres
-			if (word.length <= 3) return false;
-			// Exclut les stop words
-			if (STOP_WORDS.has(word)) return false;
-			// Exclut les nombres purs (sauf années)
-			if (/^\d+$/.test(word) && (word.length !== 4 || !word.startsWith('20'))) return false;
-			return true;
-		})
-	);
-}
-
-/**
- * Calcule le coefficient de Jaccard entre deux ensembles
- * (intersection / union)
- */
-function jaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
-	if (set1.size === 0 && set2.size === 0) return 0;
-
-	const intersection = new Set([...set1].filter((x) => set2.has(x)));
-	const union = new Set([...set1, ...set2]);
-
-	return intersection.size / union.size;
-}
-
-/**
- * Calcule un score de similarité amélioré
- * Combine Jaccard avec un bonus pour les mots rares partagés
- */
-function calculateSimilarity(
-	title1: string,
-	title2: string,
-	verbose: boolean = false
-): { score: number; keywords1: Set<string>; keywords2: Set<string>; common: Set<string> } {
-	const keywords1 = extractKeywords(title1);
-	const keywords2 = extractKeywords(title2);
-
-	const common = new Set([...keywords1].filter((x) => keywords2.has(x)));
-	const baseScore = jaccardSimilarity(keywords1, keywords2);
-
-	// Bonus si les mots communs sont "significatifs" (longs ou rares)
-	let bonus = 0;
-	for (const word of common) {
-		if (word.length >= 8) bonus += 0.05; // Mots longs
-		if (/^\d{4}$/.test(word)) bonus += 0.1; // Années
-	}
-
-	const finalScore = Math.min(1, baseScore + bonus);
-
-	if (verbose) {
-		console.log(`    Mots-clés source: ${[...keywords1].join(', ')}`);
-		console.log(`    Mots-clés cible:  ${[...keywords2].join(', ')}`);
-		console.log(`    Mots communs:     ${[...common].join(', ')}`);
-		console.log(`    Score Jaccard:    ${baseScore.toFixed(3)}, bonus: ${bonus.toFixed(3)}`);
-	}
-
-	return { score: finalScore, keywords1, keywords2, common };
-}
-
-// ============================================================
-// Fonctions d'extraction de texte
-// ============================================================
-
-/**
- * Extrait le texte brut depuis la réponse Légifrance
- */
-function extractTextFromResponse(response: LegiTexteResponse): string {
-	const parts: string[] = [];
-
-	// Ajouter le visa si présent
-	if (response.visa) {
-		const visaClean = cleanHtml(response.visa);
-		if (visaClean) parts.push(visaClean);
-	}
-
-	// Extraire les articles
-	if (response.articles && response.articles.length > 0) {
-		for (const article of response.articles) {
-			const num = article.num ? `Article ${article.num}` : '';
-			const content = cleanHtml(article.content || article.texteHtml || '');
-			if (content) {
-				parts.push(num ? `${num}\n${content}` : content);
-			}
-		}
-	}
-
-	// Extraire les sections récursivement
-	if (response.sections && response.sections.length > 0) {
-		parts.push(extractSections(response.sections));
-	}
-
-	// Ajouter les signataires si présents
-	if (response.signers) {
-		const signersClean = cleanHtml(response.signers);
-		if (signersClean) parts.push(`\n---\n${signersClean}`);
-	}
-
-	return parts.filter(Boolean).join('\n\n');
-}
-
-/**
- * Extrait le texte des sections récursivement
- */
-function extractSections(
-	sections: Array<{
-		titre?: string;
-		articles?: Array<{ num?: string; content?: string; texteHtml?: string }>;
-		sections?: typeof sections;
-	}>
-): string {
-	const parts: string[] = [];
-
-	for (const section of sections) {
-		if (section.titre) {
-			parts.push(`\n## ${section.titre}\n`);
-		}
-
-		if (section.articles) {
-			for (const article of section.articles) {
-				const num = article.num ? `Article ${article.num}` : '';
-				const content = cleanHtml(article.content || article.texteHtml || '');
-				if (content) {
-					parts.push(num ? `${num}\n${content}` : content);
-				}
-			}
-		}
-
-		if (section.sections) {
-			parts.push(extractSections(section.sections));
-		}
-	}
-
-	return parts.filter(Boolean).join('\n\n');
-}
-
-/**
- * Nettoie le HTML et décode les entités
- */
-function cleanHtml(html: string): string {
-	return (
-		html
-			// Balises de structure
-			.replace(/<br\s*\/?>/gi, '\n')
-			.replace(/<p[^>]*>/gi, '\n')
-			.replace(/<\/p>/gi, '\n')
-			.replace(/<[^>]*>/g, '')
-			// Entités HTML nommées courantes
-			.replace(/&nbsp;/g, ' ')
-			.replace(/&amp;/g, '&')
-			.replace(/&lt;/g, '<')
-			.replace(/&gt;/g, '>')
-			.replace(/&quot;/g, '"')
-			.replace(/&apos;/g, "'")
-			.replace(/&laquo;/g, '«')
-			.replace(/&raquo;/g, '»')
-			.replace(/&ndash;/g, '–')
-			.replace(/&mdash;/g, '—')
-			.replace(/&hellip;/g, '…')
-			.replace(/&euro;/g, '€')
-			.replace(/&oelig;/g, 'œ')
-			.replace(/&OElig;/g, 'Œ')
-			// Entités numériques (décimales et hexadécimales)
-			.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
-			.replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
-			// Nettoyage final
-			.replace(/\n{3,}/g, '\n\n')
-			.trim()
-	);
 }
 
 // ============================================================
@@ -379,10 +132,10 @@ function cleanHtml(html: string): string {
  * @param limit - Nombre max de résultats
  * @param withScrutins - Si true, cible les lois liées aux scrutins
  */
-async function getLawsToEnrich(limit: number, withScrutins: boolean) {
+async function getLawsToEnrich(limit: number, withScrutins: boolean, force: boolean) {
 	if (withScrutins) {
 		// Lois liées aux scrutins, sans description
-		const results = await db
+		const query = db
 			.selectDistinct({
 				id: laws.id,
 				title: laws.title,
@@ -390,23 +143,43 @@ async function getLawsToEnrich(limit: number, withScrutins: boolean) {
 				promulgationDate: laws.promulgationDate
 			})
 			.from(laws)
-			.innerJoin(scrutins, eq(scrutins.lawId, laws.id))
-			.where(isNull(laws.description))
+			.innerJoin(scrutins, eq(scrutins.lawId, laws.id));
+
+		if (!force) {
+			query.leftJoin(lawTextSkipList, eq(laws.id, lawTextSkipList.lawId));
+		}
+
+		const results = await query
+			.where(
+				force
+					? isNull(laws.description)
+					: and(isNull(laws.description), isNull(lawTextSkipList.lawId))
+			)
 			.limit(limit);
 
 		return results;
 	}
 
 	// Mode par défaut: lois promulguées sans description
-	const results = await db
+	const query = db
 		.select({
 			id: laws.id,
 			title: laws.title,
 			status: laws.status,
 			promulgationDate: laws.promulgationDate
 		})
-		.from(laws)
-		.where(and(eq(laws.status, 'promulgué'), isNull(laws.description)))
+		.from(laws);
+
+	if (!force) {
+		query.leftJoin(lawTextSkipList, eq(laws.id, lawTextSkipList.lawId));
+	}
+
+	const results = await query
+		.where(
+			force
+				? and(eq(laws.status, 'promulgué'), isNull(laws.description))
+				: and(eq(laws.status, 'promulgué'), isNull(laws.description), isNull(lawTextSkipList.lawId))
+		)
 		.orderBy(desc(laws.promulgationDate))
 		.limit(limit);
 
@@ -550,6 +323,9 @@ async function main() {
 	if (args.dryRun) {
 		console.log("  Mode: DRY RUN (pas d'écriture en base)");
 	}
+	if (args.force) {
+		console.log('  Mode: FORCE (skip list ignorée)');
+	}
 	if (args.verbose) {
 		console.log('  Mode verbeux activé');
 	}
@@ -558,7 +334,7 @@ async function main() {
 	// Récupérer les dossiers à enrichir
 	const targetDesc = args.withScrutins ? 'liés aux scrutins' : 'promulgués';
 	console.log(`Recherche des dossiers ${targetDesc} sans texte complet...`);
-	const lawsToEnrich = await getLawsToEnrich(args.limit, args.withScrutins);
+	const lawsToEnrich = await getLawsToEnrich(args.limit, args.withScrutins, args.force);
 	console.log(`  ${lawsToEnrich.length} dossiers trouvés`);
 	console.log('');
 
@@ -600,9 +376,53 @@ async function main() {
 					console.log(`  → Score insuffisant: ${match.score.toFixed(3)} < ${args.threshold}`);
 					console.log(`    Meilleur candidat: ${match.legifranceTitle?.slice(0, 60)}...`);
 					result.lowScore++;
+
+					if (!args.dryRun) {
+						await db
+							.insert(lawTextSkipList)
+							.values({
+								lawId: law.id,
+								reason: 'low_score',
+								bestScore: match.score,
+								bestMatchTitle: match.legifranceTitle ?? null,
+								bestMatchTextId: match.textId ?? null,
+								threshold: args.threshold
+							})
+							.onConflictDoUpdate({
+								target: lawTextSkipList.lawId,
+								set: {
+									reason: 'low_score',
+									bestScore: match.score,
+									bestMatchTitle: match.legifranceTitle ?? null,
+									bestMatchTextId: match.textId ?? null,
+									threshold: args.threshold,
+									attemptedAt: sql`now()`
+								}
+							});
+					}
 				} else {
 					console.log('  → Aucune correspondance trouvée');
 					result.notFound++;
+
+					if (!args.dryRun) {
+						await db
+							.insert(lawTextSkipList)
+							.values({
+								lawId: law.id,
+								reason: 'not_found',
+								threshold: args.threshold
+							})
+							.onConflictDoUpdate({
+								target: lawTextSkipList.lawId,
+								set: {
+									reason: 'not_found',
+									bestScore: null,
+									bestMatchTitle: null,
+									threshold: args.threshold,
+									attemptedAt: sql`now()`
+								}
+							});
+					}
 				}
 				continue;
 			}
@@ -629,6 +449,29 @@ async function main() {
 			if (fullText.length < 100) {
 				console.log(`  → Texte trop court (${fullText.length} caractères), ignoré`);
 				result.notFound++;
+
+				await db
+					.insert(lawTextSkipList)
+					.values({
+						lawId: law.id,
+						reason: 'text_too_short',
+						bestScore: match.score ?? null,
+						bestMatchTitle: match.legifranceTitle ?? null,
+						bestMatchTextId: match.textId ?? null,
+						threshold: args.threshold
+					})
+					.onConflictDoUpdate({
+						target: lawTextSkipList.lawId,
+						set: {
+							reason: 'text_too_short',
+							bestScore: match.score ?? null,
+							bestMatchTitle: match.legifranceTitle ?? null,
+							bestMatchTextId: match.textId ?? null,
+							threshold: args.threshold,
+							attemptedAt: sql`now()`
+						}
+					});
+
 				continue;
 			}
 

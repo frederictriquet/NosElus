@@ -4,12 +4,13 @@
 
 .PHONY: help install dev build preview clean clean-cache \
         db-up db-down db-migrate db-push db-studio db-generate db-reset \
-        etl-download etl-all etl-incremental \
+        etl-an-download etl-an-all etl-an-incremental \
         etl-an-actors etl-an-scrutins etl-an-laws etl-an-link-laws etl-an-dossiers etl-an-amendements etl-an-nosdeputes \
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
-        etl-classify-scrutins etl-analyze-laws etl-law-texts \
-        etl-an-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
+        etl-an-classify-scrutins etl-analyze-laws etl-an-analyze-laws etl-europarl-analyze-laws \
+        etl-an-law-texts \
+        etl-an-nosdeputes-stats etl-senat-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
         etl-leg14 etl-leg15 etl-leg16 etl-leg17 etl-all-legislatures \
         init init-quick \
@@ -106,22 +107,20 @@ db-reset: ## Reset complet de la DB (ATTENTION: destructif!)
 # ETL - Import des données
 # =============================================================================
 
-##@ ETL - Orchestration
-
-etl-download: ## Télécharge les données de l'Assemblée Nationale
-	@echo "$(CYAN)Téléchargement des données...$(RESET)"
-	@mkdir -p $(ETL_DATA_DIR)
-	npm run etl:download
-
-etl-all: ## Import complet (organs, actors, mandates, scrutins, votes)
-	@echo "$(CYAN)Import complet - Legislature $(ETL_LEGISLATURE)$(RESET)"
-	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:all
-
-etl-incremental: ## Import incrémental (nouveaux/modifiés uniquement)
-	@echo "$(CYAN)Import incrémental - Legislature $(ETL_LEGISLATURE)$(RESET)"
-	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:all -- --incremental
-
 ##@ ETL - Assemblée Nationale
+
+etl-an-download: ## Télécharge les données de l'Assemblée Nationale
+	@echo "$(CYAN)Téléchargement des données AN...$(RESET)"
+	@mkdir -p $(ETL_DATA_DIR)
+	npm run etl:an-download
+
+etl-an-all: ## Import complet AN (organs, actors, mandates, scrutins, votes)
+	@echo "$(CYAN)Import complet AN - Legislature $(ETL_LEGISLATURE)$(RESET)"
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-all
+
+etl-an-incremental: ## Import incrémental AN (nouveaux/modifiés uniquement)
+	@echo "$(CYAN)Import incrémental AN - Legislature $(ETL_LEGISLATURE)$(RESET)"
+	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-all -- --incremental
 
 etl-an-actors: ## Import des acteurs (députés)
 	ETL_DATA_DIR=$(ETL_DATA_DIR) ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-actors
@@ -185,18 +184,28 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
 	npm run etl:pe-enrich-groups
 
-##@ ETL - Enrichissement & Analyse
+##@ ETL - Analyse IA (nécessite Ollama)
 
-etl-classify-scrutins: ## Classifier scrutins par catégorie sémantique
-	@echo "$(CYAN)Classification des scrutins...$(RESET)"
+etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
+	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:classify-scrutins
 
-etl-analyze-laws: ## Analyser lois avec LLM (Ollama)
-	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
+etl-an-analyze-laws: ## Analyser lois AN avec LLM (Ollama)
+	@echo "$(CYAN)Analyse des lois AN avec LLM (Ollama)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
-	npm run etl:analyze-laws -- $(ARGS)
+	npm run etl:analyze-laws -- --chamber AN $(ARGS)
 
-etl-law-texts: ## Import textes complets via Légifrance PISTE
+etl-europarl-analyze-laws: ## Analyser lois PE avec LLM (Ollama)
+	@echo "$(CYAN)Analyse des lois PE avec LLM (Ollama)...$(RESET)"
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
+	npm run etl:analyze-laws -- --chamber PE $(ARGS)
+
+etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser toutes les lois avec LLM (Ollama)
+
+##@ ETL - Enrichissement
+
+etl-an-law-texts: ## Import textes complets AN via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: PISTE_CLIENT_ID et PISTE_CLIENT_SECRET dans .env$(RESET)"
 	npm run etl:law-texts -- $(ARGS)
@@ -207,7 +216,7 @@ etl-an-nosdeputes-stats: ## Statistiques députés (NosDéputés.fr)
 	@echo "$(CYAN)Import statistiques d'activité des députés...$(RESET)"
 	npm run etl:an-nosdeputes-stats
 
-etl-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
+etl-senat-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
 	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
 	npm run etl:nossenateurs-stats
 
@@ -240,26 +249,26 @@ etl-seed-pe-positions: ## Seed positions PE (Chapel Hill Expert Survey)
 ##@ ETL - Législatures historiques
 
 etl-leg14: ## Import législature 14 (2012-2017)
-	@$(MAKE) etl-all ETL_LEGISLATURE=14
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=14
 
 etl-leg15: ## Import législature 15 (2017-2022)
-	@$(MAKE) etl-all ETL_LEGISLATURE=15
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=15
 
 etl-leg16: ## Import législature 16 (2022-2024)
-	@$(MAKE) etl-all ETL_LEGISLATURE=16
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=16
 
 etl-leg17: ## Import législature 17 (2024-)
-	@$(MAKE) etl-all ETL_LEGISLATURE=17
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=17
 
-etl-all-legislatures: ## Import toutes législatures (14→17)
+etl-all-legislatures: ## Import toutes législatures AN (14→17)
 	@echo "$(CYAN)Import législature 14 (XIVe - 2012-2017)...$(RESET)"
-	@$(MAKE) etl-all ETL_LEGISLATURE=14
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=14
 	@echo "$(CYAN)Import législature 15 (XVe - 2017-2022)...$(RESET)"
-	@$(MAKE) etl-all ETL_LEGISLATURE=15
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=15
 	@echo "$(CYAN)Import législature 16 (XVIe - 2022-2024)...$(RESET)"
-	@$(MAKE) etl-all ETL_LEGISLATURE=16
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=16
 	@echo "$(CYAN)Import législature 17 (XVIIe - 2024-)...$(RESET)"
-	@$(MAKE) etl-all ETL_LEGISLATURE=17
+	@$(MAKE) etl-an-all ETL_LEGISLATURE=17
 	@echo "$(GREEN)✓ Toutes les législatures importées$(RESET)"
 
 # =============================================================================
@@ -282,7 +291,7 @@ init: ## Initialisation complète du projet (install, db, data)
 	@$(MAKE) db-migrate
 	@echo ""
 	@echo "$(CYAN)4/4 - Import des données (legislature $(ETL_LEGISLATURE))...$(RESET)"
-	@$(MAKE) etl-all
+	@$(MAKE) etl-an-all
 	@echo ""
 	@echo "$(GREEN)✓ Initialisation terminée!$(RESET)"
 	@echo "  Lancez 'make dev' pour démarrer le serveur de développement"

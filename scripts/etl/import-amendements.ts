@@ -6,6 +6,7 @@
  *   npx tsx scripts/etl/import-amendements.ts 17        # Législature 17 uniquement
  */
 
+import 'dotenv/config';
 import { importAmendementsFromAN } from '../../src/lib/server/etl/sources/assemblee-nationale/amendements-import.js';
 import { getAvailableAmendementsLegislatures } from '../../src/lib/server/etl/sources/assemblee-nationale/amendements-loader.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';

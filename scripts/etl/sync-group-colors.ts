@@ -7,6 +7,7 @@
  * Usage: npx tsx scripts/etl/sync-group-colors.ts
  */
 
+import 'dotenv/config';
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and, like, notLike, isNull } from 'drizzle-orm';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';

@@ -13,6 +13,7 @@
  *   3. Ollama lancé: ollama serve
  */
 
+import 'dotenv/config';
 import {
 	analyzeLawsBatch,
 	analyzeLaw,
@@ -27,6 +28,7 @@ import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 interface Args {
 	limit: number;
 	legislature?: string;
+	chamber?: 'AN' | 'PE';
 	model: string;
 	dryRun: boolean;
 	help: boolean;
@@ -50,6 +52,10 @@ function parseArgs(argv: string[]): Args {
 				break;
 			case '--legislature':
 				args.legislature = argv[++i];
+				break;
+			case '--chamber':
+			case '-c':
+				args.chamber = argv[++i] as 'AN' | 'PE';
 				break;
 			case '--model':
 			case '-m':
@@ -82,6 +88,7 @@ Usage: npm run etl:analyze-laws -- [options]
 
 Options:
   -l, --limit <n>       Nombre max de lois à analyser (défaut: 100)
+  -c, --chamber <AN|PE> Filtrer par chambre (AN ou PE)
   --legislature <leg>   Filtrer par législature (ex: 17)
   -m, --model <name>    Modèle Ollama à utiliser (défaut: mistral-nemo)
   -r, --reanalyze <id>  Ré-analyser une loi spécifique (supprime l'ancien résumé)
@@ -228,6 +235,9 @@ async function main() {
 	console.log('Configuration:');
 	console.log(`  Modèle: ${args.model}`);
 	console.log(`  Limite: ${args.limit} lois`);
+	if (args.chamber) {
+		console.log(`  Chambre: ${args.chamber}`);
+	}
 	if (args.legislature) {
 		console.log(`  Législature: ${args.legislature}`);
 	}
@@ -240,6 +250,7 @@ async function main() {
 		const result = await analyzeLawsBatch({
 			limit: args.limit,
 			legislature: args.legislature,
+			chamber: args.chamber,
 			model: args.model,
 			dryRun: args.dryRun
 		});

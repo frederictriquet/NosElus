@@ -3,6 +3,7 @@
  * Usage: npm run etl:senat-mandates-history
  */
 
+import 'dotenv/config';
 import { importSenatMandatesHistory } from '../../src/lib/server/etl/sources/senat/mandates-history.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

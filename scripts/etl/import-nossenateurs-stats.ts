@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { importNosSenateursStats } from '../../src/lib/server/etl/sources/nossenateurs/activity-stats.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

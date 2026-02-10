@@ -1,0 +1,1 @@
+ALTER TABLE "law_text_skip_list" ADD COLUMN IF NOT EXISTS "best_match_text_id" varchar(100);

@@ -44,7 +44,7 @@ Remplacer les résumés LLM basés sur titre par des résumés basés sur le tex
 ## Fichiers Modifiés
 - `src/lib/components/LawSummaryCard.svelte` - Ajout disclaimer IA
 - `src/routes/an/scrutins/[id]/+page.svelte` - Message fallback
-- `Makefile` - Nouvelle commande `etl-law-texts`
+- `Makefile` - Nouvelle commande `etl-an-law-texts`
 - `package.json` - Nouveau script `etl:law-texts`
 - `.env.example` - Variables PISTE
 

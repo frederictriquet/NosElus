@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { db, scrutins } from '../../src/lib/server/db/index.js';
 import { classifyScrutin } from '../../src/lib/server/etl/classify.js';
 import { eq, sql, isNull } from 'drizzle-orm';

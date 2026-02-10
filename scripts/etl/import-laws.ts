@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { importLaws, linkScrutinsToLaws } from '../../src/lib/server/etl/sources/assemblee/laws.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { parseArgs, updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

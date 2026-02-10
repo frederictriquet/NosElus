@@ -8,6 +8,7 @@
  * Usage: npx tsx scripts/etl/import-external-colors.ts
  */
 
+import 'dotenv/config';
 import { db, organs } from '../../src/lib/server/db';
 import { eq, and, like, isNull } from 'drizzle-orm';
 import { execSync } from 'child_process';

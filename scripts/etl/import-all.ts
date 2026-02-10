@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
 	importActors,
 	importOrgans,
@@ -28,7 +29,7 @@ async function safeUpdateSyncMetadata(
 }
 
 function printUsage() {
-	console.log('Usage: npm run etl:all [options]');
+	console.log('Usage: npm run etl:an-all [options]');
 	console.log('');
 	console.log('Options:');
 	console.log('  --incremental, -i    Only import records modified since last sync');
@@ -38,9 +39,9 @@ function printUsage() {
 	console.log('  --since, -s          Import records modified since this date (ISO format)');
 	console.log('');
 	console.log('Examples:');
-	console.log('  npm run etl:all                     # Full import');
-	console.log('  npm run etl:all -- --incremental    # Incremental import');
-	console.log('  npm run etl:all -- -i -l 17         # Incremental import for legislature 17');
+	console.log('  npm run etl:an-all                     # Full import');
+	console.log('  npm run etl:an-all -- --incremental    # Incremental import');
+	console.log('  npm run etl:an-all -- -i -l 17         # Incremental import for legislature 17');
 	console.log('');
 }
 

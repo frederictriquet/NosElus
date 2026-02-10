@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { mkdir, writeFile, readFile, unlink } from 'fs/promises';
 import { existsSync, createReadStream, createWriteStream } from 'fs';
 import { createUnzip } from 'zlib';
@@ -132,7 +133,7 @@ async function main() {
 	console.log('');
 	console.log('Prochaines étapes:');
 	console.log(`  export ETL_DATA_DIR=${dataDir}`);
-	console.log('  npm run etl:all');
+	console.log('  npm run etl:an-all');
 	console.log('='.repeat(60));
 
 	await notifyETLComplete(

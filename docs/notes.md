@@ -1,4 +1,5 @@
 
+
 traite le TODO de src/routes/api/quiz/group-votes/+server.ts:98
  
 dans le dashboard de stats globales, je vois qu'il y a 100% des textes du parlement européen qui ont été analysés par IA alors qu'il y a 0% des textes complets. Je croyais qu'il était interdit d'analyser des lois sans avoir leur texte complet
@@ -55,7 +56,7 @@ utilise le FemtoLogger https://github.com/frederictriquet/FemtoLogger pour logge
 Evénements à logger: la fin de n'importe quel ETL
 
 
-make etl-law-texts
+make etl-an-law-texts
 make etl-analyze-laws ARGS="--limit 5"
 
 combien de lois avec un texte

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { importEuroparlMeps } from '../../src/lib/server/etl/sources/europarl/meps.js';
 import { getETLConfig } from '../../src/lib/server/etl/types.js';
 import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';

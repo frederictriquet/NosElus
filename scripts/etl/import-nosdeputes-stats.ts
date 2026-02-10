@@ -3,6 +3,7 @@
  * Run with: npm run etl:nosdeputes-stats
  */
 
+import 'dotenv/config';
 import { importNosDeputesActivityStats } from '../../src/lib/server/etl/sources/nosdeputes/activity-stats';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 

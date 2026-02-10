@@ -2,6 +2,7 @@
  * Script ETL : Lier les scrutins aux textes via parsing des titres
  */
 
+import 'dotenv/config';
 import { linkScrutinsByTitle } from '../../src/lib/server/etl/link-scrutins-by-title';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 

@@ -209,7 +209,7 @@
 						</div>
 						{#if stats.tieVotes > 0}
 							<div class="stat-box">
-								<div class="stat-value" style="color: var(--color-info);">{stats.tieVotes}</div>
+								<div class="stat-value" style="color: var(--color-primary);">{stats.tieVotes}</div>
 								<div class="stat-label">Égalités</div>
 							</div>
 						{/if}
@@ -1203,8 +1203,8 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 0.25rem 0.5rem;
-		background: var(--color-info-bg);
-		color: var(--color-info);
+		background: var(--color-primary-bg);
+		color: var(--color-primary);
 		border-radius: var(--radius-sm);
 		font-size: 0.75rem;
 		font-weight: 600;

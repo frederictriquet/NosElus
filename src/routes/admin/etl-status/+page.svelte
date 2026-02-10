@@ -72,11 +72,11 @@
 	function getSeverityBadge(severity: string): { icon: string; color: string } {
 		switch (severity) {
 			case 'critical':
-				return { icon: '🔴', color: 'var(--color-error)' };
+				return { icon: '🔴', color: 'var(--color-danger)' };
 			case 'warning':
 				return { icon: '🟡', color: 'var(--color-warning)' };
 			case 'info':
-				return { icon: '🔵', color: 'var(--color-info)' };
+				return { icon: '🔵', color: 'var(--color-primary)' };
 			case 'ok':
 				return { icon: '✅', color: 'var(--color-success)' };
 			default:
@@ -396,7 +396,7 @@
 	}
 
 	.stale {
-		color: var(--color-error);
+		color: var(--color-danger);
 		font-weight: 600;
 	}
 
@@ -467,7 +467,7 @@
 
 	/* Lignes par sévérité */
 	.row-critical {
-		border-left: 4px solid var(--color-error);
+		border-left: 4px solid var(--color-danger);
 	}
 
 	.row-warning {
@@ -475,7 +475,7 @@
 	}
 
 	.row-info {
-		border-left: 4px solid var(--color-info);
+		border-left: 4px solid var(--color-primary);
 	}
 
 	.row-ok {
@@ -530,7 +530,7 @@
 	}
 
 	.severity-fill-critical {
-		background: var(--color-error);
+		background: var(--color-danger);
 	}
 
 	.severity-fill-warning {
@@ -538,7 +538,7 @@
 	}
 
 	.severity-fill-info {
-		background: var(--color-info);
+		background: var(--color-primary);
 	}
 
 	.severity-fill-ok {
@@ -605,8 +605,8 @@
 
 	.error {
 		padding: 1rem;
-		background: var(--color-error-bg, #f8d7da);
-		color: var(--color-error, #721c24);
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
 		border-radius: 6px;
 	}
 </style>

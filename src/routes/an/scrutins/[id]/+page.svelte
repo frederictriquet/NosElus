@@ -225,9 +225,9 @@
 	}
 
 	.tight-vote-badge.tie {
-		background-color: var(--color-info-bg);
-		color: var(--color-info);
-		border-color: var(--color-info-border);
+		background-color: var(--color-primary-bg);
+		color: var(--color-primary);
+		border-color: var(--color-primary);
 	}
 
 	/* Voters grid */

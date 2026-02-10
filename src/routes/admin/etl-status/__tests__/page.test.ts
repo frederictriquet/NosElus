@@ -85,7 +85,7 @@ describe('ETL Status Page - Client Logic', () => {
 			const badge = getSeverityBadge(severity);
 
 			expect(badge.icon).toBe('🔴');
-			expect(badge.color).toContain('error');
+			expect(badge.color).toContain('danger');
 		});
 
 		it('should map warning severity to yellow badge', () => {
@@ -101,7 +101,7 @@ describe('ETL Status Page - Client Logic', () => {
 			const badge = getSeverityBadge(severity);
 
 			expect(badge.icon).toBe('🔵');
-			expect(badge.color).toContain('info');
+			expect(badge.color).toContain('primary');
 		});
 
 		it('should map ok severity to green badge', () => {
@@ -253,11 +253,11 @@ describe('ETL Status Page - Client Logic', () => {
 function getSeverityBadge(severity: string): { icon: string; color: string } {
 	switch (severity) {
 		case 'critical':
-			return { icon: '🔴', color: 'var(--color-error)' };
+			return { icon: '🔴', color: 'var(--color-danger)' };
 		case 'warning':
 			return { icon: '🟡', color: 'var(--color-warning)' };
 		case 'info':
-			return { icon: '🔵', color: 'var(--color-info)' };
+			return { icon: '🔵', color: 'var(--color-primary)' };
 		case 'ok':
 			return { icon: '✅', color: 'var(--color-success)' };
 		default:

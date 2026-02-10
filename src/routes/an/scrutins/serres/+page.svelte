@@ -50,7 +50,9 @@
 
 	// Stats rapides
 	const tieCount = $derived(data.scrutins.filter((s) => s.isTie).length);
-	const veryTightCount = $derived(data.scrutins.filter((s) => s.margin > 0 && s.margin <= 5).length);
+	const veryTightCount = $derived(
+		data.scrutins.filter((s) => s.margin > 0 && s.margin <= 5).length
+	);
 </script>
 
 <svelte:head>
@@ -114,7 +116,7 @@
 	</div>
 	{#if tieCount > 0}
 		<div class="stat-card">
-			<div class="stat-value" style="color: var(--color-info);">{tieCount}</div>
+			<div class="stat-value" style="color: var(--color-primary);">{tieCount}</div>
 			<div class="stat-label">Égalités parfaites</div>
 		</div>
 	{/if}
@@ -304,9 +306,9 @@
 	}
 
 	.tight-vote-badge.tie {
-		background: var(--color-info-bg);
-		color: var(--color-info);
-		border-color: var(--color-info-border);
+		background: var(--color-primary-bg);
+		color: var(--color-primary);
+		border-color: var(--color-primary);
 	}
 
 	.result-badge {

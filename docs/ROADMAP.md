@@ -192,6 +192,7 @@
 - [x] ETL votes en session plénière (via HowTheyVote.eu API)
 - [x] Historique des mandats européens (depuis 2004) - 303 MEPs, 554 mandats, termes 6-10
 - [x] **Expansion des lois PE** (2026-02-07) - Passage de 9 à 2 039 procédures PE (suppression filtre geo_areas + extraction auto des termes PE-8/9/10)
+- [x] **Bug fix : Cohérence lawId PE** (2026-02-09) - Factorisation shared.ts, 54 tests non-régression, 2204 scrutins ↔ lois linked (99,9% données accessibles)
 
 ### 7.2 Interface eurodéputés
 - [x] Page `/eurodeputes` - Liste des eurodéputés français avec filtres (84 MEPs, infinite scroll)

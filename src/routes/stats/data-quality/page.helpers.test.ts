@@ -239,10 +239,42 @@ describe('sortLegislatureStats', () => {
 	});
 
 	const testData = [
-		makeStat({ legislature: '17', totalLaws: 100, lawsWithVotes: 80, lawsWithSummaries: 90, lawsWithTags: 70, lawsWithDescription: 60, totalScrutins: 50 }),
-		makeStat({ legislature: '1', totalLaws: 50, lawsWithVotes: 10, lawsWithSummaries: 5, lawsWithTags: 40, lawsWithDescription: 45, totalScrutins: 200 }),
-		makeStat({ legislature: '10', totalLaws: 200, lawsWithVotes: 150, lawsWithSummaries: 20, lawsWithTags: 10, lawsWithDescription: 30, totalScrutins: 10 }),
-		makeStat({ legislature: '2', totalLaws: 75, lawsWithVotes: 30, lawsWithSummaries: 50, lawsWithTags: 25, lawsWithDescription: 15, totalScrutins: 100 })
+		makeStat({
+			legislature: '17',
+			totalLaws: 100,
+			lawsWithVotes: 80,
+			lawsWithSummaries: 90,
+			lawsWithTags: 70,
+			lawsWithDescription: 60,
+			totalScrutins: 50
+		}),
+		makeStat({
+			legislature: '1',
+			totalLaws: 50,
+			lawsWithVotes: 10,
+			lawsWithSummaries: 5,
+			lawsWithTags: 40,
+			lawsWithDescription: 45,
+			totalScrutins: 200
+		}),
+		makeStat({
+			legislature: '10',
+			totalLaws: 200,
+			lawsWithVotes: 150,
+			lawsWithSummaries: 20,
+			lawsWithTags: 10,
+			lawsWithDescription: 30,
+			totalScrutins: 10
+		}),
+		makeStat({
+			legislature: '2',
+			totalLaws: 75,
+			lawsWithVotes: 30,
+			lawsWithSummaries: 50,
+			lawsWithTags: 25,
+			lawsWithDescription: 15,
+			totalScrutins: 100
+		})
 	];
 
 	it('should sort by legislature in natural order (asc)', () => {

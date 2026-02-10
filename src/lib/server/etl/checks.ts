@@ -52,7 +52,7 @@ export interface SyncStatusRow {
  * @see src/lib/server/db/constants.ts
  * @see .serena/memories/std-shared-data-definitions.md
  */
-const MIN_DESCRIPTION_LENGTH = 100;
+export const MIN_DESCRIPTION_LENGTH = 100;
 
 /**
  * Charge l'état des dernières synchronisations ETL depuis sync_metadata.

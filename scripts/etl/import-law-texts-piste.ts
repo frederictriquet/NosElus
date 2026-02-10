@@ -195,6 +195,7 @@ interface MatchResult {
 	legifranceTitle?: string;
 	score?: number;
 	textId?: string;
+	cid?: string;
 	text?: string;
 }
 
@@ -238,7 +239,8 @@ async function findMatchingLaw(
 					found: score >= threshold,
 					legifranceTitle: legiTitle,
 					score,
-					textId: result.id
+					textId: result.id,
+					cid: result.cid
 				};
 
 				// Si on a un très bon match, on arrête de chercher
@@ -437,10 +439,13 @@ async function main() {
 			}
 
 			// Récupérer le texte complet
-			let texte = textCache.get(match.textId!);
+			if (args.verbose) {
+				console.log(`  → textId: ${match.textId}, cid: ${match.cid}`);
+			}
+			let texte = textCache.get(match.textId);
 			if (!texte) {
-				texte = await client.getTexteComplet(match.textId!);
-				textCache.set(match.textId!, texte);
+				texte = await client.getTexteComplet(match.textId, { cid: match.cid });
+				textCache.set(match.textId, texte);
 			}
 
 			// Extraire le texte

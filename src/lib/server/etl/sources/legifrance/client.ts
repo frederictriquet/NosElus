@@ -157,16 +157,31 @@ export class LegifranceClient {
 	}
 
 	/**
-	 * Récupère le texte complet d'une loi par son identifiant LEGI
+	 * Récupère le texte complet d'une loi par son identifiant LEGI.
+	 * Fallback sur /consult/jorf si legiPart échoue et qu'un CID est fourni.
 	 * @param textId - Identifiant du texte (ex: LEGITEXT000053145205)
-	 * @param date - Date de version (format YYYY-MM-DD), défaut: aujourd'hui
+	 * @param options.date - Date de version (format YYYY-MM-DD), défaut: aujourd'hui
+	 * @param options.cid - CID JORF pour fallback (ex: JORFTEXT000038821374)
 	 */
-	async getTexteComplet(textId: string, date?: string): Promise<LegiTexteResponse> {
-		const consultDate = date || new Date().toISOString().split('T')[0];
-		return this.request<LegiTexteResponse>('/consult/legiPart', {
-			textId,
-			date: consultDate
-		});
+	async getTexteComplet(
+		textId: string,
+		options?: { date?: string; cid?: string }
+	): Promise<LegiTexteResponse> {
+		const consultDate = options?.date || new Date().toISOString().split('T')[0];
+		try {
+			return await this.request<LegiTexteResponse>('/consult/legiPart', {
+				textId,
+				date: consultDate
+			});
+		} catch (error) {
+			// Fallback sur /consult/jorf si legiPart échoue (certaines lois n'ont pas de version LEGI consolidée)
+			if (options?.cid && error instanceof Error && error.message.includes('400')) {
+				return this.request<LegiTexteResponse>('/consult/jorf', {
+					textCid: options.cid
+				});
+			}
+			throw error;
+		}
 	}
 
 	/**
@@ -193,7 +208,7 @@ export class LegifranceClient {
 				// Chercher le numéro dans les résultats
 				const match = searchResult.results.find((r) => r.num === numero);
 				if (match) {
-					return this.getTexteComplet(match.id);
+					return this.getTexteComplet(match.id, { cid: match.cid });
 				}
 
 				// Si on a parcouru tous les résultats
@@ -304,8 +319,8 @@ export class LegifranceClient {
 
 			// Test récupération d'un texte complet si on a des résultats
 			if (result.results.length > 0) {
-				const textId = result.results[0].id;
-				const texte = await this.getTexteComplet(textId);
+				const first = result.results[0];
+				const texte = await this.getTexteComplet(first.id, { cid: first.cid });
 				console.log(`✓ Consultation fonctionnelle (texte: ${texte.title?.slice(0, 50)}...)`);
 			}
 

@@ -15,9 +15,7 @@ describe('ETL Status Page - Client Logic', () => {
 			const allChecks = integrationData.mixedChecks;
 			const activeChamber: ETLChamber = 'AN';
 
-			const filtered = allChecks.filter(
-				(c) => c.chamber === activeChamber || c.chamber === 'ALL'
-			);
+			const filtered = allChecks.filter((c) => c.chamber === activeChamber || c.chamber === 'ALL');
 
 			// Vérifier que seulement AN et ALL sont présents
 			for (const check of filtered) {
@@ -29,9 +27,7 @@ describe('ETL Status Page - Client Logic', () => {
 			const allChecks = integrationData.mixedChecks;
 			const activeChamber: ETLChamber = 'PE';
 
-			const filtered = allChecks.filter(
-				(c) => c.chamber === activeChamber || c.chamber === 'ALL'
-			);
+			const filtered = allChecks.filter((c) => c.chamber === activeChamber || c.chamber === 'ALL');
 
 			for (const check of filtered) {
 				expect(['PE', 'ALL']).toContain(check.chamber);
@@ -42,9 +38,7 @@ describe('ETL Status Page - Client Logic', () => {
 			const allChecks = integrationData.mixedChecks;
 			const activeChamber: ETLChamber = 'SENAT';
 
-			const filtered = allChecks.filter(
-				(c) => c.chamber === activeChamber || c.chamber === 'ALL'
-			);
+			const filtered = allChecks.filter((c) => c.chamber === activeChamber || c.chamber === 'ALL');
 
 			for (const check of filtered) {
 				expect(['SENAT', 'ALL']).toContain(check.chamber);
@@ -225,7 +219,7 @@ describe('ETL Status Page - Client Logic', () => {
 
 			// Format français : 17 872 (espace insécable)
 			// Note: Le séparateur exact dépend du navigateur (espace ou espace insécable)
-		expect(formatted).toMatch(/^17[\s\u202f]872$/);
+			expect(formatted).toMatch(/^17[\s\u202f]872$/);
 		});
 
 		it('should format percentage with 1 decimal', () => {

@@ -1,9 +1,8 @@
 /**
  * Tests d'intégration pour ETL checks
  *
- * Note : Suffix `.server.test.ts` indique des tests d'intégration DB
- * Ces tests sont exclus du CI (voir vitest.config.ts)
- * Exécution locale uniquement : `npx vitest run src/**/*.server.test.ts`
+ * Tests d'intégration à exécuter localement seulement.
+ * Suffix ".server.test.ts" est exclu du CI via vitest.config.ts
  *
  * @see pattern-integration-tests-real-db.md
  */
@@ -173,9 +172,9 @@ describe('ETL Checks - Integration Tests', () => {
 			for (const check of checksResult) {
 				expect(check.command.length).toBeGreaterThan(0);
 				// Commandes doivent commencer par "make" ou "npm run"
-				expect(
-					check.command.startsWith('make ') || check.command.startsWith('npm run ')
-				).toBe(true);
+				expect(check.command.startsWith('make ') || check.command.startsWith('npm run ')).toBe(
+					true
+				);
 			}
 		});
 

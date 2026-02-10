@@ -168,9 +168,7 @@
 								<div class="check-stats">
 									<span class="pct">{check.pct.toFixed(1)}%</span>
 									<span class="counts">
-										{check.current.toLocaleString('fr-FR')} / {check.total.toLocaleString(
-											'fr-FR'
-										)}
+										{check.current.toLocaleString('fr-FR')} / {check.total.toLocaleString('fr-FR')}
 									</span>
 								</div>
 							</div>

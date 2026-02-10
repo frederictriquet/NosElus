@@ -117,7 +117,7 @@ export const checkFixtures = {
 	infoStats: createTestCheckResult({
 		id: 'senat-actor-stats',
 		label: 'Statistiques sénateurs',
-		description: 'Sénateurs avec statistiques d\'activité',
+		description: "Sénateurs avec statistiques d'activité",
 		severity: 'info',
 		current: 310,
 		total: 348,

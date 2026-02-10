@@ -11,6 +11,58 @@
 	/** Filtre chambre actif */
 	let activeChamber = $state<ETLChamber | 'ALL'>('ALL');
 
+	/** Tri des colonnes */
+	type SortKey = 'severity' | 'label' | 'chamber' | 'pct' | 'current' | 'total';
+	let sortColumn = $state<SortKey>('severity');
+	let sortDirection = $state<'asc' | 'desc'>('asc');
+
+	const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2, ok: 3 };
+
+	interface ColumnConfig {
+		key: SortKey;
+		label: string;
+		align: 'left' | 'right';
+	}
+
+	const COLUMNS: ColumnConfig[] = [
+		{ key: 'severity', label: 'Sévérité', align: 'left' },
+		{ key: 'label', label: 'Label', align: 'left' },
+		{ key: 'chamber', label: 'Chambre', align: 'left' },
+		{ key: 'pct', label: 'Complétude', align: 'right' },
+		{ key: 'current', label: 'Progression', align: 'right' }
+	];
+
+	function handleSort(col: SortKey) {
+		if (sortColumn === col) {
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortColumn = col;
+			sortDirection = 'asc';
+		}
+	}
+
+	function sortChecks(checks: ETLCheckResult[]): ETLCheckResult[] {
+		const mult = sortDirection === 'asc' ? 1 : -1;
+		return [...checks].sort((a, b) => {
+			switch (sortColumn) {
+				case 'severity':
+					return mult * ((SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9));
+				case 'label':
+					return mult * a.label.localeCompare(b.label, 'fr');
+				case 'chamber':
+					return mult * a.chamber.localeCompare(b.chamber, 'fr');
+				case 'pct':
+					return mult * (b.pct - a.pct);
+				case 'current':
+					return mult * (a.current - b.current);
+				case 'total':
+					return mult * (a.total - b.total);
+				default:
+					return 0;
+			}
+		});
+	}
+
 	/** Copie la commande dans le clipboard */
 	function copyCommand(command: string) {
 		navigator.clipboard.writeText(command);
@@ -146,48 +198,92 @@
 		{#await data.etlChecks}
 			<div class="skeleton" style="height: 400px;"></div>
 		{:then allChecks}
-			{@const checks =
+			{@const filtered =
 				activeChamber === 'ALL'
 					? allChecks
 					: allChecks.filter(
 							(c: ETLCheckResult) => c.chamber === activeChamber || c.chamber === 'ALL'
 						)}
+			{@const checks = sortChecks(filtered)}
 			{#if checks.length === 0}
 				<p class="empty">Aucune suggestion pour cette chambre.</p>
 			{:else}
-				<div class="checks-list">
-					{#each checks as check}
-						{@const badge = getSeverityBadge(check.severity)}
-						<div class="check-card severity-{check.severity}">
-							<div class="check-header">
-								<div class="check-title">
-									<span class="severity-icon" style="color: {badge.color}">{badge.icon}</span>
-									<h3>{check.label}</h3>
-									<span class="chamber-badge">{check.chamber}</span>
-								</div>
-								<div class="check-stats">
-									<span class="pct">{check.pct.toFixed(1)}%</span>
-									<span class="counts">
-										{check.current.toLocaleString('fr-FR')} / {check.total.toLocaleString('fr-FR')}
-									</span>
-								</div>
-							</div>
-
-							<p class="check-description">{check.description}</p>
-
-							<div class="check-action">
-								<code class="command">{check.command}</code>
-								<button
-									class="copy-btn"
-									onclick={() => copyCommand(check.command)}
-									title="Copier la commande"
-									aria-label="Copier la commande {check.command}"
-								>
-									📋 Copier
-								</button>
-							</div>
-						</div>
-					{/each}
+				<div class="table-wrapper">
+					<table class="etl-table">
+						<thead>
+							<tr>
+								{#each COLUMNS as col}
+									<th
+										class="{col.align === 'right' ? 'text-right ' : ''}sortable"
+										class:sorted={sortColumn === col.key}
+										aria-sort={sortColumn === col.key
+											? sortDirection === 'asc'
+												? 'ascending'
+												: 'descending'
+											: 'none'}
+										tabindex="0"
+										onclick={() => handleSort(col.key)}
+										onkeydown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												handleSort(col.key);
+											}
+										}}
+									>
+										{col.label}
+										{#if sortColumn === col.key}
+											<span class="sort-indicator" class:desc={sortDirection === 'desc'}>▲</span>
+										{/if}
+									</th>
+								{/each}
+								<th>Commande</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each checks as check}
+								{@const badge = getSeverityBadge(check.severity)}
+								<tr class="row-{check.severity}">
+									<td>
+										<span class="severity-dot" style="color: {badge.color}" title={check.severity}
+											>{badge.icon}</span
+										>
+									</td>
+									<td>
+										<span class="check-label">{check.label}</span>
+										<span class="check-desc">{check.description}</span>
+									</td>
+									<td><span class="chamber-badge">{check.chamber}</span></td>
+									<td class="text-right">
+										<div class="completude-cell">
+											<span>{(100 - check.pct).toFixed(1)}%</span>
+											<div class="progress-mini">
+												<div
+													class="progress-fill severity-fill-{check.severity}"
+													style="width: {Math.max(100 - check.pct, 0)}%"
+												></div>
+											</div>
+										</div>
+									</td>
+									<td class="text-right number">
+										{(check.total - check.current).toLocaleString('fr-FR')} / {check.total.toLocaleString('fr-FR')}
+									</td>
+									<td>
+										<div class="command-cell">
+											<code>{check.command}</code>
+											<button
+												class="copy-btn"
+												onclick={() => copyCommand(check.command)}
+												title="Copier la commande"
+												aria-label="Copier la commande {check.command}"
+											>
+												📋
+											</button>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				</div>
 			{/if}
 		{:catch err}
@@ -314,115 +410,162 @@
 		color: var(--color-success, #155724);
 	}
 
-	/* Checks list */
-	.checks-list {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
+	/* Tableau ETL */
+	.etl-table {
+		width: 100%;
+		border-collapse: collapse;
 	}
 
-	.check-card {
-		padding: 1.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
+	.etl-table th,
+	.etl-table td {
+		padding: 0.5rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.etl-table th {
+		font-weight: 600;
 		background: var(--color-bg);
+		font-size: 0.875rem;
 	}
 
-	.check-card.severity-critical {
+	.text-right {
+		text-align: right;
+	}
+
+	.number {
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	/* Tri */
+	.sortable {
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.sortable:hover {
+		background: color-mix(in srgb, var(--color-text-muted, #888) 10%, transparent);
+	}
+
+	.sorted {
+		color: var(--color-primary);
+	}
+
+	.sort-indicator {
+		display: inline-block;
+		font-size: 0.625rem;
+		margin-left: 0.25rem;
+		transition: transform 0.2s;
+	}
+
+	.sort-indicator.desc {
+		transform: rotate(180deg);
+	}
+
+	/* Lignes par sévérité */
+	.row-critical {
 		border-left: 4px solid var(--color-error);
 	}
 
-	.check-card.severity-warning {
+	.row-warning {
 		border-left: 4px solid var(--color-warning);
 	}
 
-	.check-card.severity-info {
+	.row-info {
 		border-left: 4px solid var(--color-info);
 	}
 
-	.check-card.severity-ok {
+	.row-ok {
 		border-left: 4px solid var(--color-success);
 	}
 
-	.check-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: 0.75rem;
+	/* Cellules */
+	.severity-dot {
+		font-size: 1rem;
 	}
 
-	.check-title {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+	.check-label {
+		display: block;
+		font-weight: 500;
+		font-size: 0.875rem;
 	}
 
-	.severity-icon {
-		font-size: 1.25rem;
-	}
-
-	.check-title h3 {
-		font-size: 1.125rem;
-		margin: 0;
+	.check-desc {
+		display: block;
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		margin-top: 0.125rem;
 	}
 
 	.chamber-badge {
-		padding: 0.25rem 0.5rem;
+		padding: 0.125rem 0.375rem;
 		background: var(--color-surface);
 		border-radius: 4px;
 		font-size: 0.75rem;
 		font-weight: 600;
 	}
 
-	.check-stats {
+	/* Complétude avec mini barre */
+	.completude-cell {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
 		gap: 0.25rem;
 	}
 
-	.check-stats .pct {
-		font-size: 1.25rem;
-		font-weight: 600;
+	.progress-mini {
+		width: 60px;
+		height: 4px;
+		background: var(--color-border);
+		border-radius: 2px;
+		overflow: hidden;
 	}
 
-	.check-stats .counts {
-		font-size: 0.875rem;
-		color: var(--color-text-secondary);
+	.progress-fill {
+		height: 100%;
+		border-radius: 2px;
 	}
 
-	.check-description {
-		margin: 0.75rem 0;
-		color: var(--color-text-secondary);
-		font-size: 0.938rem;
+	.severity-fill-critical {
+		background: var(--color-error);
 	}
 
-	.check-action {
+	.severity-fill-warning {
+		background: var(--color-warning);
+	}
+
+	.severity-fill-info {
+		background: var(--color-info);
+	}
+
+	.severity-fill-ok {
+		background: var(--color-success);
+	}
+
+	/* Commande */
+	.command-cell {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		margin-top: 1rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--color-border);
+		gap: 0.5rem;
 	}
 
-	.command {
-		flex: 1;
+	.command-cell code {
 		background: var(--color-surface);
-		padding: 0.75rem 1rem;
-		border-radius: 6px;
-		font-family: 'Monaco', 'Courier New', monospace;
-		font-size: 0.875rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		white-space: nowrap;
 	}
 
 	.copy-btn {
-		padding: 0.75rem 1.25rem;
+		padding: 0.25rem 0.5rem;
 		background: var(--color-primary);
 		color: white;
 		border: none;
-		border-radius: 6px;
+		border-radius: 4px;
 		cursor: pointer;
-		font-weight: 600;
+		font-size: 0.75rem;
 		transition: opacity 0.2s;
 	}
 

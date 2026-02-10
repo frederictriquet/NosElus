@@ -174,7 +174,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		sync_freshness AS (
 			SELECT
 				EXTRACT(DAY FROM NOW() - MAX(last_sync_at) FILTER (WHERE source = 'assemblee'))::integer as last_sync_an_days,
-				EXTRACT(DAY FROM NOW() - MAX(last_sync_at) FILTER (WHERE source = 'htv'))::integer as last_sync_pe_days
+				EXTRACT(DAY FROM NOW() - MAX(last_sync_at) FILTER (WHERE source = 'europarl'))::integer as last_sync_pe_days
 			FROM sync_metadata
 		)
 		SELECT

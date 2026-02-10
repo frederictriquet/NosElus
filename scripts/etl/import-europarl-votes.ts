@@ -9,7 +9,10 @@
 
 import { importEuroparlVotes } from '../../src/lib/server/etl/sources/europarl/votes';
 import type { ETLConfig } from '../../src/lib/server/etl/types';
+import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
+
+const SOURCE = 'europarl';
 
 async function main() {
 	const incremental = process.argv.includes('--incremental');
@@ -43,6 +46,14 @@ async function main() {
 		console.log(`  Insérés/MàJ: ${stats.inserted}`);
 		console.log(`  Erreurs: ${stats.errors}`);
 		console.log('='.repeat(60));
+
+		try {
+			await updateSyncMetadata(SOURCE, 'votes', stats, {
+				status: stats.errors > 0 ? 'partial' : 'success'
+			});
+		} catch (syncError) {
+			console.warn('[Warning] Could not update sync_metadata:', (syncError as Error).message);
+		}
 
 		await notifyETLComplete('import-europarl-votes', stats, {
 			dryRun: process.argv.includes('--dry-run')

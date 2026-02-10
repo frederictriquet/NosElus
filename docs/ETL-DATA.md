@@ -47,14 +47,14 @@ if (!fs.existsSync(jsonDir)) {
 scp -r data/ prod:/app/data/
 
 # Les ETL utiliseront les fichiers existants sans retélécharger
-make etl-all
+make etl-an-all
 ```
 
 ### Option 2 : Télécharger depuis zéro
 
 ```bash
 # Télécharge les données AN (scrutins, acteurs)
-make etl-download
+make etl-an-download
 
 # Télécharge les dossiers législatifs AN
 # (fait automatiquement par etl-an-dossiers si absent)
@@ -88,7 +88,7 @@ Les données AN sont mises à jour périodiquement sur `data.assemblee-nationale
 rm -rf data/assemblee/scrutins
 
 # Re-télécharger
-make etl-download
+make etl-an-download
 ```
 
 Les APIs (Sénat, PE) sont interrogées en temps réel avec un cache de quelques heures (configurable dans `src/lib/server/etl/config.ts`).

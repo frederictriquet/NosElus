@@ -340,6 +340,6 @@ Améliorations déjà implémentées :
 - **Import AN**: `make etl-all-legislatures` pour importer toutes les législatures
 - **Import PE**: `make etl-europarl-meps` pour importer les eurodéputés français (ParlTrack)
 - **Import couleurs**: `make etl-external-colors` pour les couleurs PE/Sénat depuis sources officielles
-- **Mode incrémental**: `make etl-incremental` avec tracking dans table `sync_metadata`
+- **Mode incrémental**: `make etl-an-incremental` avec tracking dans table `sync_metadata`
 - **Cache ETL**: Fichiers JSON dans `data/cache/` avec TTL configurable
 - **Fréquence ETL**: À définir (quotidien/hebdomadaire)

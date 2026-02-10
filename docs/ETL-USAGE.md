@@ -31,11 +31,11 @@ Tous les scripts ETL supportent :
 
 | Objectif | Commande | Prérequis | Résultats |
 |----------|----------|-----------|-----------|
-| **Télécharger données AN** | `make etl-download` | Aucun | ~160 Mo dans `data/assemblee/` |
-| **Import complet AN** | `make etl-all` | `etl-download` | 2100 députés + 17872 scrutins + 1.99M votes |
-| **Import incrémental** | `make etl-incremental` | `etl-all` | Nouveaux/modifiés uniquement (via `sync_metadata`) |
-| **Import députés** | `make etl-an-actors` | `etl-download` | 2100 députés, 12245 mandats (législatures 12-17) |
-| **Import scrutins + votes** | `make etl-an-scrutins` | `etl-download` + `etl-an-actors` | 17872 scrutins + 1.99M votes individuels |
+| **Télécharger données AN** | `make etl-an-download` | Aucun | ~160 Mo dans `data/assemblee/` |
+| **Import complet AN** | `make etl-an-all` | `etl-an-download` | 2100 députés + 17872 scrutins + 1.99M votes |
+| **Import incrémental** | `make etl-an-incremental` | `etl-an-all` | Nouveaux/modifiés uniquement (via `sync_metadata`) |
+| **Import députés** | `make etl-an-actors` | `etl-an-download` | 2100 députés, 12245 mandats (législatures 12-17) |
+| **Import scrutins + votes** | `make etl-an-scrutins` | `etl-an-download` + `etl-an-actors` | 17872 scrutins + 1.99M votes individuels |
 | **Import lois AN** | `make etl-an-laws` | Aucun | Dossiers législatifs AN |
 | **Lier scrutins ↔ lois** | `make etl-an-link-laws` | `etl-an-scrutins` + `etl-an-laws` | Liens scrutins ↔ textes (parsing titres) |
 | **Import dossiers complets** | `make etl-an-dossiers` | Aucun | Dossiers législatifs + cosignataires |
@@ -100,8 +100,8 @@ Tous les scripts ETL supportent :
 
 ```bash
 # 1. Données Assemblée Nationale
-make etl-download              # Télécharge données (~160 Mo)
-make etl-all                   # Import complet AN
+make etl-an-download              # Télécharge données (~160 Mo)
+make etl-an-all                   # Import complet AN
 
 # 2. Sénat
 make etl-senat-senators        # Import sénateurs
@@ -125,7 +125,7 @@ make etl-senat-activity-stats  # Stats sénateurs
 
 ```bash
 # Nouveaux scrutins/votes uniquement
-make etl-incremental
+make etl-an-incremental
 
 # Nouvelles statistiques
 make etl-an-nosdeputes-stats

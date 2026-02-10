@@ -13,6 +13,8 @@ jobs:
     name: Quality Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/noselus
 
     steps:
       - name: Checkout code
@@ -35,8 +37,6 @@ jobs:
 
       - name: Run unit tests
         run: npm run test
-        env:
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/noselus
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps

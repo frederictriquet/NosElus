@@ -1,18 +1,23 @@
 # Pattern : Factorisation des Fonctions de Génération d'IDs Critiques
 
 ## Problème
+
 Lorsqu'un ID sert de **clé de liaison entre tables** (foreign key logique), la duplication de la fonction de génération dans plusieurs modules peut causer des incohérences catastrophiques :
+
 - IDs différents pour la même entité
 - Joins cassés (0 résultats au lieu de milliers)
 - Perte d'intégrité référentielle
 
 ## Contexte
+
 Ce pattern s'applique quand :
+
 - Un ID est généré programmatiquement (pas auto-incrémenté DB)
 - Cet ID est utilisé comme clé de liaison entre tables/modules
 - Plusieurs modules doivent générer le même ID pour la même entité
 
 ## Solution
+
 **Centraliser** la génération d'ID dans un module `shared.ts` partagé par tous les consommateurs.
 
 ### Structure recommandée
@@ -32,16 +37,16 @@ module/
 ```typescript
 // votes.ts
 function generateLawId(ref: string, term: number): string {
-  // Regex: /[A-Z](\d+)-/
-  return `LWPE${term}-${ref.replace(/\//g, '-')}`;
+	// Regex: /[A-Z](\d+)-/
+	return `LWPE${term}-${ref.replace(/\//g, '-')}`;
 }
 
 // laws.ts
 function generateLawId(ref: string, term: number): string {
-  // Regex: /[ABC](\d+)-/ ⚠️ DIFFÉRENTE !
-  const extracted = ref.match(/[ABC](\d+)-/)?.[1];
-  const t = extracted ? parseInt(extracted) : term;
-  return `LWPE${t}-${ref.replace(/\//g, '-')}`;
+	// Regex: /[ABC](\d+)-/ ⚠️ DIFFÉRENTE !
+	const extracted = ref.match(/[ABC](\d+)-/)?.[1];
+	const t = extracted ? parseInt(extracted) : term;
+	return `LWPE${t}-${ref.replace(/\//g, '-')}`;
 }
 ```
 
@@ -50,13 +55,13 @@ function generateLawId(ref: string, term: number): string {
 ```typescript
 // shared.ts
 export function extractTermFromReference(reference: string): number | null {
-  const match = reference.match(/[ABC](\d+)-/);
-  return match ? parseInt(match[1], 10) : null;
+	const match = reference.match(/[ABC](\d+)-/);
+	return match ? parseInt(match[1], 10) : null;
 }
 
 export function generateLawId(reference: string, fallbackTerm: number): string {
-  const term = extractTermFromReference(reference) ?? fallbackTerm;
-  return `LWPE${term}-${reference.replace(/\//g, '-')}`;
+	const term = extractTermFromReference(reference) ?? fallbackTerm;
+	return `LWPE${term}-${reference.replace(/\//g, '-')}`;
 }
 
 // votes.ts
@@ -69,12 +74,14 @@ const lawId = generateLawId(procedure.reference, currentTerm);
 ```
 
 ## Avantages
+
 - **Cohérence garantie** : Une seule source de vérité
 - **Maintenabilité** : Changement en un seul endroit
 - **Testabilité** : Tests centralisés et exhaustifs
 - **Évitabilité des bugs** : Impossible d'avoir des divergences
 
 ## Inconvénients
+
 - Dépendance partagée (couplage entre modules)
 - Nécessite discipline pour ne pas dupliquer
 
@@ -100,7 +107,7 @@ const lawId = generateLawId(procedure.reference, currentTerm);
  * @see {@link extractTermFromReference} pour la logique d'extraction
  */
 export function generateLawId(reference: string, fallbackTerm: number): string {
-  // ...
+	// ...
 }
 ```
 
@@ -116,6 +123,7 @@ Lors d'une PR modifiant une fonction de génération d'ID :
 ## Exemples d'utilisation dans le projet
 
 ### EuroParl ETL (2026-02-09)
+
 - **Fichier** : `src/lib/server/etl/sources/europarl/shared.ts`
 - **Fonction** : `generateLawId()`
 - **Consommateurs** : votes.ts, laws.ts, law-texts.ts
@@ -123,6 +131,7 @@ Lors d'une PR modifiant une fonction de génération d'ID :
 - **Impact bug** : 2 matches au lieu de 2204 (99,9% données inaccessibles)
 
 ### Scrutin IDs (potentiel)
+
 - **Pattern** : `VTPE{term}-{voteId}` (votes PE)
 - Si répliqué ailleurs, factoriser également
 
@@ -146,9 +155,11 @@ rg "const .*Id = \`[A-Z]+\$\{" --type ts
 ```
 
 ## Voir aussi
+
 - Pattern : Multi-Chamber Factorization (`pattern-multi-chamber-factorization.md`)
 - Bug : PE ETL lawId Mismatch (`bug-2026-02-09-pe-etl-lawid-mismatch.md`)
 - Standard : Shared Data Definitions (`std-shared-data-definitions.md`)
 
 ## Date d'adoption
+
 2026-02-09

@@ -1,16 +1,19 @@
 # Pattern : Extraction de Métadonnées depuis Identifiants Structurés
 
 ## Catégorie
+
 Data Processing | Parsing | ETL
 
 ## Problème
 
 Les identifiants externes (références de procédures, IDs techniques, tags git) contiennent souvent **des métadonnées implicites** encodées dans leur format :
+
 - Version dans un tag git : `v2.1.0-beta`
 - Législature dans un ID scrutin : `VTANR5L17V4545` (L17 = législature 17)
 - Terme PE dans une référence : `A10-0270/2025` (10 = terme PE-10)
 
 **Hard-coder ces métadonnées** créée :
+
 - ❌ Maintenance manuelle (changer le code pour chaque nouvelle version)
 - ❌ Incohérences (données historiques mal classées)
 - ❌ Perte d'information (métadonnées ignorées)
@@ -18,12 +21,14 @@ Les identifiants externes (références de procédures, IDs techniques, tags git
 ## Contexte
 
 Utiliser ce pattern quand :
+
 - ✅ Identifiants externes suivent un format structuré
 - ✅ Métadonnées peuvent être extraites par regex
 - ✅ Extraction automatique est plus fiable que hard-coding
 - ✅ Données historiques doivent être correctement classées
 
 Ne PAS utiliser quand :
+
 - ❌ Format d'ID imprévisible ou incohérent
 - ❌ Extraction trop complexe (>1 regex)
 - ❌ Métadonnées critiques (préférer API explicite)
@@ -32,7 +37,7 @@ Ne PAS utiliser quand :
 
 ### Pattern générique
 
-```typescript
+````typescript
 /**
  * Extrait une métadonnée depuis un identifiant structuré
  *
@@ -48,20 +53,20 @@ Ne PAS utiliser quand :
  * ```
  */
 function extractMetadata<T = string>(
-  id: string,
-  pattern: RegExp,
-  parser?: (match: string) => T
+	id: string,
+	pattern: RegExp,
+	parser?: (match: string) => T
 ): T | null {
-  const match = id.match(pattern);
-  if (!match || !match[1]) return null;
+	const match = id.match(pattern);
+	if (!match || !match[1]) return null;
 
-  return parser ? parser(match[1]) : (match[1] as T);
+	return parser ? parser(match[1]) : (match[1] as T);
 }
-```
+````
 
 ### Cas d'usage réel : Terme PE depuis référence
 
-```typescript
+````typescript
 /**
  * Extracts the EP term number from a procedure reference.
  * References follow patterns like A10-0270/2025, B9-0063/2026, RC-B10-0071/2026, C10-0263/2025.
@@ -79,14 +84,14 @@ function extractMetadata<T = string>(
  * ```
  */
 function extractTermFromReference(reference: string): number | null {
-  const match = reference.match(/[ABC](\d+)-/);
-  return match ? parseInt(match[1], 10) : null;
+	const match = reference.match(/[ABC](\d+)-/);
+	return match ? parseInt(match[1], 10) : null;
 }
 
 // Usage avec fallback
 const term = extractTermFromReference(reference) ?? getCurrentPETerm();
 const lawId = `LWPE${term}-${reference}`;
-```
+````
 
 ## Avantages
 
@@ -109,58 +114,58 @@ const lawId = `LWPE${term}-${reference}`;
 
 ```typescript
 function extractVersionFromTag(tag: string): string | null {
-  return extractMetadata(tag, /v([\d.]+)/);
+	return extractMetadata(tag, /v([\d.]+)/);
 }
 
-extractVersionFromTag('v2.1.0-beta')  // → '2.1.0'
-extractVersionFromTag('release-3.0')  // → null
+extractVersionFromTag('v2.1.0-beta'); // → '2.1.0'
+extractVersionFromTag('release-3.0'); // → null
 ```
 
 ### Cas 2 : Législature depuis ID scrutin
 
 ```typescript
 function extractLegislatureFromScrutinId(id: string): number | null {
-  return extractMetadata(id, /L(\d+)V/, parseInt);
+	return extractMetadata(id, /L(\d+)V/, parseInt);
 }
 
-extractLegislatureFromScrutinId('VTANR5L17V4545')  // → 17
-extractLegislatureFromScrutinId('VTANR5L16V2301')  // → 16
+extractLegislatureFromScrutinId('VTANR5L17V4545'); // → 17
+extractLegislatureFromScrutinId('VTANR5L16V2301'); // → 16
 ```
 
 ### Cas 3 : Date depuis nom de fichier
 
 ```typescript
 function extractDateFromFilename(filename: string): string | null {
-  return extractMetadata(filename, /(\d{4}-\d{2}-\d{2})/);
+	return extractMetadata(filename, /(\d{4}-\d{2}-\d{2})/);
 }
 
-extractDateFromFilename('backup-2026-02-07.sql')  // → '2026-02-07'
-extractDateFromFilename('data.csv')               // → null
+extractDateFromFilename('backup-2026-02-07.sql'); // → '2026-02-07'
+extractDateFromFilename('data.csv'); // → null
 ```
 
 ### Cas 4 : Multi-extraction avec validation
 
 ```typescript
 interface ParsedReference {
-  type: 'A' | 'B' | 'C';
-  term: number;
-  number: number;
-  year: number;
+	type: 'A' | 'B' | 'C';
+	term: number;
+	number: number;
+	year: number;
 }
 
 function parseEPReference(ref: string): ParsedReference | null {
-  const match = ref.match(/([ABC])(\d+)-(\d+)\/(\d{4})/);
-  if (!match) return null;
+	const match = ref.match(/([ABC])(\d+)-(\d+)\/(\d{4})/);
+	if (!match) return null;
 
-  return {
-    type: match[1] as 'A' | 'B' | 'C',
-    term: parseInt(match[2], 10),
-    number: parseInt(match[3], 10),
-    year: parseInt(match[4], 10)
-  };
+	return {
+		type: match[1] as 'A' | 'B' | 'C',
+		term: parseInt(match[2], 10),
+		number: parseInt(match[3], 10),
+		year: parseInt(match[4], 10)
+	};
 }
 
-parseEPReference('A10-0270/2025')
+parseEPReference('A10-0270/2025');
 // → { type: 'A', term: 10, number: 270, year: 2025 }
 ```
 
@@ -176,32 +181,32 @@ parseEPReference('A10-0270/2025')
  * @param onFallback - Callback optionnel pour logger les échecs
  */
 function extractWithFallback<T>(
-  id: string,
-  pattern: RegExp,
-  fallback: T | (() => T),
-  onFallback?: (id: string) => void
+	id: string,
+	pattern: RegExp,
+	fallback: T | (() => T),
+	onFallback?: (id: string) => void
 ): T {
-  const match = id.match(pattern);
+	const match = id.match(pattern);
 
-  if (match && match[1]) {
-    return match[1] as T;
-  }
+	if (match && match[1]) {
+		return match[1] as T;
+	}
 
-  // Log si callback fourni
-  if (onFallback) {
-    onFallback(id);
-  }
+	// Log si callback fourni
+	if (onFallback) {
+		onFallback(id);
+	}
 
-  // Retourner fallback
-  return typeof fallback === 'function' ? (fallback as () => T)() : fallback;
+	// Retourner fallback
+	return typeof fallback === 'function' ? (fallback as () => T)() : fallback;
 }
 
 // Usage
 const term = extractWithFallback(
-  reference,
-  /[ABC](\d+)-/,
-  () => getCurrentPETerm(),
-  (ref) => console.warn(`Could not extract term from: ${ref}`)
+	reference,
+	/[ABC](\d+)-/,
+	() => getCurrentPETerm(),
+	(ref) => console.warn(`Could not extract term from: ${ref}`)
 );
 ```
 
@@ -209,37 +214,37 @@ const term = extractWithFallback(
 
 ```typescript
 describe('extractMetadata', () => {
-  it('should extract version from git tag', () => {
-    expect(extractMetadata('v2.1.0-beta', /v([\d.]+)/)).toBe('2.1.0');
-  });
+	it('should extract version from git tag', () => {
+		expect(extractMetadata('v2.1.0-beta', /v([\d.]+)/)).toBe('2.1.0');
+	});
 
-  it('should return null for invalid format', () => {
-    expect(extractMetadata('invalid', /v([\d.]+)/)).toBeNull();
-  });
+	it('should return null for invalid format', () => {
+		expect(extractMetadata('invalid', /v([\d.]+)/)).toBeNull();
+	});
 
-  it('should parse extracted value', () => {
-    const result = extractMetadata('L17V', /L(\d+)V/, parseInt);
-    expect(result).toBe(17);
-    expect(typeof result).toBe('number');
-  });
+	it('should parse extracted value', () => {
+		const result = extractMetadata('L17V', /L(\d+)V/, parseInt);
+		expect(result).toBe(17);
+		expect(typeof result).toBe('number');
+	});
 });
 
 describe('extractTermFromReference', () => {
-  it('should extract term from type A reference', () => {
-    expect(extractTermFromReference('A10-0270/2025')).toBe(10);
-  });
+	it('should extract term from type A reference', () => {
+		expect(extractTermFromReference('A10-0270/2025')).toBe(10);
+	});
 
-  it('should extract term from type B reference', () => {
-    expect(extractTermFromReference('B9-0063/2026')).toBe(9);
-  });
+	it('should extract term from type B reference', () => {
+		expect(extractTermFromReference('B9-0063/2026')).toBe(9);
+	});
 
-  it('should extract term from RC-B prefix', () => {
-    expect(extractTermFromReference('RC-B10-0071/2026')).toBe(10);
-  });
+	it('should extract term from RC-B prefix', () => {
+		expect(extractTermFromReference('RC-B10-0071/2026')).toBe(10);
+	});
 
-  it('should return null for invalid reference', () => {
-    expect(extractTermFromReference('invalid')).toBeNull();
-  });
+	it('should return null for invalid reference', () => {
+		expect(extractTermFromReference('invalid')).toBeNull();
+	});
 });
 ```
 
@@ -276,10 +281,10 @@ const law = { legislature: `PE-${term}`, ... };
 
 ```typescript
 // ❌ MAUVAIS : Match n'importe quel nombre
-reference.match(/(\d+)/)  // → Match aussi l'année (2025)
+reference.match(/(\d+)/); // → Match aussi l'année (2025)
 
 // ✅ BON : Match spécifiquement le terme
-reference.match(/[ABC](\d+)-/)  // → Match uniquement le terme
+reference.match(/[ABC](\d+)-/); // → Match uniquement le terme
 ```
 
 ## Voir aussi
@@ -295,6 +300,6 @@ reference.match(/[ABC](\d+)-/)  // → Match uniquement le terme
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                             |
+| ---------- | -------------------------------------------------------- |
 | 2026-02-07 | Création suite à implémentation extractTermFromReference |

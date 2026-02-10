@@ -10,6 +10,7 @@ Attendu (naturel) : "1", "2", "10", "17", "20"
 ```
 
 Ce problème est fréquent pour :
+
 - Numéros de législatures/mandatures
 - Versions ("v1", "v10", "v2")
 - Numéros de chapitres/sections
@@ -42,8 +43,8 @@ Extraire la partie numérique pour tri, tout en conservant la string originale p
  * extractNumber('no-number')  // → 0
  */
 function extractNumber(str: string): number {
-  const match = str.match(/(\d+)/);
-  return match ? Number(match[1]) : 0;
+	const match = str.match(/(\d+)/);
+	return match ? Number(match[1]) : 0;
 }
 
 /**
@@ -60,8 +61,8 @@ function extractNumber(str: string): number {
 
 ```typescript
 interface Legislature {
-  id: string;  // "17", "PE-10", etc.
-  name: string;
+	id: string; // "17", "PE-10", etc.
+	name: string;
 }
 
 // Tri par ID de mandature en ordre naturel
@@ -74,28 +75,28 @@ Pour éviter de coder en dur la logique d'extraction à chaque tri :
 
 ```typescript
 interface ColumnConfig {
-  key: string;
-  getValue: (row: any) => number;  // Fonction d'extraction
+	key: string;
+	getValue: (row: any) => number; // Fonction d'extraction
 }
 
 const COLUMNS: ColumnConfig[] = [
-  {
-    key: 'legislature',
-    getValue: (row) => extractNumber(row.legislature)  // Tri naturel
-  },
-  {
-    key: 'totalLaws',
-    getValue: (row) => row.totalLaws  // Tri numérique direct
-  }
+	{
+		key: 'legislature',
+		getValue: (row) => extractNumber(row.legislature) // Tri naturel
+	},
+	{
+		key: 'totalLaws',
+		getValue: (row) => row.totalLaws // Tri numérique direct
+	}
 ];
 
 // Tri générique
 function sortBy(data: any[], column: string, direction: 'asc' | 'desc') {
-  const col = COLUMNS.find(c => c.key === column);
-  if (!col) return data;
-  
-  const mult = direction === 'asc' ? 1 : -1;
-  return [...data].sort((a, b) => mult * (col.getValue(a) - col.getValue(b)));
+	const col = COLUMNS.find((c) => c.key === column);
+	if (!col) return data;
+
+	const mult = direction === 'asc' ? 1 : -1;
+	return [...data].sort((a, b) => mult * (col.getValue(a) - col.getValue(b)));
 }
 ```
 
@@ -128,9 +129,9 @@ versions.sort((a, b) => semver.compare(a, b));
 ```typescript
 // Tri par numéro, puis par préfixe si égalité
 items.sort((a, b) => {
-  const numDiff = extractNumber(a) - extractNumber(b);
-  if (numDiff !== 0) return numDiff;
-  return a.localeCompare(b);  // Fallback lexicographique
+	const numDiff = extractNumber(a) - extractNumber(b);
+	if (numDiff !== 0) return numDiff;
+	return a.localeCompare(b); // Fallback lexicographique
 });
 ```
 
@@ -145,23 +146,23 @@ items.sort((a, b) => {
 ```typescript
 // Tests unitaires pour vérifier le comportement
 describe('extractNumber', () => {
-  it('should extract from AN legislature', () => {
-    expect(extractNumber('17')).toBe(17);
-    expect(extractNumber('1')).toBe(1);
-  });
+	it('should extract from AN legislature', () => {
+		expect(extractNumber('17')).toBe(17);
+		expect(extractNumber('1')).toBe(1);
+	});
 
-  it('should extract from PE legislature', () => {
-    expect(extractNumber('PE-10')).toBe(10);
-  });
+	it('should extract from PE legislature', () => {
+		expect(extractNumber('PE-10')).toBe(10);
+	});
 
-  it('should extract from Sénat legislature', () => {
-    expect(extractNumber('SE-2023')).toBe(2023);
-  });
+	it('should extract from Sénat legislature', () => {
+		expect(extractNumber('SE-2023')).toBe(2023);
+	});
 
-  it('should return 0 for non-numeric', () => {
-    expect(extractNumber('')).toBe(0);
-    expect(extractNumber('abc')).toBe(0);
-  });
+	it('should return 0 for non-numeric', () => {
+		expect(extractNumber('')).toBe(0);
+		expect(extractNumber('abc')).toBe(0);
+	});
 });
 ```
 

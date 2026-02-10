@@ -13,6 +13,7 @@
 **Décision** : Un seul module `notifications.ts` avec fonction publique `notifyETLComplete()`
 
 **Résultat** :
+
 - Aucune duplication de code
 - Modifications centralisées (ex: fix regex .env → 1 fichier)
 - Pattern uniforme sur 31 scripts
@@ -27,16 +28,18 @@
 **Décision** : Credentials manquants ou erreur d'envoi → warning, pas crash
 
 **Résultat** :
+
 - 0 ETL cassé si Telegram mal configuré
 - Adoption facilitée (pas besoin de setup immédiat)
 - Logs explicites pour debugging
 
 **Code clé** :
+
 ```typescript
 if (!credentials) {
-  console.warn('⚠️  Telegram credentials not configured.');
-  console.warn('   ETL notifications will be skipped.');
-  return;  // Pas d'exception
+	console.warn('⚠️  Telegram credentials not configured.');
+	console.warn('   ETL notifications will be skipped.');
+	return; // Pas d'exception
 }
 ```
 
@@ -49,18 +52,20 @@ if (!credentials) {
 **Décision** : Logger créé au premier appel, réutilisé ensuite
 
 **Résultat** :
+
 - Pas de connexion multiple inutile
 - Détection credentials au runtime (pas au build)
 - Pattern clair et maintenable
 
 **Code clé** :
+
 ```typescript
 let telegramLogger: FemtoLogger | null | undefined;
 // undefined = pas encore initialisé, null = credentials manquants
 
 function getLogger(): FemtoLogger | null {
-  if (telegramLogger !== undefined) return telegramLogger;
-  // ... initialisation ...
+	if (telegramLogger !== undefined) return telegramLogger;
+	// ... initialisation ...
 }
 ```
 
@@ -73,6 +78,7 @@ function getLogger(): FemtoLogger | null {
 **Process** : Invoke `/code-review --thorough --security` sur 38 fichiers
 
 **Résultat** : Détection de 4 issues avant production :
+
 1. Regex .env fragile (pas de support quotes)
 2. Compteur erreurs hardcodé à 0
 3. 18 scripts sans flag dryRun
@@ -91,6 +97,7 @@ function getLogger(): FemtoLogger | null {
 **Cause** : Regex `/^(TELEGRAM_\w+)=(.+)$/` capture les quotes dans la valeur
 
 **Solution** :
+
 ```typescript
 // Avant
 const match = trimmed.match(/^(TELEGRAM_\w+)=(.+)$/);
@@ -112,6 +119,7 @@ const match = trimmed.match(/^(TELEGRAM_\w+)=["']?(.+?)["']?$/);
 **Cause** : Hardcodage de `errors: 0` au lieu de compter les vraies erreurs
 
 **Solution** :
+
 ```typescript
 let errors = 0;
 
@@ -146,9 +154,10 @@ const stats = { ..., errors };  // Valeur réelle
 **Cause** : Appels sans le paramètre `dryRun` dans `notifyETLComplete()`
 
 **Solution** : Pattern uniforme ajouté partout :
+
 ```typescript
 await notifyETLComplete('script', stats, {
-  dryRun: process.argv.includes('--dry-run')
+	dryRun: process.argv.includes('--dry-run')
 });
 ```
 
@@ -161,6 +170,7 @@ await notifyETLComplete('script', stats, {
 **Dilemme initial** : Winston (populaire) vs FemtoLogger (léger)
 
 **Analyse** :
+
 - Winston : 7.5 MB, complexe, pas de transport Telegram officiel
 - FemtoLogger : 50 KB, TelegramTransport natif, HTML formatting built-in
 
@@ -179,24 +189,25 @@ await notifyETLComplete('script', stats, {
 **Cas d'usage** : ETL en plusieurs phases (organes → acteurs → mandats)
 
 **Pattern** :
+
 ```typescript
 const allStats: ImportStats[] = [step1Stats, step2Stats, step3Stats];
 
 const combinedStats: ImportStats = {
-  total: allStats.reduce((sum, s) => sum + s.total, 0),
-  inserted: allStats.reduce((sum, s) => sum + s.inserted, 0),
-  updated: allStats.reduce((sum, s) => sum + s.updated, 0),
-  skipped: allStats.reduce((sum, s) => sum + s.skipped, 0),
-  errors: allStats.reduce((sum, s) => sum + s.errors, 0)
+	total: allStats.reduce((sum, s) => sum + s.total, 0),
+	inserted: allStats.reduce((sum, s) => sum + s.inserted, 0),
+	updated: allStats.reduce((sum, s) => sum + s.updated, 0),
+	skipped: allStats.reduce((sum, s) => sum + s.skipped, 0),
+	errors: allStats.reduce((sum, s) => sum + s.errors, 0)
 };
 
 await notifyETLComplete('import-all', combinedStats, {
-  dryRun,
-  additionalInfo: {
-    step1: step1Stats.inserted,
-    step2: step2Stats.inserted,
-    step3: step3Stats.inserted
-  }
+	dryRun,
+	additionalInfo: {
+		step1: step1Stats.inserted,
+		step2: step2Stats.inserted,
+		step3: step3Stats.inserted
+	}
 });
 ```
 
@@ -209,15 +220,18 @@ await notifyETLComplete('import-all', combinedStats, {
 **Cas d'usage** : Retry sur sources alternatives avant de compter une erreur
 
 **Pattern** :
+
 ```typescript
 let recovered = false;
 
 for (const altSource of alternatives) {
-  try {
-    await process(altSource);
-    recovered = true;
-    break;
-  } catch { continue; }
+	try {
+		await process(altSource);
+		recovered = true;
+		break;
+	} catch {
+		continue;
+	}
 }
 
 if (!recovered) errors++;
@@ -232,11 +246,12 @@ if (!recovered) errors++;
 **Cas d'usage** : Messages Telegram avec emojis et formatage selon statut
 
 **Pattern** :
+
 ```typescript
 function getStatusEmoji(stats: ImportStats): string {
-  if (stats.errors === 0) return '✅';  // Succès total
-  const errorRate = stats.errors / stats.total;
-  return errorRate < 0.1 ? '⚠️' : '❌';  // Partiel vs Échec
+	if (stats.errors === 0) return '✅'; // Succès total
+	const errorRate = stats.errors / stats.total;
+	return errorRate < 0.1 ? '⚠️' : '❌'; // Partiel vs Échec
 }
 
 const message = `
@@ -264,6 +279,7 @@ ${getStatusEmoji(stats)} ETL Terminé: ${scriptName} ${legislature || ''}
 **Choix** : Option 2 (module centralisé)
 
 **Justification** :
+
 - Maintenance : 1 fichier vs 31 fichiers
 - Évolutivité : Ajouter Discord = 1 ligne de code
 - Type-safety : Interface partagée garantie
@@ -280,6 +296,7 @@ ${getStatusEmoji(stats)} ETL Terminé: ${scriptName} ${legislature || ''}
 **Choix** : Option 2 (notification unique)
 
 **Justification** :
+
 - Moins de bruit dans Telegram
 - Vue d'ensemble claire du succès global
 - additionalInfo permet de détailler les phases
@@ -296,6 +313,7 @@ ${getStatusEmoji(stats)} ETL Terminé: ${scriptName} ${legislature || ''}
 **Choix** : Option 2 (parsing manuel)
 
 **Justification** :
+
 - Déjà pattern existant dans le projet (cohérence)
 - Pas de dépendance runtime supplémentaire
 - Contrôle total sur le parsing (support quotes, comments)
@@ -353,7 +371,7 @@ await notifyETLComplete('script', stats);
 
 // ✅ CORRECT
 await notifyETLComplete('script', stats, {
-  dryRun: process.argv.includes('--dry-run')
+	dryRun: process.argv.includes('--dry-run')
 });
 ```
 

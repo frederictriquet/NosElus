@@ -1,6 +1,7 @@
 # ADR-2026-02-02 : Identification et calcul des votes décisifs
 
 ## Métadonnées
+
 - **Date** : 2026-02-02
 - **Statut** : Proposé
 - **Contexte** : Phase 4.2 de la roadmap - Votes décisifs
@@ -11,6 +12,7 @@
 Comment quantifier le "poids décisif" d'un vote individuel dans un scrutin parlementaire ? Quels scrutins sont considérés comme "décisifs" ?
 
 **Besoins fonctionnels** :
+
 1. Identifier les scrutins où chaque voix comptait vraiment
 2. Calculer le poids décisif de chaque vote individuel
 3. Identifier les groupes pivot (dont le basculement inverse le résultat)
@@ -18,6 +20,7 @@ Comment quantifier le "poids décisif" d'un vote individuel dans un scrutin parl
 5. Créer une page dédiée listant tous les votes serrés
 
 **Contraintes** :
+
 - Wording neutre et factuel (pas de jugement normatif)
 - Performance acceptable (requêtes DB optimisées)
 - Transparence méthodologique (expliquer clairement le calcul)
@@ -30,12 +33,14 @@ Comment quantifier le "poids décisif" d'un vote individuel dans un scrutin parl
 Adopter une approche binaire basée sur la **marge de victoire absolue** avec un **seuil de 10 voix**.
 
 **Formule** :
+
 ```typescript
-margin = ABS(total_for - total_against)
-is_tight_vote = margin <= 10  // Seuil paramétrable en UI (5, 10, 20)
+margin = ABS(total_for - total_against);
+is_tight_vote = margin <= 10; // Seuil paramétrable en UI (5, 10, 20)
 ```
 
 **Implémentation** :
+
 - Ajouter colonne `scrutins.margin` INTEGER (pré-calculée lors de l'import)
 - Index `scrutins_margin_idx` pour performance
 - Helper `getTightScrutins(threshold, legislatureCondition)`
@@ -43,6 +48,7 @@ is_tight_vote = margin <= 10  // Seuil paramétrable en UI (5, 10, 20)
 - Page dédiée `/an/scrutins/serres` avec filtres
 
 **Wording retenu** : "Vote serré" (neutre) au lieu de "vote décisif" (dramatique)
+
 - Cohérent avec "autonomie de vote" (Phase 1.2) vs "dissidence"
 - Factuel et transparent
 - Évite jugement normatif
@@ -54,15 +60,16 @@ Ajouter analyse des **groupes pivot** comme enrichissement complémentaire.
 **Définition groupe pivot** : Groupe dont le basculement complet (tous ses votes "pour" → "contre" ou inversement) inverse le résultat du scrutin.
 
 **Formule** :
+
 ```typescript
 for (group of groups) {
   group_votes_for = COUNT(votes WHERE group_id = group AND position = 'pour')
   group_votes_against = COUNT(votes WHERE group_id = group AND position = 'contre')
-  
+
   // Hypothèse : basculement complet du groupe
   hypothetical_for = total_for - group_votes_for + group_votes_against
   hypothetical_against = total_against - group_votes_against + group_votes_for
-  
+
   // Le groupe est pivot si le résultat s'inverse
   original_result = total_for > total_against
   hypothetical_result = hypothetical_for > hypothetical_against
@@ -71,6 +78,7 @@ for (group of groups) {
 ```
 
 **Implémentation** :
+
 - Helper `getPivotGroups(scrutinId)` (pas de colonne, calcul à la volée)
 - Section dédiée "Groupes pivot" sur page scrutin détail
 - Complète l'analyse sans complexifier le concept de base
@@ -78,9 +86,11 @@ for (group of groups) {
 ## Options considérées
 
 ### 1. Margin Simple (CHOISIE - MVP)
+
 **Score** : 119/140
 
 **Avantages** :
+
 - ✅ Simplicité maximale (1 soustraction)
 - ✅ Transparence totale pour citoyens
 - ✅ Pré-calculable et indexable
@@ -88,12 +98,14 @@ for (group of groups) {
 - ✅ Aucune dépendance externe
 
 **Inconvénients** :
+
 - ❌ Binaire (pas de nuance entre 1 voix et 10 voix)
 - ❌ Seuil arbitraire (10 voix = choix éditorial)
 
 **Justification choix** : Pour un projet citoyen, simplicité et transparence priment sur sophistication mathématique.
 
 ### 2. Poids Inversement Proportionnel
+
 **Score** : 104/140 - **REJETÉE**
 
 **Formule** : `weight = (max_margin - margin) / max_margin`
@@ -101,11 +113,13 @@ for (group of groups) {
 **Raison rejet** : Complexité intermédiaire sans bénéfice clair. Le paramètre `max_margin` reste aussi arbitraire que le seuil binaire, mais moins compréhensible pour citoyens.
 
 ### 3. Indice de Banzhaf (Théorie des jeux)
+
 **Score** : 77/140 - **RÉFÉRENCE ACADÉMIQUE UNIQUEMENT**
 
 **Description** : Calcule probabilité qu'un vote soit "pivot" (change le résultat) dans toutes les coalitions possibles.
 
-**Raison non-implémentation** : 
+**Raison non-implémentation** :
+
 - Complexité algorithmique exponentielle (2^n coalitions)
 - Gain marginal faible pour citoyens vs effort
 - Utilisé comme **référence théorique** dans documentation méthodologique
@@ -113,11 +127,13 @@ for (group of groups) {
 **Utilisation** : Documentation transparente citant Banzhaf/Shapley comme fondement académique sans implémentation complète.
 
 ### 4. Groupes Pivot (CHOISIE - Enrichissement Phase 2)
+
 **Score** : 97/140
 
 **Justification** : Complémentaire à Option 1, apporte analyse politique/journalistique sans complexifier le concept de base.
 
 ### 5. Hybride Seuil Absolu + Relatif
+
 **Score** : 106/140 - **REJETÉE**
 
 **Formule** : `is_decisive = margin <= min(10, 0.05 * total_voters)`
@@ -142,6 +158,7 @@ for (group of groups) {
 ### Cas particuliers
 
 **Égalité parfaite (margin = 0)** : 71 scrutins
+
 - Badge spécial "Égalité parfaite" (couleur distincte)
 - Tous les votes sont strictement décisifs
 
@@ -160,10 +177,8 @@ for (group of groups) {
 
 1. **Seuil arbitraire (10 voix)**
    - Mitigation : Paramétrable en UI, justification empirique (10.1% des scrutins)
-   
 2. **Poids binaire (pas de nuance)**
    - Mitigation : Phase 2 (Pivot Groups) apporte nuance complémentaire
-   
 3. **Ignore composition par groupe**
    - Mitigation : Phase 2 dédiée à l'analyse coalitions
 
@@ -195,6 +210,7 @@ for (group of groups) {
 ### Documentation méthodologique
 
 Créer page `/methodologie/votes-serres` expliquant :
+
 - Définition du "vote serré" (margin ≤ 10 voix)
 - Justification du seuil (distribution empirique)
 - Ce que la métrique **mesure** (proximité du résultat)
@@ -214,19 +230,19 @@ Si retour utilisateurs/chercheurs le justifie :
 
 ## Distribution estimée (17 881 scrutins)
 
-| Catégorie margin | Scrutins | % | Label UI |
-|------------------|----------|---|----------|
-| = 0 | 71 | 0.4% | "Égalité parfaite" |
-| 1-5 | ~630 | 3.5% | "Très serré" |
-| 6-10 | ~1 100 | 6.2% | "Serré" |
-| > 10 | ~16 080 | 89.9% | (pas de badge) |
+| Catégorie margin | Scrutins | %     | Label UI           |
+| ---------------- | -------- | ----- | ------------------ |
+| = 0              | 71       | 0.4%  | "Égalité parfaite" |
+| 1-5              | ~630     | 3.5%  | "Très serré"       |
+| 6-10             | ~1 100   | 6.2%  | "Serré"            |
+| > 10             | ~16 080  | 89.9% | (pas de badge)     |
 
 ## Références
 
 - **Roadmap** : Section 4.2 - Votes décisifs (`docs/ROADMAP2.md`)
 - **Exploration** : `exploration-decisive-votes-2026-02-02.md`
 - **Workflow** : `workflow-current.md`
-- **Règles projet** : 
+- **Règles projet** :
   - `no-hardcoding-rule.md`
   - `database-queries-factorization.md`
   - `ui-best-practices.md` (AsyncCard pattern)
@@ -242,6 +258,7 @@ Si retour utilisateurs/chercheurs le justifie :
 **Décision approuvée** : En attente validation utilisateur
 
 **Critères validation** :
+
 - [ ] Wording "vote serré" validé vs "vote décisif"
 - [ ] Seuil 10 voix acceptable
 - [ ] MVP Phase 1 suffisant avant enrichissement Phase 2

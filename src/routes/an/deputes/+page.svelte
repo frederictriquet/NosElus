@@ -5,8 +5,11 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let searchInput = $state(data.filters.search);
+	// svelte-ignore state_referenced_locally
 	let deputies = $state(data.deputies);
+	// svelte-ignore state_referenced_locally
 	let currentPage = $state(data.pagination.page);
 	let loading = $state(false);
 	let hasMore = $derived(currentPage < data.pagination.totalPages);

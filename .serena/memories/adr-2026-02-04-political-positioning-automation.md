@@ -14,6 +14,7 @@
 Les pages `/an/carte` et `/pe/carte` contiennent des tableaux hardcodés (`spectrumOrder`) avec 71 identifiants/noms de groupes politiques pour ordonner les partis sur l'échiquier gauche-droite.
 
 **Fichiers concernés** :
+
 - `src/routes/an/carte/+page.svelte` : 33 IDs hardcodés (lignes 18-32)
 - `src/routes/pe/carte/+page.svelte` : 38 IDs hardcodés (lignes 19-38)
 
@@ -81,33 +82,33 @@ Les pages `/an/carte` et `/pe/carte` contiennent des tableaux hardcodés (`spect
 
 ### Option 1 : Choix de la source
 
-| Option | Score | Avantages | Inconvénients |
-|--------|-------|-----------|---------------|
-| **1A. ParlGov** ✅ | **4.8/5** | Format simple (CSV), 1700+ partis, documentation claire, projet actif | Positions statiques (pas d'évolution dans le temps) |
-| 1B. IPWE/QoG | 3.3/5 | Focus polarisation | Accès complexe, moins parties, documentation fragmentée |
-| 1C. ELFF/Manifesto | 3.0/5 | Multi-dimensionnel | Complexité élevée, formats multiples, overhead |
+| Option             | Score     | Avantages                                                             | Inconvénients                                           |
+| ------------------ | --------- | --------------------------------------------------------------------- | ------------------------------------------------------- |
+| **1A. ParlGov** ✅ | **4.8/5** | Format simple (CSV), 1700+ partis, documentation claire, projet actif | Positions statiques (pas d'évolution dans le temps)     |
+| 1B. IPWE/QoG       | 3.3/5     | Focus polarisation                                                    | Accès complexe, moins parties, documentation fragmentée |
+| 1C. ELFF/Manifesto | 3.0/5     | Multi-dimensionnel                                                    | Complexité élevée, formats multiples, overhead          |
 
 ### Option 2 : Algorithme de matching
 
-| Option | Score | Avantages | Inconvénients |
-|--------|-------|-----------|---------------|
-| 2A. Exact matching | 2.5/5 | Simple, rapide | Taux de succès <50% (variantes de noms) |
-| **2B. Fuzzy Jaccard** ✅ | **4.4/5** | Pattern existant, 90%+ succès, robuste aux variantes | Requiert normalisation NLP |
-| 2C. Semi-automatique | 4.0/5 | 100% précision | Table de mapping manuelle à maintenir |
+| Option                   | Score     | Avantages                                            | Inconvénients                           |
+| ------------------------ | --------- | ---------------------------------------------------- | --------------------------------------- |
+| 2A. Exact matching       | 2.5/5     | Simple, rapide                                       | Taux de succès <50% (variantes de noms) |
+| **2B. Fuzzy Jaccard** ✅ | **4.4/5** | Pattern existant, 90%+ succès, robuste aux variantes | Requiert normalisation NLP              |
+| 2C. Semi-automatique     | 4.0/5     | 100% précision                                       | Table de mapping manuelle à maintenir   |
 
 ### Option 3 : Stockage
 
-| Option | Score | Avantages | Inconvénients |
-|--------|-------|-----------|---------------|
+| Option                                  | Score     | Avantages                             | Inconvénients                    |
+| --------------------------------------- | --------- | ------------------------------------- | -------------------------------- |
 | **3A. Colonne `political_position`** ✅ | **4.5/5** | Simple, requêtes rapides, pas de JOIN | Pas d'historique des changements |
-| 3B. Table séparée | 3.2/5 | Historique, versioning | Complexité accrue, JOIN requis |
+| 3B. Table séparée                       | 3.2/5     | Historique, versioning                | Complexité accrue, JOIN requis   |
 
 ### Option 4 : Gestion des non-matchés
 
-| Option | Score | Avantages | Inconvénients |
-|--------|-------|-----------|---------------|
-| 4A. Position par défaut (999) | 3.0/5 | Simple | Perd info pour NI légitimes |
-| 4B. Dernière valeur connue | 3.5/5 | Continuité | Complexe pour nouveaux partis |
+| Option                                       | Score     | Avantages                    | Inconvénients                          |
+| -------------------------------------------- | --------- | ---------------------------- | -------------------------------------- |
+| 4A. Position par défaut (999)                | 3.0/5     | Simple                       | Perd info pour NI légitimes            |
+| 4B. Dernière valeur connue                   | 3.5/5     | Continuité                   | Complexe pour nouveaux partis          |
 | **4C. Heuristiques (NI=999, défaut=5.0)** ✅ | **4.3/5** | Équilibre logique/simplicité | Positions centrées pas toujours justes |
 
 ---
@@ -234,6 +235,7 @@ Si ParlGov devient insuffisant :
 4. **Historique** : Migrer vers table séparée `organ_positions(organ_id, date, position)`
 
 Critères de réévaluation :
+
 - Taux de matching <80% sur nouveaux partis
 - Demande utilisateur pour historique des évolutions
 - Disponibilité d'une source plus complète/récente
@@ -261,8 +263,8 @@ Critères de réévaluation :
 
 ## Historique des décisions
 
-| Date | Changement | Raison |
-|------|------------|--------|
+| Date       | Changement        | Raison                                    |
+| ---------- | ----------------- | ----------------------------------------- |
 | 2026-02-04 | Décision initiale | Violation `no-hardcoding-rule` identifiée |
 
 ---

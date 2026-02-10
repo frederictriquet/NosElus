@@ -34,10 +34,10 @@ const list = await fetchHTV<HTVVoteListResponse>('/votes?page=1');
 Extrait le numéro de législature depuis une référence de procédure.
 
 ```typescript
-extractTermFromReference('A10-0270/2025');      // 10
-extractTermFromReference('B9-0063/2026');       // 9
-extractTermFromReference('RC-B10-0071/2026');  // 10 (références composites)
-extractTermFromReference('2024/1234');         // null (pas de pattern)
+extractTermFromReference('A10-0270/2025'); // 10
+extractTermFromReference('B9-0063/2026'); // 9
+extractTermFromReference('RC-B10-0071/2026'); // 10 (références composites)
+extractTermFromReference('2024/1234'); // null (pas de pattern)
 ```
 
 **Patterns supportés** : `A{term}-`, `B{term}-`, `C{term}-` (ex: A9-, B10-, RC-B10-)
@@ -47,9 +47,9 @@ extractTermFromReference('2024/1234');         // null (pas de pattern)
 Génère un ID unique de loi au format `LWPE{term}-{reference-avec-tirets}`.
 
 ```typescript
-generateLawId('A9-0045/2024', 10);       // 'LWPE9-A9-0045-2024'
-generateLawId('RC-B10-0071/2026', 10);  // 'LWPE10-RC-B10-0071-2026'
-generateLawId('2024/1234', 10);         // 'LWPE10-2024-1234' (fallback)
+generateLawId('A9-0045/2024', 10); // 'LWPE9-A9-0045-2024'
+generateLawId('RC-B10-0071/2026', 10); // 'LWPE10-RC-B10-0071-2026'
+generateLawId('2024/1234', 10); // 'LWPE10-2024-1234' (fallback)
 ```
 
 **⚠️ CRITIQUE** : Cette fonction doit produire des IDs **identiques** dans `votes.ts` et `laws.ts` pour garantir le lien `scrutins.lawId` ↔ `laws.id`.
@@ -111,7 +111,7 @@ npm test europarl
 ```typescript
 // config.ts
 export const PE_SOURCES = {
-  howTheyVoteApiUrl: 'https://howtheyvote.eu/api'
+	howTheyVoteApiUrl: 'https://howtheyvote.eu/api'
 };
 ```
 

@@ -13,11 +13,7 @@ export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
 export { adminSettings, type AdminSetting, type NewAdminSetting } from './admin-settings';
 export { tags, type Tag, type NewTag } from './tags';
 export { lawTags, type LawTag, type NewLawTag } from './law-tags';
-export {
-	lawTextSkipList,
-	type LawTextSkip,
-	type NewLawTextSkip
-} from './law-text-skip-list';
+export { lawTextSkipList, type LawTextSkip, type NewLawTextSkip } from './law-text-skip-list';
 
 // Relations
 export {

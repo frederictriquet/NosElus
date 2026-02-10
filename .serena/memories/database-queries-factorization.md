@@ -28,10 +28,10 @@ const groups = await db.select({...}).from(mandates).innerJoin(organs, ...).wher
 ```typescript
 // src/lib/server/api/helpers.ts
 export async function getANGroupsWithMemberCount(
-  legislature: string,
-  referenceDate: string
+	legislature: string,
+	referenceDate: string
 ): Promise<GroupWithMemberCount[]> {
-  // Requête unique, testée, maintenue à un seul endroit
+	// Requête unique, testée, maintenue à un seul endroit
 }
 
 // /an/groupes/+page.server.ts

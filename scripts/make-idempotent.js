@@ -39,16 +39,10 @@ function makeIdempotent(sql) {
 	result = result.replace(/CREATE TABLE "(\w+)"/g, 'CREATE TABLE IF NOT EXISTS "$1"');
 
 	// CREATE INDEX → CREATE INDEX IF NOT EXISTS
-	result = result.replace(
-		/CREATE INDEX "(\w+)"/g,
-		'CREATE INDEX IF NOT EXISTS "$1"'
-	);
+	result = result.replace(/CREATE INDEX "(\w+)"/g, 'CREATE INDEX IF NOT EXISTS "$1"');
 
 	// CREATE UNIQUE INDEX → CREATE UNIQUE INDEX IF NOT EXISTS
-	result = result.replace(
-		/CREATE UNIQUE INDEX "(\w+)"/g,
-		'CREATE UNIQUE INDEX IF NOT EXISTS "$1"'
-	);
+	result = result.replace(/CREATE UNIQUE INDEX "(\w+)"/g, 'CREATE UNIQUE INDEX IF NOT EXISTS "$1"');
 
 	// ALTER TABLE ... ADD COLUMN → ADD COLUMN IF NOT EXISTS
 	result = result.replace(

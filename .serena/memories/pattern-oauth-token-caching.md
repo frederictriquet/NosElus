@@ -16,74 +16,74 @@ Implémenter un cache de token en mémoire avec gestion automatique de l'expirat
 
 ```typescript
 class ApiClient {
-  private tokenCache: {
-    token: string;
-    expiresAt: number; // timestamp en millisecondes
-  } | null = null;
+	private tokenCache: {
+		token: string;
+		expiresAt: number; // timestamp en millisecondes
+	} | null = null;
 
-  /**
-   * Récupère un access token valide, depuis le cache si possible,
-   * sinon via l'endpoint OAuth
-   */
-  private async getAccessToken(): Promise<string> {
-    // 1. Vérifier si le cache existe et est encore valide
-    if (this.tokenCache && Date.now() < this.tokenCache.expiresAt) {
-      return this.tokenCache.token;
-    }
+	/**
+	 * Récupère un access token valide, depuis le cache si possible,
+	 * sinon via l'endpoint OAuth
+	 */
+	private async getAccessToken(): Promise<string> {
+		// 1. Vérifier si le cache existe et est encore valide
+		if (this.tokenCache && Date.now() < this.tokenCache.expiresAt) {
+			return this.tokenCache.token;
+		}
 
-    // 2. Requête OAuth pour obtenir un nouveau token
-    const response = await fetch(this.oauthUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        scope: this.scope || ''
-      })
-    });
+		// 2. Requête OAuth pour obtenir un nouveau token
+		const response = await fetch(this.oauthUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+				grant_type: 'client_credentials',
+				client_id: this.clientId,
+				client_secret: this.clientSecret,
+				scope: this.scope || ''
+			})
+		});
 
-    if (!response.ok) {
-      throw new Error(`OAuth failed: ${response.status}`);
-    }
+		if (!response.ok) {
+			throw new Error(`OAuth failed: ${response.status}`);
+		}
 
-    const data = await response.json();
-    const accessToken = data.access_token;
-    const expiresIn = data.expires_in; // en secondes
+		const data = await response.json();
+		const accessToken = data.access_token;
+		const expiresIn = data.expires_in; // en secondes
 
-    // 3. Mettre en cache avec marge de sécurité (60s avant expiration)
-    this.tokenCache = {
-      token: accessToken,
-      expiresAt: Date.now() + (expiresIn * 1000) - 60000
-    };
+		// 3. Mettre en cache avec marge de sécurité (60s avant expiration)
+		this.tokenCache = {
+			token: accessToken,
+			expiresAt: Date.now() + expiresIn * 1000 - 60000
+		};
 
-    return accessToken;
-  }
+		return accessToken;
+	}
 
-  /**
-   * Requête API utilisant le token OAuth
-   */
-  public async apiRequest(endpoint: string): Promise<any> {
-    const token = await this.getAccessToken();
-    
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+	/**
+	 * Requête API utilisant le token OAuth
+	 */
+	public async apiRequest(endpoint: string): Promise<any> {
+		const token = await this.getAccessToken();
 
-    if (response.status === 401) {
-      // Token invalide/expiré malgré le cache
-      // Invalider le cache et réessayer une fois
-      this.tokenCache = null;
-      return this.apiRequest(endpoint);
-    }
+		const response = await fetch(`${this.baseUrl}${endpoint}`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
 
-    return response.json();
-  }
+		if (response.status === 401) {
+			// Token invalide/expiré malgré le cache
+			// Invalider le cache et réessayer une fois
+			this.tokenCache = null;
+			return this.apiRequest(endpoint);
+		}
+
+		return response.json();
+	}
 }
 ```
 
@@ -93,7 +93,8 @@ class ApiClient {
 
 **Pourquoi** : Soustraire 60 secondes (`- 60000` ms) de l'expiration nominale.
 
-**Raison** : 
+**Raison** :
+
 - Éviter les race conditions (requête lancée juste avant expiration)
 - Compenser les délais réseau
 - Prévenir les échecs 401 en production
@@ -103,23 +104,27 @@ class ApiClient {
 ### 2. Cache en Mémoire
 
 **Avantages** :
+
 - Simple à implémenter
 - Pas de dépendance externe (Redis, etc.)
 - Performant (accès instantané)
 
 **Limites** :
+
 - Cache perdu au redémarrage du process
 - Non partagé entre instances (scaling horizontal)
 
 **Quand c'est OK** :
+
 - Scripts ETL (single-process)
 - API peu sollicitée
 - Développement/testing
 
 **Quand ce n'est PAS OK** :
+
 - Application multi-instance en production
 - Load balancer avec plusieurs workers
-→ Utiliser Redis ou autre cache distribué
+  → Utiliser Redis ou autre cache distribué
 
 ### 3. Gestion 401 (Token Invalide)
 
@@ -127,8 +132,8 @@ class ApiClient {
 
 ```typescript
 if (response.status === 401) {
-  this.tokenCache = null; // Invalider
-  return this.apiRequest(endpoint); // Réessayer UNE fois
+	this.tokenCache = null; // Invalider
+	return this.apiRequest(endpoint); // Réessayer UNE fois
 }
 ```
 
@@ -207,6 +212,7 @@ private async getAccessToken(): Promise<string> {
 **Code** : `src/lib/server/etl/sources/legifrance/client.ts`
 
 **Résultats** :
+
 - Avant : 1 requête OAuth par appel API (50 calls = 50 OAuth)
 - Après : 1 requête OAuth par heure (50 calls = 1 OAuth)
 - **Gain** : 98% de réduction des appels OAuth
@@ -242,7 +248,7 @@ private async getAccessToken(): Promise<string> {
 
   this.oauthRequestCount++;
   console.log(`OAuth requests: ${this.oauthRequestCount}/${this.apiRequestCount} API requests`);
-  
+
   // ... fetch token ...
 }
 

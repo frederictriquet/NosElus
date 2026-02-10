@@ -3,6 +3,7 @@
 ## Vue d'ensemble
 
 Le quiz politique permet aux citoyens de découvrir leur alignement avec les groupes parlementaires en votant sur de vraies lois. Disponible pour :
+
 - **Assemblée nationale** : `/an/quiz`
 - **Parlement européen** : `/pe/quiz`
 
@@ -49,15 +50,15 @@ export const load = async () => loadQuizData('PE-10');
 
 ```typescript
 interface QuizChamberConfig {
-  chamber: 'an' | 'pe';
-  legislature: string;        // '17' | 'PE-10'
-  basePath: string;           // '/an/quiz' | '/pe/quiz'
-  resultsPath: string;        // '/an/quiz/resultats' | '/pe/quiz/resultats'
-  lawBasePath: string;        // '/an/laws' | '/pe/scrutins'
-  chamberLabel: string;       // "l'Assemblée nationale" | "le Parlement européen"
-  periodLabel: string;        // "législature 17" | "terme 10"
-  storageKey: string;         // Clé localStorage pour votes
-  sessionKey: string;         // Clé localStorage pour session
+	chamber: 'an' | 'pe';
+	legislature: string; // '17' | 'PE-10'
+	basePath: string; // '/an/quiz' | '/pe/quiz'
+	resultsPath: string; // '/an/quiz/resultats' | '/pe/quiz/resultats'
+	lawBasePath: string; // '/an/laws' | '/pe/scrutins'
+	chamberLabel: string; // "l'Assemblée nationale" | "le Parlement européen"
+	periodLabel: string; // "législature 17" | "terme 10"
+	storageKey: string; // Clé localStorage pour votes
+	sessionKey: string; // Clé localStorage pour session
 }
 ```
 
@@ -66,11 +67,13 @@ interface QuizChamberConfig {
 ### 1. Chargement des lois éligibles
 
 **Server-side** (`load-quiz-data.ts`) :
+
 - Récupère les lois avec résumé LLM + au moins 1 scrutin
 - Charge les tags en batch (évite N+1 queries)
 - Retourne `allLaws` + `availableTags`
 
 **Client-side** (`quiz-selection.ts`) :
+
 - Stratification par tags pour diversité thématique
 - Mélange aléatoire (Fisher-Yates)
 - Sélection de N lois pour le quiz
@@ -86,11 +89,13 @@ interface QuizChamberConfig {
 ### 3. Calcul d'alignement
 
 **Algorithme Jaccard** (similarité simple) :
+
 ```typescript
-alignmentScore = (votes_communs / total_votes) * 100
+alignmentScore = (votes_communs / total_votes) * 100;
 ```
 
 **Exemple** :
+
 - User : [pour, contre, pour, contre, pour]
 - Groupe A : [pour, contre, contre, contre, pour]
 - Accord : 3/5 = **60%**
@@ -119,6 +124,7 @@ npm run etl:analyze-laws -- --legislature PE-10
 ```
 
 **Fichiers** :
+
 - `src/lib/server/etl/sources/europarl/laws.ts` - Import procédures depuis API HTV
 - `src/lib/server/etl/sources/europarl/law-texts.ts` - Enrichissement descriptions
 - `scripts/etl/enrich-europarl-law-texts.ts` - CLI enrichissement
@@ -137,6 +143,7 @@ Stratégie : combine toutes les sources disponibles, limite à 50 000 chars.
 **Problème** : Les groupes PE ont `legislature = '10'` (table `organs`) alors que scrutins/lois PE ont `legislature = 'PE-10'`.
 
 **Solution** : Helper `getOrgansLegislature()` dans `config.ts` :
+
 ```typescript
 // Convertit 'PE-10' → '10' pour requêtes sur organs
 const organsLegislature = getOrgansLegislature(legislature);
@@ -147,10 +154,12 @@ const organsLegislature = getOrgansLegislature(legislature);
 ### Tests d'intégration
 
 **API group-votes** (`src/routes/api/quiz/group-votes/group-votes.test.ts`) :
+
 - 13 tests couvrant validation inputs, AN, PE, edge cases, performance
 - Utilise la vraie DB (pattern `pattern-integration-tests-real-db`)
 
 **ETL enrichment** (`src/lib/server/etl/sources/europarl/__tests__/enrichment.test.ts`) :
+
 - 11 tests validant descriptions enrichies > 500 chars
 - Vérifie lois PE spécifiques (A10-0215, A9-0048, A9-0355)
 - Qualité : pas de HTML, contenu lisible, structuré
@@ -158,6 +167,7 @@ const organsLegislature = getOrgansLegislature(legislature);
 ### Tests E2E
 
 **Playwright** (`tests/e2e/quiz-pe.test.ts`) :
+
 - 15 tests du parcours complet : intro → vote → résultats → restart
 - Skippés en CI (nécessitent DB), à exécuter localement
 
@@ -181,21 +191,24 @@ npm run test:e2e -- quiz-pe.test.ts
 #### Ajouter une nouvelle chambre
 
 1. Créer la config dans `src/lib/quiz/config.ts` :
+
 ```typescript
 export const SENAT_QUIZ_CONFIG: QuizChamberConfig = {
-  chamber: 'senat',
-  legislature: 'S2024',
-  // ...
+	chamber: 'senat',
+	legislature: 'S2024'
+	// ...
 };
 ```
 
 2. Créer les routes :
+
 ```svelte
 <!-- src/routes/senat/quiz/+page.svelte -->
 <QuizPage config={SENAT_QUIZ_CONFIG} {data} />
 ```
 
 3. Load data :
+
 ```typescript
 // src/routes/senat/quiz/+page.server.ts
 export const load = async () => loadQuizData('S2024');
@@ -208,11 +221,8 @@ C'est tout ! Zéro duplication de code.
 Fichier : `src/lib/utils/alignment.ts`
 
 ```typescript
-export function calculateAlignment(
-  userVotes: Vote[],
-  groupVotes: Vote[]
-): number {
-  // Implémenter nouvelle formule ici
+export function calculateAlignment(userVotes: Vote[], groupVotes: Vote[]): number {
+	// Implémenter nouvelle formule ici
 }
 ```
 
@@ -277,13 +287,16 @@ npm run etl:analyze-laws -- --legislature PE-10 --force
 ### Debugging
 
 **Votes non trouvés** :
+
 - Vérifier que `scrutins.groupResults` est non NULL
 - Vérifier le mapping legislature (PE-10 vs 10)
 
 **Lois manquantes** :
+
 - Vérifier existence de `law_summaries` (requis pour éligibilité)
 - Vérifier qu'il y a au moins 1 scrutin lié
 
 **Score d'alignement incorrect** :
+
 - Inspecter localStorage : `noselus-quiz-pe-votes`
 - Vérifier l'API `/api/quiz/group-votes` retourne les bons groupResults

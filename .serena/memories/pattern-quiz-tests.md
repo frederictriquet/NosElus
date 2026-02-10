@@ -5,6 +5,7 @@
 ## Contexte
 
 Suite de tests pour le quiz politique multi-chambre (Assemblée Nationale et Parlement Européen). Les tests couvrent :
+
 - L'API `/api/quiz/group-votes` (calcul des votes majoritaires)
 - Le module ETL `law-texts.ts` (enrichissement textes PE)
 - Le parcours E2E utilisateur complet
@@ -18,6 +19,7 @@ Suite de tests pour le quiz politique multi-chambre (Assemblée Nationale et Par
 **Pattern** : Tests d'intégration avec vraie DB (pas de mocks)
 
 **Structure** :
+
 ```typescript
 describe('/api/quiz/group-votes - Integration', () => {
   let anLawIds: string[] = [];
@@ -60,6 +62,7 @@ describe('/api/quiz/group-votes - Integration', () => {
 5. **Performance test** : 20 lois doivent être traitées en < 2s
 
 **Cas Testés** :
+
 - ✅ Validation entrées (lawIds manquant, vide, pas array, JSON invalide)
 - ✅ Legislature AN par défaut (17)
 - ✅ Legislature PE avec conversion (PE-10 → 10)
@@ -76,60 +79,63 @@ describe('/api/quiz/group-votes - Integration', () => {
 **Pattern** : Unit tests avec mocks (fetch, DB, fs)
 
 **Mocks** :
+
 ```typescript
 // Mock fetch global
 global.fetch = vi.fn();
 
 // Mock DB
 vi.mock('$lib/server/db', () => ({
-  db: {
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    // ...
-  }
+	db: {
+		select: vi.fn().mockReturnThis(),
+		update: vi.fn().mockReturnThis()
+		// ...
+	}
 }));
 
 // Mock fs
 vi.mock('fs', () => ({
-  readFileSync: vi.fn(),
-  readdirSync: vi.fn(() => [])
+	readFileSync: vi.fn(),
+	readdirSync: vi.fn(() => [])
 }));
 ```
 
 **Structure** :
+
 ```typescript
 describe('law-texts ETL', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-  describe('enrichPELawTexts - Integration scenarios', () => {
-    // Tests avec mocks de DB, cache HTV, fetch
-  });
+	describe('enrichPELawTexts - Integration scenarios', () => {
+		// Tests avec mocks de DB, cache HTV, fetch
+	});
 
-  describe('Source prioritization', () => {
-    // Summary > Press > Snippet > Report
-  });
+	describe('Source prioritization', () => {
+		// Summary > Press > Snippet > Report
+	});
 
-  describe('HTML cleaning', () => {
-    // Test cases pour cleanHtml()
-  });
+	describe('HTML cleaning', () => {
+		// Test cases pour cleanHtml()
+	});
 
-  describe('Description building', () => {
-    // Format des sections, headers, etc.
-  });
+	describe('Description building', () => {
+		// Format des sections, headers, etc.
+	});
 
-  describe('Edge cases', () => {
-    // JSON malformé, HTTP errors, timeout
-  });
+	describe('Edge cases', () => {
+		// JSON malformé, HTTP errors, timeout
+	});
 
-  describe('Dry-run mode', () => {
-    // db.update() jamais appelé
-  });
+	describe('Dry-run mode', () => {
+		// db.update() jamais appelé
+	});
 });
 ```
 
 **Cas Testés** :
+
 - ✅ Skip si pas de reference
 - ✅ Skip si description existante > 200 chars
 - ✅ Skip si pas de cache HTV
@@ -148,23 +154,25 @@ describe('law-texts ETL', () => {
 **Pattern** : Parcours utilisateur end-to-end
 
 **Setup** :
+
 ```typescript
 test.describe.skip('Quiz PE - E2E Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/pe/quiz');
-    await page.evaluate(() => {
-      localStorage.removeItem('noselus-quiz-pe-votes');
-      localStorage.removeItem('noselus-quiz-pe-session');
-    });
-  });
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/pe/quiz');
+		await page.evaluate(() => {
+			localStorage.removeItem('noselus-quiz-pe-votes');
+			localStorage.removeItem('noselus-quiz-pe-session');
+		});
+	});
 
-  // Tests...
+	// Tests...
 });
 ```
 
 **Note** : `.skip()` car nécessite la DB (fail en CI sans DB)
 
 **Cas Testés** :
+
 - ✅ Affichage page intro quiz
 - ✅ Démarrage quiz → affichage première loi
 - ✅ Vote et progression à loi suivante
@@ -183,18 +191,20 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 **Techniques E2E** :
 
 1. **Injection localStorage pour tests rapides** :
+
 ```typescript
 await page.evaluate(() => {
-  const mockQuizState = {
-    laws: [{ id: 'LWPE10-TEST1', title: 'Test', shortTitle: 'T' }],
-    votes: [{ lawId: 'LWPE10-TEST1', position: 'pour' }],
-    abstainedLawIds: []
-  };
-  localStorage.setItem('noselus-quiz-pe-votes', JSON.stringify(mockQuizState));
+	const mockQuizState = {
+		laws: [{ id: 'LWPE10-TEST1', title: 'Test', shortTitle: 'T' }],
+		votes: [{ lawId: 'LWPE10-TEST1', position: 'pour' }],
+		abstainedLawIds: []
+	};
+	localStorage.setItem('noselus-quiz-pe-votes', JSON.stringify(mockQuizState));
 });
 ```
 
 2. **Selectors flexibles** :
+
 ```typescript
 // Accepte plusieurs variantes de texte
 const button = page.locator('button').filter({ hasText: /Pour|Favorable/i });
@@ -204,27 +214,29 @@ const card = page.locator('.quiz-card, .law-card, [data-testid="law-title"]');
 ```
 
 3. **Attentes avec timeout** :
+
 ```typescript
 const isVisible = await button.isVisible({ timeout: 1000 }).catch(() => false);
 if (!isVisible) break;
 ```
 
 4. **Validation conditionnelle** :
+
 ```typescript
 const hasProgress = await progress.count();
 if (hasProgress > 0) {
-  await expect(progress).toBeVisible();
+	await expect(progress).toBeVisible();
 }
 ```
 
 ## Couverture Globale
 
-| Type | Fichiers | Tests | Focus |
-|------|----------|-------|-------|
-| Integration | 1 | ~15 | API group-votes (AN + PE) |
-| Unit | 1 | ~20 | ETL law-texts (fetch, clean, build) |
-| E2E | 1 | ~15 | Parcours quiz PE complet |
-| **Total** | **3** | **~50** | **Quiz PE multi-chambre** |
+| Type        | Fichiers | Tests   | Focus                               |
+| ----------- | -------- | ------- | ----------------------------------- |
+| Integration | 1        | ~15     | API group-votes (AN + PE)           |
+| Unit        | 1        | ~20     | ETL law-texts (fetch, clean, build) |
+| E2E         | 1        | ~15     | Parcours quiz PE complet            |
+| **Total**   | **3**    | **~50** | **Quiz PE multi-chambre**           |
 
 ## Commandes
 
@@ -250,6 +262,7 @@ npm test -- --coverage
 ### 1. Tests intégration > mocks pour requêtes SQL complexes
 
 L'API `group-votes` fait :
+
 - Jointure scrutins × laws
 - Parse JSONB groupResults
 - Calcul majorityPosition
@@ -261,8 +274,8 @@ L'API `group-votes` fait :
 
 ```typescript
 if (anLawIds.length === 0) {
-  console.warn('No AN laws found, skipping test');
-  return; // Test passe sans fail
+	console.warn('No AN laws found, skipping test');
+	return; // Test passe sans fail
 }
 ```
 
@@ -275,8 +288,8 @@ global.fetch = vi.fn();
 
 // Dans le test
 (global.fetch as any).mockResolvedValue({
-  ok: true,
-  text: async () => '<html>...</html>'
+	ok: true,
+	text: async () => '<html>...</html>'
 });
 ```
 
@@ -309,11 +322,11 @@ await page.evaluate(() => {
 
 ```typescript
 function createMockRequest(body: any): Request {
-  return new Request('http://localhost/api/endpoint', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+	return new Request('http://localhost/api/endpoint', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body)
+	});
 }
 ```
 
@@ -326,8 +339,8 @@ expect(data).toHaveProperty('groups');
 
 // Chaque élément
 data.groups.forEach((group: any) => {
-  expect(group).toHaveProperty('id');
-  expect(group).toHaveProperty('name');
+	expect(group).toHaveProperty('id');
+	expect(group).toHaveProperty('name');
 });
 ```
 

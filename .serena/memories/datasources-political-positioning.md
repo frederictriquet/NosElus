@@ -45,16 +45,26 @@ Positions des partis dans plusieurs dimensions idéologiques.
 ```typescript
 // src/routes/an/carte/+page.svelte - lignes 18-32
 const spectrumOrder = [
-    'LFI-NFP', 'GDR', 'EcoS', 'SOC', 'LIOT',  // Gauche
-    'Dem', 'EPR', 'HOR',                        // Centre
-    'DR', 'AD', 'UDR', 'RN',                    // Droite
-    'NI'                                         // Non-inscrits
+	'LFI-NFP',
+	'GDR',
+	'EcoS',
+	'SOC',
+	'LIOT', // Gauche
+	'Dem',
+	'EPR',
+	'HOR', // Centre
+	'DR',
+	'AD',
+	'UDR',
+	'RN', // Droite
+	'NI' // Non-inscrits
 ];
 ```
 
 ## Priorité
 
 Basse - L'ordre codé en dur fonctionne. À implémenter si besoin de :
+
 - Support multi-législatures (groupes qui changent)
 - Cohérence automatique entre pages
 - Enrichissement avec données supplémentaires (score précis)

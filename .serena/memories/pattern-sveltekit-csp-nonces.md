@@ -5,6 +5,7 @@
 Lors de l'implémentation d'une Content Security Policy (CSP) stricte dans une application SvelteKit, les scripts inline nécessaires à l'hydratation de l'application sont bloqués par la directive `script-src 'self'`.
 
 **Symptômes** :
+
 - Console browser : "Content-Security-Policy : Les paramètres de la page ont empêché l'exécution d'un script intégré"
 - L'application ne s'hydrate pas correctement
 - Les composants Svelte ne sont pas interactifs
@@ -14,6 +15,7 @@ Lors de l'implémentation d'une Content Security Policy (CSP) stricte dans une a
 ## Contexte
 
 Utiliser ce pattern quand :
+
 - Vous implémentez des security headers HTTP dans une app SvelteKit
 - Vous voulez une CSP stricte sans `'unsafe-inline'`
 - Vous devez permettre les scripts d'hydratation de Svelte tout en bloquant les scripts malveillants
@@ -45,31 +47,31 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  preprocess: vitePreprocess(),
-  
-  kit: {
-    adapter: adapter(),
-    
-    // Content Security Policy avec nonces automatiques
-    csp: {
-      directives: {
-        'default-src': ['self'],
-        'img-src': [
-          'self',
-          'https://www.assemblee-nationale.fr',
-          'https://www.nosdeputes.fr',
-          'https://www.senat.fr',
-          'https://www.europarl.europa.eu',
-          'data:'
-        ],
-        'style-src': ['self', 'unsafe-inline'], // Requis pour Svelte scoped styles
-        'script-src': ['self'], // Nonces ajoutés automatiquement par SvelteKit
-        'connect-src': ['self'],
-        'font-src': ['self'],
-        'frame-ancestors': ['none']
-      }
-    }
-  }
+	preprocess: vitePreprocess(),
+
+	kit: {
+		adapter: adapter(),
+
+		// Content Security Policy avec nonces automatiques
+		csp: {
+			directives: {
+				'default-src': ['self'],
+				'img-src': [
+					'self',
+					'https://www.assemblee-nationale.fr',
+					'https://www.nosdeputes.fr',
+					'https://www.senat.fr',
+					'https://www.europarl.europa.eu',
+					'data:'
+				],
+				'style-src': ['self', 'unsafe-inline'], // Requis pour Svelte scoped styles
+				'script-src': ['self'], // Nonces ajoutés automatiquement par SvelteKit
+				'connect-src': ['self'],
+				'font-src': ['self'],
+				'frame-ancestors': ['none']
+			}
+		}
+	}
 };
 
 export default config;
@@ -89,14 +91,14 @@ Les headers non-CSP restent dans `src/hooks.server.ts` :
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const response = await resolve(event);
-  
-  // Headers de sécurité (CSP gérée par svelte.config.js)
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  return response;
+	const response = await resolve(event);
+
+	// Headers de sécurité (CSP gérée par svelte.config.js)
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+	return response;
 };
 ```
 
@@ -144,18 +146,21 @@ Les tests unitaires ne peuvent pas tester la CSP (gérée par SvelteKit au runti
 ## Pièges à éviter
 
 ❌ **Ne pas configurer la CSP manuellement dans hooks.server.ts**
+
 ```typescript
 // ❌ INCORRECT - Conflits avec svelte.config.js
 response.headers.set('Content-Security-Policy', '...');
 ```
 
 ❌ **Ne pas utiliser 'unsafe-inline' pour script-src**
+
 ```javascript
 // ❌ INCORRECT - Compromet la sécurité
 'script-src': ['self', 'unsafe-inline']
 ```
 
 ✅ **Laisser SvelteKit gérer les nonces**
+
 ```javascript
 // ✅ CORRECT
 'script-src': ['self'] // Nonces ajoutés automatiquement
@@ -175,6 +180,6 @@ response.headers.set('Content-Security-Policy', '...');
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                               |
+| ---------- | ------------------------------------------ |
 | 2026-02-02 | Création initiale (implémentation NosElus) |

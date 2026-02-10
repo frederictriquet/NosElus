@@ -9,12 +9,14 @@
 ## Contexte d'Usage
 
 **Quand utiliser ce pattern** :
+
 - Scripts ETL exécutés en tâche de fond (cron, CI)
 - Besoin de monitoring en temps réel du succès/échec
 - Statistiques d'import à communiquer automatiquement
 - Notifications mobiles pour les erreurs critiques
 
 **Avantages** :
+
 - ✅ Notification temps réel sur mobile
 - ✅ Pas de consultation manuelle des logs
 - ✅ Détection rapide des problèmes
@@ -36,17 +38,17 @@ import type { ImportStats } from '../../src/lib/server/etl/types.js';
 
 ```typescript
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
-  const config = getETLConfig();
-  
-  // Logique ETL
-  const stats = await importData(config);
-  
-  // Notification
-  await notifyETLComplete('nom-du-script', stats, {
-    dryRun,
-    legislature: config.legislature  // optionnel
-  });
+	const dryRun = process.argv.includes('--dry-run');
+	const config = getETLConfig();
+
+	// Logique ETL
+	const stats = await importData(config);
+
+	// Notification
+	await notifyETLComplete('nom-du-script', stats, {
+		dryRun,
+		legislature: config.legislature // optionnel
+	});
 }
 ```
 
@@ -54,40 +56,40 @@ async function main() {
 
 ```typescript
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
-  const config = getETLConfig();
-  
-  // Étape 1
-  const step1Stats = await importOrgans(config);
-  console.log(`Organes: ${step1Stats.inserted} imported`);
-  
-  // Étape 2
-  const step2Stats = await importActors(config);
-  console.log(`Acteurs: ${step2Stats.inserted} imported`);
-  
-  // Étape 3
-  const step3Stats = await importMandates(config);
-  console.log(`Mandats: ${step3Stats.inserted} imported`);
-  
-  // Combiner les stats
-  const combinedStats: ImportStats = {
-    total: step1Stats.total + step2Stats.total + step3Stats.total,
-    inserted: step1Stats.inserted + step2Stats.inserted + step3Stats.inserted,
-    updated: step1Stats.updated + step2Stats.updated + step3Stats.updated,
-    skipped: step1Stats.skipped + step2Stats.skipped + step3Stats.skipped,
-    errors: step1Stats.errors + step2Stats.errors + step3Stats.errors
-  };
-  
-  // Notification unique avec détails
-  await notifyETLComplete('import-all', combinedStats, {
-    dryRun,
-    legislature: config.legislature,
-    additionalInfo: {
-      organs: step1Stats.inserted,
-      actors: step2Stats.inserted,
-      mandates: step3Stats.inserted
-    }
-  });
+	const dryRun = process.argv.includes('--dry-run');
+	const config = getETLConfig();
+
+	// Étape 1
+	const step1Stats = await importOrgans(config);
+	console.log(`Organes: ${step1Stats.inserted} imported`);
+
+	// Étape 2
+	const step2Stats = await importActors(config);
+	console.log(`Acteurs: ${step2Stats.inserted} imported`);
+
+	// Étape 3
+	const step3Stats = await importMandates(config);
+	console.log(`Mandats: ${step3Stats.inserted} imported`);
+
+	// Combiner les stats
+	const combinedStats: ImportStats = {
+		total: step1Stats.total + step2Stats.total + step3Stats.total,
+		inserted: step1Stats.inserted + step2Stats.inserted + step3Stats.inserted,
+		updated: step1Stats.updated + step2Stats.updated + step3Stats.updated,
+		skipped: step1Stats.skipped + step2Stats.skipped + step3Stats.skipped,
+		errors: step1Stats.errors + step2Stats.errors + step3Stats.errors
+	};
+
+	// Notification unique avec détails
+	await notifyETLComplete('import-all', combinedStats, {
+		dryRun,
+		legislature: config.legislature,
+		additionalInfo: {
+			organs: step1Stats.inserted,
+			actors: step2Stats.inserted,
+			mandates: step3Stats.inserted
+		}
+	});
 }
 ```
 
@@ -97,15 +99,16 @@ async function main() {
 
 ```typescript
 interface ImportStats {
-  total: number;      // Nombre total d'entités traitées
-  inserted: number;   // Nouvelles entités créées
-  updated: number;    // Entités existantes mises à jour
-  skipped: number;    // Entités ignorées (déjà à jour, filtres)
-  errors: number;     // Échecs de traitement
+	total: number; // Nombre total d'entités traitées
+	inserted: number; // Nouvelles entités créées
+	updated: number; // Entités existantes mises à jour
+	skipped: number; // Entités ignorées (déjà à jour, filtres)
+	errors: number; // Échecs de traitement
 }
 ```
 
 **Règles de calcul** :
+
 - `total` = inserted + updated + skipped + errors
 - `successRate` = ((inserted + updated) / total) × 100
 
@@ -122,6 +125,7 @@ TELEGRAM_CHAT_ID=123456789
 ```
 
 **Obtention** :
+
 1. **Bot Token** : Telegram → @BotFather → `/newbot`
 2. **Chat ID** : Telegram → @userinfobot → `/start`
 
@@ -133,17 +137,19 @@ TELEGRAM_CHAT_ID=123456789
 
 ```typescript
 await notifyETLComplete('script', stats, {
-  dryRun: process.argv.includes('--dry-run')  // ⚠️ OBLIGATOIRE
+	dryRun: process.argv.includes('--dry-run') // ⚠️ OBLIGATOIRE
 });
 ```
 
 **Avec --dry-run** :
+
 ```
 [DRY-RUN] Would send Telegram notification for: import-actors
 [DRY-RUN] Stats: {"total":577,"inserted":450,...}
 ```
 
 **Sans --dry-run** :
+
 ```
 ✅ Telegram notification sent for: import-actors
 ```
@@ -155,6 +161,7 @@ await notifyETLComplete('script', stats, {
 ## Format des Messages
 
 ### Succès total (0 erreur)
+
 ```
 ✅ ETL Terminé: import-actors (AN-17)
 
@@ -168,6 +175,7 @@ await notifyETLComplete('script', stats, {
 ```
 
 ### Succès partiel (< 10% erreurs)
+
 ```
 ⚠️ ETL Terminé: import-scrutins (AN-17)
 
@@ -181,6 +189,7 @@ await notifyETLComplete('script', stats, {
 ```
 
 ### Échec significatif (≥ 10% erreurs)
+
 ```
 ❌ ETL Terminé: import-europarl-laws (PE-10)
 
@@ -203,20 +212,20 @@ await notifyETLComplete('script', stats, {
 let errors = 0;
 
 for (const item of items) {
-  try {
-    await processItem(item);
-  } catch (error) {
-    console.error(`Failed to process ${item.id}:`, error);
-    errors++;
-  }
+	try {
+		await processItem(item);
+	} catch (error) {
+		console.error(`Failed to process ${item.id}:`, error);
+		errors++;
+	}
 }
 
 const stats: ImportStats = {
-  total: items.length,
-  inserted: newItems.length,
-  updated: updatedItems.length,
-  skipped: skippedItems.length,
-  errors
+	total: items.length,
+	inserted: newItems.length,
+	updated: updatedItems.length,
+	skipped: skippedItems.length,
+	errors
 };
 ```
 
@@ -226,26 +235,26 @@ const stats: ImportStats = {
 let errors = 0;
 
 for (const item of items) {
-  try {
-    await processPrimary(item);
-  } catch (primaryError) {
-    // Tentative avec source alternative
-    let recovered = false;
-    
-    for (const fallback of fallbackSources) {
-      try {
-        await processFallback(item, fallback);
-        recovered = true;
-        break;
-      } catch {
-        continue;
-      }
-    }
-    
-    if (!recovered) {
-      errors++;  // Compter seulement si échec sur toutes les sources
-    }
-  }
+	try {
+		await processPrimary(item);
+	} catch (primaryError) {
+		// Tentative avec source alternative
+		let recovered = false;
+
+		for (const fallback of fallbackSources) {
+			try {
+				await processFallback(item, fallback);
+				recovered = true;
+				break;
+			} catch {
+				continue;
+			}
+		}
+
+		if (!recovered) {
+			errors++; // Compter seulement si échec sur toutes les sources
+		}
+	}
 }
 ```
 
@@ -263,7 +272,7 @@ await notifyETLComplete('script', stats);
 
 // CORRECT
 await notifyETLComplete('script', stats, {
-  dryRun: process.argv.includes('--dry-run')
+	dryRun: process.argv.includes('--dry-run')
 });
 ```
 
@@ -299,16 +308,16 @@ await notifyETLComplete('import-step3', step3Stats, { dryRun });
 
 // CORRECT (1 notification combinée)
 const combinedStats = {
-  total: step1Stats.total + step2Stats.total + step3Stats.total,
-  // ... autres champs ...
+	total: step1Stats.total + step2Stats.total + step3Stats.total
+	// ... autres champs ...
 };
 await notifyETLComplete('import-all', combinedStats, {
-  dryRun,
-  additionalInfo: {
-    step1: step1Stats.inserted,
-    step2: step2Stats.inserted,
-    step3: step3Stats.inserted
-  }
+	dryRun,
+	additionalInfo: {
+		step1: step1Stats.inserted,
+		step2: step2Stats.inserted,
+		step3: step3Stats.inserted
+	}
 });
 ```
 
@@ -335,6 +344,7 @@ Quand ajouter des notifications à un nouveau script ETL :
 ### Pas de notification reçue
 
 1. Vérifier les variables d'environnement :
+
    ```bash
    node -e "require('dotenv').config(); console.log(process.env.TELEGRAM_BOT_TOKEN)"
    ```
@@ -353,6 +363,7 @@ Quand ajouter des notifications à un nouveau script ETL :
 **Cause** : Variables manquantes dans `.env`
 
 **Solution** :
+
 1. Créer/compléter `.env` à la racine
 2. Ajouter `TELEGRAM_BOT_TOKEN` et `TELEGRAM_CHAT_ID`
 3. Relancer le script

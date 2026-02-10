@@ -37,6 +37,7 @@ Les anciens tokens ne sont plus valides.
 ## Exemples
 
 ### Ajout de fonctionnalité (0.1.0 → 0.2.0)
+
 ```
 feat: ajout de la page de profil utilisateur
 
@@ -45,6 +46,7 @@ d'avatar et édition de la bio.
 ```
 
 ### Correction de bug (0.1.0 → 0.1.1)
+
 ```
 fix: résolution du débordement du menu de navigation sur mobile
 
@@ -53,6 +55,7 @@ appareils de moins de 768px. CSS ajusté pour corriger.
 ```
 
 ### Changement Breaking (0.1.0 → 1.0.0)
+
 ```
 feat!: migration vers les nouveaux endpoints API
 
@@ -61,6 +64,7 @@ Mettez à jour vos appels API en conséquence.
 ```
 
 ### Documentation (pas de bump de version)
+
 ```
 docs: mise à jour des instructions d'installation
 

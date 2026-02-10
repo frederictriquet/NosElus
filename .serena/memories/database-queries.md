@@ -1,7 +1,9 @@
 # Accès PostgreSQL – RÈGLE IMPÉRATIVE
 
 ## ⛔ INTERDICTION ABSOLUE
+
 Il est STRICTEMENT INTERDIT d’utiliser :
+
 - `docker exec`
 - `docker compose exec`
 - toute commande Docker directe pour PostgreSQL
@@ -9,6 +11,7 @@ Il est STRICTEMENT INTERDIT d’utiliser :
 Toute solution utilisant Docker pour accéder à la DB est INCORRECTE.
 
 ## ✅ MÉTHODE UNIQUE AUTORISÉE
+
 La seule méthode valide pour exécuter des requêtes SQL est :
 
 ```bash
@@ -16,7 +19,6 @@ La seule méthode valide pour exécuter des requêtes SQL est :
 ```
 
 Aucune autre méthode n’est acceptable.
-
 
 ⚠️ Oui, même **retirer `docker exec` de SERENA** est volontaire et nécessaire.
 
@@ -26,7 +28,7 @@ Aucune autre méthode n’est acceptable.
 
 À la racine du repo :
 
-```md
+````md
 ## Règles système – Base de données
 
 - NE JAMAIS utiliser `docker exec` ou `docker compose exec` pour PostgreSQL
@@ -36,15 +38,10 @@ Aucune autre méthode n’est acceptable.
 
 Si une solution implique Docker pour la DB, elle est fausse.
 
-
-
-
-
-
-
 ## Exemples utiles
 
 ### Compter les votes par groupe pour un député
+
 ```bash
 docker exec noselus-postgres psql -U noselus -d noselus -c "
 SELECT v.group_id, o.short_name, COUNT(*) as vote_count
@@ -55,8 +52,10 @@ GROUP BY v.group_id, o.short_name
 ORDER BY vote_count DESC;
 "
 ```
+````
 
 ### Statistiques des tables
+
 ```bash
 docker exec noselus-postgres psql -U noselus -d noselus -c "
 SELECT 'actors' as table_name, COUNT(*) FROM actors
@@ -71,26 +70,31 @@ UNION ALL SELECT 'scrutins', COUNT(*) FROM scrutins;
 **⚠️ Toute requête récupérant des mandats DOIT être ordonnée par `startDate DESC`**
 
 ### Pattern obligatoire
+
 ```typescript
 const mandatesData = await db
-  .select({
-    actorId: mandates.actorId,
-    // ... autres colonnes
-    startDate: mandates.startDate  // ← Obligatoire pour le tri
-  })
-  .from(mandates)
-  .where(/* conditions */)
-  .orderBy(desc(mandates.startDate));  // ← OBLIGATOIRE
+	.select({
+		actorId: mandates.actorId,
+		// ... autres colonnes
+		startDate: mandates.startDate // ← Obligatoire pour le tri
+	})
+	.from(mandates)
+	.where(/* conditions */)
+	.orderBy(desc(mandates.startDate)); // ← OBLIGATOIRE
 ```
 
 ### Justification
+
 Un acteur peut avoir plusieurs mandats successifs dans différents groupes. Sans ordre :
+
 - La base retourne un mandat **arbitraire**
 - Risque d'afficher un groupe obsolète au lieu du groupe actuel
 - Incohérence entre pages (liste vs profil)
 
 ### Exemple de bug sans ordering
+
 Deputy PA841067 avait 4 mandats GP :
+
 - 2024-07-19 : Non inscrit (NI)
 - 2024-08-06 : À Droite (AD)
 - 2024-09-17 : UDR (nom court uniquement)

@@ -31,20 +31,21 @@ Définir les standards et bonnes pratiques pour toute intégration d'API externe
 
 ```typescript
 interface ApiClientConfig {
-  clientId: string;        // PISTE_CLIENT_ID
-  clientSecret: string;    // PISTE_CLIENT_SECRET
-  environment: 'sandbox' | 'production';
-  timeout?: number;        // Default: 30000ms
+	clientId: string; // PISTE_CLIENT_ID
+	clientSecret: string; // PISTE_CLIENT_SECRET
+	environment: 'sandbox' | 'production';
+	timeout?: number; // Default: 30000ms
 }
 
 export class ApiClient {
-  private readonly baseUrl: string;
-  
-  constructor(private config: ApiClientConfig) {
-    this.baseUrl = config.environment === 'production'
-      ? 'https://api.piste.gouv.fr'
-      : 'https://sandbox-api.piste.gouv.fr';
-  }
+	private readonly baseUrl: string;
+
+	constructor(private config: ApiClientConfig) {
+		this.baseUrl =
+			config.environment === 'production'
+				? 'https://api.piste.gouv.fr'
+				: 'https://sandbox-api.piste.gouv.fr';
+	}
 }
 ```
 
@@ -80,20 +81,20 @@ private async getAccessToken(): Promise<string> {
 
 ```typescript
 async function makeRequest(url: string): Promise<Response> {
-  // Rate limiting
-  const delay = 200 + Math.random() * 100; // 200-300ms
-  await new Promise(r => setTimeout(r, delay));
+	// Rate limiting
+	const delay = 200 + Math.random() * 100; // 200-300ms
+	await new Promise((r) => setTimeout(r, delay));
 
-  const response = await fetch(url);
+	const response = await fetch(url);
 
-  // Handle 429
-  if (response.status === 429) {
-    const retryAfter = response.headers.get('Retry-After');
-    await sleep(retryAfter ? parseInt(retryAfter) * 1000 : 5000);
-    return makeRequest(url); // Retry once
-  }
+	// Handle 429
+	if (response.status === 429) {
+		const retryAfter = response.headers.get('Retry-After');
+		await sleep(retryAfter ? parseInt(retryAfter) * 1000 : 5000);
+		return makeRequest(url); // Retry once
+	}
 
-  return response;
+	return response;
 }
 ```
 
@@ -107,20 +108,22 @@ async function makeRequest(url: string): Promise<Response> {
 **Problème courant** : Mauvaise interprétation d'un paramètre API.
 
 **Exemple réel (leçon apprise)** :
+
 ```typescript
 // ❌ MAUVAIS : Assumption incorrecte
 // Intention: Filtrer votes des MEPs français
 // Réalité: Filtre votes dont le SUJET géographique concerne la France
-fetchHTV('/votes?geo_areas=FRA')
+fetchHTV('/votes?geo_areas=FRA');
 // → Retourne 9 votes (votes ABOUT France, pas votes BY French MEPs)
 
 // ✅ BON : Pas de filtre géographique, filtrage fait côté applicatif
-fetchHTV('/votes')
+fetchHTV('/votes');
 // → Retourne 2204 votes (tous les votes PE)
 // Le filtrage par MEPs français se fait via les votes individuels
 ```
 
 **Pattern de validation** :
+
 ```typescript
 // 1. Tester SANS le filtre
 const allResults = await api.fetch('/endpoint');
@@ -139,6 +142,7 @@ console.log('Sample results:', sample);
 ```
 
 **Checklist de validation** :
+
 - [ ] Documentation API lue et comprise
 - [ ] Test avec/sans filtre effectué
 - [ ] Résultats comparés et validés
@@ -146,6 +150,7 @@ console.log('Sample results:', sample);
 - [ ] Cas limites testés (ex: filtre qui retourne 0 résultats)
 
 **Voir aussi** :
+
 - `lessons-learned-2026-02-07-pe-laws-expansion.md` (leçon #1)
 - `adr-2026-02-07-pe-laws-expansion.md` (cas réel geo_areas=FRA)
 
@@ -158,40 +163,35 @@ console.log('Sample results:', sample);
 
 ```typescript
 class ApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number,
-    public endpoint: string,
-    public response?: any
-  ) {
-    super(`API Error [${statusCode}] ${endpoint}: ${message}`);
-    this.name = 'ApiError';
-  }
+	constructor(
+		message: string,
+		public statusCode: number,
+		public endpoint: string,
+		public response?: any
+	) {
+		super(`API Error [${statusCode}] ${endpoint}: ${message}`);
+		this.name = 'ApiError';
+	}
 }
 
 async function apiRequest(endpoint: string): Promise<any> {
-  try {
-    const response = await fetch(endpoint);
-    
-    if (!response.ok) {
-      throw new ApiError(
-        await response.text(),
-        response.status,
-        endpoint,
-        response
-      );
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      console.error('API Error:', error);
-      throw error;
-    }
-    // Network errors, etc.
-    console.error('Network Error:', error);
-    throw new Error(`Network error calling ${endpoint}`);
-  }
+	try {
+		const response = await fetch(endpoint);
+
+		if (!response.ok) {
+			throw new ApiError(await response.text(), response.status, endpoint, response);
+		}
+
+		return await response.json();
+	} catch (error) {
+		if (error instanceof ApiError) {
+			console.error('API Error:', error);
+			throw error;
+		}
+		// Network errors, etc.
+		console.error('Network Error:', error);
+		throw new Error(`Network error calling ${endpoint}`);
+	}
 }
 ```
 
@@ -203,20 +203,20 @@ async function apiRequest(endpoint: string): Promise<any> {
 
 ```typescript
 async function testConnection(): Promise<void> {
-  console.log('Testing API connection...');
-  
-  try {
-    const token = await this.getAccessToken();
-    console.log('✓ OAuth authentication successful');
-    
-    const result = await this.search('test');
-    console.log(`✓ API endpoint accessible (${result.length} results)`);
-    
-    console.log('\n✓ All tests passed!');
-  } catch (error) {
-    console.error('\n✗ Connection test failed:', error.message);
-    process.exit(1);
-  }
+	console.log('Testing API connection...');
+
+	try {
+		const token = await this.getAccessToken();
+		console.log('✓ OAuth authentication successful');
+
+		const result = await this.search('test');
+		console.log(`✓ API endpoint accessible (${result.length} results)`);
+
+		console.log('\n✓ All tests passed!');
+	} catch (error) {
+		console.error('\n✗ Connection test failed:', error.message);
+		process.exit(1);
+	}
 }
 ```
 
@@ -236,21 +236,21 @@ async function testConnection(): Promise<void> {
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
-  options: {
-    'test-connection': { type: 'boolean', default: false },
-    'dry-run': { type: 'boolean', default: false },
-    'verbose': { type: 'boolean', default: false },
-    'limit': { type: 'string', default: '100' },
-    'with-scrutins': { type: 'boolean', default: false }
-  }
+	options: {
+		'test-connection': { type: 'boolean', default: false },
+		'dry-run': { type: 'boolean', default: false },
+		verbose: { type: 'boolean', default: false },
+		limit: { type: 'string', default: '100' },
+		'with-scrutins': { type: 'boolean', default: false }
+	}
 });
 
 const config = {
-  testConnection: values['test-connection'],
-  dryRun: values['dry-run'],
-  verbose: values['verbose'],
-  limit: parseInt(values.limit as string, 10),
-  withScrutins: values['with-scrutins']
+	testConnection: values['test-connection'],
+	dryRun: values['dry-run'],
+	verbose: values['verbose'],
+	limit: parseInt(values.limit as string, 10),
+	withScrutins: values['with-scrutins']
 };
 ```
 
@@ -263,23 +263,23 @@ const config = {
 
 ```typescript
 const stats = {
-  total: 0,
-  success: 0,
-  errors: 0,
-  startTime: Date.now()
+	total: 0,
+	success: 0,
+	errors: 0,
+	startTime: Date.now()
 };
 
 for (const [index, item] of items.entries()) {
-  console.log(`[${index + 1}/${items.length}] Processing ${item.id}...`);
-  stats.total++;
-  
-  try {
-    await processItem(item);
-    stats.success++;
-  } catch (error) {
-    stats.errors++;
-    console.error(`  ✗ Error: ${error.message}`);
-  }
+	console.log(`[${index + 1}/${items.length}] Processing ${item.id}...`);
+	stats.total++;
+
+	try {
+		await processItem(item);
+		stats.success++;
+	} catch (error) {
+		stats.errors++;
+		console.error(`  ✗ Error: ${error.message}`);
+	}
 }
 
 const duration = ((Date.now() - stats.startTime) / 1000).toFixed(1);
@@ -288,7 +288,7 @@ console.log(`Results:`);
 console.log(`  Total: ${stats.total}`);
 console.log(`  Success: ${stats.success}`);
 console.log(`  Errors: ${stats.errors}`);
-console.log(`  Success rate: ${(stats.success / stats.total * 100).toFixed(1)}%`);
+console.log(`  Success rate: ${((stats.success / stats.total) * 100).toFixed(1)}%`);
 console.log(`  Duration: ${duration}s`);
 console.log('='.repeat(60));
 ```
@@ -303,23 +303,21 @@ console.log('='.repeat(60));
 import { db } from '$lib/server/db';
 
 async function importData(items: Item[]): Promise<void> {
-  await db.transaction(async (tx) => {
-    for (const item of items) {
-      // Upsert pour idempotence
-      await tx.insert(table)
-        .values(item)
-        .onConflictDoUpdate({
-          target: table.id,
-          set: item
-        });
-    }
-    
-    // Validation finale
-    const count = await tx.select().from(table);
-    if (count.length === 0) {
-      throw new Error('No data imported, rolling back');
-    }
-  });
+	await db.transaction(async (tx) => {
+		for (const item of items) {
+			// Upsert pour idempotence
+			await tx.insert(table).values(item).onConflictDoUpdate({
+				target: table.id,
+				set: item
+			});
+		}
+
+		// Validation finale
+		const count = await tx.select().from(table);
+		if (count.length === 0) {
+			throw new Error('No data imported, rolling back');
+		}
+	});
 }
 ```
 
@@ -333,27 +331,31 @@ async function importData(items: Item[]): Promise<void> {
 import fs from 'fs';
 
 async function fetchWithCache(url: string, cacheFile: string): Promise<any> {
-  // Check cache
-  if (fs.existsSync(cacheFile) && !config.noCache) {
-    const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
-    const age = Date.now() - cached.timestamp;
-    
-    if (age < 3600 * 1000) { // 1h TTL
-      console.log('  ↻ Using cached result');
-      return cached.data;
-    }
-  }
+	// Check cache
+	if (fs.existsSync(cacheFile) && !config.noCache) {
+		const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+		const age = Date.now() - cached.timestamp;
 
-  // Fetch
-  const data = await fetch(url).then(r => r.json());
-  
-  // Save to cache
-  fs.writeFileSync(cacheFile, JSON.stringify({
-    timestamp: Date.now(),
-    data
-  }));
-  
-  return data;
+		if (age < 3600 * 1000) {
+			// 1h TTL
+			console.log('  ↻ Using cached result');
+			return cached.data;
+		}
+	}
+
+	// Fetch
+	const data = await fetch(url).then((r) => r.json());
+
+	// Save to cache
+	fs.writeFileSync(
+		cacheFile,
+		JSON.stringify({
+			timestamp: Date.now(),
+			data
+		})
+	);
+
+	return data;
 }
 ```
 
@@ -365,6 +367,7 @@ async function fetchWithCache(url: string, cacheFile: string): Promise<any> {
 - [ ] **ADR référencé** : Lien vers la décision technique
 
 **Exemple `.env.example`** :
+
 ```bash
 # Légifrance PISTE API
 # Inscription: https://piste.gouv.fr/registration
@@ -374,6 +377,7 @@ PISTE_ENV=production  # or 'sandbox' for testing
 ```
 
 **Exemple Makefile** :
+
 ```makefile
 # Import full law texts from Légifrance PISTE API
 .PHONY: etl-law-texts
@@ -404,62 +408,67 @@ etl-an-law-texts:
 ### ❌ Ce qu'il ne faut JAMAIS faire :
 
 1. **Credentials en dur dans le code**
+
    ```typescript
    // ❌ JAMAIS
    const clientId = 'abc123';
-   
+
    // ✅ TOUJOURS
    const clientId = process.env.PISTE_CLIENT_ID;
    ```
 
 2. **Pas de rate limiting**
+
    ```typescript
    // ❌ Spam API = ban
    for (const item of items) {
-     await api.fetch(item);
+   	await api.fetch(item);
    }
-   
+
    // ✅ Rate limiting
    for (const item of items) {
-     await api.fetch(item);
-     await sleep(200 + Math.random() * 100);
+   	await api.fetch(item);
+   	await sleep(200 + Math.random() * 100);
    }
    ```
 
 3. **Ignorer les erreurs**
+
    ```typescript
    // ❌ Erreurs silencieuses
    try {
-     await api.fetch();
+   	await api.fetch();
    } catch {}
-   
+
    // ✅ Log + handle
    try {
-     await api.fetch();
+   	await api.fetch();
    } catch (error) {
-     console.error('API Error:', error);
-     stats.errors++;
+   	console.error('API Error:', error);
+   	stats.errors++;
    }
    ```
 
 4. **Pas de dry-run**
+
    ```typescript
    // ❌ Directement en DB
    await db.insert(table).values(data);
-   
+
    // ✅ Mode dry-run
    if (config.dryRun) {
-     console.log('Would insert:', data);
+   	console.log('Would insert:', data);
    } else {
-     await db.insert(table).values(data);
+   	await db.insert(table).values(data);
    }
    ```
 
 5. **Oublier les timeouts**
+
    ```typescript
    // ❌ Peut hang indéfiniment
    await fetch(url);
-   
+
    // ✅ Timeout explicite
    await fetch(url, { signal: AbortSignal.timeout(30000) });
    ```
@@ -469,10 +478,12 @@ etl-an-law-texts:
 **Projet** : NosElus - Client Légifrance PISTE
 
 **Fichiers** :
+
 - `src/lib/server/etl/sources/legifrance/client.ts` (352 lignes)
 - `scripts/etl/import-law-texts-piste.ts` (670 lignes)
 
 **Fonctionnalités implémentées** :
+
 - ✅ OAuth 2.0 avec cache
 - ✅ Rate limiting (200-300ms)
 - ✅ Modes test/dry-run/verbose
@@ -482,6 +493,7 @@ etl-an-law-texts:
 - ✅ Documentation complète
 
 **Résultats** :
+
 - 32 lois importées
 - 96% de success rate
 - 0 erreur API

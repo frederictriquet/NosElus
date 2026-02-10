@@ -16,6 +16,7 @@ Il est **INTERDIT** de faire autrement.
 ## Cookies actuels (février 2026)
 
 L'application utilise 3 cookies fonctionnels de préférence de période :
+
 - `noselus-period-an` — Législature sélectionnée (Assemblée nationale)
 - `noselus-period-senat` — Renouvellement sélectionné (Sénat)
 - `noselus-period-pe` — Terme sélectionné (Parlement européen)

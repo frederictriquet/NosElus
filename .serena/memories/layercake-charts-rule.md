@@ -22,29 +22,29 @@
 
 ```svelte
 <script>
-  import { LayerCake, Svg } from 'layercake';
-  import { scalePoint } from 'd3-scale';
-  import Line from '$lib/components/charts/Line.svelte';
-  import AxisX from '$lib/components/charts/AxisX.svelte';
-  import AxisY from '$lib/components/charts/AxisY.svelte';
+	import { LayerCake, Svg } from 'layercake';
+	import { scalePoint } from 'd3-scale';
+	import Line from '$lib/components/charts/Line.svelte';
+	import AxisX from '$lib/components/charts/AxisX.svelte';
+	import AxisY from '$lib/components/charts/AxisY.svelte';
 </script>
 
 <div class="chart-container" style="height: 200px;">
-  <LayerCake
-    padding={{ top: 10, right: 10, bottom: 40, left: 35 }}
-    x="xKey"
-    y="yKey"
-    xScale={scalePoint().padding(0.5)}
-    {xDomain}
-    {yDomain}
-    {data}
-  >
-    <Svg>
-      <AxisY />
-      <AxisX />
-      <Line />
-    </Svg>
-  </LayerCake>
+	<LayerCake
+		padding={{ top: 10, right: 10, bottom: 40, left: 35 }}
+		x="xKey"
+		y="yKey"
+		xScale={scalePoint().padding(0.5)}
+		{xDomain}
+		{yDomain}
+		{data}
+	>
+		<Svg>
+			<AxisY />
+			<AxisX />
+			<Line />
+		</Svg>
+	</LayerCake>
 </div>
 ```
 

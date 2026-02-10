@@ -18,15 +18,15 @@ npm run db:generate
 
 Le script `scripts/make-idempotent.js` transforme automatiquement :
 
-| Avant | Après |
-|-------|-------|
-| `CREATE TABLE "x"` | `CREATE TABLE IF NOT EXISTS "x"` |
-| `CREATE INDEX "x"` | `CREATE INDEX IF NOT EXISTS "x"` |
-| `CREATE UNIQUE INDEX "x"` | `CREATE UNIQUE INDEX IF NOT EXISTS "x"` |
-| `ALTER TABLE "x" ADD COLUMN "y"` | `ALTER TABLE "x" ADD COLUMN IF NOT EXISTS "y"` |
-| `DROP TABLE "x"` | `DROP TABLE IF EXISTS "x"` |
-| `DROP INDEX "x"` | `DROP INDEX IF EXISTS "x"` |
-| `ALTER TABLE "x" DROP COLUMN "y"` | `ALTER TABLE "x" DROP COLUMN IF EXISTS "y"` |
+| Avant                             | Après                                          |
+| --------------------------------- | ---------------------------------------------- |
+| `CREATE TABLE "x"`                | `CREATE TABLE IF NOT EXISTS "x"`               |
+| `CREATE INDEX "x"`                | `CREATE INDEX IF NOT EXISTS "x"`               |
+| `CREATE UNIQUE INDEX "x"`         | `CREATE UNIQUE INDEX IF NOT EXISTS "x"`        |
+| `ALTER TABLE "x" ADD COLUMN "y"`  | `ALTER TABLE "x" ADD COLUMN IF NOT EXISTS "y"` |
+| `DROP TABLE "x"`                  | `DROP TABLE IF EXISTS "x"`                     |
+| `DROP INDEX "x"`                  | `DROP INDEX IF EXISTS "x"`                     |
+| `ALTER TABLE "x" DROP COLUMN "y"` | `ALTER TABLE "x" DROP COLUMN IF EXISTS "y"`    |
 
 ## Cas Manuels (Nécessitent Intervention)
 
@@ -103,4 +103,5 @@ Ce standard s'applique uniquement aux migrations **0012+**.
 Voir `adr-2026-02-06-idempotent-migrations.md` (ADR-005)
 
 ## Date de Création
+
 2026-02-06

@@ -61,7 +61,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		// Voter "Pour" sur la première loi
@@ -83,7 +86,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		// Voter sur plusieurs lois (max 5 pour le test)
@@ -250,7 +256,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		// Chercher le bouton "Passer" ou "Abstention"
@@ -282,7 +291,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer et voter
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		await page.locator('button').filter({ hasText: /Pour/i }).first().click();
@@ -302,7 +314,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		// Devrait avoir un indicateur de progression (X/Y lois)
@@ -320,7 +335,10 @@ test.describe.skip('Quiz PE - E2E Flow', () => {
 		await page.goto('/pe/quiz');
 
 		// Démarrer
-		await page.locator('button').filter({ hasText: /Démarrer/i }).click();
+		await page
+			.locator('button')
+			.filter({ hasText: /Démarrer/i })
+			.click();
 		await page.waitForTimeout(500);
 
 		// Devrait afficher un résumé de la loi

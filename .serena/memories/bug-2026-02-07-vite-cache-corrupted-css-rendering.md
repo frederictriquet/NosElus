@@ -1,15 +1,18 @@
 # Bug : Cache Vite Corrompu Affichant du CSS dans le DOM
 
 ## Date
+
 2026-02-07
 
 ## Symptômes
+
 - **Observation** : "le DOM semble cassé car la page affiche du css"
 - **URL affectée** : `http://localhost:5173/an/scrutins/VTANR5L17V4545`
 - **Contexte** : Après un refactoring important (commit 463ec85) qui a extrait du code inline dans un composant réutilisable `LawDossierCard.svelte`
 - **Environnement** : Dev server Vite local
 
 ## Symptômes observés
+
 1. Page scrutin affiche du CSS comme texte (au lieu de l'appliquer)
 2. Le DOM paraît cassé visuellement
 3. Le problème apparaît après un refactoring qui déplace du code entre fichiers
@@ -57,13 +60,13 @@ npm run dev
 
 ### Refactorings à risque
 
-| Type de refactoring | Risque | Prévention |
-|---------------------|--------|------------|
-| **Extraction de composant** | ⚠️ Élevé | Clear cache après |
-| **Renommage de fichier** | ⚠️ Élevé | Clear cache après |
-| **Déplacement de CSS** | ⚠️ Moyen | Clear cache après |
-| **Modification imports** | ⚠️ Moyen | Restart dev server |
-| **Changement de config Vite** | 🔴 Très élevé | **Obligatoire** |
+| Type de refactoring           | Risque        | Prévention         |
+| ----------------------------- | ------------- | ------------------ |
+| **Extraction de composant**   | ⚠️ Élevé      | Clear cache après  |
+| **Renommage de fichier**      | ⚠️ Élevé      | Clear cache après  |
+| **Déplacement de CSS**        | ⚠️ Moyen      | Clear cache après  |
+| **Modification imports**      | ⚠️ Moyen      | Restart dev server |
+| **Changement de config Vite** | 🔴 Très élevé | **Obligatoire**    |
 
 ## Prévention
 
@@ -112,6 +115,7 @@ Si le problème disparaît après le nettoyage → c'était le cache.
 ## Cas Concret : Scrutin VTANR5L17V4545
 
 ### Contexte du refactoring
+
 - **Commit** : 463ec85
 - **Changement** : Extraction de 412 lignes de code inline dans `LawDossierCard.svelte`
 - **Fichiers affectés** :
@@ -119,38 +123,43 @@ Si le problème disparaît après le nettoyage → c'était le cache.
   - `src/lib/components/LawDossierCard.svelte` (nouveau composant)
 
 ### Manifestation
+
 - Composant `LawDossierCard` ne se rendait pas correctement
 - CSS affiché comme texte dans le DOM
 - Page de 123 KB (contient une description de loi de 50 000 chars)
 
 ### Résolution
+
 1. `rm -rf .svelte-kit node_modules/.vite`
 2. Restart dev server
 3. ✅ Problème résolu immédiatement
 
 ## Comparaison : Cache Vite vs Cache Navigateur
 
-| Symptôme | Cache Vite | Cache Navigateur |
-|----------|------------|------------------|
-| CSS manquant | ✅ Possible | ✅ Possible |
-| HTML cassé | ✅ Fréquent | ❌ Rare |
-| Après refactoring | ✅ Très courant | ❌ Peu probable |
-| Fix : navigation privée | ❌ N'aide pas | ✅ Résout |
-| Fix : clean cache Vite | ✅ Résout | ❌ N'aide pas |
+| Symptôme                | Cache Vite      | Cache Navigateur |
+| ----------------------- | --------------- | ---------------- |
+| CSS manquant            | ✅ Possible     | ✅ Possible      |
+| HTML cassé              | ✅ Fréquent     | ❌ Rare          |
+| Après refactoring       | ✅ Très courant | ❌ Peu probable  |
+| Fix : navigation privée | ❌ N'aide pas   | ✅ Résout        |
+| Fix : clean cache Vite  | ✅ Résout       | ❌ N'aide pas    |
 
 ## Tags
+
 - **type** : build-cache | rendering | refactoring
 - **module** : vite | sveltekit
 - **environnement** : development
 - **sévérité** : bloquant (dev uniquement)
 
 ## Références
+
 - **Commit du refactoring** : 463ec85 (extraction LawDossierCard)
 - **Page affectée** : `/an/scrutins/VTANR5L17V4545`
 - **Vite cache docs** : https://vitejs.dev/guide/dep-pre-bundling.html#caching
 - **SvelteKit generated files** : https://kit.svelte.dev/docs/project-structure#project-files-svelte-kit
 
 ## Voir aussi
+
 - `std-code-review-systematic.md` : Checklist de review incluant test après refactoring
 - `pattern-component-documentation.md` : Best practices pour extraction de composants
 

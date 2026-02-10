@@ -3,6 +3,7 @@
 ## Problème
 
 Lorsqu'un utilisateur doit filtrer/configurer une sélection complexe avant d'agir (quiz, import, création), la stratification côté serveur impose :
+
 - Rechargement de page à chaque changement de filtre
 - Latence réseau pour calculer les résultats filtrés
 - Impossibilité d'avoir un compteur temps réel
@@ -166,97 +167,85 @@ export const load: PageServerLoad = async () => {
 ```svelte
 <!-- QuizSetup.svelte -->
 <script lang="ts">
-  import { getAvailableQuizSizes } from '$lib/utils/quiz-selection';
-  
-  interface Props {
-    availableTags: AvailableTag[];
-    allLaws: QuizLaw[];
-    onStart: (selectedTagSlugs: Set<string>, quizSize: number) => void;
-  }
-  
-  let { availableTags, allLaws, onStart }: Props = $props();
-  
-  // État : tous les tags cochés par défaut
-  let selectedSlugs = $state<Set<string>>(
-    new Set(availableTags.map((t) => t.slug))
-  );
-  let quizSize = $state(10);
-  
-  // Filtrage temps réel avec $derived (Svelte 5)
-  const filteredLawCount = $derived(
-    allLaws.filter((law) =>
-      law.tags.some((t) => selectedSlugs.has(t.slug))
-    ).length
-  );
-  
-  // Tailles de quiz disponibles (dynamiques)
-  const availableSizes = $derived(
-    getAvailableQuizSizes(filteredLawCount)
-  );
-  
-  // Auto-ajuster la taille si elle dépasse le nombre de lois
-  $effect(() => {
-    if (availableSizes.length > 0 && !availableSizes.includes(quizSize)) {
-      quizSize = availableSizes[availableSizes.length - 1];
-    }
-  });
-  
-  function toggleTag(slug: string) {
-    const next = new Set(selectedSlugs);
-    if (next.has(slug)) {
-      next.delete(slug);
-    } else {
-      next.add(slug);
-    }
-    selectedSlugs = next;
-  }
-  
-  function handleStart() {
-    onStart(selectedSlugs, quizSize);
-  }
+	import { getAvailableQuizSizes } from '$lib/utils/quiz-selection';
+
+	interface Props {
+		availableTags: AvailableTag[];
+		allLaws: QuizLaw[];
+		onStart: (selectedTagSlugs: Set<string>, quizSize: number) => void;
+	}
+
+	let { availableTags, allLaws, onStart }: Props = $props();
+
+	// État : tous les tags cochés par défaut
+	let selectedSlugs = $state<Set<string>>(new Set(availableTags.map((t) => t.slug)));
+	let quizSize = $state(10);
+
+	// Filtrage temps réel avec $derived (Svelte 5)
+	const filteredLawCount = $derived(
+		allLaws.filter((law) => law.tags.some((t) => selectedSlugs.has(t.slug))).length
+	);
+
+	// Tailles de quiz disponibles (dynamiques)
+	const availableSizes = $derived(getAvailableQuizSizes(filteredLawCount));
+
+	// Auto-ajuster la taille si elle dépasse le nombre de lois
+	$effect(() => {
+		if (availableSizes.length > 0 && !availableSizes.includes(quizSize)) {
+			quizSize = availableSizes[availableSizes.length - 1];
+		}
+	});
+
+	function toggleTag(slug: string) {
+		const next = new Set(selectedSlugs);
+		if (next.has(slug)) {
+			next.delete(slug);
+		} else {
+			next.add(slug);
+		}
+		selectedSlugs = next;
+	}
+
+	function handleStart() {
+		onStart(selectedSlugs, quizSize);
+	}
 </script>
 
 <div class="tags-grid">
-  {#each availableTags as tag}
-    {@const isSelected = selectedSlugs.has(tag.slug)}
-    <button
-      class="tag-checkbox"
-      class:selected={isSelected}
-      onclick={() => toggleTag(tag.slug)}
-    >
-      <span class="tag-check">{isSelected ? '✓' : ''}</span>
-      <span class="tag-name">{tag.name}</span>
-      <span class="tag-count">{tag.lawCount}</span>
-    </button>
-  {/each}
+	{#each availableTags as tag}
+		{@const isSelected = selectedSlugs.has(tag.slug)}
+		<button class="tag-checkbox" class:selected={isSelected} onclick={() => toggleTag(tag.slug)}>
+			<span class="tag-check">{isSelected ? '✓' : ''}</span>
+			<span class="tag-name">{tag.name}</span>
+			<span class="tag-count">{tag.lawCount}</span>
+		</button>
+	{/each}
 </div>
 
 <p class="law-count">
-  {#if selectedSlugs.size === 0}
-    Sélectionnez au moins un thème
-  {:else}
-    {filteredLawCount} loi{filteredLawCount > 1 ? 's' : ''} disponible{filteredLawCount > 1 ? 's' : ''}
-  {/if}
+	{#if selectedSlugs.size === 0}
+		Sélectionnez au moins un thème
+	{:else}
+		{filteredLawCount} loi{filteredLawCount > 1 ? 's' : ''} disponible{filteredLawCount > 1
+			? 's'
+			: ''}
+	{/if}
 </p>
 
 <div class="size-buttons">
-  {#each availableSizes as size}
-    <button
-      class="size-btn"
-      class:selected={quizSize === size}
-      onclick={() => (quizSize = size)}
-    >
-      {size}
-    </button>
-  {/each}
+	{#each availableSizes as size}
+		<button class="size-btn" class:selected={quizSize === size} onclick={() => (quizSize = size)}>
+			{size}
+		</button>
+	{/each}
 </div>
 
 <button
-  class="start-btn"
-  disabled={selectedSlugs.size === 0 || filteredLawCount === 0}
-  onclick={handleStart}
+	class="start-btn"
+	disabled={selectedSlugs.size === 0 || filteredLawCount === 0}
+	onclick={handleStart}
 >
-  Commencer le quiz
+	Commencer le quiz
 </button>
 ```
 
@@ -265,71 +254,72 @@ export const load: PageServerLoad = async () => {
 ```typescript
 // quiz-selection.ts
 export function selectQuizLaws(
-  allLaws: QuizLaw[],
-  selectedTagSlugs: Set<string>,
-  quizSize: number
+	allLaws: QuizLaw[],
+	selectedTagSlugs: Set<string>,
+	quizSize: number
 ): SelectionResult {
-  // 1. Filtrer les lois qui ont au moins un tag sélectionné (logique OR)
-  const filtered = allLaws.filter((law) =>
-    law.tags.some((t) => selectedTagSlugs.has(t.slug))
-  );
-  
-  if (filtered.length === 0) {
-    return { quizLaws: [], reserveLaws: [] };
-  }
-  
-  // 2. Grouper par tag principal (premier tag parmi les sélectionnés)
-  const lawsByTag = new Map<string, QuizLaw[]>();
-  for (const law of filtered) {
-    const primaryTag = law.tags.find((t) => selectedTagSlugs.has(t.slug));
-    if (primaryTag) {
-      const key = primaryTag.slug;
-      if (!lawsByTag.has(key)) {
-        lawsByTag.set(key, []);
-      }
-      lawsByTag.get(key)!.push(law);
-    }
-  }
-  
-  // 3. Stratifier : prendre équitablement de chaque tag
-  const selectedLaws: QuizLaw[] = [];
-  const tagGroups = Array.from(lawsByTag.values());
-  const lawsPerTag = Math.ceil(quizSize / tagGroups.length);
-  
-  for (const tagLaws of tagGroups) {
-    const shuffled = shuffle(tagLaws); // Fisher-Yates
-    selectedLaws.push(...shuffled.slice(0, lawsPerTag));
-  }
-  
-  // 4. Mélanger
-  const allShuffled = shuffle(selectedLaws);
-  
-  // 5. Ajouter les lois non sélectionnées comme réserve
-  const selectedIds = new Set(allShuffled.map((l) => l.id));
-  const remaining = filtered.filter((l) => !selectedIds.has(l.id));
-  const allOrdered = [...allShuffled, ...shuffle(remaining)];
-  
-  return {
-    quizLaws: allOrdered.slice(0, quizSize),
-    reserveLaws: allOrdered.slice(quizSize)
-  };
+	// 1. Filtrer les lois qui ont au moins un tag sélectionné (logique OR)
+	const filtered = allLaws.filter((law) => law.tags.some((t) => selectedTagSlugs.has(t.slug)));
+
+	if (filtered.length === 0) {
+		return { quizLaws: [], reserveLaws: [] };
+	}
+
+	// 2. Grouper par tag principal (premier tag parmi les sélectionnés)
+	const lawsByTag = new Map<string, QuizLaw[]>();
+	for (const law of filtered) {
+		const primaryTag = law.tags.find((t) => selectedTagSlugs.has(t.slug));
+		if (primaryTag) {
+			const key = primaryTag.slug;
+			if (!lawsByTag.has(key)) {
+				lawsByTag.set(key, []);
+			}
+			lawsByTag.get(key)!.push(law);
+		}
+	}
+
+	// 3. Stratifier : prendre équitablement de chaque tag
+	const selectedLaws: QuizLaw[] = [];
+	const tagGroups = Array.from(lawsByTag.values());
+	const lawsPerTag = Math.ceil(quizSize / tagGroups.length);
+
+	for (const tagLaws of tagGroups) {
+		const shuffled = shuffle(tagLaws); // Fisher-Yates
+		selectedLaws.push(...shuffled.slice(0, lawsPerTag));
+	}
+
+	// 4. Mélanger
+	const allShuffled = shuffle(selectedLaws);
+
+	// 5. Ajouter les lois non sélectionnées comme réserve
+	const selectedIds = new Set(allShuffled.map((l) => l.id));
+	const remaining = filtered.filter((l) => !selectedIds.has(l.id));
+	const allOrdered = [...allShuffled, ...shuffle(remaining)];
+
+	return {
+		quizLaws: allOrdered.slice(0, quizSize),
+		reserveLaws: allOrdered.slice(quizSize)
+	};
 }
 ```
 
 ## Avantages
 
 ### UX
+
 - ✅ **Feedback immédiat** : compteur "X lois disponibles" se met à jour instantanément
 - ✅ **Pas de latence** : pas de requête serveur à chaque changement
 - ✅ **Validation en temps réel** : bouton "Commencer" désactivé si config invalide
 - ✅ **Actions dynamiques** : boutons de taille activés/désactivés selon disponibilité
 
 ### Performance
+
 - ✅ **Moins de charge serveur** : une seule requête au chargement
 - ✅ **Pas de requêtes inutiles** : filtrage client sans réseau
 - ✅ **Scalabilité** : pour < 500 items, client plus rapide que serveur
 
 ### Développement
+
 - ✅ **Logique testable** : `selectQuizLaws()` est une pure function
 - ✅ **Séparation des responsabilités** : serveur = données, client = UX
 - ✅ **Réutilisable** : `quiz-selection.ts` peut être utilisé ailleurs
@@ -337,33 +327,36 @@ export function selectQuizLaws(
 ## Inconvénients
 
 ### Limites
-- ❌ **Payload initial plus gros** : ~32 lois * ~300 bytes = ~10 KB (acceptable)
+
+- ❌ **Payload initial plus gros** : ~32 lois \* ~300 bytes = ~10 KB (acceptable)
 - ❌ **Performance client** : Si > 1000 items, filtrage côté client devient lent
 - ❌ **Calculs complexes impossibles** : Si stratification nécessite DB, doit rester serveur
 - ❌ **Pas de cache serveur** : Chaque visite recharge toutes les lois
 
 ### Sécurité
+
 - ⚠️ **Données exposées au client** : Toutes les lois éligibles sont envoyées
   - Acceptable si données publiques (cas NosÉlus)
   - Problématique si données sensibles → filtrer côté serveur
 
 ## Comparaison avec Stratification Serveur
 
-| Critère | Serveur | Client (ce pattern) |
-|---------|---------|---------------------|
-| Latence | 200-500ms par changement | 0ms (instantané) |
-| Charge serveur | Haute (N requêtes) | Basse (1 requête) |
-| Payload initial | 5 KB (lois filtrées) | 10 KB (toutes lois) |
-| Feedback temps réel | ❌ Non | ✅ Oui |
-| Compteur dynamique | ❌ Non | ✅ Oui |
-| Scalabilité items | ✅ Illimitée | ⚠️ < 500 items |
-| Données sensibles | ✅ OK | ❌ Exposées |
+| Critère             | Serveur                  | Client (ce pattern) |
+| ------------------- | ------------------------ | ------------------- |
+| Latence             | 200-500ms par changement | 0ms (instantané)    |
+| Charge serveur      | Haute (N requêtes)       | Basse (1 requête)   |
+| Payload initial     | 5 KB (lois filtrées)     | 10 KB (toutes lois) |
+| Feedback temps réel | ❌ Non                   | ✅ Oui              |
+| Compteur dynamique  | ❌ Non                   | ✅ Oui              |
+| Scalabilité items   | ✅ Illimitée             | ⚠️ < 500 items      |
+| Données sensibles   | ✅ OK                    | ❌ Exposées         |
 
 ## Exemples d'Utilisation
 
 ### Cas 1 : Quiz politique (NosÉlus)
 
 **Fichiers** :
+
 - `src/routes/an/quiz/+page.server.ts` - Serveur
 - `src/lib/components/QuizSetup.svelte` - Client UI
 - `src/lib/utils/quiz-selection.ts` - Client logique
@@ -377,6 +370,7 @@ export function selectQuizLaws(
 **Contexte** : L'utilisateur importe un fichier CSV et peut filtrer les colonnes/lignes avant import.
 
 **Architecture** :
+
 - Serveur : Parse le CSV, retourne toutes les lignes + métadonnées (colonnes, types)
 - Client : Filtrage colonnes + validation temps réel + aperçu dynamique
 
@@ -385,6 +379,7 @@ export function selectQuizLaws(
 **Contexte** : Création d'un projet avec sélection d'équipe, tags, et templates.
 
 **Architecture** :
+
 - Serveur : Retourne tous les utilisateurs, tags, templates
 - Client : Filtrage par rôle, équipe, disponibilité + compteur "X membres sélectionnés"
 
@@ -395,6 +390,7 @@ export function selectQuizLaws(
 **Symptôme** : Chargement initial lent (> 2s)
 
 **Solution** :
+
 - Paginer côté serveur si > 500 items
 - Compresser la réponse (gzip)
 - Charger en lazy loading si non critique
@@ -404,6 +400,7 @@ export function selectQuizLaws(
 **Symptôme** : Impossible de calculer côté client (ex: full-text search, agrégations)
 
 **Solution** : Hybrid approach
+
 - Filtres simples → client
 - Filtres complexes → requête serveur avec debounce (300ms)
 
@@ -412,6 +409,7 @@ export function selectQuizLaws(
 **Symptôme** : Toutes les lois (même non sélectionnées) visibles dans DevTools
 
 **Solution** :
+
 - Filtrer côté serveur si données sensibles
 - OU chiffrer les données non affichées côté client (rare)
 
@@ -431,9 +429,9 @@ describe('selectQuizLaws', () => {
       { id: 'L3', tags: [{ slug: 'economie', ... }], ... },
     ];
     const selectedTags = new Set(['economie']);
-    
+
     const result = selectQuizLaws(laws, selectedTags, 10);
-    
+
     expect(result.quizLaws).toHaveLength(2);
     expect(result.quizLaws.every(law =>
       law.tags.some(t => t.slug === 'economie')
@@ -451,11 +449,11 @@ it('should filter 1000 items in < 100ms', () => {
     tags: [{ slug: i % 10 === 0 ? 'economie' : 'sante', ... }],
     ...
   }));
-  
+
   const start = performance.now();
   const result = selectQuizLaws(laws, new Set(['economie']), 20);
   const duration = performance.now() - start;
-  
+
   expect(duration).toBeLessThan(100); // < 100ms
   expect(result.quizLaws).toHaveLength(20);
 });

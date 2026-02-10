@@ -1,7 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 const config = {
 	packageManager: 'npm',
-	reporters: ['json','html', 'clear-text', 'progress', 'dashboard'],
+	reporters: ['json', 'html', 'clear-text', 'progress', 'dashboard'],
 	testRunner: 'command',
 	testRunnerNodeArgs: [],
 	commandRunner: {

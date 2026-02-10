@@ -24,7 +24,8 @@
 
 	let { config, allLaws, availableTags }: Props = $props();
 
-	// Créer le store pour cette chambre
+	// Créer le store pour cette chambre (initialisation unique, pas de réactivité nécessaire)
+	// svelte-ignore state_referenced_locally
 	const quiz = createChamberQuizStore(config);
 	const {
 		store: quizStore,

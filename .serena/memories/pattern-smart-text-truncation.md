@@ -1,11 +1,13 @@
 # Pattern : Troncature Intelligente de Texte
 
 ## Catégorie
+
 Text Processing | Data Validation | User Experience
 
 ## Problème
 
 Lors de la troncature de texte pour respecter des contraintes de longueur (VARCHAR, UI, APIs), une **troncature naïve** coupe mid-mot, créant :
+
 - ❌ Texte visuellement cassé : `"Résolution sur le règlemen..."`
 - ❌ Perte de sens : `"Vote du Parlement européen sur la réglement..."`
 - ❌ UX dégradée : Utilisateur voit du texte coupé brutalement
@@ -15,12 +17,14 @@ Lors de la troncature de texte pour respecter des contraintes de longueur (VARCH
 ## Contexte
 
 Utiliser ce pattern quand :
+
 - ✅ Contrainte de longueur stricte (DB, API, affichage)
 - ✅ Texte en langue naturelle (pas du code/JSON)
 - ✅ UX importante (titres, descriptions)
 - ✅ Préservation du sens prioritaire
 
 Ne PAS utiliser quand :
+
 - ❌ Données techniques (URLs, tokens, hashes)
 - ❌ Pas de contrainte stricte (TEXT illimité)
 - ❌ Troncature doit être exacte (sécurité, crypto)
@@ -29,7 +33,7 @@ Ne PAS utiliser quand :
 
 ### Pattern de base : Troncature avec préservation des mots
 
-```typescript
+````typescript
 /**
  * Tronque un texte intelligemment en préservant les mots complets
  *
@@ -45,27 +49,21 @@ Ne PAS utiliser quand :
  * // (pas 'Résolution du Parlement eur...')
  * ```
  */
-function truncate(
-  text: string,
-  maxLength: number,
-  ellipsis: string = '...'
-): string {
-  // Pas besoin de tronquer
-  if (text.length <= maxLength) {
-    return text;
-  }
+function truncate(text: string, maxLength: number, ellipsis: string = '...'): string {
+	// Pas besoin de tronquer
+	if (text.length <= maxLength) {
+		return text;
+	}
 
-  // Longueur cible sans ellipsis
-  const targetLength = maxLength - ellipsis.length;
+	// Longueur cible sans ellipsis
+	const targetLength = maxLength - ellipsis.length;
 
-  // Couper au dernier espace avant targetLength
-  const truncated = text
-    .slice(0, targetLength)
-    .replace(/\s+\S*$/, '');  // Retire le dernier mot incomplet
+	// Couper au dernier espace avant targetLength
+	const truncated = text.slice(0, targetLength).replace(/\s+\S*$/, ''); // Retire le dernier mot incomplet
 
-  return truncated + ellipsis;
+	return truncated + ellipsis;
 }
-```
+````
 
 ### Explication de la regex `/\s+\S*$/`
 
@@ -86,9 +84,10 @@ Résultat : "Résolution du Parlement"
 // Contexte : DB avec short_title VARCHAR(300)
 const displayTitle = vote.display_title || 'Procédure sans titre';
 
-const shortTitle = displayTitle.length > 300
-  ? displayTitle.slice(0, 297).replace(/\s+\S*$/, '') + '...'
-  : displayTitle;
+const shortTitle =
+	displayTitle.length > 300
+		? displayTitle.slice(0, 297).replace(/\s+\S*$/, '') + '...'
+		: displayTitle;
 
 // Pourquoi 297 ?
 // 300 (max VARCHAR) - 3 (longueur de '...') = 297
@@ -98,7 +97,7 @@ const shortTitle = displayTitle.length > 300
 
 ### 1. Troncature à N mots
 
-```typescript
+````typescript
 /**
  * Tronque à un nombre maximum de mots
  *
@@ -108,24 +107,20 @@ const shortTitle = displayTitle.length > 300
  * // → 'Un texte très long...'
  * ```
  */
-function truncateWords(
-  text: string,
-  maxWords: number,
-  ellipsis: string = '...'
-): string {
-  const words = text.split(/\s+/);
+function truncateWords(text: string, maxWords: number, ellipsis: string = '...'): string {
+	const words = text.split(/\s+/);
 
-  if (words.length <= maxWords) {
-    return text;
-  }
+	if (words.length <= maxWords) {
+		return text;
+	}
 
-  return words.slice(0, maxWords).join(' ') + ellipsis;
+	return words.slice(0, maxWords).join(' ') + ellipsis;
 }
-```
+````
 
 ### 2. Troncature à la phrase
 
-```typescript
+````typescript
 /**
  * Tronque en préservant les phrases complètes
  *
@@ -135,28 +130,22 @@ function truncateWords(
  * // → 'Première phrase.'
  * ```
  */
-function truncateSentences(
-  text: string,
-  maxLength: number,
-  ellipsis: string = '...'
-): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
+function truncateSentences(text: string, maxLength: number, ellipsis: string = '...'): string {
+	if (text.length <= maxLength) {
+		return text;
+	}
 
-  // Chercher la dernière phrase complète avant maxLength
-  const match = text
-    .slice(0, maxLength - ellipsis.length)
-    .match(/^.*[.!?]/);
+	// Chercher la dernière phrase complète avant maxLength
+	const match = text.slice(0, maxLength - ellipsis.length).match(/^.*[.!?]/);
 
-  if (match) {
-    return match[0];
-  }
+	if (match) {
+		return match[0];
+	}
 
-  // Fallback : troncature standard
-  return truncate(text, maxLength, ellipsis);
+	// Fallback : troncature standard
+	return truncate(text, maxLength, ellipsis);
 }
-```
+````
 
 ### 3. Troncature HTML-aware
 
@@ -167,9 +156,9 @@ function truncateSentences(
  * ⚠️ Complexe - préférer strip HTML + truncate si possible
  */
 function truncateHTML(html: string, maxLength: number): string {
-  // Strip HTML, truncate, puis optionnellement re-wrap
-  const text = html.replace(/<[^>]+>/g, '');
-  return truncate(text, maxLength);
+	// Strip HTML, truncate, puis optionnellement re-wrap
+	const text = html.replace(/<[^>]+>/g, '');
+	return truncate(text, maxLength);
 }
 ```
 
@@ -180,20 +169,17 @@ function truncateHTML(html: string, maxLength: number): string {
  * Tronque et retourne aussi un flag pour afficher un tooltip
  */
 interface TruncationResult {
-  text: string;
-  truncated: boolean;
-  originalLength: number;
+	text: string;
+	truncated: boolean;
+	originalLength: number;
 }
 
-function truncateWithMeta(
-  text: string,
-  maxLength: number
-): TruncationResult {
-  return {
-    text: truncate(text, maxLength),
-    truncated: text.length > maxLength,
-    originalLength: text.length
-  };
+function truncateWithMeta(text: string, maxLength: number): TruncationResult {
+	return {
+		text: truncate(text, maxLength),
+		truncated: text.length > maxLength,
+		originalLength: text.length
+	};
 }
 
 // Usage en Svelte
@@ -228,19 +214,20 @@ const result = truncateWithMeta(law.title, 100);
 
 ```typescript
 // src/lib/server/etl/sources/europarl/laws.ts:103-105
-const shortTitle = displayTitle.length > 300
-  ? displayTitle.slice(0, 297).replace(/\s+\S*$/, '') + '...'
-  : displayTitle;
+const shortTitle =
+	displayTitle.length > 300
+		? displayTitle.slice(0, 297).replace(/\s+\S*$/, '') + '...'
+		: displayTitle;
 ```
 
 ### Cas 2 : Descriptions de cartes (UI)
 
 ```svelte
 <script>
-  export let description: string;
-  const maxLength = 150;
+	export let description: string;
+	const maxLength = 150;
 
-  $: truncatedDesc = truncate(description, maxLength);
+	$: truncatedDesc = truncate(description, maxLength);
 </script>
 
 <p>{truncatedDesc}</p>
@@ -249,27 +236,23 @@ const shortTitle = displayTitle.length > 300
 ### Cas 3 : Snippets de recherche
 
 ```typescript
-function createSearchSnippet(
-  fullText: string,
-  query: string,
-  maxLength: number = 200
-): string {
-  // Trouver la position du query
-  const index = fullText.toLowerCase().indexOf(query.toLowerCase());
+function createSearchSnippet(fullText: string, query: string, maxLength: number = 200): string {
+	// Trouver la position du query
+	const index = fullText.toLowerCase().indexOf(query.toLowerCase());
 
-  if (index === -1) {
-    // Query non trouvé → tronquer depuis le début
-    return truncate(fullText, maxLength);
-  }
+	if (index === -1) {
+		// Query non trouvé → tronquer depuis le début
+		return truncate(fullText, maxLength);
+	}
 
-  // Centrer le snippet autour du query
-  const start = Math.max(0, index - maxLength / 2);
-  const end = start + maxLength;
-  const snippet = fullText.slice(start, end);
+	// Centrer le snippet autour du query
+	const start = Math.max(0, index - maxLength / 2);
+	const end = start + maxLength;
+	const snippet = fullText.slice(start, end);
 
-  return (start > 0 ? '...' : '') +
-         truncate(snippet, maxLength) +
-         (end < fullText.length ? '...' : '');
+	return (
+		(start > 0 ? '...' : '') + truncate(snippet, maxLength) + (end < fullText.length ? '...' : '')
+	);
 }
 ```
 
@@ -277,43 +260,43 @@ function createSearchSnippet(
 
 ```typescript
 describe('truncate', () => {
-  it('should not truncate short text', () => {
-    expect(truncate('Short', 10)).toBe('Short');
-  });
+	it('should not truncate short text', () => {
+		expect(truncate('Short', 10)).toBe('Short');
+	});
 
-  it('should truncate long text with ellipsis', () => {
-    expect(truncate('Very long text here', 10)).toBe('Very...');
-  });
+	it('should truncate long text with ellipsis', () => {
+		expect(truncate('Very long text here', 10)).toBe('Very...');
+	});
 
-  it('should preserve complete words', () => {
-    const result = truncate('Résolution du Parlement européen', 25);
-    expect(result).toBe('Résolution du...');
-    expect(result).not.toContain('Parlem'); // Pas de mot coupé
-  });
+	it('should preserve complete words', () => {
+		const result = truncate('Résolution du Parlement européen', 25);
+		expect(result).toBe('Résolution du...');
+		expect(result).not.toContain('Parlem'); // Pas de mot coupé
+	});
 
-  it('should handle exact length boundary', () => {
-    expect(truncate('Exactly ten', 11)).toBe('Exactly ten');
-  });
+	it('should handle exact length boundary', () => {
+		expect(truncate('Exactly ten', 11)).toBe('Exactly ten');
+	});
 
-  it('should handle custom ellipsis', () => {
-    expect(truncate('Long text', 8, ' […]')).toBe('Long […]');
-  });
+	it('should handle custom ellipsis', () => {
+		expect(truncate('Long text', 8, ' […]')).toBe('Long […]');
+	});
 
-  it('should handle edge case: one word too long', () => {
-    const result = truncate('Supercalifragilisticexpialidocious', 10);
-    // Aucun espace → regex ne retire rien → coupe brutalement
-    expect(result.length).toBeLessThanOrEqual(10);
-  });
+	it('should handle edge case: one word too long', () => {
+		const result = truncate('Supercalifragilisticexpialidocious', 10);
+		// Aucun espace → regex ne retire rien → coupe brutalement
+		expect(result.length).toBeLessThanOrEqual(10);
+	});
 });
 
 describe('truncateWords', () => {
-  it('should truncate to N words', () => {
-    expect(truncateWords('One two three four five', 3)).toBe('One two three...');
-  });
+	it('should truncate to N words', () => {
+		expect(truncateWords('One two three four five', 3)).toBe('One two three...');
+	});
 
-  it('should not truncate if less than N words', () => {
-    expect(truncateWords('One two', 5)).toBe('One two');
-  });
+	it('should not truncate if less than N words', () => {
+		expect(truncateWords('One two', 5)).toBe('One two');
+	});
 });
 ```
 
@@ -332,7 +315,7 @@ describe('truncateWords', () => {
 
 ```typescript
 // ❌ MAUVAIS : Coupe mid-mot
-text.slice(0, 300)
+text.slice(0, 300);
 // → "Résolution du Parlement européen sur le règlemen..."
 ```
 
@@ -340,7 +323,7 @@ text.slice(0, 300)
 
 ```typescript
 // ❌ MAUVAIS : Peut dépasser maxLength
-text.slice(0, 300) + '...'  // → 303 chars si text.length > 300
+text.slice(0, 300) + '...'; // → 303 chars si text.length > 300
 // → Viole la contrainte VARCHAR(300)
 ```
 
@@ -348,7 +331,7 @@ text.slice(0, 300) + '...'  // → 303 chars si text.length > 300
 
 ```typescript
 // ❌ MAUVAIS : Pas d'indication de troncature
-text.slice(0, 300)
+text.slice(0, 300);
 // Utilisateur ne sait pas que le texte est incomplet
 ```
 
@@ -372,8 +355,8 @@ Si vous tronquez des milliers de textes :
 import memoize from 'lodash/memoize';
 
 const memoizedTruncate = memoize(
-  (text: string, maxLength: number) => truncate(text, maxLength),
-  (text, maxLength) => `${text.slice(0, 50)}-${maxLength}` // Cache key
+	(text: string, maxLength: number) => truncate(text, maxLength),
+	(text, maxLength) => `${text.slice(0, 50)}-${maxLength}` // Cache key
 );
 ```
 
@@ -383,10 +366,10 @@ const memoizedTruncate = memoize(
 const WORD_BOUNDARY_REGEX = /\s+\S*$/;
 
 function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
+	if (text.length <= maxLength) return text;
 
-  const targetLength = maxLength - 3;
-  return text.slice(0, targetLength).replace(WORD_BOUNDARY_REGEX, '') + '...';
+	const targetLength = maxLength - 3;
+	return text.slice(0, targetLength).replace(WORD_BOUNDARY_REGEX, '') + '...';
 }
 ```
 
@@ -403,7 +386,7 @@ function truncate(text: string, maxLength: number): string {
 
 ```typescript
 // ✅ JavaScript slice() est UTF-8 safe
-'Café ☕ résumé'.slice(0, 10)  // → 'Café ☕ ré'
+'Café ☕ résumé'.slice(0, 10); // → 'Café ☕ ré'
 
 // Pas de problème avec emojis, accents, etc.
 ```
@@ -415,9 +398,9 @@ function truncate(text: string, maxLength: number): string {
 // Anglais : pas d'espaces avant ponctuation
 
 function truncateMultilang(text: string, maxLength: number, lang: 'fr' | 'en' = 'fr'): string {
-  // Logique similaire, mais aware des règles de ponctuation
-  // Complexe → à implémenter seulement si nécessaire
-  return truncate(text, maxLength);
+	// Logique similaire, mais aware des règles de ponctuation
+	// Complexe → à implémenter seulement si nécessaire
+	return truncate(text, maxLength);
 }
 ```
 
@@ -427,6 +410,6 @@ function truncateMultilang(text: string, maxLength: number, lang: 'fr' | 'en' = 
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                          |
+| ---------- | ----------------------------------------------------- |
 | 2026-02-07 | Création suite à implémentation shortTitle truncation |

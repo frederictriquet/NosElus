@@ -1,6 +1,7 @@
 # Standard : Security Headers HTTP
 
 ## Catégorie
+
 Security
 
 ## Règle
@@ -16,12 +17,12 @@ Security
 
 ### Menaces protégées
 
-| Header | Protection | Impact sans |
-|--------|-----------|-------------|
-| X-Frame-Options | **Clickjacking** : Empêche l'app d'être embarquée dans une iframe malveillante | Utilisateurs trompés, actions non intentionnelles |
-| X-Content-Type-Options | **MIME sniffing** : Force le respect du Content-Type déclaré | Scripts malveillants exécutés via fichiers déguisés |
-| Referrer-Policy | **Fuite d'info** : Contrôle les URLs envoyées aux sites externes | URLs complètes avec tokens/IDs exposées |
-| Content-Security-Policy | **XSS, injection** : Contrôle strict des sources de contenu autorisées | Scripts malveillants, vol de données |
+| Header                  | Protection                                                                     | Impact sans                                         |
+| ----------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| X-Frame-Options         | **Clickjacking** : Empêche l'app d'être embarquée dans une iframe malveillante | Utilisateurs trompés, actions non intentionnelles   |
+| X-Content-Type-Options  | **MIME sniffing** : Force le respect du Content-Type déclaré                   | Scripts malveillants exécutés via fichiers déguisés |
+| Referrer-Policy         | **Fuite d'info** : Contrôle les URLs envoyées aux sites externes               | URLs complètes avec tokens/IDs exposées             |
+| Content-Security-Policy | **XSS, injection** : Contrôle strict des sources de contenu autorisées         | Scripts malveillants, vol de données                |
 
 ### Score de sécurité
 
@@ -37,33 +38,33 @@ Security
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const response = await resolve(event);
-  
-  // Headers de sécurité essentiels
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // CSP configurée dans svelte.config.js (voir pattern-sveltekit-csp-nonces.md)
-  
-  return response;
+	const response = await resolve(event);
+
+	// Headers de sécurité essentiels
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+	// CSP configurée dans svelte.config.js (voir pattern-sveltekit-csp-nonces.md)
+
+	return response;
 };
 ```
 
 ```javascript
 // svelte.config.js
 const config = {
-  kit: {
-    csp: {
-      directives: {
-        'default-src': ['self'],
-        'script-src': ['self'], // Nonces automatiques
-        'style-src': ['self', 'unsafe-inline'], // Requis Svelte
-        'img-src': ['self', 'data:', /* sources officielles */],
-        'frame-ancestors': ['none']
-      }
-    }
-  }
+	kit: {
+		csp: {
+			directives: {
+				'default-src': ['self'],
+				'script-src': ['self'], // Nonces automatiques
+				'style-src': ['self', 'unsafe-inline'], // Requis Svelte
+				'img-src': ['self', 'data:' /* sources officielles */],
+				'frame-ancestors': ['none']
+			}
+		}
+	}
 };
 ```
 
@@ -76,15 +77,17 @@ const helmet = require('helmet');
 app.use(helmet.frameguard({ action: 'deny' }));
 app.use(helmet.noSniff());
 app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    styleSrc: ["'self'"],
-    imgSrc: ["'self'", "data:"],
-    frameAncestors: ["'none'"]
-  }
-}));
+app.use(
+	helmet.contentSecurityPolicy({
+		directives: {
+			defaultSrc: ["'self'"],
+			scriptSrc: ["'self'"],
+			styleSrc: ["'self'"],
+			imgSrc: ["'self'", 'data:'],
+			frameAncestors: ["'none'"]
+		}
+	})
+);
 ```
 
 ### ❌ Incorrect - Headers manquants
@@ -92,7 +95,7 @@ app.use(helmet.contentSecurityPolicy({
 ```typescript
 // ❌ INCORRECT - Aucun header de sécurité
 export const handle: Handle = async ({ event, resolve }) => {
-  return await resolve(event);
+	return await resolve(event);
 };
 ```
 
@@ -100,8 +103,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ```typescript
 // ❌ INCORRECT - CSP trop permissive
-response.headers.set('Content-Security-Policy', 
-  "default-src *; script-src * 'unsafe-inline' 'unsafe-eval';"
+response.headers.set(
+	'Content-Security-Policy',
+	"default-src *; script-src * 'unsafe-inline' 'unsafe-eval';"
 );
 // → Permet tout, ne protège contre rien
 ```
@@ -118,17 +122,19 @@ response.headers.set('Content-Security-Policy',
 ```javascript
 // next.config.js
 module.exports = {
-  async headers() {
-    return [{
-      source: '/:path*',
-      headers: [
-        { key: 'X-Frame-Options', value: 'DENY' },
-        { key: 'X-Content-Type-Options', value: 'nosniff' },
-        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        { key: 'Content-Security-Policy', value: "default-src 'self'; ..." }
-      ]
-    }];
-  }
+	async headers() {
+		return [
+			{
+				source: '/:path*',
+				headers: [
+					{ key: 'X-Frame-Options', value: 'DENY' },
+					{ key: 'X-Content-Type-Options', value: 'nosniff' },
+					{ key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+					{ key: 'Content-Security-Policy', value: "default-src 'self'; ..." }
+				]
+			}
+		];
+	}
 };
 ```
 
@@ -137,13 +143,13 @@ module.exports = {
 ```javascript
 // nuxt.config.ts
 export default defineNuxtConfig({
-  nitro: {
-    headers: {
-      'X-Frame-Options': 'DENY',
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
-    }
-  }
+	nitro: {
+		headers: {
+			'X-Frame-Options': 'DENY',
+			'X-Content-Type-Options': 'nosniff',
+			'Referrer-Policy': 'strict-origin-when-cross-origin'
+		}
+	}
 });
 ```
 
@@ -199,33 +205,35 @@ csp: { directives: { 'frame-ancestors': ['self'] } }
 ```typescript
 // src/hooks.server.test.ts
 describe('Security Headers', () => {
-  it('should set X-Frame-Options', async () => {
-    const response = await handle({ event, resolve });
-    expect(response.headers.get('X-Frame-Options')).toBe('DENY');
-  });
-  
-  it('should set X-Content-Type-Options', async () => {
-    const response = await handle({ event, resolve });
-    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
-  });
-  
-  it('should set Referrer-Policy', async () => {
-    const response = await handle({ event, resolve });
-    expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
-  });
-  
-  // CSP testée en E2E (voir pattern-sveltekit-csp-nonces.md)
+	it('should set X-Frame-Options', async () => {
+		const response = await handle({ event, resolve });
+		expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+	});
+
+	it('should set X-Content-Type-Options', async () => {
+		const response = await handle({ event, resolve });
+		expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
+	});
+
+	it('should set Referrer-Policy', async () => {
+		const response = await handle({ event, resolve });
+		expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
+	});
+
+	// CSP testée en E2E (voir pattern-sveltekit-csp-nonces.md)
 });
 ```
 
 ### 2. Vérification manuelle
 
 **DevTools** (Chrome/Firefox) :
+
 1. Network > sélectionner requête HTML
 2. Onglet Headers
 3. Vérifier présence des 4 headers
 
 **Console** :
+
 - Aucune erreur "CSP violation"
 - Toutes les ressources se chargent
 
@@ -246,15 +254,19 @@ Lors de la revue de code, vérifier :
 - [ ] Aucune erreur CSP en console lors des tests manuels
 
 ## Date d'adoption
+
 2026-02-02
 
 ## Impact sur les Projets Existants
 
 ### Nouveau projet
+
 ✅ Implémenter dès le début (coût : ~1h)
 
 ### Projet existant
+
 ⚠️ Tester en staging avant prod :
+
 1. Implémenter les headers
 2. Tester toutes les pages/features
 3. Vérifier analytics/CDN externes fonctionnent
@@ -273,6 +285,6 @@ Lors de la revue de code, vérifier :
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                               |
+| ---------- | ------------------------------------------ |
 | 2026-02-02 | Création standard (implémentation NosElus) |

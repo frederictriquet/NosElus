@@ -1,9 +1,11 @@
 # Standard : Définitions de Données Partagées
 
 ## Catégorie
+
 Data Quality / Architecture / Standards
 
 ## Date d'adoption
+
 2026-02-09
 
 ## Règle
@@ -13,16 +15,20 @@ Data Quality / Architecture / Standards
 ## Justification
 
 ### Problème observé (2026-02-09)
+
 Deux composants utilisaient des définitions différentes de "texte complet" :
+
 - ETL LLM : `isNotNull(description)` ❌
 - Dashboard : `length(description) > 100` ✅
 
 **Résultat** : 1190 résumés IA générés pour des descriptions de 25 chars ("Proposition de résolution").
 
 ### Root Cause
+
 Définitions implicites dispersées dans le code → incohérences silencieuses.
 
 ### Bénéfices de la centralisation
+
 ✅ **Une seule source de vérité** : Impossible d'avoir des définitions divergentes
 ✅ **Maintenabilité** : Changer la définition une seule fois
 ✅ **Documentation** : La constante documente la règle métier
@@ -33,15 +39,15 @@ Définitions implicites dispersées dans le code → incohérences silencieuses.
 
 ### Textes de Lois
 
-```typescript
+````typescript
 // src/lib/server/db/constants.ts
 
 /**
  * Seuil minimal (en caractères) pour considérer une description comme "texte complet".
- * 
- * Les descriptions courtes (≤100 chars) sont des labels génériques comme 
+ *
+ * Les descriptions courtes (≤100 chars) sont des labels génériques comme
  * "Proposition de résolution" (25 chars) qui ne contiennent pas de texte analysable.
- * 
+ *
  * @constant
  * @example
  * ```typescript
@@ -54,7 +60,7 @@ export const MIN_DESCRIPTION_LENGTH = 100;
 
 /**
  * Filtre Drizzle ORM pour "texte complet" utilisable dans les requêtes SQL.
- * 
+ *
  * @example
  * ```typescript
  * const laws = await db
@@ -64,34 +70,31 @@ export const MIN_DESCRIPTION_LENGTH = 100;
  * ```
  */
 export const hasFullTextFilter = gt(sql`length(${laws.description})`, MIN_DESCRIPTION_LENGTH);
-```
+````
 
 ### Mandats Actifs
 
 ```typescript
 /**
  * Critère pour considérer un mandat comme "actif" à une date donnée.
- * 
+ *
  * Un mandat est actif si :
  * - Sa date de début ≤ date de référence
  * - Sa date de fin est NULL OU > date de référence
  */
 export function isMandateActive(mandate: Mandate, referenceDate: Date): boolean {
-  return (
-    mandate.startDate <= referenceDate &&
-    (mandate.endDate === null || mandate.endDate > referenceDate)
-  );
+	return (
+		mandate.startDate <= referenceDate &&
+		(mandate.endDate === null || mandate.endDate > referenceDate)
+	);
 }
 
 // SQL equivalent
 export function activeMandateFilter(referenceDate: Date) {
-  return and(
-    lte(mandates.startDate, referenceDate),
-    or(
-      isNull(mandates.endDate),
-      gt(mandates.endDate, referenceDate)
-    )
-  );
+	return and(
+		lte(mandates.startDate, referenceDate),
+		or(isNull(mandates.endDate), gt(mandates.endDate, referenceDate))
+	);
 }
 ```
 
@@ -100,7 +103,7 @@ export function activeMandateFilter(referenceDate: Date) {
 ```typescript
 /**
  * Seuil minimal de votants pour considérer un scrutin comme "significatif".
- * 
+ *
  * Les scrutins avec < 50 votants sont souvent des votes procéduraux ou techniques
  * qui ne reflètent pas de véritables positions politiques.
  */
@@ -113,10 +116,7 @@ export const MIN_SIGNIFICANT_VOTES = 50;
 
 ```typescript
 // ETL LLM
-const unanalyzedLaws = await db
-  .select()
-  .from(laws)
-  .where(hasFullTextFilter);
+const unanalyzedLaws = await db.select().from(laws).where(hasFullTextFilter);
 
 // Dashboard
 const stats = await db.execute(sql`
@@ -127,10 +127,7 @@ const stats = await db.execute(sql`
 
 // Quiz
 function getLawsForQuiz(laws: Law[]): Law[] {
-  return laws.filter(law => 
-    law.description && 
-    law.description.length > MIN_DESCRIPTION_LENGTH
-  );
+	return laws.filter((law) => law.description && law.description.length > MIN_DESCRIPTION_LENGTH);
 }
 ```
 
@@ -140,10 +137,7 @@ function getLawsForQuiz(laws: Law[]): Law[] {
 
 ```typescript
 // ETL LLM
-const unanalyzedLaws = await db
-  .select()
-  .from(laws)
-  .where(isNotNull(laws.description)); // ❌ Définition différente
+const unanalyzedLaws = await db.select().from(laws).where(isNotNull(laws.description)); // ❌ Définition différente
 
 // Dashboard
 const stats = await db.execute(sql`
@@ -154,7 +148,7 @@ const stats = await db.execute(sql`
 
 // Quiz
 function getLawsForQuiz(laws: Law[]): Law[] {
-  return laws.filter(law => law.description !== null); // ❌ Encore différent
+	return laws.filter((law) => law.description !== null); // ❌ Encore différent
 }
 ```
 
@@ -173,9 +167,9 @@ function getLawsForQuiz(laws: Law[]): Law[] {
 ```typescript
 // Composant unique : filtre UI local
 function filterBySearchTerm(items: Item[], search: string): Item[] {
-  const minLength = 3; // OK : utilisé uniquement ici
-  if (search.length < minLength) return items;
-  return items.filter(item => item.name.includes(search));
+	const minLength = 3; // OK : utilisé uniquement ici
+	if (search.length < minLength) return items;
+	return items.filter((item) => item.name.includes(search));
 }
 ```
 
@@ -208,10 +202,13 @@ grep -r "length.*description.*100" src/
 ```json
 // eslint custom rule
 {
-  "no-magic-numbers": ["error", { 
-    "ignore": [0, 1, -1],
-    "enforceConst": true
-  }]
+	"no-magic-numbers": [
+		"error",
+		{
+			"ignore": [0, 1, -1],
+			"enforceConst": true
+		}
+	]
 }
 ```
 
@@ -220,6 +217,7 @@ grep -r "length.*description.*100" src/
 ### Étape 1 : Identifier les Définitions Critiques
 
 Chercher les concepts métier répétés :
+
 - "Texte complet"
 - "Actif"
 - "Valide"
@@ -232,7 +230,7 @@ Chercher les concepts métier répétés :
 // src/lib/server/db/constants.ts
 /**
  * Constantes définissant les critères métier pour la qualité des données.
- * 
+ *
  * Toute modification ici impacte potentiellement :
  * - ETL (import de données)
  * - Dashboard (statistiques)
@@ -258,15 +256,15 @@ export const MIN_SIGNIFICANT_VOTES = 50;
 ```typescript
 // constants.test.ts
 describe('Data Quality Constants', () => {
-  it('MIN_DESCRIPTION_LENGTH should filter short labels', () => {
-    const shortLabel = 'Proposition de résolution'; // 25 chars
-    expect(shortLabel.length).toBeLessThanOrEqual(MIN_DESCRIPTION_LENGTH);
-  });
-  
-  it('MIN_DESCRIPTION_LENGTH should accept substantive text', () => {
-    const substantiveText = 'A'.repeat(101);
-    expect(substantiveText.length).toBeGreaterThan(MIN_DESCRIPTION_LENGTH);
-  });
+	it('MIN_DESCRIPTION_LENGTH should filter short labels', () => {
+		const shortLabel = 'Proposition de résolution'; // 25 chars
+		expect(shortLabel.length).toBeLessThanOrEqual(MIN_DESCRIPTION_LENGTH);
+	});
+
+	it('MIN_DESCRIPTION_LENGTH should accept substantive text', () => {
+		const substantiveText = 'A'.repeat(101);
+		expect(substantiveText.length).toBeGreaterThan(MIN_DESCRIPTION_LENGTH);
+	});
 });
 ```
 
@@ -282,8 +280,7 @@ import { MIN_DESCRIPTION_LENGTH } from './constants';
  * Vérifie si une loi a un texte complet analysable.
  */
 export function hasFullText(law: Law): boolean {
-  return law.description !== null && 
-         law.description.length > MIN_DESCRIPTION_LENGTH;
+	return law.description !== null && law.description.length > MIN_DESCRIPTION_LENGTH;
 }
 
 // Usage
@@ -297,7 +294,7 @@ const analyzableLaws = allLaws.filter(hasFullText);
  * Type guard pour lois avec texte complet.
  */
 export function isLawWithFullText(law: Law): law is Law & { description: string } {
-  return law.description !== null && 
+  return law.description !== null &&
          law.description.length > MIN_DESCRIPTION_LENGTH;
 }
 
@@ -309,12 +306,12 @@ const withText = laws.filter(isLawWithFullText);
 
 ## Métriques de Succès
 
-| Indicateur | Avant | Après |
-|------------|-------|-------|
-| Définitions dupliquées | 3+ occurrences | 1 constante |
-| Risque d'incohérence | Élevé | Faible |
-| Maintenabilité | Modification N fichiers | Modification 1 fichier |
-| Documentation | Implicite | Explicite (JSDoc) |
+| Indicateur             | Avant                   | Après                  |
+| ---------------------- | ----------------------- | ---------------------- |
+| Définitions dupliquées | 3+ occurrences          | 1 constante            |
+| Risque d'incohérence   | Élevé                   | Faible                 |
+| Maintenabilité         | Modification N fichiers | Modification 1 fichier |
+| Documentation          | Implicite               | Explicite (JSDoc)      |
 
 ## Documentation Automatique
 
@@ -336,8 +333,8 @@ Les constantes servent aussi de documentation vivante :
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                           |
+| ---------- | -------------------------------------- |
 | 2026-02-09 | Création suite à incident PE summaries |
 
 ## Références

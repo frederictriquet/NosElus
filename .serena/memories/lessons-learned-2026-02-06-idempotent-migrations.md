@@ -1,6 +1,7 @@
 # Lessons Learned : Migrations Idempotentes avec Drizzle ORM
 
 ## Date
+
 2026-02-06
 
 ## Contexte
@@ -12,6 +13,7 @@ Mise en place d'un système pour rendre toutes les migrations Drizzle ORM idempo
 ## Architecture Retenue
 
 **Solution Hybrid** (ADR-005) :
+
 - Script automatique `make-idempotent.js` pour 80% des cas
 - Documentation SERENA pour les 20% restants
 - Review humaine obligatoire
@@ -25,6 +27,7 @@ Mise en place d'un système pour rendre toutes les migrations Drizzle ORM idempo
 **Décision** : Ne pas chercher la perfection (100% automatique) mais viser l'efficacité (80% auto + 20% doc).
 
 **Bénéfice** :
+
 - Script simple et maintenable (~85 lignes)
 - Gère les cas courants sans complexité excessive
 - Doc guide pour les cas edge
@@ -34,10 +37,11 @@ Mise en place d'un système pour rendre toutes les migrations Drizzle ORM idempo
 #### 2. Détection des Cas Edge avec Warnings
 
 Le script ne se contente pas de transformer, il **détecte et alerte** :
+
 ```javascript
 const constraintMatches = result.match(/ADD CONSTRAINT/g);
 if (constraintMatches) {
-  warnings.push('⚠️ ADD CONSTRAINT nécessite review manuelle');
+	warnings.push('⚠️ ADD CONSTRAINT nécessite review manuelle');
 }
 ```
 
@@ -52,6 +56,7 @@ if (constraintMatches) {
 ```
 
 **Bénéfice** :
+
 - Transparence totale (le développeur n'a rien à faire)
 - Impossible d'oublier
 - Log visible à chaque génération
@@ -64,7 +69,8 @@ if (constraintMatches) {
 
 **Décision** : Standard s'applique uniquement à 0012+.
 
-**Bénéfice** : 
+**Bénéfice** :
+
 - Zéro risque prod
 - Implémentation rapide (pas de migration des anciennes)
 - Focus sur le futur
@@ -74,6 +80,7 @@ if (constraintMatches) {
 #### 5. Patterns SQL Idempotents Documentés
 
 La doc SERENA liste **tous les cas** avec exemples :
+
 - `CREATE TABLE IF NOT EXISTS`
 - `ADD COLUMN IF NOT EXISTS`
 - Wrapper PL/pgSQL pour `ADD CONSTRAINT`
@@ -88,15 +95,18 @@ La doc SERENA liste **tous les cas** avec exemples :
 #### 1. Regex Limités (Mais Acceptables)
 
 Le script utilise des regex simples :
+
 ```javascript
 result.replace(/CREATE TABLE "(\w+)"/g, 'CREATE TABLE IF NOT EXISTS "$1"');
 ```
 
 **Limitation connue** : Ne gère pas :
+
 - Les noms de tables avec caractères spéciaux
 - Les syntaxes SQL complexes (sous-requêtes, etc.)
 
-**Mitigation** : 
+**Mitigation** :
+
 - Review humaine obligatoire
 - Documentation des limitations dans le code
 - Amélioration itérative si besoin réel
@@ -108,6 +118,7 @@ result.replace(/CREATE TABLE "(\w+)"/g, 'CREATE TABLE IF NOT EXISTS "$1"');
 **Risque** : Si Drizzle change sa génération SQL, le script peut casser.
 
 **Mitigation** :
+
 - Script simple, facile à ajuster
 - Tests manuels lors des updates Drizzle
 - Monitoring des releases Drizzle
@@ -119,6 +130,7 @@ result.replace(/CREATE TABLE "(\w+)"/g, 'CREATE TABLE IF NOT EXISTS "$1"');
 PostgreSQL n'a pas de `ADD CONSTRAINT IF NOT EXISTS` natif.
 
 **Solution** :
+
 ```sql
 DO $$
 BEGIN
@@ -137,6 +149,7 @@ END $$;
 **Option rejetée** : Surcharger les méthodes de génération Drizzle.
 
 **Raison** :
+
 - Trop couplé aux internals Drizzle
 - Maintenance cauchemardesque
 - Risque de casser à chaque update
@@ -148,6 +161,7 @@ END $$;
 **Tentation** : Parser SQL complet avec AST pour gérer tous les cas.
 
 **Raison de rejeter** :
+
 - Effort démesuré (20-30h) pour peu de gain (les 20% restants)
 - Parser SQL = problème complexe (dialectes, edge cases)
 - Overkill pour un besoin ponctuel
@@ -159,6 +173,7 @@ END $$;
 **Option envisagée** : Utiliser `node-sql-parser` ou similaire.
 
 **Raison de rejeter** :
+
 - Dépendance supplémentaire
 - Complexité ajoutée
 - Regex suffisent pour les cas simples
@@ -185,6 +200,7 @@ END $$;
 ### ADR Avant Implémentation
 
 Le fait de créer l'ADR-005 **avant** d'implémenter a permis :
+
 - Valider l'approche avec l'utilisateur
 - Avoir un plan clair pour `/implement`
 - Documenter les options rejetées (évite de les réexplorer)
@@ -193,12 +209,12 @@ Le fait de créer l'ADR-005 **avant** d'implémenter a permis :
 
 ## Métriques
 
-| Métrique | Avant | Après |
-|----------|-------|-------|
-| Migrations idempotentes | 0/12 (0%) | Standard établi pour 0012+ |
+| Métrique                                    | Avant             | Après                         |
+| ------------------------------------------- | ----------------- | ----------------------------- |
+| Migrations idempotentes                     | 0/12 (0%)         | Standard établi pour 0012+    |
 | Temps pour rendre une migration idempotente | 5-10 min (manuel) | 0 sec (auto) + 2 min (review) |
-| Risque d'oubli | Élevé | Faible (hook auto) |
-| Documentation | Inexistante | ADR + Pattern SERENA |
+| Risque d'oubli                              | Élevé             | Faible (hook auto)            |
+| Documentation                               | Inexistante       | ADR + Pattern SERENA          |
 
 ## Réutilisabilité
 
@@ -219,6 +235,7 @@ Le fait de créer l'ADR-005 **avant** d'implémenter a permis :
 ### Code réutilisable
 
 Le script `make-idempotent.js` peut être adapté pour :
+
 - Autres ORM (Prisma, TypeORM)
 - Autres bases (MySQL, SQLite)
 - Autres transformations post-génération
@@ -244,15 +261,15 @@ Le script `make-idempotent.js` peut être adapté pour :
 
 ## Fichiers Créés
 
-| Fichier | Type | Lignes | Rôle |
-|---------|------|--------|------|
-| `scripts/make-idempotent.js` | Script | 85 | Transformations automatiques |
-| `adr-2026-02-06-idempotent-migrations.md` | ADR | ~250 | Justification technique |
-| `pattern-idempotent-migrations.md` | Doc | ~100 | Patterns SQL + checklist |
-| `package.json` (modifié) | Config | 1 ligne | Hook NPM |
+| Fichier                                   | Type   | Lignes  | Rôle                         |
+| ----------------------------------------- | ------ | ------- | ---------------------------- |
+| `scripts/make-idempotent.js`              | Script | 85      | Transformations automatiques |
+| `adr-2026-02-06-idempotent-migrations.md` | ADR    | ~250    | Justification technique      |
+| `pattern-idempotent-migrations.md`        | Doc    | ~100    | Patterns SQL + checklist     |
+| `package.json` (modifié)                  | Config | 1 ligne | Hook NPM                     |
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                            |
+| ---------- | ------------------------------------------------------- |
 | 2026-02-06 | Création suite à implémentation migrations idempotentes |

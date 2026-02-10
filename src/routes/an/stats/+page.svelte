@@ -490,12 +490,6 @@
 </div>
 
 <style>
-	h2 {
-		font-size: 1.25rem;
-		font-weight: 600;
-		margin-bottom: 1rem;
-	}
-
 	/* Skeleton loading */
 	.stat-card.loading {
 		display: flex;
@@ -946,70 +940,4 @@
 		color: var(--color-text-muted);
 	}
 
-	/* Chamber comparison cards */
-	.chamber-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 1rem;
-		margin-bottom: 2rem;
-	}
-
-	.chamber-card {
-		background: var(--color-surface);
-		border-radius: var(--radius-lg);
-		padding: 1.25rem;
-		text-decoration: none;
-		color: inherit;
-		transition:
-			box-shadow 0.2s,
-			transform 0.2s;
-		border: 1px solid var(--color-border);
-	}
-
-	.chamber-card:hover {
-		box-shadow: var(--shadow-md);
-		transform: translateY(-2px);
-		text-decoration: none;
-	}
-
-	.chamber-card.loading {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.chamber-label {
-		font-weight: 600;
-		font-size: 1rem;
-		margin-bottom: 0.75rem;
-		color: var(--color-text);
-	}
-
-	.chamber-stats {
-		display: flex;
-		gap: 1rem;
-	}
-
-	.chamber-stat {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-	}
-
-	.chamber-value {
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-primary);
-	}
-
-	.chamber-name {
-		font-size: 0.75rem;
-		color: var(--color-text-muted);
-	}
-
-	@media (max-width: 768px) {
-		.chamber-grid {
-			grid-template-columns: 1fr;
-		}
-	}
 </style>

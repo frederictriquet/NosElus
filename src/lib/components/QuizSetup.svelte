@@ -85,6 +85,7 @@
 	let { availableTags, allLaws, onStart }: Props = $props();
 
 	// État : tous les tags cochés par défaut
+	// svelte-ignore state_referenced_locally
 	let selectedSlugs = $state<Set<string>>(new Set(availableTags.map((t) => t.slug)));
 	let quizSize = $state(10);
 

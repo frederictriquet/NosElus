@@ -8,14 +8,14 @@
 
 ## Résumé Exécutif
 
-| Catégorie | Sévérité | Findings |
-|-----------|----------|----------|
-| Dépendances | Moyenne | 11 vulnérabilités npm |
-| Injection SQL | Faible | Aucune (Drizzle ORM protège) |
-| XSS | Faible | Aucun @html/innerHTML détecté |
-| Headers Sécurité | Moyenne | Absents |
-| Validation Entrées | Faible | Quelques améliorations possibles |
-| Secrets | OK | Pas d'exposition détectée |
+| Catégorie          | Sévérité | Findings                         |
+| ------------------ | -------- | -------------------------------- |
+| Dépendances        | Moyenne  | 11 vulnérabilités npm            |
+| Injection SQL      | Faible   | Aucune (Drizzle ORM protège)     |
+| XSS                | Faible   | Aucun @html/innerHTML détecté    |
+| Headers Sécurité   | Moyenne  | Absents                          |
+| Validation Entrées | Faible   | Quelques améliorations possibles |
+| Secrets            | OK       | Pas d'exposition détectée        |
 
 ---
 
@@ -23,12 +23,13 @@
 
 ### Trouvées: 11 vulnérabilités
 
-| Package | Sévérité | Problème |
-|---------|----------|----------|
-| cookie <0.7.0 | Moyenne | Accepte certains caractères invalides |
-| esbuild <=0.24.2 | Moyenne | Vulnérabilités non spécifiées |
+| Package          | Sévérité | Problème                              |
+| ---------------- | -------- | ------------------------------------- |
+| cookie <0.7.0    | Moyenne  | Accepte certains caractères invalides |
+| esbuild <=0.24.2 | Moyenne  | Vulnérabilités non spécifiées         |
 
 ### Recommandation
+
 Ces vulnérabilités sont dans des dépendances transitives (vite, esbuild). Une mise à jour pourrait nécessiter des changements breaking. À surveiller lors des mises à jour majeures.
 
 ---
@@ -40,6 +41,7 @@ Ces vulnérabilités sont dans des dépendances transitives (vite, esbuild). Une
 L'application utilise **Drizzle ORM** qui paramétrise automatiquement les requêtes via les template literals `sql\`...\``.
 
 **Exemple de code sécurisé trouvé** (`src/routes/api/v1/search/+server.ts:33`):
+
 ```typescript
 .where(or(ilike(actors.fullName, searchTerm), ilike(actors.lastName, searchTerm)))
 ```
@@ -88,7 +90,10 @@ const response = await resolve(event);
 response.headers.set('X-Frame-Options', 'DENY');
 response.headers.set('X-Content-Type-Options', 'nosniff');
 response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-response.headers.set('Content-Security-Policy', "default-src 'self'; img-src 'self' https://www.assemblee-nationale.fr");
+response.headers.set(
+	'Content-Security-Policy',
+	"default-src 'self'; img-src 'self' https://www.assemblee-nationale.fr"
+);
 ```
 
 ### Sévérité: **Moyenne** - À implémenter
@@ -99,16 +104,17 @@ response.headers.set('Content-Security-Policy', "default-src 'self'; img-src 'se
 
 ### URL Parameters
 
-| Pattern | Fichiers | Status |
-|---------|----------|--------|
+| Pattern         | Fichiers    | Status                                  |
+| --------------- | ----------- | --------------------------------------- |
 | IDs (params.id) | 12 fichiers | OK - Utilisés dans requêtes paramétrées |
-| page/limit | 8 fichiers | OK - parseInt + Math.min/max |
-| dates | 5 fichiers | OK - Format string, pas d'exécution |
-| search query | 4 fichiers | OK - Passé à ILIKE |
+| page/limit      | 8 fichiers  | OK - parseInt + Math.min/max            |
+| dates           | 5 fichiers  | OK - Format string, pas d'exécution     |
+| search query    | 4 fichiers  | OK - Passé à ILIKE                      |
 
 ### Route Photo Proxy (`/api/photo/[...path]`)
 
 **Protections en place**:
+
 1. Whitelist de préfixes autorisés: `dyn/` et `tribun/`
 2. Sanitisation du nom de fichier cache: `replace(/[^a-zA-Z0-9.-]/g, '_')`
 3. Destination fixe: `https://www.assemblee-nationale.fr/`
@@ -121,10 +127,10 @@ response.headers.set('Content-Security-Policy', "default-src 'self'; img-src 'se
 
 ### Variables d'environnement
 
-| Variable | Usage | Exposition |
-|----------|-------|------------|
-| DATABASE_URL | Connexion DB | Côté serveur uniquement |
-| ETL_* | Scripts d'import | Côté serveur uniquement |
+| Variable     | Usage            | Exposition              |
+| ------------ | ---------------- | ----------------------- |
+| DATABASE_URL | Connexion DB     | Côté serveur uniquement |
+| ETL\_\*      | Scripts d'import | Côté serveur uniquement |
 
 ### Fichiers de configuration
 
@@ -168,6 +174,7 @@ L'application est **publique** (données ouvertes) - pas d'authentification util
 ### Recommandation
 
 Implémenter un rate limiting basique, par exemple:
+
 - 100 requêtes/minute pour la recherche
 - 1000 requêtes/minute pour les API de lecture
 
@@ -202,6 +209,7 @@ L'application NosElus présente un **niveau de sécurité acceptable** pour une 
 - Une validation basique des entrées
 
 Les points d'amélioration concernent principalement:
+
 - L'ajout de security headers HTTP
 - La surveillance des dépendances vulnérables
 - Un éventuel rate limiting en production

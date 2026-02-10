@@ -1,15 +1,15 @@
-
-
 # Roadmap NosElus
 
 ## Phase 1 - Fondations (0-4 semaines)
 
 ### 1.1 Inventaire des sources & modèles de données
+
 - [x] Cataloguer les API / dumps disponibles (AN, Sénat, NosDéputés, data.gouv.fr)
 - [x] Concevoir schéma DB unifié (députés + sénateurs + lois + votes)
 - [x] Configurer PostgreSQL avec Drizzle ORM
 
 ### 1.2 Ingestion initiale (ETL)
+
 - [x] ETL NosDéputés.fr - Députés
 - [x] ETL NosDéputés.fr - Groupes parlementaires
 - [x] ETL NosDéputés.fr - Scrutins
@@ -22,6 +22,7 @@
 - [x] ETL Sénat (data.senat.fr) - Travaux législatifs (DOSLEG) - 12 171 dossiers
 
 ### 1.3 API de base (backend)
+
 - [x] Endpoint REST `/api/v1/actors` - Liste des députés (618 importés)
 - [x] Endpoint REST `/api/v1/actors/:id` - Détail d'un élu + votes
 - [x] Endpoint REST `/api/v1/scrutins` - Liste des scrutins (4105 importés)
@@ -35,17 +36,20 @@
 ## Phase 2 - Données historiques (5-8 semaines)
 
 ### 2.1 Historique députés
+
 - [x] Intégrer données AN historiques depuis 1997 (2100 députés, législatures 12-17)
 - [x] Consolider affiliations politiques successives (8321 mandats GP)
 - [x] Mapper les mandats avec les législatures (3924 mandats député)
 
 ### 2.2 Votes historiques
+
 - [x] Charger scrutins archivés XIVe législature (via @tricoteuses/assemblee)
 - [x] Charger scrutins archivés XVe législature (via @tricoteuses/assemblee)
 - [x] Charger scrutins XVIe législature (via @tricoteuses/assemblee)
 - [x] Support import incrémental avec tracking des syncs
 
 ### 2.3 Dossiers législatifs
+
 - [x] ETL dossiers législatifs AN
 - [x] ETL dossiers législatifs Sénat (DOSLEG) - 12 171 dossiers depuis 1977
 - [x] Lier scrutins aux textes de loi
@@ -55,6 +59,7 @@
 ## Phase 3 - UI initiale (9-12 semaines)
 
 ### 3.1 Pages principales
+
 - [x] Page d'accueil avec statistiques clés
 - [x] Liste des députés avec filtres et recherche
 - [x] Liste des sénateurs avec filtres et recherche (348 sénateurs)
@@ -65,6 +70,7 @@
 - [x] Détail d'un groupe parlementaire
 
 ### 3.2 Recherche et navigation
+
 - [x] Recherche par nom de député
 - [x] Recherche par titre de scrutin
 - [x] Filtres par résultat (adopté/rejeté)
@@ -75,6 +81,7 @@
 ## Phase 4 - Analyse avancée (13-18 semaines)
 
 ### 4.1 Statistiques
+
 - [x] Taux de participation par député (Top 10)
 - [x] Cohésion de vote par groupe (tableau votes par groupe)
 - [x] Répartition globale des votes (pour/contre/abstention)
@@ -84,6 +91,7 @@
 - [x] Évolution des positions dans le temps (graphique mensuel)
 
 ### 4.2 Visualisations
+
 - [x] Graphique barres activité mensuelle
 - [x] Barre de répartition des votes
 - [x] Heatmap des votes par groupe (15 derniers scrutins)
@@ -96,12 +104,14 @@
 - [x] Timeline de carrière (jalons d'activité parlementaire)
 
 ### 4.3 Comparateur
+
 - [x] Comparaison de deux élus
 - [x] Similarité de vote (taux d'accord)
 - [x] Liste des votes divergents
 - [x] Distance politique calculée (pondérée selon type de désaccord)
 
 ### 4.6 Positionnement politique automatisé
+
 - [x] Intégrer données ParlGov (1700+ partis européens)
 - [x] Implémenter fuzzy Jaccard matching (75% success rate)
 - [x] Éliminer hardcoding spectrumOrder AN/PE (71 IDs)
@@ -115,6 +125,7 @@
 ## Phase 5 - Soft Launch (19-22 semaines)
 
 ### 5.1 Qualité
+
 - [ ] Tests unitaires API
 - [x] Tests E2E interface
 - [x] Audit de sécurité statique + Security Headers HTTP
@@ -122,16 +133,19 @@
 - [ ] Audit d'accessibilité (RGAA)
 
 ### 5.2 Documentation
+
 - [ ] Documentation API publique (OpenAPI/Swagger)
 - [ ] Guide utilisateur
 - [x] Mentions légales et RGPD
 
 ### 5.3 Déploiement
+
 - [ ] Configuration CI/CD
 - [ ] Déploiement production
 - [ ] Monitoring et alertes
 
 ### 5.4 Administration
+
 - [x] Page d'administration `/admin` avec authentification
 - [x] Édition manuelle des positions politiques par chambre
 - [x] Protection ETL par chambre (empêcher écrasement automatique)
@@ -141,6 +155,7 @@
 - [x] Documentation complète (ADMIN.md + JSDoc)
 
 ### 5.5 Data Quality
+
 - [x] Nettoyage résumés PE sans texte complet (suppression 1190 résumés invalides)
   - Détection incohérence : ETL utilisait `isNotNull(description)` vs Dashboard `length(description) > 100`
   - Fix : Alignement critère texte complet à `length > 100` dans ETL + debug page
@@ -152,11 +167,13 @@
 ## Phase 6 - Extensions (23-30 semaines)
 
 ### 6.1 Notifications
+
 - [ ] Système d'alertes email
 - [ ] Suivi d'un député spécifique
 - [ ] Alertes sur nouveaux scrutins
 
 ### 6.2 Quiz politique
+
 - [x] Configuration page (filtrage tags, sélection taille)
 - [x] Phase quiz avec navigation et abstention
 - [x] Calcul alignement (similarité Jaccard)
@@ -171,6 +188,7 @@
 - [x] Capitalisation patterns (factorisation, web scraping, normalization, CLI)
 
 ### 6.3 Intégrations
+
 - [x] Légifrance API (textes de loi promulguées)
   - [x] **Page admin de revue manuelle des textes de loi** (2026-02-10)
     - Page `/admin/law-text-review` pour gérer skip list Légifrance
@@ -182,6 +200,7 @@
 - [ ] API publique pour développeurs tiers
 
 ### 6.4 Fonctionnalités collaboratives
+
 - [ ] Annotations utilisateurs (modérées)
 - [ ] Commentaires sur les votes
 - [ ] Partage sur réseaux sociaux
@@ -191,6 +210,7 @@
 ## Phase 7 - Parlement européen (31-38 semaines)
 
 ### 7.1 Données eurodéputés
+
 - [x] ETL Parlement européen - Eurodéputés français (84 MEPs via ParlTrack, mandat 10 2024-2029)
 - [x] ETL Parlement européen - Groupes politiques européens (9 groupes avec couleurs officielles)
 - [x] ETL couleurs groupes PE depuis results.elections.europa.eu
@@ -201,12 +221,14 @@
 - [x] **Bug fix : Cohérence lawId PE** (2026-02-09) - Factorisation shared.ts, 54 tests non-régression, 2204 scrutins ↔ lois linked (99,9% données accessibles)
 
 ### 7.2 Interface eurodéputés
+
 - [x] Page `/eurodeputes` - Liste des eurodéputés français avec filtres (84 MEPs, infinite scroll)
 - [x] Fiche détaillée eurodéputé (profil + groupe + mandats)
 - [x] Statistiques de vote au Parlement européen (via ETL HowTheyVote.eu)
 - [x] Comparaison entre eurodéputés (`/eurodeputes/compare`)
 
 ### 7.3 Intégration multi-chambres
+
 - [x] Navigation unifiée AN / Sénat / PE (liens dans header)
 - [x] Recherche globale tous élus français (`/recherche`)
 - [x] Statistiques comparées entre chambres (page `/stats`)
@@ -215,20 +237,21 @@
 
 ## Sources de données
 
-| Source | Type | Statut | Documentation |
-|--------|------|--------|---------------|
-| NosDéputés.fr | API JSON | ✅ Fait | [API](https://www.nosdeputes.fr/api) |
-| NosSénateurs.fr | API JSON | ⚠️ Inaccessible | Site archivé |
-| Assemblée Nationale | JSON/XML | ✅ Fait | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/) |
-| Sénat | API + CSV | ✅ Fait | [data.senat.fr](https://data.senat.fr/) |
-| ParlTrack | JSON dump | ✅ Fait | [parltrack.org](https://parltrack.org/dumps/) |
-| EU Election Results | HTML/CSS | ✅ Fait | [results.elections.europa.eu](https://results.elections.europa.eu) |
-| HowTheyVote.eu | API JSON | ✅ Fait | [howtheyvote.eu](https://howtheyvote.eu) |
-| Légifrance | API PISTE | Planifié | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
+| Source              | Type      | Statut          | Documentation                                                                              |
+| ------------------- | --------- | --------------- | ------------------------------------------------------------------------------------------ |
+| NosDéputés.fr       | API JSON  | ✅ Fait         | [API](https://www.nosdeputes.fr/api)                                                       |
+| NosSénateurs.fr     | API JSON  | ⚠️ Inaccessible | Site archivé                                                                               |
+| Assemblée Nationale | JSON/XML  | ✅ Fait         | [data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/)                        |
+| Sénat               | API + CSV | ✅ Fait         | [data.senat.fr](https://data.senat.fr/)                                                    |
+| ParlTrack           | JSON dump | ✅ Fait         | [parltrack.org](https://parltrack.org/dumps/)                                              |
+| EU Election Results | HTML/CSS  | ✅ Fait         | [results.elections.europa.eu](https://results.elections.europa.eu)                         |
+| HowTheyVote.eu      | API JSON  | ✅ Fait         | [howtheyvote.eu](https://howtheyvote.eu)                                                   |
+| Légifrance          | API PISTE | Planifié        | [legifrance.gouv.fr](https://www.legifrance.gouv.fr/contenu/pied-de-page/open-data-et-api) |
 
 ### Limitations des sources
 
 **NosDéputés.fr (Regards Citoyens)** ✅
+
 - Site de nouveau accessible (janvier 2026)
 - Statistiques d'activité parlementaire importées (586 députés) :
   - Semaines de présence, présences en commission
@@ -238,11 +261,13 @@
 - **ETL** : `make etl-an-nosdeputes-stats`
 
 **NosSénateurs.fr (Regards Citoyens)** ⚠️
+
 - Site toujours inaccessible
 - **ETL prêt** : `make etl-senat-nossenateurs-stats`
 - **Alternative utilisée** : Données d'activité récupérées via senat.fr officiel
 
 **Sénat - Votes nominatifs**
+
 - Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable
 - Seuls les résultats agrégés des scrutins sont disponibles
 - Impact : pas de statistiques de vote ni de comparaison pour les sénateurs
@@ -253,24 +278,25 @@
 
 ### 8.1 Analyse des fonctionnalités AN existantes
 
-| Fonctionnalité AN | Page | PE | Sénat | Notes |
-|------------------|------|:---:|:-----:|-------|
-| Liste élus avec filtres | `/an/deputes` | ✅ | ✅ | Déjà implémenté |
-| Fiche détaillée élu | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
-| Historique mandats | `/an/deputes/[id]` | ✅ | ✅ | Déjà implémenté |
-| Liste groupes | `/an/groupes` | 🔜 | 🔜 | À implémenter |
-| Détail groupe | `/an/groupes/[id]` | 🔜 | 🔜 | À implémenter |
-| Liste scrutins | `/an/scrutins` | 🔜 | ❌ | PE: données HowTheyVote, Sénat: pas de données |
-| Détail scrutin | `/an/scrutins/[id]` | 🔜 | ❌ | PE: votes disponibles, Sénat: bloqué |
-| Statistiques | `/an/stats` | 🔜 | ❌ | PE: calculable, Sénat: pas de votes |
-| Carte/Hémicycle | `/an/carte` | ✅ | ❌ | PE: implémenté, Sénat: pas de positionnement |
-| Comparateur élus | `/an/compare` | ✅ | ❌ | PE: déjà fait, Sénat: nécessite votes |
+| Fonctionnalité AN       | Page                | PE  | Sénat | Notes                                          |
+| ----------------------- | ------------------- | :-: | :---: | ---------------------------------------------- |
+| Liste élus avec filtres | `/an/deputes`       | ✅  |  ✅   | Déjà implémenté                                |
+| Fiche détaillée élu     | `/an/deputes/[id]`  | ✅  |  ✅   | Déjà implémenté                                |
+| Historique mandats      | `/an/deputes/[id]`  | ✅  |  ✅   | Déjà implémenté                                |
+| Liste groupes           | `/an/groupes`       | 🔜  |  🔜   | À implémenter                                  |
+| Détail groupe           | `/an/groupes/[id]`  | 🔜  |  🔜   | À implémenter                                  |
+| Liste scrutins          | `/an/scrutins`      | 🔜  |  ❌   | PE: données HowTheyVote, Sénat: pas de données |
+| Détail scrutin          | `/an/scrutins/[id]` | 🔜  |  ❌   | PE: votes disponibles, Sénat: bloqué           |
+| Statistiques            | `/an/stats`         | 🔜  |  ❌   | PE: calculable, Sénat: pas de votes            |
+| Carte/Hémicycle         | `/an/carte`         | ✅  |  ❌   | PE: implémenté, Sénat: pas de positionnement   |
+| Comparateur élus        | `/an/compare`       | ✅  |  ❌   | PE: déjà fait, Sénat: nécessite votes          |
 
 **Légende**: ✅ Fait | 🔜 À faire | ❌ Bloqué (données manquantes)
 
 ### 8.2 Parlement européen (PE) - 89% faisable
 
 Pages implémentées :
+
 - [x] `/pe/groupes` - Liste des 9 groupes politiques européens
 - [x] `/pe/groupes/[id]` - Détail groupe avec membres français
 - [x] `/pe/scrutins` - Liste des scrutins PE (données HowTheyVote.eu)
@@ -279,6 +305,7 @@ Pages implémentées :
 - [x] `/pe/carte` - Visualisation hémicycle européen (spectre gauche-droite)
 
 Données disponibles :
+
 - ✅ Eurodéputés français (84 actuels, 303 historiques depuis 2004)
 - ✅ Groupes politiques européens avec couleurs
 - ✅ Votes en session plénière (via HowTheyVote.eu API)
@@ -288,12 +315,14 @@ Données disponibles :
 ### 8.3 Sénat - 33% faisable (bloqué)
 
 Pages implémentées :
+
 - [x] `/senat/senateurs` - Liste des sénateurs (348)
 - [x] `/senat/senateurs/[id]` - Fiche détaillée sénateur
 - [x] `/senat/groupes` - Liste des groupes sénatoriaux
 - [x] `/senat/groupes/[id]` - Détail groupe avec membres
 
 Pages bloquées (absence de données) :
+
 - ❌ `/senat/scrutins` - Pas de données de scrutins publics
 - ❌ `/senat/scrutins/[id]` - Pas de votes individuels
 - ❌ `/senat/stats` - Nécessite votes pour calculer statistiques
@@ -301,6 +330,7 @@ Pages bloquées (absence de données) :
 
 **Problème**: Le Sénat ne publie pas les votes individuels nominatifs de manière exploitable.
 Sources explorées sans succès :
+
 - data.senat.fr : dossiers législatifs uniquement
 - API senat.fr : liste sénateurs et commissions uniquement
 - NosSénateurs.fr : site fermé
@@ -310,6 +340,7 @@ Sources explorées sans succès :
 ### 8.4 Infrastructure commune
 
 Améliorations déjà implémentées :
+
 - [x] Store unifié `chamber-period.ts` (cookies pour persistance)
 - [x] Hooks server pour lecture périodes depuis cookies
 - [x] Sélecteurs de période contextuels par chambre

@@ -1,10 +1,13 @@
 # Bug : Légifrance API - legiPart retourne 400 pour certaines lois
 
 ## Date
+
 2026-02-10
 
 ## Symptômes
+
 L'ETL `import-law-texts-piste.ts` échoue avec une erreur 400 lors de l'appel à `/consult/legiPart` :
+
 ```
 API error 400: {"message":"L'expression à valider est fausse."}
 ```
@@ -14,6 +17,7 @@ API error 400: {"message":"L'expression à valider est fausse."}
 **Score Jaccard** : 1.000 (match excellent)
 
 L'erreur se produit malgré :
+
 - Un textId valide (commence par `LEGITEXT`)
 - Un score de matching parfait
 - Un format de date correct (`YYYY-MM-DD`)
@@ -23,6 +27,7 @@ L'erreur se produit malgré :
 **Certaines lois n'ont pas de version LEGI consolidée** accessible via `/consult/legiPart`, mais sont disponibles via `/consult/jorf` avec leur CID JORF.
 
 Les lois simples (non-codes) publiées au Journal Officiel peuvent ne pas avoir de version consolidée dans la base LEGI, particulièrement :
+
 - Lois modificatrices courtes (1-2 articles)
 - Lois d'autorisation d'approbation de traités
 - Lois très récentes pas encore consolidées
@@ -68,6 +73,7 @@ async getTexteComplet(
 ```
 
 **Modifications nécessaires** :
+
 1. `LegifranceClient.getTexteComplet()` accepte `options.cid` pour fallback
 2. `MatchResult` interface inclut `cid?: string`
 3. `findMatchingLaw()` stocke `result.cid` du résultat de recherche
@@ -84,6 +90,7 @@ async getTexteComplet(
 ### Architecture
 
 Le fallback est transparent pour les appelants :
+
 - Si `/consult/legiPart` fonctionne → réponse directe
 - Si erreur 400 + CID fourni → fallback automatique sur `/consult/jorf`
 - La structure `LegiTexteResponse` est compatible avec les deux endpoints
@@ -91,6 +98,7 @@ Le fallback est transparent pour les appelants :
 ### Tests
 
 Pour tester le fallback :
+
 ```bash
 make etl-an-law-texts ARGS="--verbose --limit 1"
 # Devrait enrichir SEN-ppl18-462 sans erreur via fallback JORF
@@ -98,12 +106,12 @@ make etl-an-law-texts ARGS="--verbose --limit 1"
 
 ## Fichiers Modifiés
 
-| Fichier | Changement |
-|---------|------------|
-| `src/lib/server/etl/sources/legifrance/client.ts` | Fallback JORF dans `getTexteComplet()` |
-| `scripts/etl/import-law-texts-piste.ts` | `MatchResult` inclut `cid`, propagation du CID |
-| `src/routes/admin/law-text-review/+page.server.ts` | N/A (utilise client, bénéficie du fallback) |
-| `src/routes/api/admin/legifrance/+server.ts` | N/A (utilise client, bénéficie du fallback) |
+| Fichier                                            | Changement                                     |
+| -------------------------------------------------- | ---------------------------------------------- |
+| `src/lib/server/etl/sources/legifrance/client.ts`  | Fallback JORF dans `getTexteComplet()`         |
+| `scripts/etl/import-law-texts-piste.ts`            | `MatchResult` inclut `cid`, propagation du CID |
+| `src/routes/admin/law-text-review/+page.server.ts` | N/A (utilise client, bénéficie du fallback)    |
+| `src/routes/api/admin/legifrance/+server.ts`       | N/A (utilise client, bénéficie du fallback)    |
 
 ## Impact
 
@@ -111,12 +119,14 @@ make etl-an-law-texts ARGS="--verbose --limit 1"
 **Après** : Fallback automatique, taux de succès proche de 100%
 
 ## Tags
+
 - type: api-integration
 - module: etl-legifrance
 - severity: medium
 - status: resolved
 
 ## Voir aussi
+
 - `pattern-api-fallback-multi-endpoint.md` (pattern général)
 - `adr-2026-02-03-legifrance-piste.md` (choix API PISTE)
 - `workflow-archive-2026-02-03-legifrance-piste.md` (implémentation initiale)

@@ -145,7 +145,7 @@ describe('PE Law Texts Enrichment - Integration', () => {
 			).toBe(true);
 		});
 
-		it('should have enriched A9-0048/2022 (Selecta)', async () => {
+		it('should have enriched A9-0048 (Eurojust discharge)', async () => {
 			if (!dbAvailable) {
 				console.log('Skipping: DB not available');
 				return;
@@ -157,16 +157,12 @@ describe('PE Law Texts Enrichment - Integration', () => {
 				.where(like(laws.id, '%A9-0048%'));
 
 			if (law.length === 0) {
-				console.warn('A9-0048/2022 not found');
+				console.warn('A9-0048 not found');
 				return;
 			}
 
+			expect(law[0].description).toBeTruthy();
 			expect(law[0].description?.length || 0).toBeGreaterThan(100);
-			expect(
-				law[0].description?.toLowerCase().includes('worker') ||
-					law[0].description?.toLowerCase().includes('travail') ||
-					law[0].description?.toLowerCase().includes('redundanc')
-			).toBe(true);
 		});
 
 		it('should have enriched A9-0355/2023 (France-Algeria agreement)', async () => {

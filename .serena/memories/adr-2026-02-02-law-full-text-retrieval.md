@@ -1,6 +1,7 @@
 # ADR-003 : Récupération du Texte Complet des Lois
 
 ## Métadonnées
+
 - **Date** : 2026-02-02
 - **Statut** : 📋 Proposé
 - **Décideurs** : Fred (utilisateur), Claude (assistant)
@@ -33,22 +34,23 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 
 ### Matrice comparative complète
 
-| Critère | Poids | PISTE | NosDép | LEGI Bulk | Scraping AN | Hybride |
-|---------|-------|-------|--------|-----------|-------------|---------|
-| **Qualité source** | 5 | 5/5 | 3/5 | 5/5 | 3/5 | 4/5 |
-| **Couverture** | 5 | 2/5 | 3/5 | 2/5 | 5/5 | 5/5 |
-| **Facilité implémentation** | 4 | 3/5 | 2/5 | 1/5 | 4/5 | 1/5 |
-| **Maintenabilité** | 5 | 5/5 | 3/5 | 4/5 | 1/5 | 2/5 |
-| **Coût opérationnel** | 3 | 4/5 | 5/5 | 3/5 | 2/5 | 2/5 |
-| **Pérennité** | 4 | 5/5 | 3/5 | 5/5 | 2/5 | 3/5 |
-| **Rapidité MVP** | 3 | 3/5 | 2/5 | 1/5 | 4/5 | 1/5 |
-| **Score pondéré** | - | **109/145** | **80/145** | **80/145** | **82/145** | **79/145** |
+| Critère                     | Poids | PISTE       | NosDép     | LEGI Bulk  | Scraping AN | Hybride    |
+| --------------------------- | ----- | ----------- | ---------- | ---------- | ----------- | ---------- |
+| **Qualité source**          | 5     | 5/5         | 3/5        | 5/5        | 3/5         | 4/5        |
+| **Couverture**              | 5     | 2/5         | 3/5        | 2/5        | 5/5         | 5/5        |
+| **Facilité implémentation** | 4     | 3/5         | 2/5        | 1/5        | 4/5         | 1/5        |
+| **Maintenabilité**          | 5     | 5/5         | 3/5        | 4/5        | 1/5         | 2/5        |
+| **Coût opérationnel**       | 3     | 4/5         | 5/5        | 3/5        | 2/5         | 2/5        |
+| **Pérennité**               | 4     | 5/5         | 3/5        | 5/5        | 2/5         | 3/5        |
+| **Rapidité MVP**            | 3     | 3/5         | 2/5        | 1/5        | 4/5         | 1/5        |
+| **Score pondéré**           | -     | **109/145** | **80/145** | **80/145** | **82/145**  | **79/145** |
 
 ### Option 1 : API Légifrance via PISTE (Score: 109) ✅
 
 **Description** : Utiliser l'API officielle Légifrance/DILA via le portail PISTE.
 
 **Avantages** :
+
 - ✅ **Source officielle** : DILA (organisme public)
 - ✅ **Qualité maximale** : Texte consolidé, juridiquement fiable
 - ✅ **API REST** : Documentation Swagger, OAuth 2.0
@@ -56,6 +58,7 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 - ✅ **Pérenne** : Service gouvernemental stable
 
 **Inconvénients** :
+
 - ❌ **Couverture limitée** : Seulement lois **promulguées** (~30%)
 - ❌ **Inscription manuelle** : Compte PISTE + acceptation CGU
 - ❌ **Complexité auth** : OAuth 2.0 client credentials
@@ -65,6 +68,7 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 **Risque** : 🟢 Faible
 
 **Prérequis** :
+
 1. Inscription sur https://piste.gouv.fr/registration
 2. Accepter CGU (sandbox + production)
 3. Récupérer client_id + client_secret
@@ -78,10 +82,12 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 **Description** : Utiliser l'API de Regards Citoyens.
 
 **Avantages** :
+
 - ✅ API publique gratuite
 - ✅ Données parlementaires agrégées
 
 **Inconvénients** :
+
 - ❌ **API cassée** : Tests montrent HTML au lieu de JSON
 - ❌ Documentation obsolète (dernière législature référencée : 16)
 - ❌ Dépendance service tiers (disponibilité incertaine)
@@ -99,10 +105,12 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 **Description** : Télécharger le bulk LEGI (~20 GB) depuis data.gouv.fr.
 
 **Avantages** :
+
 - ✅ Données officielles complètes
 - ✅ Pas de quota API
 
 **Inconvénients** :
+
 - ❌ **Taille massive** : ~20 GB
 - ❌ **Parsing XML complexe** : DTD LEGIFRANCE
 - ❌ **Couverture limitée** : Seulement lois promulguées
@@ -120,10 +128,12 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 **Description** : Scraper les pages HTML `/dyn/opendata/[uid].html`.
 
 **Avantages** :
+
 - ✅ Couverture maximale (~95%)
 - ✅ URL prévisibles
 
 **Inconvénients** :
+
 - ❌ **Rate limiting** : 429 Too Many Requests constaté
 - ❌ **Fragile** : Structure HTML peut changer
 - ❌ **Maintenance coûteuse**
@@ -141,6 +151,7 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 **Description** : Combiner PISTE + scraping.
 
 **Inconvénients** :
+
 - ❌ Complexité élevée (2 implémentations)
 - ❌ Logique de fallback complexe
 
@@ -161,7 +172,7 @@ Les données open data de l'Assemblée nationale (JSON) contiennent uniquement l
 
 En choisissant cette option, nous acceptons :
 
-- **Couverture limitée (~30%)** - Mitigation : 
+- **Couverture limitée (~30%)** - Mitigation :
   - Démarrer avec les lois promulguées (les plus importantes)
   - Étendre plus tard avec scraping ciblé si besoin
   - Afficher clairement "Texte non disponible" pour les autres
@@ -194,10 +205,8 @@ En choisissant cette option, nous acceptons :
 
 - ⚠️ **Couverture partielle** (~30%) → Afficher clairement le statut
   - **Action** : Badge "Texte disponible" vs "Métadonnées uniquement"
-  
 - ⚠️ **Quotas API** (limites inconnues avant inscription) → Monitoring
   - **Action** : Logger les appels, implémenter cache local
-  
 - ⚠️ **Latence API** (inconnue) → UX
   - **Action** : Chargement async, skeleton loaders
 

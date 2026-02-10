@@ -8,12 +8,14 @@
 ## Vue d'ensemble
 
 L'application NosElus implémente des headers de sécurité HTTP pour protéger contre les attaques courantes :
+
 - Clickjacking
 - MIME sniffing
 - Fuites de referrer
 - Injections de contenu (XSS, scripts malveillants)
 
 **Implémentation** :
+
 - `svelte.config.js` - Content Security Policy avec nonces automatiques
 - `src/hooks.server.ts` - Autres headers de sécurité (X-Frame-Options, etc.)
 
@@ -43,6 +45,7 @@ Empêche le navigateur de "deviner" le type MIME d'un fichier, ce qui pourrait p
 **Effet** : Envoie uniquement l'origine (pas le chemin complet) lors de navigations cross-origin
 
 Balance entre :
+
 - **Protection de la vie privée** : Ne révèle pas les URLs complètes aux sites externes
 - **Analytics** : Permet toujours de tracker les sources de trafic (origine)
 
@@ -56,12 +59,15 @@ Balance entre :
 ```
 default-src 'self'
 ```
+
 Par défaut, tout le contenu doit provenir du même domaine.
 
 ```
 img-src 'self' https://www.assemblee-nationale.fr https://www.senat.fr https://www.europarl.europa.eu data:
 ```
+
 **Images autorisées depuis** :
+
 - `'self'` : Domaine de l'application
 - `https://www.assemblee-nationale.fr` : Photos des députés (via proxy `/api/photo/*`)
 - `https://www.senat.fr` : Photos des sénateurs
@@ -71,7 +77,9 @@ img-src 'self' https://www.assemblee-nationale.fr https://www.senat.fr https://w
 ```
 style-src 'self' 'unsafe-inline'
 ```
+
 **Styles autorisés** :
+
 - `'self'` : Fichiers CSS de l'application
 - `'unsafe-inline'` : **Nécessaire pour Svelte** (styles scopés générés dynamiquement)
 
@@ -80,7 +88,9 @@ style-src 'self' 'unsafe-inline'
 ```
 script-src 'self' 'nonce-xxx'
 ```
+
 **Scripts autorisés** :
+
 - `'self'` : Depuis le domaine de l'application
 - `'nonce-xxx'` : Scripts inline avec nonce généré automatiquement par SvelteKit
 - Aucun script externe (CDN, analytics tiers, etc.)
@@ -110,20 +120,26 @@ kit: {
 ```
 connect-src 'self'
 ```
+
 **Connexions API** :
+
 - Uniquement vers le domaine de l'application
 - Aucune API externe autorisée
 
 ```
 font-src 'self'
 ```
+
 **Polices** :
+
 - Uniquement depuis le domaine de l'application
 
 ```
 frame-ancestors 'none'
 ```
+
 **Embedding** :
+
 - Équivalent moderne de `X-Frame-Options: DENY`
 - Empêche l'application d'être chargée dans une iframe
 
@@ -135,14 +151,14 @@ frame-ancestors 'none'
 
 ### Couverture
 
-| Test | Description |
-|------|-------------|
-| `should set X-Frame-Options header` | Vérifie présence du header anti-clickjacking |
-| `should set X-Content-Type-Options header` | Vérifie présence du header anti-MIME sniffing |
-| `should set Referrer-Policy header` | Vérifie présence du header de vie privée |
-| `should set Content-Security-Policy header` | Vérifie présence et contenu de la CSP |
-| `should allow images from official sources` | Vérifie whitelist des sources d'images |
-| `should set all security headers on any route` | Vérifie headers sur toutes les routes |
+| Test                                           | Description                                   |
+| ---------------------------------------------- | --------------------------------------------- |
+| `should set X-Frame-Options header`            | Vérifie présence du header anti-clickjacking  |
+| `should set X-Content-Type-Options header`     | Vérifie présence du header anti-MIME sniffing |
+| `should set Referrer-Policy header`            | Vérifie présence du header de vie privée      |
+| `should set Content-Security-Policy header`    | Vérifie présence et contenu de la CSP         |
+| `should allow images from official sources`    | Vérifie whitelist des sources d'images        |
+| `should set all security headers on any route` | Vérifie headers sur toutes les routes         |
 
 **Résultat** : 6/6 tests passés ✅
 
@@ -168,6 +184,7 @@ Content-Security-Policy: default-src 'self'; img-src ...
 ### Vérifier les violations CSP
 
 Ouvrir la console du navigateur (F12) et chercher :
+
 - ⚠️ Aucune erreur de type "CSP violation"
 - ✅ Toutes les ressources (images, styles, scripts) doivent se charger correctement
 
@@ -188,11 +205,12 @@ Si une nouvelle source officielle doit être ajoutée (ex: Commission Européenn
 3. Ajouter un test dans `src/hooks.server.test.ts`
 
 Exemple :
+
 ```typescript
 const csp = [
-  "default-src 'self'",
-  "img-src 'self' https://www.assemblee-nationale.fr https://www.senat.fr https://www.europarl.europa.eu https://ec.europa.eu data:",
-  // ...
+	"default-src 'self'",
+	"img-src 'self' https://www.assemblee-nationale.fr https://www.senat.fr https://www.europarl.europa.eu https://ec.europa.eu data:"
+	// ...
 ].join('; ');
 ```
 
@@ -222,6 +240,7 @@ Si des ressources ne se chargent pas après modification :
 **Après implémentation** : ~8.5/10
 
 **Améliorations futures** :
+
 - [ ] HSTS (à configurer au niveau du reverse proxy)
 - [ ] Permissions-Policy (permissions du navigateur)
 - [ ] Résoudre les 11 vulnérabilités npm (dépendances transitives)

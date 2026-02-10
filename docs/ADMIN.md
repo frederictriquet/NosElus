@@ -17,6 +17,7 @@ ADMIN_PASSWORD=votre-mot-de-passe-securise
 ```
 
 **Important** :
+
 - Utilisez un mot de passe fort en production
 - La variable doit être définie au démarrage du serveur
 - Pas de longueur minimale imposée (utile pour les environnements de développement)
@@ -32,6 +33,7 @@ L'authentification utilise un cookie de session signé avec HMAC-SHA256 :
 - **Signature** : HMAC-SHA256 basé sur `ADMIN_PASSWORD`
 
 Avantages :
+
 - Pas de dépendance externe (utilise `crypto` natif Node.js)
 - Pas besoin de JWT_SECRET séparé
 - Validation timing-safe du mot de passe
@@ -43,16 +45,19 @@ Avantages :
 Interface de gestion des positions pour les trois chambres parlementaires :
 
 #### Assemblée nationale (AN)
+
 - **Filtre** : Par législature (12e à 17e)
 - **Groupes** : ~94 groupes parlementaires
 - **Positions** : 0.0 (extrême gauche) à 10.0 (extrême droite), 999 (non-inscrits)
 
 #### Parlement européen (PE)
+
 - **Filtre** : Par terme (6e à 10e)
 - **Groupes** : ~49 groupes parlementaires européens
 - **Positions** : Même échelle que l'AN
 
 #### Sénat
+
 - **Filtre** : "Groupes actuels" vs "Groupes historiques"
 - **Groupes** : ~28 groupes sénatoriaux
 - **Note** : Le Sénat n'utilise pas de législatures numériques mais des renouvellements
@@ -67,10 +72,12 @@ Chaque chambre possède un switch de protection individuel :
 ```
 
 **Cas d'usage** :
+
 - Activer la protection après avoir défini manuellement des positions pour une chambre
 - Désactiver pour réimporter les positions automatiquement depuis ParlGov
 
 **Persistance** : Les switches sont stockés dans la table `admin_settings` avec les clés :
+
 - `etl_protect_an`
 - `etl_protect_pe`
 - `etl_protect_senat`
@@ -78,6 +85,7 @@ Chaque chambre possède un switch de protection individuel :
 ### 3. Gestion des Doublons
 
 L'interface déduplique automatiquement les groupes qui partagent le même sigle dans la même chambre/législature :
+
 - **Critère** : Garde le groupe avec la `start_date` la plus récente
 - **Raison** : Gère les cas de dissolution/reconstitution (ex: AN 17e législature)
 
@@ -99,6 +107,7 @@ Si `ADMIN_PASSWORD` n'est pas configuré, un message d'erreur s'affiche.
 4. Cliquer sur "Sauvegarder" (activé uniquement si la valeur a changé)
 
 **Validation** :
+
 - Position entre 0 et 999
 - Pas de décimale (arrondi au 0.1 près)
 - Retourne une erreur 404 si le groupe n'existe plus
@@ -113,20 +122,21 @@ Si `ADMIN_PASSWORD` n'est pas configuré, un message d'erreur s'affiche.
 
 ### Fichiers clés
 
-| Fichier | Rôle |
-|---------|------|
-| `src/lib/server/auth.ts` | Fonctions d'authentification HMAC |
-| `src/routes/admin/+layout.server.ts` | Guard d'authentification |
-| `src/routes/admin/+page.server.ts` | Chargement des données + form actions |
-| `src/routes/admin/+page.svelte` | Interface utilisateur (login + éditeur) |
-| `src/lib/server/db/schema/admin-settings.ts` | Schéma DB pour les settings |
-| `scripts/etl/import-political-positions.ts` | ETL avec respect des protections |
+| Fichier                                      | Rôle                                    |
+| -------------------------------------------- | --------------------------------------- |
+| `src/lib/server/auth.ts`                     | Fonctions d'authentification HMAC       |
+| `src/routes/admin/+layout.server.ts`         | Guard d'authentification                |
+| `src/routes/admin/+page.server.ts`           | Chargement des données + form actions   |
+| `src/routes/admin/+page.svelte`              | Interface utilisateur (login + éditeur) |
+| `src/lib/server/db/schema/admin-settings.ts` | Schéma DB pour les settings             |
+| `scripts/etl/import-political-positions.ts`  | ETL avec respect des protections        |
 
 ### Form Actions
 
 Le serveur expose 4 actions :
 
 #### `?/login`
+
 ```typescript
 POST /admin?/login
 Body: { password: string }
@@ -135,12 +145,14 @@ Errors: 400 (missing), 401 (incorrect)
 ```
 
 #### `?/logout`
+
 ```typescript
 POST /admin?/logout
 Response: redirect 303 /admin (sans cookie)
 ```
 
 #### `?/updatePosition`
+
 ```typescript
 POST /admin?/updatePosition
 Body: { organId: string, position: number }
@@ -149,6 +161,7 @@ Errors: 401 (non auth), 400 (invalid), 404 (not found), 500 (db error)
 ```
 
 #### `?/toggleEtlProtection`
+
 ```typescript
 POST /admin?/toggleEtlProtection
 Body: { chamber: 'AN'|'PE'|'SENAT', enabled: 'true'|'false' }
@@ -161,6 +174,7 @@ Errors: 401 (non auth), 400 (invalid chamber), 500 (db error)
 ### Base de données
 
 #### Table `admin_settings`
+
 ```sql
 CREATE TABLE admin_settings (
   key VARCHAR(100) PRIMARY KEY,
@@ -170,6 +184,7 @@ CREATE TABLE admin_settings (
 ```
 
 **Entrées** :
+
 - `etl_protect_an` → `'true'` | `'false'`
 - `etl_protect_pe` → `'true'` | `'false'`
 - `etl_protect_senat` → `'true'` | `'false'`
@@ -177,33 +192,40 @@ CREATE TABLE admin_settings (
 ### Déduplication des groupes
 
 Logique dans `+page.server.ts` :
+
 ```typescript
 const key = `${chamber}|${legislature || ''}|${shortName || id}`;
-if (!existing || (group.startDate && (!existing.startDate || group.startDate > existing.startDate))) {
-  deduped.set(key, group);
+if (
+	!existing ||
+	(group.startDate && (!existing.startDate || group.startDate > existing.startDate))
+) {
+	deduped.set(key, group);
 }
 ```
 
 ### Filtres par chambre
 
 **AN/PE** : Législatures/termes numériques triés par ordre décroissant
+
 ```typescript
 legislatures.AN.sort((a, b) => Number(b.value) - Number(a.value));
 ```
 
 **Sénat** : Labels métier remplaçant les valeurs brutes
+
 ```typescript
 legislaturesPerChamber.SENAT = [
-  { value: 'SENAT', label: 'Groupes actuels' },
-  { value: '__none__', label: 'Groupes historiques' }
+	{ value: 'SENAT', label: 'Groupes actuels' },
+	{ value: '__none__', label: 'Groupes historiques' }
 ];
 ```
 
 Filtrage côté client avec `$derived.by` (Svelte 5) :
+
 ```typescript
 const filteredGroups = $derived.by(() => {
-  if (leg === '__none__') return groups.filter((g) => !g.legislature);
-  return groups.filter((g) => g.legislature === leg);
+	if (leg === '__none__') return groups.filter((g) => !g.legislature);
+	return groups.filter((g) => g.legislature === leg);
 });
 ```
 
@@ -211,14 +233,14 @@ const filteredGroups = $derived.by(() => {
 
 ### Mesures implémentées
 
-| Mesure | Implémentation |
-|--------|----------------|
-| **Timing-safe password comparison** | `timingSafeEqual()` dans `verifyAdminPassword()` |
-| **Signature HMAC des sessions** | `createHmac('sha256', ADMIN_PASSWORD)` |
-| **Cookie sécurisé** | `httpOnly=true`, `sameSite=lax`, `secure` en prod |
-| **Validation des entrées** | Whitelist des chambres, validation numérique des positions |
-| **Vérification d'authentification** | Middleware dans `hooks.server.ts` |
-| **Protection CSRF** | SvelteKit `use:enhance` gère automatiquement |
+| Mesure                              | Implémentation                                             |
+| ----------------------------------- | ---------------------------------------------------------- |
+| **Timing-safe password comparison** | `timingSafeEqual()` dans `verifyAdminPassword()`           |
+| **Signature HMAC des sessions**     | `createHmac('sha256', ADMIN_PASSWORD)`                     |
+| **Cookie sécurisé**                 | `httpOnly=true`, `sameSite=lax`, `secure` en prod          |
+| **Validation des entrées**          | Whitelist des chambres, validation numérique des positions |
+| **Vérification d'authentification** | Middleware dans `hooks.server.ts`                          |
+| **Protection CSRF**                 | SvelteKit `use:enhance` gère automatiquement               |
 
 ### Limitations
 
@@ -241,27 +263,28 @@ Le script `scripts/etl/import-political-positions.ts` vérifie les protections a
 ```typescript
 // Étape 4 : Charger les settings de protection
 const protectSettings = await db
-  .select()
-  .from(adminSettings)
-  .where(like(adminSettings.key, 'etl_protect_%'));
+	.select()
+	.from(adminSettings)
+	.where(like(adminSettings.key, 'etl_protect_%'));
 
 const protectedChambers = new Set(
-  protectSettings
-    .filter((s) => s.value === 'true')
-    .map((s) => s.key.replace('etl_protect_', '').toUpperCase())
+	protectSettings
+		.filter((s) => s.value === 'true')
+		.map((s) => s.key.replace('etl_protect_', '').toUpperCase())
 );
 
 // Filtrer les résultats
 const updatableResults = results.filter((r) => {
-  if (protectedChambers.has(r.organ.chamber)) {
-    // Skipper ce groupe
-    return false;
-  }
-  return true;
+	if (protectedChambers.has(r.organ.chamber)) {
+		// Skipper ce groupe
+		return false;
+	}
+	return true;
 });
 ```
 
 **Comportement** :
+
 - Chambre protégée : Les groupes sont skippés (comptés comme "not matched")
 - Chambre non protégée : Les positions sont mises à jour normalement
 - Mode `--dry-run` : Affiche ce qui serait fait sans modifier la DB

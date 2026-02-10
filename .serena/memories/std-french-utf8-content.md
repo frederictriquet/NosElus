@@ -1,9 +1,11 @@
 # Standard : Contenu Français en UTF-8
 
 ## Catégorie
+
 Content Generation / Internationalization
 
 ## Date d'adoption
+
 2026-02-05
 
 ## Règle
@@ -15,6 +17,7 @@ Ne jamais générer du français sans accents : `donnees` ❌ → `données` ✅
 ## Justification
 
 Générer du contenu français sans accents :
+
 - Rend le texte illisible et peu professionnel
 - Est particulièrement critique pour les pages juridiques (mentions légales, RGPD)
 - Viole les standards d'accessibilité (lecteurs d'écran)
@@ -23,6 +26,7 @@ Générer du contenu français sans accents :
 ## Caractères concernés
 
 Lettres accentuées françaises à toujours utiliser :
+
 - **é** è ê ë (e accentués)
 - **à** â (a accentués)
 - **ù** û (u accentués)
@@ -34,6 +38,7 @@ Lettres accentuées françaises à toujours utiliser :
 ## Exemples
 
 ### ✅ Correct
+
 ```markdown
 # Politique de confidentialité
 
@@ -44,6 +49,7 @@ Sécurité
 ```
 
 ### ❌ Incorrect
+
 ```markdown
 # Politique de confidentialite
 
@@ -56,6 +62,7 @@ Securite
 ## Vérification
 
 ### Après génération de contenu
+
 ```bash
 # Vérifier présence d'accents dans un fichier français
 grep -P '[éèêëàâùûôîïçœæ]' file.md
@@ -64,6 +71,7 @@ grep -P '[éèêëàâùûôîïçœæ]' file.md
 ```
 
 ### Recherche de fichiers sans accents
+
 ```bash
 # Trouver les fichiers français suspects (aucun caractère accentué)
 find src/routes -name "*.svelte" -type f -exec sh -c \

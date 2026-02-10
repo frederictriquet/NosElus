@@ -7,6 +7,7 @@ Le shuffle naïf avec `array.sort(() => Math.random() - 0.5)` n'est **pas unifor
 ### Exemple du biais
 
 Pour `[1, 2, 3]`, certaines permutations sont plus probables que d'autres :
+
 - `[1, 2, 3]` : probabilité ~16%
 - `[3, 2, 1]` : probabilité ~12%
 - Autres permutations : entre 10% et 18%
@@ -22,12 +23,14 @@ Distribution attendue : 16.67% pour chaque permutation (6 permutations possibles
 ## Contexte
 
 Utiliser quand :
+
 - [ ] Shuffle de liste pour sélection aléatoire équitable
 - [ ] Randomisation de quiz/questions
 - [ ] Génération de données de test
 - [ ] Tout cas nécessitant une distribution uniforme
 
 Ne PAS utiliser si :
+
 - [ ] L'ordre n'a pas d'importance (pas de shuffle nécessaire)
 - [ ] Biais acceptable (ex: shuffle pour affichage seulement, pas de calcul derrière)
 
@@ -37,7 +40,7 @@ Algorithme en O(n) avec distribution uniforme parfaite.
 
 ### Implémentation TypeScript
 
-```typescript
+````typescript
 /**
  * Mélange un tableau avec l'algorithme Fisher-Yates (distribution uniforme).
  *
@@ -61,7 +64,7 @@ function shuffle<T>(array: T[]): T[] {
 	}
 	return a;
 }
-```
+````
 
 ### Implémentation Python
 
@@ -71,10 +74,10 @@ import random
 def shuffle(array: list) -> list:
     """
     Mélange une liste avec l'algorithme Fisher-Yates.
-    
+
     Args:
         array: Liste à mélanger (n'est pas modifiée)
-    
+
     Returns:
         Nouvelle liste avec les éléments mélangés
     """
@@ -88,6 +91,7 @@ def shuffle(array: list) -> list:
 ### Alternative : Utiliser les fonctions natives
 
 **JavaScript/TypeScript** :
+
 ```typescript
 // ATTENTION : modifie le tableau en place
 const shuffled = [...array].sort(() => Math.random() - 0.5); // ❌ BIAISÉ
@@ -97,6 +101,7 @@ const shuffled = [...array].sort(() => crypto.getRandomValues(new Uint32Array(1)
 ```
 
 **Python** :
+
 ```python
 import random
 
@@ -126,23 +131,24 @@ random.shuffle(shuffled)
 
 ```typescript
 export function selectQuizLaws(
-  allLaws: QuizLaw[],
-  selectedTagSlugs: Set<string>,
-  quizSize: number
+	allLaws: QuizLaw[],
+	selectedTagSlugs: Set<string>,
+	quizSize: number
 ): SelectionResult {
-  // ... filtrage ...
-  
-  for (const tagLaws of tagGroups) {
-    const shuffled = shuffle(tagLaws); // Fisher-Yates
-    selectedLaws.push(...shuffled.slice(0, lawsPerTag));
-  }
-  
-  const allShuffled = shuffle(selectedLaws); // Fisher-Yates
-  // ...
+	// ... filtrage ...
+
+	for (const tagLaws of tagGroups) {
+		const shuffled = shuffle(tagLaws); // Fisher-Yates
+		selectedLaws.push(...shuffled.slice(0, lawsPerTag));
+	}
+
+	const allShuffled = shuffle(selectedLaws); // Fisher-Yates
+	// ...
 }
 ```
 
 **Avant (biaisé)** :
+
 ```typescript
 const shuffled = tagLaws.sort(() => Math.random() - 0.5);
 ```
@@ -155,24 +161,22 @@ const shuffled = tagLaws.sort(() => Math.random() - 0.5);
 import { describe, it, expect } from 'vitest';
 
 describe('quiz-selection', () => {
-  it('should shuffle laws (non-deterministic)', () => {
-    const laws = createTestLawsWithTags(
-      Array.from({ length: 20 }, (_, i) => ({ tagSlugs: ['economie'] }))
-    );
-    
-    const selectedTags = new Set(['economie']);
-    
-    // Exécuter plusieurs fois et vérifier ordres différents
-    const results = Array.from({ length: 5 }, () =>
-      selectQuizLaws(laws, selectedTags, 10)
-    );
-    
-    const orders = results.map((r) => r.quizLaws.map((l) => l.id).join(','));
-    
-    // Au moins 2 ordres différents devraient exister
-    const uniqueOrders = new Set(orders);
-    expect(uniqueOrders.size).toBeGreaterThan(1);
-  });
+	it('should shuffle laws (non-deterministic)', () => {
+		const laws = createTestLawsWithTags(
+			Array.from({ length: 20 }, (_, i) => ({ tagSlugs: ['economie'] }))
+		);
+
+		const selectedTags = new Set(['economie']);
+
+		// Exécuter plusieurs fois et vérifier ordres différents
+		const results = Array.from({ length: 5 }, () => selectQuizLaws(laws, selectedTags, 10));
+
+		const orders = results.map((r) => r.quizLaws.map((l) => l.id).join(','));
+
+		// Au moins 2 ordres différents devraient exister
+		const uniqueOrders = new Set(orders);
+		expect(uniqueOrders.size).toBeGreaterThan(1);
+	});
 });
 ```
 
@@ -182,27 +186,27 @@ Si vous avez besoin d'un shuffle reproductible (tests), utilisez un PRNG avec se
 
 ```typescript
 class SeededRandom {
-  private seed: number;
-  
-  constructor(seed: number) {
-    this.seed = seed;
-  }
-  
-  next(): number {
-    // LCG (Linear Congruential Generator)
-    this.seed = (this.seed * 1664525 + 1013904223) % 2**32;
-    return this.seed / 2**32;
-  }
+	private seed: number;
+
+	constructor(seed: number) {
+		this.seed = seed;
+	}
+
+	next(): number {
+		// LCG (Linear Congruential Generator)
+		this.seed = (this.seed * 1664525 + 1013904223) % 2 ** 32;
+		return this.seed / 2 ** 32;
+	}
 }
 
 function shuffleSeeded<T>(array: T[], seed: number): T[] {
-  const rng = new SeededRandom(seed);
-  const a = [...array];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng.next() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+	const rng = new SeededRandom(seed);
+	const a = [...array];
+	for (let i = a.length - 1; i > 0; i--) {
+		const j = Math.floor(rng.next() * (i + 1));
+		[a[i], a[j]] = [a[j], a[i]];
+	}
+	return a;
 }
 
 // Test reproductible
@@ -217,28 +221,29 @@ Pour vérifier que le shuffle est uniforme :
 
 ```typescript
 function testShuffleDistribution() {
-  const array = [1, 2, 3];
-  const permutations = new Map<string, number>();
-  const iterations = 100000;
-  
-  for (let i = 0; i < iterations; i++) {
-    const shuffled = shuffle(array);
-    const key = shuffled.join(',');
-    permutations.set(key, (permutations.get(key) || 0) + 1);
-  }
-  
-  // 6 permutations possibles : [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]
-  // Probabilité attendue : 16.67% chacune
-  
-  for (const [perm, count] of permutations) {
-    const probability = (count / iterations) * 100;
-    console.log(`${perm}: ${probability.toFixed(2)}% (attendu: 16.67%)`);
-    // Vérifier que la probabilité est dans [15%, 18%] (marge d'erreur)
-  }
+	const array = [1, 2, 3];
+	const permutations = new Map<string, number>();
+	const iterations = 100000;
+
+	for (let i = 0; i < iterations; i++) {
+		const shuffled = shuffle(array);
+		const key = shuffled.join(',');
+		permutations.set(key, (permutations.get(key) || 0) + 1);
+	}
+
+	// 6 permutations possibles : [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]
+	// Probabilité attendue : 16.67% chacune
+
+	for (const [perm, count] of permutations) {
+		const probability = (count / iterations) * 100;
+		console.log(`${perm}: ${probability.toFixed(2)}% (attendu: 16.67%)`);
+		// Vérifier que la probabilité est dans [15%, 18%] (marge d'erreur)
+	}
 }
 ```
 
 **Résultat avec `.sort(() => Math.random() - 0.5)` (biaisé)** :
+
 ```
 1,2,3: 18.23%
 1,3,2: 15.89%
@@ -249,6 +254,7 @@ function testShuffleDistribution() {
 ```
 
 **Résultat avec Fisher-Yates** :
+
 ```
 1,2,3: 16.71%
 1,3,2: 16.59%
@@ -270,15 +276,15 @@ function testShuffleDistribution() {
 
 ```json
 {
-  "rules": {
-    "no-restricted-syntax": [
-      "error",
-      {
-        "selector": "CallExpression[callee.property.name='sort'][arguments.0.type='ArrowFunctionExpression']",
-        "message": "Use Fisher-Yates shuffle instead of .sort(() => Math.random() - 0.5)"
-      }
-    ]
-  }
+	"rules": {
+		"no-restricted-syntax": [
+			"error",
+			{
+				"selector": "CallExpression[callee.property.name='sort'][arguments.0.type='ArrowFunctionExpression']",
+				"message": "Use Fisher-Yates shuffle instead of .sort(() => Math.random() - 0.5)"
+			}
+		]
+	}
 }
 ```
 
@@ -287,7 +293,7 @@ function testShuffleDistribution() {
 - [Fisher-Yates Shuffle (Wikipedia)](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
 - [The Danger of Naive Shuffling](https://blog.codinghorror.com/the-danger-of-naivete/)
 - [V8 sort() implementation](https://v8.dev/blog/array-sort) - Pourquoi `.sort(() => Math.random() - 0.5)` est biaisé
-- Knuth, Donald E. (1969). *The Art of Computer Programming*, Volume 2: *Seminumerical Algorithms*
+- Knuth, Donald E. (1969). _The Art of Computer Programming_, Volume 2: _Seminumerical Algorithms_
 
 ## Tags
 

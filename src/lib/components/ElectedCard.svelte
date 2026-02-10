@@ -49,7 +49,7 @@
 		senateur: '/senat/senateurs',
 		eurodepute: '/pe/eurodeputes'
 	};
-	const href = hrefProp || `${typeRoutes[type]}/${id}`;
+	const href = $derived(hrefProp || `${typeRoutes[type]}/${id}`);
 	const placeholder = '/placeholder.svg';
 
 	// État pour la photo chargée - commence toujours par le placeholder

@@ -23,21 +23,25 @@ Chaque skill a une responsabilité unique et produit des artefacts consommés pa
 ## Workflow Détaillé
 
 ### Phase 1 : Compréhension
+
 1. **`/analyze`** - Analyse approfondie du besoin
    - Produit : memories d'analyse
    - Sortie : Compréhension claire du problème
 
 ### Phase 2 : Conception
+
 2. **`/architecture`** - Conception de la solution
    - Produit : memories d'architecture
    - Sortie : Plan d'implémentation détaillé
 
 ### Phase 3 : Développement
+
 3. **`/implement`** - Implémentation du code
    - Produit : Code fonctionnel
    - Sortie : Feature implémentée
 
 ### Phase 4 : Validation
+
 4. **`/test-write`** - Écriture des tests
    - Produit : Suite de tests
    - Sortie : Tests couvrant tous les cas
@@ -47,11 +51,13 @@ Chaque skill a une responsabilité unique et produit des artefacts consommés pa
    - Sortie : Validation de la qualité
 
 ### Phase 5 : Review
+
 6. **`/code-review`** - Revue de code approfondie
    - Produit : Feedback et corrections
    - Sortie : Code revu et amélioré
 
 ### Phase 6 : Livraison
+
 7. **`/pre-merge`** - Préparation au merge
    - Produit : PR prête
    - Sortie : Branche validée
@@ -114,6 +120,7 @@ Session complète (2026-02-01) :
 ## Skill /next : Continuité
 
 La skill `/next` permet de reprendre le workflow après interruption en rappelant :
+
 - Où on en est
 - Quelle skill a été exécutée en dernier
 - Quelle est la prochaine étape logique
@@ -140,14 +147,14 @@ La skill `/next` permet de reprendre le workflow après interruption en rappelan
 
 ## Métriques de Succès
 
-| Indicateur | Session Phase 2.2 |
-|------------|-------------------|
-| Tests écrits | ✅ 11 tests |
-| Tests passants | ✅ 100% |
-| Code review fait | ✅ Oui |
-| Suggestions appliquées | ✅ 3/3 |
-| Roadmap à jour | ✅ Oui |
-| Memories capitalisées | ✅ 20+ |
+| Indicateur             | Session Phase 2.2 |
+| ---------------------- | ----------------- |
+| Tests écrits           | ✅ 11 tests       |
+| Tests passants         | ✅ 100%           |
+| Code review fait       | ✅ Oui            |
+| Suggestions appliquées | ✅ 3/3            |
+| Roadmap à jour         | ✅ Oui            |
+| Memories capitalisées  | ✅ 20+            |
 
 ## Références
 

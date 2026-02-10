@@ -20,7 +20,7 @@ Les ETL vérifient si les fichiers existent avant de télécharger :
 
 ```typescript
 if (!fs.existsSync(jsonDir)) {
-    await downloadScrutins(legislature);  // Télécharge seulement si absent
+	await downloadScrutins(legislature); // Télécharge seulement si absent
 }
 ```
 
@@ -28,15 +28,15 @@ if (!fs.existsSync(jsonDir)) {
 
 ## Sources des données
 
-| Source | Type | URL |
-|--------|------|-----|
-| AN Acteurs | ZIP → JSON | `data.assemblee-nationale.fr` |
-| AN Scrutins | ZIP → JSON | `data.assemblee-nationale.fr` |
-| AN Dossiers | ZIP → JSON | `data.assemblee-nationale.fr` |
-| Sénat | API/CSV | `data.senat.fr`, `senat.fr/api` |
-| PE ParlTrack | API JSON | `parltrack.org` |
-| PE HowTheyVote | API JSON | `howtheyvote.eu/api` |
-| NosDéputés | API JSON | `nosdeputes.fr` |
+| Source         | Type       | URL                             |
+| -------------- | ---------- | ------------------------------- |
+| AN Acteurs     | ZIP → JSON | `data.assemblee-nationale.fr`   |
+| AN Scrutins    | ZIP → JSON | `data.assemblee-nationale.fr`   |
+| AN Dossiers    | ZIP → JSON | `data.assemblee-nationale.fr`   |
+| Sénat          | API/CSV    | `data.senat.fr`, `senat.fr/api` |
+| PE ParlTrack   | API JSON   | `parltrack.org`                 |
+| PE HowTheyVote | API JSON   | `howtheyvote.eu/api`            |
+| NosDéputés     | API JSON   | `nosdeputes.fr`                 |
 
 ## Déploiement en production
 
@@ -67,11 +67,11 @@ make etl-europarl-meps
 
 ## Variables d'environnement
 
-| Variable | Défaut | Description |
-|----------|--------|-------------|
-| `ETL_DATA_DIR` | `./data/assemblee` | Répertoire des données AN |
-| `ETL_CACHE_DIR` | `data/cache` | Répertoire de cache |
-| `ETL_LEGISLATURE` | `17` | Législature à importer |
+| Variable          | Défaut             | Description               |
+| ----------------- | ------------------ | ------------------------- |
+| `ETL_DATA_DIR`    | `./data/assemblee` | Répertoire des données AN |
+| `ETL_CACHE_DIR`   | `data/cache`       | Répertoire de cache       |
+| `ETL_LEGISLATURE` | `17`               | Législature à importer    |
 
 ## Taille approximative
 

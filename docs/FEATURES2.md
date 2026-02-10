@@ -10,16 +10,16 @@ Je les classe par **valeur ajoutée** (pas par facilité technique).
 
 **Pour chaque loi / proposition de loi :**
 
-* Chronologie détaillée :
+- Chronologie détaillée :
+  - dépôt (auteur(s), groupe),
+  - commissions,
+  - lectures AN / Sénat,
+  - CMP,
+  - adoption / rejet / abandon,
+  - promulgation.
 
-  * dépôt (auteur(s), groupe),
-  * commissions,
-  * lectures AN / Sénat,
-  * CMP,
-  * adoption / rejet / abandon,
-  * promulgation.
-* Chambres impliquées et dates exactes.
-* Versionnage du texte (avant/après amendements).
+- Chambres impliquées et dates exactes.
+- Versionnage du texte (avant/après amendements).
 
 👉 Permet de **sortir du vote isolé** et de comprendre le processus.
 
@@ -29,10 +29,10 @@ Je les classe par **valeur ajoutée** (pas par facilité technique).
 
 Pour un élu donné, sur un texte donné :
 
-* a-t-il cosigné ?
-* a-t-il déposé des amendements ?
-* a-t-il pris la parole ?
-* a-t-il voté à chaque étape ?
+- a-t-il cosigné ?
+- a-t-il déposé des amendements ?
+- a-t-il pris la parole ?
+- a-t-il voté à chaque étape ?
 
 👉 Passage d’une logique “vote” à une logique **responsabilité**.
 
@@ -44,17 +44,17 @@ Pour un élu donné, sur un texte donné :
 
 Classifier chaque scrutin :
 
-* vote final sur texte,
-* article,
-* amendement,
-* procédure (motion, exception, renvoi),
-* vote budgétaire,
-* vote constitutionnel.
+- vote final sur texte,
+- article,
+- amendement,
+- procédure (motion, exception, renvoi),
+- vote budgétaire,
+- vote constitutionnel.
 
 Puis :
 
-* stats séparées par type,
-* pondération configurable.
+- stats séparées par type,
+- pondération configurable.
 
 👉 Rend tes stats **beaucoup plus défendables**.
 
@@ -64,14 +64,14 @@ Puis :
 
 Pour chaque élu :
 
-* taux de dissidence par rapport au groupe,
-* sur quels types de textes,
-* sur quels thèmes.
+- taux de dissidence par rapport au groupe,
+- sur quels types de textes,
+- sur quels thèmes.
 
 Pour chaque groupe :
 
-* députés “frondeurs”,
-* votes les plus clivants en interne.
+- députés “frondeurs”,
+- votes les plus clivants en interne.
 
 ---
 
@@ -79,9 +79,9 @@ Pour chaque groupe :
 
 Déjà partiellement fait côté groupes, mais à étendre :
 
-* matrice député ↔ député (cosine / Jaccard),
-* projection 2D (UMAP / PCA) par législature,
-* trajectoire temporelle d’un élu dans l’espace politique.
+- matrice député ↔ député (cosine / Jaccard),
+- projection 2D (UMAP / PCA) par législature,
+- trajectoire temporelle d’un élu dans l’espace politique.
 
 ---
 
@@ -91,21 +91,21 @@ Déjà partiellement fait côté groupes, mais à étendre :
 
 À partir :
 
-* des dossiers législatifs,
-* des mots-clés officiels,
-* éventuellement NLP léger.
+- des dossiers législatifs,
+- des mots-clés officiels,
+- éventuellement NLP léger.
 
 Exemples :
 
-* environnement,
-* immigration,
-* économie,
-* libertés publiques,
-* santé.
+- environnement,
+- immigration,
+- économie,
+- libertés publiques,
+- santé.
 
 👉 Permet de répondre à :
 
-> “Comment X vote sur *ce sujet précis* ?”
+> “Comment X vote sur _ce sujet précis_ ?”
 
 ---
 
@@ -113,9 +113,9 @@ Exemples :
 
 Pour chaque élu :
 
-* participation par thème,
-* dissidence par thème,
-* spécialisation (indice de concentration).
+- participation par thème,
+- dissidence par thème,
+- spécialisation (indice de concentration).
 
 ---
 
@@ -123,12 +123,11 @@ Pour chaque élu :
 
 ### 4.1 Comparaison multi-élus (pas seulement 2)
 
-* comparer un député à :
-
-  * son groupe,
-  * sa circonscription,
-  * un “cluster idéologique”,
-  * un élu d’une autre législature.
+- comparer un député à :
+  - son groupe,
+  - sa circonscription,
+  - un “cluster idéologique”,
+  - un élu d’une autre législature.
 
 ---
 
@@ -136,9 +135,9 @@ Pour chaque élu :
 
 Pour un même texte :
 
-* positions AN vs Sénat,
-* évolution entre lectures,
-* alignement des groupes AN/Sénat/PE sur un thème.
+- positions AN vs Sénat,
+- évolution entre lectures,
+- alignement des groupes AN/Sénat/PE sur un thème.
 
 ---
 
@@ -148,10 +147,10 @@ Pour un même texte :
 
 Vue chronologique :
 
-* changements de groupe,
-* ruptures de vote,
-* pics d’activité,
-* changements de proximité idéologique.
+- changements de groupe,
+- ruptures de vote,
+- pics d’activité,
+- changements de proximité idéologique.
 
 ---
 
@@ -159,10 +158,10 @@ Vue chronologique :
 
 Corréler :
 
-* élections,
-* remaniements,
-* changements de majorité,
-* crises (COVID, Ukraine, etc.).
+- élections,
+- remaniements,
+- changements de majorité,
+- crises (COVID, Ukraine, etc.).
 
 ---
 
@@ -172,8 +171,8 @@ Corréler :
 
 Si possible (même partiellement) :
 
-* positions publiques (discours, tribunes),
-* votes réels.
+- positions publiques (discours, tribunes),
+- votes réels.
 
 👉 Même imparfait, très fort symboliquement.
 
@@ -183,9 +182,9 @@ Si possible (même partiellement) :
 
 Identifier :
 
-* scrutins à faible majorité,
-* élus dont le vote était décisif,
-* groupes pivot.
+- scrutins à faible majorité,
+- élus dont le vote était décisif,
+- groupes pivot.
 
 ---
 
@@ -195,17 +194,17 @@ Identifier :
 
 Même sans votes individuels :
 
-* implication dans les dossiers,
-* rôle de rapporteur,
-* fréquence d’intervention par thème.
+- implication dans les dossiers,
+- rôle de rapporteur,
+- fréquence d’intervention par thème.
 
 ---
 
 ### 7.2 Comparaison AN ↔ Sénat sur textes communs
 
-* délais,
-* taux de modification,
-* nature des amendements sénatoriaux.
+- délais,
+- taux de modification,
+- nature des amendements sénatoriaux.
 
 ---
 
@@ -213,15 +212,15 @@ Même sans votes individuels :
 
 ### 8.1 Suivi personnalisé
 
-* suivre un élu, un texte, un thème,
-* alertes (nouveau vote, changement de position).
+- suivre un élu, un texte, un thème,
+- alertes (nouveau vote, changement de position).
 
 ---
 
 ### 8.2 Exports & API
 
-* export CSV/JSON par élu / texte / période,
-* API publique documentée (lecture seule).
+- export CSV/JSON par élu / texte / période,
+- API publique documentée (lecture seule).
 
 ---
 
@@ -231,17 +230,17 @@ Même sans votes individuels :
 
 Pour chaque indicateur :
 
-* ce que ça mesure,
-* ce que ça ne mesure pas,
-* biais connus.
+- ce que ça mesure,
+- ce que ça ne mesure pas,
+- biais connus.
 
 ---
 
 ### 9.2 Indicateurs de fiabilité
 
-* taux de données manquantes,
-* couverture par période,
-* différences AN / Sénat / PE.
+- taux de données manquantes,
+- couverture par période,
+- différences AN / Sénat / PE.
 
 ---
 
@@ -249,9 +248,9 @@ Pour chaque indicateur :
 
 Pour rester sérieux :
 
-* classements “meilleurs / pires députés”,
-* scores uniques agrégés,
-* indicateurs normatifs sans contexte.
+- classements “meilleurs / pires députés”,
+- scores uniques agrégés,
+- indicateurs normatifs sans contexte.
 
 ---
 

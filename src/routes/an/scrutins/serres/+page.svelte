@@ -49,8 +49,8 @@
 	}
 
 	// Stats rapides
-	const tieCount = data.scrutins.filter((s) => s.isTie).length;
-	const veryTightCount = data.scrutins.filter((s) => s.margin > 0 && s.margin <= 5).length;
+	const tieCount = $derived(data.scrutins.filter((s) => s.isTie).length);
+	const veryTightCount = $derived(data.scrutins.filter((s) => s.margin > 0 && s.margin <= 5).length);
 </script>
 
 <svelte:head>

@@ -9,6 +9,7 @@ Besoin de lier des entités entre deux sources de données hétérogènes (bases
 Comment matcher des titres/noms similaires mais non identiques entre deux sources ?
 
 **Exemples de variations** :
+
 - Abréviations : "Projet de loi" vs "PL"
 - Articles : "la réforme" vs "réforme"
 - Ordre des mots : "loi de finances 2025" vs "finances pour 2025 loi"
@@ -26,41 +27,41 @@ Utiliser la **similarité de Jaccard** avec normalisation NLP extensive et bonus
 /**
  * Calcule la similarité de Jaccard entre deux titres
  * avec normalisation NLP et bonus pour mots discriminants
- * 
+ *
  * @param title1 Premier titre
  * @param title2 Deuxième titre
  * @returns Score de similarité entre 0.0 (aucune) et 1.0+ (identique avec bonus)
  */
 function calculateJaccardSimilarity(title1: string, title2: string): number {
-  // 1. NORMALISATION
-  const normalized1 = normalizeTitle(title1);
-  const normalized2 = normalizeTitle(title2);
+	// 1. NORMALISATION
+	const normalized1 = normalizeTitle(title1);
+	const normalized2 = normalizeTitle(title2);
 
-  // 2. TOKENISATION
-  const tokens1 = new Set(normalized1.split(/\s+/).filter(t => t.length > 0));
-  const tokens2 = new Set(normalized2.split(/\s+/).filter(t => t.length > 0));
+	// 2. TOKENISATION
+	const tokens1 = new Set(normalized1.split(/\s+/).filter((t) => t.length > 0));
+	const tokens2 = new Set(normalized2.split(/\s+/).filter((t) => t.length > 0));
 
-  // 3. JACCARD DE BASE
-  const intersection = new Set([...tokens1].filter(t => tokens2.has(t)));
-  const union = new Set([...tokens1, ...tokens2]);
-  const baseScore = intersection.size / union.size;
+	// 3. JACCARD DE BASE
+	const intersection = new Set([...tokens1].filter((t) => tokens2.has(t)));
+	const union = new Set([...tokens1, ...tokens2]);
+	const baseScore = intersection.size / union.size;
 
-  // 4. BONUS MOTS DISCRIMINANTS
-  let bonus = 0;
+	// 4. BONUS MOTS DISCRIMINANTS
+	let bonus = 0;
 
-  // Bonus pour mots longs (8+ caractères)
-  const longWords = [...intersection].filter(t => t.length >= 8);
-  if (longWords.length > 0) {
-    bonus += 0.2; // +20%
-  }
+	// Bonus pour mots longs (8+ caractères)
+	const longWords = [...intersection].filter((t) => t.length >= 8);
+	if (longWords.length > 0) {
+		bonus += 0.2; // +20%
+	}
 
-  // Bonus pour années (2020-2030)
-  const years = [...intersection].filter(t => /^(202[0-9])$/.test(t));
-  if (years.length > 0) {
-    bonus += 0.2; // +20%
-  }
+	// Bonus pour années (2020-2030)
+	const years = [...intersection].filter((t) => /^(202[0-9])$/.test(t));
+	if (years.length > 0) {
+		bonus += 0.2; // +20%
+	}
 
-  return Math.min(baseScore + bonus, 1.0);
+	return Math.min(baseScore + bonus, 1.0);
 }
 ```
 
@@ -69,30 +70,60 @@ function calculateJaccardSimilarity(title1: string, title2: string): number {
 ```typescript
 // Stop words français (à adapter selon la langue)
 const FRENCH_STOP_WORDS = new Set([
-  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'à',
-  'au', 'aux', 'et', 'ou', 'pour', 'par', 'dans', 'sur',
-  'avec', 'sans', 'sous', 'en', 'ce', 'cette', 'ces',
-  'son', 'sa', 'ses', 'leur', 'leurs', 'mon', 'ma', 'mes'
+	'le',
+	'la',
+	'les',
+	'un',
+	'une',
+	'des',
+	'du',
+	'de',
+	'à',
+	'au',
+	'aux',
+	'et',
+	'ou',
+	'pour',
+	'par',
+	'dans',
+	'sur',
+	'avec',
+	'sans',
+	'sous',
+	'en',
+	'ce',
+	'cette',
+	'ces',
+	'son',
+	'sa',
+	'ses',
+	'leur',
+	'leurs',
+	'mon',
+	'ma',
+	'mes'
 ]);
 
 function normalizeTitle(title: string): string {
-  return title
-    // 1. Lowercase
-    .toLowerCase()
-    // 2. Supprimer accents
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    // 3. Remplacer apostrophes par espaces
-    .replace(/['']/g, ' ')
-    // 4. Supprimer ponctuation (sauf chiffres et lettres)
-    .replace(/[^\w\s]/g, ' ')
-    // 5. Normaliser espaces multiples
-    .replace(/\s+/g, ' ')
-    .trim()
-    // 6. Supprimer stop words
-    .split(/\s+/)
-    .filter(word => !FRENCH_STOP_WORDS.has(word))
-    .join(' ');
+	return (
+		title
+			// 1. Lowercase
+			.toLowerCase()
+			// 2. Supprimer accents
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			// 3. Remplacer apostrophes par espaces
+			.replace(/['']/g, ' ')
+			// 4. Supprimer ponctuation (sauf chiffres et lettres)
+			.replace(/[^\w\s]/g, ' ')
+			// 5. Normaliser espaces multiples
+			.replace(/\s+/g, ' ')
+			.trim()
+			// 6. Supprimer stop words
+			.split(/\s+/)
+			.filter((word) => !FRENCH_STOP_WORDS.has(word))
+			.join(' ')
+	);
 }
 ```
 
@@ -107,6 +138,7 @@ function normalizeTitle(title: string): string {
 - **|A ∪ B|** : Nombre total de mots distincts (union)
 
 **Exemple** :
+
 ```
 Titre 1: "projet de loi de finances pour 2025"
 Titre 2: "loi finances 2025"
@@ -130,11 +162,13 @@ Jaccard = 3/4 = 0.75
 **Catégories de bonus** :
 
 #### Mots longs (8+ caractères)
+
 - **Pourquoi** : Les mots longs sont souvent plus spécifiques et discriminants
 - **Exemples** : "environnement", "agriculture", "numérique"
 - **Bonus** : +20% si au moins 1 mot long en commun
 
 #### Années (2020-2030)
+
 - **Pourquoi** : Les années sont très discriminantes dans les contextes législatifs
 - **Exemples** : "2025", "2024"
 - **Bonus** : +20% si au moins 1 année en commun
@@ -148,11 +182,13 @@ Jaccard = 3/4 = 0.75
 **Recommandation** : Seuil = **0.4** (40%)
 
 **Justification empirique** :
+
 - Seuil trop bas (< 0.3) : Trop de faux positifs
 - Seuil trop haut (> 0.5) : Manque de vrais positifs
 - **0.4** : Bon équilibre testé sur 50 cas réels
 
 **Ajuster selon** :
+
 - Qualité des données source (si très bruitées, monter à 0.5)
 - Objectif (précision vs recall)
 - Validation manuelle d'un échantillon
@@ -166,24 +202,24 @@ const titlesLegifrance = await searchLegifrance(query);
 
 // 2. Pour chaque titre AN, trouver le meilleur match Légifrance
 for (const lawAN of titlesAN) {
-  let bestMatch = null;
-  let bestScore = 0;
+	let bestMatch = null;
+	let bestScore = 0;
 
-  for (const resultLF of titlesLegifrance) {
-    const score = calculateJaccardSimilarity(lawAN.title, resultLF.title);
-    
-    if (score > bestScore && score >= SIMILARITY_THRESHOLD) {
-      bestScore = score;
-      bestMatch = resultLF;
-    }
-  }
+	for (const resultLF of titlesLegifrance) {
+		const score = calculateJaccardSimilarity(lawAN.title, resultLF.title);
 
-  if (bestMatch) {
-    console.log(`✓ Match: ${lawAN.title} → ${bestMatch.title} (${bestScore.toFixed(2)})`);
-    // Lier les entités
-  } else {
-    console.log(`✗ No match: ${lawAN.title}`);
-  }
+		if (score > bestScore && score >= SIMILARITY_THRESHOLD) {
+			bestScore = score;
+			bestMatch = resultLF;
+		}
+	}
+
+	if (bestMatch) {
+		console.log(`✓ Match: ${lawAN.title} → ${bestMatch.title} (${bestScore.toFixed(2)})`);
+		// Lier les entités
+	} else {
+		console.log(`✗ No match: ${lawAN.title}`);
+	}
 }
 ```
 
@@ -212,11 +248,11 @@ Pour gérer les typos et variations orthographiques :
 
 ```typescript
 function generateTrigrams(text: string): Set<string> {
-  const trigrams = new Set<string>();
-  for (let i = 0; i <= text.length - 3; i++) {
-    trigrams.add(text.slice(i, i + 3));
-  }
-  return trigrams;
+	const trigrams = new Set<string>();
+	for (let i = 0; i <= text.length - 3; i++) {
+		trigrams.add(text.slice(i, i + 3));
+	}
+	return trigrams;
 }
 
 // Jaccard sur tri-grammes au lieu de mots
@@ -251,9 +287,9 @@ Pour textes très proches avec typos :
 
 ```typescript
 function levenshteinSimilarity(s1: string, s2: string): number {
-  const distance = levenshtein(s1, s2);
-  const maxLen = Math.max(s1.length, s2.length);
-  return 1 - (distance / maxLen);
+	const distance = levenshtein(s1, s2);
+	const maxLen = Math.max(s1.length, s2.length);
+	return 1 - distance / maxLen;
 }
 ```
 
@@ -266,14 +302,17 @@ function levenshteinSimilarity(s1: string, s2: string): number {
 **Projet** : NosElus - Matching Assemblée Nationale ↔ Légifrance
 
 **Données** :
+
 - 50 titres de lois AN
 - ~10 résultats Légifrance par recherche (500 comparaisons totales)
 
 **Résultats** :
+
 - **48/50 matchés** avec seuil 0.4 (96% de succès)
 - **2 non matchés** : Titres trop différents ou loi non publiée au JO
 
 **Exemple de match réussi** :
+
 ```
 AN:          "proposition de loi visant à réformer le mode d'élection du conseil d'administration"
 Légifrance:  "Loi visant à réformer le mode d'élection des membres du conseil d'administration"
@@ -281,6 +320,7 @@ Score:       0.72 (sans bonus) + 0.2 (mot long "administration") = 0.92
 ```
 
 **Exemple de non-match** :
+
 ```
 AN:          "gouvernement de rétablissement de l'article 6 bis (supprimé)"
 Légifrance:  (Aucun résultat pertinent)
@@ -310,30 +350,35 @@ Raison:      Titre incomplet/procédural, pas une loi finale
 
 ```typescript
 const stats = {
-  total: 0,
-  matched: 0,
-  notMatched: 0,
-  scores: [] as number[]
+	total: 0,
+	matched: 0,
+	notMatched: 0,
+	scores: [] as number[]
 };
 
 for (const law of laws) {
-  stats.total++;
-  const match = findBestMatch(law.title, candidates);
-  
-  if (match && match.score >= THRESHOLD) {
-    stats.matched++;
-    stats.scores.push(match.score);
-  } else {
-    stats.notMatched++;
-    console.log(`No match: ${law.title}`);
-  }
+	stats.total++;
+	const match = findBestMatch(law.title, candidates);
+
+	if (match && match.score >= THRESHOLD) {
+		stats.matched++;
+		stats.scores.push(match.score);
+	} else {
+		stats.notMatched++;
+		console.log(`No match: ${law.title}`);
+	}
 }
 
-console.log(`Matched: ${stats.matched}/${stats.total} (${(stats.matched/stats.total*100).toFixed(1)}%)`);
-console.log(`Average score: ${(stats.scores.reduce((a,b) => a+b, 0) / stats.scores.length).toFixed(2)}`);
+console.log(
+	`Matched: ${stats.matched}/${stats.total} (${((stats.matched / stats.total) * 100).toFixed(1)}%)`
+);
+console.log(
+	`Average score: ${(stats.scores.reduce((a, b) => a + b, 0) / stats.scores.length).toFixed(2)}`
+);
 ```
 
 **Objectifs** :
+
 - **Success rate** : > 90%
 - **Average score** : > 0.6 (pour seuil 0.4)
 

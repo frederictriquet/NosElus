@@ -1,6 +1,7 @@
 # ADR-2026-02-01 : Classification sémantique des scrutins
 
 ## Métadonnées
+
 - **Date** : 2026-02-01
 - **Statut** : Proposé
 - **Contexte** : Phase 1.1 de la roadmap - Typologie des scrutins
@@ -14,6 +15,7 @@ Les scrutins ont un champ `type` technique (SPO, SPS, MOC, PLN) qui ne permet pa
 Ajouter une colonne `category` (varchar 30) classifiée automatiquement par analyse regex du champ `title` lors de l'import ETL.
 
 **Taxonomie (6 catégories)** :
+
 1. `vote-final` - Vote sur l'ensemble d'un texte
 2. `article` - Vote sur un article spécifique
 3. `amendement` - Vote sur un amendement
@@ -25,15 +27,17 @@ Ajouter une colonne `category` (varchar 30) classifiée automatiquement par anal
 **Ordre de priorité** : procédure > constitutionnel > budget > vote-final > amendement > article > autre
 
 **Fonction de classification** :
+
 ```typescript
 export function classifyScrutin(title: string): string {
-  if (/motion de|question de confiance|exception d'irrecevabilité/i.test(title)) return 'procédure';
-  if (/constitution|projet de loi constitutionnel|projet de loi organique/i.test(title)) return 'constitutionnel';
-  if (/loi de finances|budget|crédits/i.test(title)) return 'budget';
-  if (/l'ensemble (du|de la) (projet|proposition)/i.test(title)) return 'vote-final';
-  if (/l'amendement n°|les amendements?/i.test(title)) return 'amendement';
-  if (/l'article (premier|\d+|unique)|les articles/i.test(title)) return 'article';
-  return 'autre';
+	if (/motion de|question de confiance|exception d'irrecevabilité/i.test(title)) return 'procédure';
+	if (/constitution|projet de loi constitutionnel|projet de loi organique/i.test(title))
+		return 'constitutionnel';
+	if (/loi de finances|budget|crédits/i.test(title)) return 'budget';
+	if (/l'ensemble (du|de la) (projet|proposition)/i.test(title)) return 'vote-final';
+	if (/l'amendement n°|les amendements?/i.test(title)) return 'amendement';
+	if (/l'article (premier|\d+|unique)|les articles/i.test(title)) return 'article';
+	return 'autre';
 }
 ```
 
@@ -49,6 +53,7 @@ export function classifyScrutin(title: string): string {
 ## Conséquences
 
 ### Positives
+
 - Filtres UI par type de scrutin
 - Stats nuancées et défendables
 - API enrichie (`?category=vote-final`)
@@ -56,6 +61,7 @@ export function classifyScrutin(title: string): string {
 - Conformité no-hardcoding (SELECT DISTINCT category)
 
 ### Négatives
+
 - Dépendance aux formats de titres (mitigé par tests de régression)
 - Précision ~95% (mitigé par validation échantillon + monitoring)
 - Maintenance des regex (acceptable, logique centralisée)

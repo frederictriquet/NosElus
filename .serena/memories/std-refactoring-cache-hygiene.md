@@ -1,6 +1,7 @@
 # Standard : Cache Hygiene Après Refactoring
 
 ## Catégorie
+
 Development Workflow | Build System | Best Practices
 
 ## Règle
@@ -22,16 +23,19 @@ Puis **redémarrer le dev server**.
 ### Problème
 
 Vite et SvelteKit maintiennent des caches de compilation pour améliorer les performances :
+
 - `node_modules/.vite/` : Pre-bundling des dépendances
 - `.svelte-kit/` : Fichiers générés par SvelteKit (routes, types, etc.)
 
 Lors d'un refactoring (renommage, déplacement, extraction de composant), ces caches peuvent devenir **incohérents** :
+
 - Anciens imports toujours en cache
 - Références à des fichiers qui n'existent plus
 - CSS scope IDs désynchronisés
 - Modules dupliqués
 
 **Symptômes typiques** :
+
 - CSS affiché comme texte dans le DOM
 - Composants qui ne se rendent pas
 - Erreurs de module non trouvé intermittentes
@@ -40,21 +44,22 @@ Lors d'un refactoring (renommage, déplacement, extraction de composant), ces ca
 ### Impact
 
 Un cache corrompu peut causer :
+
 - ❌ **Perte de temps** : Plusieurs heures de debug pour un problème inexistant
 - ❌ **Faux positifs** : Croire qu'il y a un bug dans le code alors que c'est le cache
 - ❌ **Régression masquée** : Le cache cache une vraie régression jusqu'au build prod
 
 ## Refactorings à Risque
 
-| Type de refactoring | Risque | Action |
-|---------------------|--------|--------|
-| **Renommage de fichier .svelte** | 🔴 Très élevé | Clean cache **obligatoire** |
-| **Déplacement de composant** | 🔴 Très élevé | Clean cache **obligatoire** |
-| **Extraction de composant** | ⚠️ Élevé | Clean cache **recommandé** |
-| **Modification des imports** | ⚠️ Moyen | Restart dev server |
-| **Changement de config Vite/SvelteKit** | 🔴 Critique | Clean cache **obligatoire** |
-| **Ajout de nouvelle route** | ✅ Faible | Optionnel |
-| **Modification de CSS inline** | ✅ Faible | Optionnel |
+| Type de refactoring                     | Risque        | Action                      |
+| --------------------------------------- | ------------- | --------------------------- |
+| **Renommage de fichier .svelte**        | 🔴 Très élevé | Clean cache **obligatoire** |
+| **Déplacement de composant**            | 🔴 Très élevé | Clean cache **obligatoire** |
+| **Extraction de composant**             | ⚠️ Élevé      | Clean cache **recommandé**  |
+| **Modification des imports**            | ⚠️ Moyen      | Restart dev server          |
+| **Changement de config Vite/SvelteKit** | 🔴 Critique   | Clean cache **obligatoire** |
+| **Ajout de nouvelle route**             | ✅ Faible     | Optionnel                   |
+| **Modification de CSS inline**          | ✅ Faible     | Optionnel                   |
 
 ## Workflow Recommandé
 
@@ -161,6 +166,7 @@ fi
 ```
 
 Usage :
+
 ```bash
 git refactor-start extract-component
 # → Crée la branche + nettoie le cache
@@ -178,14 +184,14 @@ git refactor-start extract-component
 
 ## Fréquence de Nettoyage
 
-| Situation | Fréquence |
-|-----------|-----------|
-| Refactoring structurel | **Chaque fois** |
-| Changement de branche git | Si problèmes |
-| Après `git pull` | Si problèmes |
+| Situation                       | Fréquence           |
+| ------------------------------- | ------------------- |
+| Refactoring structurel          | **Chaque fois**     |
+| Changement de branche git       | Si problèmes        |
+| Après `git pull`                | Si problèmes        |
 | Comportement bizarre inexpliqué | **Première action** |
-| Démarrage d'une session de dev | Optionnel |
-| Quotidiennement | ❌ Non nécessaire |
+| Démarrage d'une session de dev  | Optionnel           |
+| Quotidiennement                 | ❌ Non nécessaire   |
 
 ## Exceptions
 
@@ -222,11 +228,11 @@ Toujours cassé ? → Vrai bug de code
 
 ## Coût du Nettoyage
 
-| Opération | Temps | Impact |
-|-----------|-------|--------|
-| `make clean-cache` | ~1s | Suppression fichiers |
-| Restart dev server | ~5-10s | Recompilation initiale |
-| **Total** | **~10s** | vs. 2h de debug d'un cache corrompu |
+| Opération          | Temps    | Impact                              |
+| ------------------ | -------- | ----------------------------------- |
+| `make clean-cache` | ~1s      | Suppression fichiers                |
+| Restart dev server | ~5-10s   | Recompilation initiale              |
+| **Total**          | **~10s** | vs. 2h de debug d'un cache corrompu |
 
 **ROI** : 10 secondes peuvent sauver des heures.
 
@@ -242,6 +248,6 @@ Toujours cassé ? → Vrai bug de code
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                             |
+| ---------- | -------------------------------------------------------- |
 | 2026-02-07 | Création suite au bug de cache corrompu sur scrutin page |

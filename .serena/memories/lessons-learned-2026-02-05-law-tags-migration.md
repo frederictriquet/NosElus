@@ -1,6 +1,7 @@
 # Lessons Learned : Migration JSONB → Tables Relationnelles (Tags de Lois)
 
 ## Date
+
 2026-02-05
 
 ## Contexte
@@ -8,6 +9,7 @@
 Migration des tags de lois depuis une colonne JSONB dans `law_summaries` vers une architecture relationnelle many-to-many (`tags` ↔ `law_tags` ↔ `laws`).
 
 **Objectifs** :
+
 - ✅ Permettre le filtrage par tag (impossible avec JSONB indexé GIN)
 - ✅ Ajouter des métadonnées aux tags (couleur, description)
 - ✅ Charger dynamiquement les tags pour le LLM (pas de constant hardcodé)
@@ -27,6 +29,7 @@ Migration des tags de lois depuis une colonne JSONB dans `law_summaries` vers un
 ```
 
 **Limitations** :
+
 - ❌ Pas de filtrage efficace par tag (`WHERE tags @> '["Économie"]'` lent)
 - ❌ Pas de métadonnées (couleurs, descriptions)
 - ❌ Duplication des noms de tags (risque d'incohérence : "Économie" vs "économie")
@@ -59,6 +62,7 @@ CREATE INDEX law_tags_law_id_idx ON law_tags (law_id);
 ```
 
 **Avantages** :
+
 - ✅ Filtrage rapide : `SELECT laws.* FROM laws JOIN law_tags ON ... WHERE tag_slug = 'economie'`
 - ✅ Métadonnées centralisées (couleur, description)
 - ✅ Cohérence garantie par FK
@@ -100,6 +104,7 @@ ON CONFLICT DO NOTHING;
 ```
 
 **Explications** :
+
 - `jsonb_array_elements_text(ls.tags)` : Explose le tableau JSONB en lignes
 - `unaccent(tag_value)` : "Économie" → "Economie"
 - `lower(...)` : "Economie" → "economie"
@@ -107,6 +112,7 @@ ON CONFLICT DO NOTHING;
 - `ON CONFLICT DO NOTHING` : Évite les doublons si migration re-exécutée
 
 **Résultat** :
+
 ```
 INSERT 0 587  -- 587 associations law↔tag migrées
 ```
@@ -123,12 +129,14 @@ ALTER TABLE law_summaries DROP COLUMN tags;
 ### ✅ Ce qui a bien fonctionné
 
 1. **`unaccent` pour normalisation** : Conversion automatique des accents sans mapping manuel
+
    ```sql
    unaccent('Économie') → 'Economie'
    lower('Economie') → 'economie'
    ```
 
 2. **`CROSS JOIN LATERAL` pour expansion JSONB** : Pattern propre et lisible
+
    ```sql
    FROM law_summaries
    CROSS JOIN LATERAL jsonb_array_elements_text(tags) AS tag_value
@@ -136,7 +144,7 @@ ALTER TABLE law_summaries DROP COLUMN tags;
 
 3. **Validation avec `WHERE ... IN (SELECT slug FROM tags)`** : Évite les tags orphelins
 
-4. **Indexes composites** : 
+4. **Indexes composites** :
    - `(law_id, tag_slug)` pour la PK
    - Index séparé sur `tag_slug` pour `WHERE tag_slug = ?`
    - Index séparé sur `law_id` pour batch loading
@@ -150,18 +158,20 @@ ALTER TABLE law_summaries DROP COLUMN tags;
    - Migration doit être idempotente
 
 2. **Tester la migration sur une copie** avant production
+
    ```bash
    # Backup
    pg_dump noselus > backup-before-migration.sql
-   
+
    # Test migration
    psql noselus < migration.sql
-   
+
    # Vérifier
    SELECT COUNT(*) FROM law_tags;  -- Doit matcher les tags JSONB
    ```
 
 3. **Vérifier les tags non reconnus**
+
    ```sql
    -- Tags dans JSONB mais pas dans la table tags
    SELECT DISTINCT tag_value
@@ -169,10 +179,10 @@ ALTER TABLE law_summaries DROP COLUMN tags;
    CROSS JOIN LATERAL jsonb_array_elements_text(tags) AS tag_value
    WHERE lower(unaccent(tag_value)) NOT IN (SELECT slug FROM tags);
    ```
-   
+
    **Résultat dans notre cas** : 0 tags non reconnus (les 20 tags couvraient 100% des données)
 
-4. **Performance de `unaccent`** : 
+4. **Performance de `unaccent`** :
    - ✅ OK pour migration one-shot (< 1 sec pour 587 lignes)
    - ❌ À éviter dans les requêtes fréquentes (utiliser des slugs pré-normalisés)
 
@@ -193,18 +203,20 @@ ALTER TABLE law_summaries DROP COLUMN tags;
 ### ETL : Chargement dynamique des tags
 
 **Avant** :
+
 ```typescript
 const AVAILABLE_TAGS = [
-  { slug: 'economie', name: 'Économie', promptName: 'économie' },
-  // ... 19 autres tags hardcodés
+	{ slug: 'economie', name: 'Économie', promptName: 'économie' }
+	// ... 19 autres tags hardcodés
 ];
 ```
 
 **Après** :
+
 ```typescript
 export async function getAvailableTags(): Promise<TagMapping[]> {
-  const dbTags = await db.select({ slug: tags.slug, name: tags.name }).from(tags);
-  return dbTags.map((t) => ({ slug: t.slug, name: t.name, promptName: t.name.toLowerCase() }));
+	const dbTags = await db.select({ slug: tags.slug, name: tags.name }).from(tags);
+	return dbTags.map((t) => ({ slug: t.slug, name: t.name, promptName: t.name.toLowerCase() }));
 }
 ```
 
@@ -213,20 +225,22 @@ export async function getAvailableTags(): Promise<TagMapping[]> {
 ### Routes : Batch loading au lieu de N+1
 
 **Avant** (N+1) :
+
 ```typescript
 const laws = await db.select().from(laws).limit(20);
 for (const law of laws) {
-  law.tags = await db.select().from(lawTags).where(eq(lawTags.lawId, law.id));
+	law.tags = await db.select().from(lawTags).where(eq(lawTags.lawId, law.id));
 }
 // 21 requêtes
 ```
 
 **Après** (batch) :
+
 ```typescript
 const lawsList = await db.select().from(laws).limit(20);
-const lawIds = lawsList.map(l => l.id);
+const lawIds = lawsList.map((l) => l.id);
 const allTags = await db.select().from(lawTags).where(inArray(lawTags.lawId, lawIds));
-const tagsByLawId = groupBy(allTags, t => t.lawId);
+const tagsByLawId = groupBy(allTags, (t) => t.lawId);
 // 2 requêtes ✅
 ```
 
@@ -234,12 +248,12 @@ Voir `pattern-batch-loading-n-plus-one.md` pour détails.
 
 ## Métriques
 
-| Métrique | Avant (JSONB) | Après (Relationnel) | Gain |
-|----------|---------------|---------------------|------|
-| Filtrage par tag | ~300ms (seq scan + JSONB @>) | ~15ms (index scan) | 20× |
-| N+1 queries sur /laws | 21 requêtes | 2 requêtes | 10× |
-| Ajout d'un nouveau tag | Redéploiement code | 1 INSERT SQL | ∞ |
-| Cohérence des noms | Risque typos | Garantie par FK | ✅ |
+| Métrique               | Avant (JSONB)                | Après (Relationnel) | Gain |
+| ---------------------- | ---------------------------- | ------------------- | ---- |
+| Filtrage par tag       | ~300ms (seq scan + JSONB @>) | ~15ms (index scan)  | 20×  |
+| N+1 queries sur /laws  | 21 requêtes                  | 2 requêtes          | 10×  |
+| Ajout d'un nouveau tag | Redéploiement code           | 1 INSERT SQL        | ∞    |
+| Cohérence des noms     | Risque typos                 | Garantie par FK     | ✅   |
 
 ## Checklist pour futures migrations similaires
 
@@ -264,19 +278,19 @@ Voir `pattern-batch-loading-n-plus-one.md` pour détails.
 
 ## Fichiers modifiés
 
-| Fichier | Type | Changement |
-|---------|------|------------|
+| Fichier                                            | Type      | Changement                          |
+| -------------------------------------------------- | --------- | ----------------------------------- |
 | `drizzle/migrations/0011_broken_the_enforcers.sql` | Migration | Création tables + migration données |
-| `src/lib/server/db/schema/tags.ts` | Schema | Nouvelle table `tags` |
-| `src/lib/server/db/schema/law-tags.ts` | Schema | Nouvelle table `law_tags` |
-| `src/lib/server/db/schema/law-summaries.ts` | Schema | Suppression colonne `tags` |
-| `src/lib/server/etl/sources/llm/law-analyzer.ts` | ETL | `getAvailableTags()` dynamique |
-| `src/routes/an/laws/+page.server.ts` | Route | Filtre par tag + batch loading |
-| `src/routes/debug/+page.server.ts` | Route | Fix N+1 avec batch loading |
-| `src/lib/components/TagBadge.svelte` | UI | Composant avec couleur depuis DB |
+| `src/lib/server/db/schema/tags.ts`                 | Schema    | Nouvelle table `tags`               |
+| `src/lib/server/db/schema/law-tags.ts`             | Schema    | Nouvelle table `law_tags`           |
+| `src/lib/server/db/schema/law-summaries.ts`        | Schema    | Suppression colonne `tags`          |
+| `src/lib/server/etl/sources/llm/law-analyzer.ts`   | ETL       | `getAvailableTags()` dynamique      |
+| `src/routes/an/laws/+page.server.ts`               | Route     | Filtre par tag + batch loading      |
+| `src/routes/debug/+page.server.ts`                 | Route     | Fix N+1 avec batch loading          |
+| `src/lib/components/TagBadge.svelte`               | UI        | Composant avec couleur depuis DB    |
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                     |
+| ---------- | ------------------------------------------------ |
 | 2026-02-05 | Création suite à migration complète tags de lois |

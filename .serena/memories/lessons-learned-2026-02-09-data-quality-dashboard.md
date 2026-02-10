@@ -7,6 +7,7 @@
 ## Contexte
 
 Création d'une page publique affichant la qualité et complétude des données de NosElus :
+
 - 3 sections : KPI globaux, couverture élus, tableau mandatures
 - Streaming SvelteKit avec AsyncCard
 - Tri interactif des colonnes avec accessibilité
@@ -21,13 +22,14 @@ Création d'une page publique affichant la qualité et complétude des données 
 ```typescript
 // ✅ Pattern appliqué dès le début
 return {
-  globalStats: loadGlobalStats(),  // Pas de await !
-  legislatureStats: loadLegislatureStats(),
-  chamberStats: loadChamberStats()
+	globalStats: loadGlobalStats(), // Pas de await !
+	legislatureStats: loadLegislatureStats(),
+	chamberStats: loadChamberStats()
 };
 ```
 
 **Impact** :
+
 - TTFB quasi-instantané (~170ms)
 - 3 requêtes SQL en parallèle
 - UX skeleton immédiate au lieu d'écran blanc
@@ -41,13 +43,14 @@ return {
 
 ```typescript
 const COLUMNS: ColumnConfig[] = [
-  { key: 'legislature', label: 'Mandature', getValue: (row) => extractNumber(row.legislature) },
-  { key: 'totalLaws', label: 'Lois', getValue: (row) => row.totalLaws },
-  // ... 5 autres colonnes
+	{ key: 'legislature', label: 'Mandature', getValue: (row) => extractNumber(row.legislature) },
+	{ key: 'totalLaws', label: 'Lois', getValue: (row) => row.totalLaws }
+	// ... 5 autres colonnes
 ];
 ```
 
 **Impact** :
+
 - DRY : template généré via `{#each COLUMNS}`
 - Ajout de colonne = 1 ligne de config
 - Type-safe avec TypeScript
@@ -58,6 +61,7 @@ const COLUMNS: ColumnConfig[] = [
 ### 3. Tests Écrits en Parallèle de l'Implémentation
 
 **Process** :
+
 1. `/implement` → fonctionnalité de base
 2. `/test-write` → 39 tests (29 unitaires + 10 intégration)
 3. `/test-run` → 39/39 ✅
@@ -65,6 +69,7 @@ const COLUMNS: ColumnConfig[] = [
 5. Corrections → 54/54 tests ✅ (12 tests ajoutés)
 
 **Impact** :
+
 - Code review a trouvé 6 issues (dark mode, accessibilité, perfs)
 - Tests ont permis corrections rapides sans régression
 - Couverture complète : tri 7 colonnes, edge cases, immutabilité
@@ -92,8 +97,9 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 ```
 
 **Impact** :
+
 - 1 requête au lieu de ~20 × 5 = 100+ (N+1 évité)
-- COUNT(*) FILTER permet 5 métriques en 1 passe
+- COUNT(\*) FILTER permet 5 métriques en 1 passe
 - Performance acceptable même avec scaling
 
 **Leçon** : Toujours utiliser CTEs pour éviter N+1, pattern éprouvé dans le projet.
@@ -109,21 +115,23 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 **Cause racine** : Confusion entre variables disponibles. Seules `--color-bg` et `--color-surface` existent.
 
 **Solution** :
+
 ```css
 /* ❌ Avant */
 .filter-btn {
-  background: var(--color-background);
+	background: var(--color-background);
 }
 
 /* ✅ Après */
 .filter-btn {
-  background: var(--color-surface);
+	background: var(--color-surface);
 }
 ```
 
 **Leçon** : Toujours vérifier les variables CSS du projet via `grep` avant d'utiliser.
 
 **Prévention** :
+
 - Ajouter un lint rule CSS pour valider les variables
 - Documenter les variables dans `app.css`
 
@@ -134,6 +142,7 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 **Découvert lors de** : Code review (review systématique a trouvé 6 issues).
 
 **Solution ajoutée** :
+
 ```svelte
 <th
   aria-sort={sortColumn === col.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
@@ -145,6 +154,7 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 **Leçon** : Checklist accessibilité dès l'implémentation, pas après.
 
 **Prévention** :
+
 - Ajouter template Svelte avec accessibilité par défaut
 - Code review systématique avec checklist accessibilité
 
@@ -156,8 +166,8 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 
 ```typescript
 function extractLegislatureNumber(legislature: string): number {
-  const match = legislature.match(/(\d+)/);
-  return match ? Number(match[1]) : 0;
+	const match = legislature.match(/(\d+)/);
+	return match ? Number(match[1]) : 0;
 }
 ```
 
@@ -169,17 +179,17 @@ function extractLegislatureNumber(legislature: string): number {
 
 ### Temps de développement
 
-| Phase | Durée | Notes |
-|-------|-------|-------|
-| /analyze | ~15min | Exploration données, décisions initiales |
-| /architecture | ~30min | Design 3 sections + requêtes SQL |
-| /implement | ~2h | Dashboard + commit |
-| /test-write | ~1h | 39 tests unitaires + intégration |
-| /test-run | ~10min | 39/39 ✅ |
-| /code-review | ~30min | 6 issues trouvées |
-| Corrections | ~45min | Fixes + 12 tests supplémentaires → 54/54 ✅ |
-| /document | ~1h | JSDoc + README 350 lignes |
-| /capitalize | ~30min | 3 nouvelles mémoires |
+| Phase         | Durée  | Notes                                       |
+| ------------- | ------ | ------------------------------------------- |
+| /analyze      | ~15min | Exploration données, décisions initiales    |
+| /architecture | ~30min | Design 3 sections + requêtes SQL            |
+| /implement    | ~2h    | Dashboard + commit                          |
+| /test-write   | ~1h    | 39 tests unitaires + intégration            |
+| /test-run     | ~10min | 39/39 ✅                                    |
+| /code-review  | ~30min | 6 issues trouvées                           |
+| Corrections   | ~45min | Fixes + 12 tests supplémentaires → 54/54 ✅ |
+| /document     | ~1h    | JSDoc + README 350 lignes                   |
+| /capitalize   | ~30min | 3 nouvelles mémoires                        |
 
 **Total** : ~7h (1 journée)
 

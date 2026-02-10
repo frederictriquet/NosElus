@@ -28,6 +28,7 @@ La SEULE interface valide pour toute interaction avec PostgreSQL est :
 Aucune autre méthode n’est acceptable.
 
 ## RÈGLE DE RAISONNEMENT OBLIGATOIRE
+
 Si une solution envisagée implique Docker pour la DB :
 → elle doit être rejetée
 → chercher une solution utilisant exclusivement ./scripts/db-query.sh
@@ -35,6 +36,7 @@ Si une solution envisagée implique Docker pour la DB :
 PORTÉE DES RÈGLES
 
 Ces règles s’appliquent :
+
 - en mode debug
 - en exploration
 - en refactor

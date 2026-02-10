@@ -4,6 +4,7 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let searchInput = $state(data.filters.search);
 
 	function handleSearch(e: Event) {

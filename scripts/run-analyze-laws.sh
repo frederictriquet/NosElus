@@ -20,4 +20,4 @@ else
   exit 1
 fi
 
-exec make -C "$PROJECT_DIR" etl-analyze-laws ARGS="--limit 1"
+exec make -C "$PROJECT_DIR" etl-an-law-texts ARGS="--limit 10"

@@ -5,6 +5,7 @@
 ## Problème
 
 Tester des helpers qui font des requêtes SQL complexes (jointures, agrégations) avec des mocks est :
+
 - Fastidieux (mocker Drizzle ORM est complexe)
 - Peu fiable (ne teste pas les vraies requêtes SQL)
 - Fragile (casse si l'ORM change)
@@ -12,6 +13,7 @@ Tester des helpers qui font des requêtes SQL complexes (jointures, agrégations
 ## Contexte
 
 Fonctions faisant des requêtes SQL avec :
+
 - Jointures multiples
 - Agrégations (count, group by)
 - Tri complexe
@@ -30,31 +32,31 @@ import { db, lawCosignatories, laws, actors } from '$lib/server/db';
 import { getActorLawsImplication, getLawContributors } from './helpers';
 
 describe('Law Implication Helpers - Integration', () => {
-  let testActorId: string | null = null;
-  let testLawId: string | null = null;
+	let testActorId: string | null = null;
+	let testLawId: string | null = null;
 
-  beforeAll(async () => {
-    // Find real test data from existing DB
-    const [actorWithLaws] = await db
-      .selectDistinct({ actorId: lawCosignatories.actorId })
-      .from(lawCosignatories)
-      .limit(1);
+	beforeAll(async () => {
+		// Find real test data from existing DB
+		const [actorWithLaws] = await db
+			.selectDistinct({ actorId: lawCosignatories.actorId })
+			.from(lawCosignatories)
+			.limit(1);
 
-    testActorId = actorWithLaws?.actorId || null;
-  });
+		testActorId = actorWithLaws?.actorId || null;
+	});
 
-  it('should return laws signed by actor when actor exists', async () => {
-    if (!testActorId) {
-      console.warn('No test actor found, skipping test');
-      return;
-    }
+	it('should return laws signed by actor when actor exists', async () => {
+		if (!testActorId) {
+			console.warn('No test actor found, skipping test');
+			return;
+		}
 
-    const result = await getActorLawsImplication(testActorId, 10);
+		const result = await getActorLawsImplication(testActorId, 10);
 
-    expect(result.length).toBeGreaterThan(0);
-    expect(result[0]).toHaveProperty('lawId');
-    expect(['author', 'cosignatory']).toContain(result[0].role);
-  });
+		expect(result.length).toBeGreaterThan(0);
+		expect(result[0]).toHaveProperty('lawId');
+		expect(['author', 'cosignatory']).toContain(result[0].role);
+	});
 });
 ```
 
@@ -78,11 +80,11 @@ describe('Law Implication Helpers - Integration', () => {
 
 ```typescript
 beforeAll(async () => {
-  // ✅ Bon : Utilise les données réelles
-  const [testData] = await db.select().from(table).limit(1);
-  
-  // ❌ Mauvais : Insert des fixtures à chaque test
-  // await db.insert(table).values(mockData);
+	// ✅ Bon : Utilise les données réelles
+	const [testData] = await db.select().from(table).limit(1);
+
+	// ❌ Mauvais : Insert des fixtures à chaque test
+	// await db.insert(table).values(mockData);
 });
 ```
 
@@ -90,12 +92,12 @@ beforeAll(async () => {
 
 ```typescript
 it('should work', async () => {
-  if (!testData) {
-    console.warn('No test data, skipping');
-    return; // Test passe sans fail
-  }
-  
-  // Test normal
+	if (!testData) {
+		console.warn('No test data, skipping');
+		return; // Test passe sans fail
+	}
+
+	// Test normal
 });
 ```
 
@@ -122,12 +124,14 @@ await db.update(table).set({ field: 'new value' });
 **Fichier** : `src/lib/server/api/helpers.law-implication.test.ts`
 
 **Résultats** :
+
 - 11 tests d'intégration
 - 100% passants
 - Durée : 165ms (acceptable)
 - Couverture : empty cases, valid data, limits, sorting, uniqueness
 
 **Cas testés** :
+
 1. Acteur inexistant → `[]`
 2. Acteur avec textes → structure validée
 3. Respect du limit parameter
@@ -138,13 +142,13 @@ await db.update(table).set({ field: 'new value' });
 
 ## Quand Utiliser ce Pattern
 
-| Situation | Recommandation |
-|-----------|----------------|
-| Requêtes SQL simples | Tests unitaires avec mocks OK |
+| Situation               | Recommandation                 |
+| ----------------------- | ------------------------------ |
+| Requêtes SQL simples    | Tests unitaires avec mocks OK  |
 | Requêtes avec jointures | ✅ Tests intégration DB réelle |
-| Agrégations complexes | ✅ Tests intégration DB réelle |
-| Logique métier pure | Tests unitaires |
-| ETL scripts | ✅ Tests intégration DB réelle |
+| Agrégations complexes   | ✅ Tests intégration DB réelle |
+| Logique métier pure     | Tests unitaires                |
+| ETL scripts             | ✅ Tests intégration DB réelle |
 
 ## Alternative : DB in-memory
 
@@ -164,8 +168,9 @@ const testDb = drizzle(new Database(':memory:'));
 - `*.server.test.ts` = tests d'intégration DB → local seulement
 
 **Config vitest.config.ts** :
+
 ```typescript
-exclude: ['src/**/*.server.test.ts', 'node_modules']
+exclude: ['src/**/*.server.test.ts', 'node_modules'];
 ```
 
 Les tests d'intégration sont exclus de `npm run test` par défaut.

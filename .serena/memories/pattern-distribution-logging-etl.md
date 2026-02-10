@@ -1,40 +1,48 @@
 # Pattern : Distribution Logging pour ETL
 
 ## Catégorie
+
 ETL | Logging | Data Quality | Observability
 
 ## Problème
 
 Lors de l'import ETL de données avec **catégorisation** (par législature, par terme, par type), il est difficile de :
+
 - ❌ Détecter les anomalies (ex: 0 données pour une catégorie attendue)
 - ❌ Valider la logique de classification
 - ❌ Comprendre la répartition des données
 - ❌ Debugger les erreurs de parsing
 
 **Sans distribution logging** :
+
 ```
 [ETL] Imported 2039 laws
 ```
+
 → Impossible de savoir si la répartition est correcte
 
 **Avec distribution logging** :
+
 ```
 [ETL] Imported 2039 laws
 [ETL] Term 8: 11 procedures
 [ETL] Term 9: 1664 procedures
 [ETL] Term 10: 364 procedures
 ```
+
 → Répartition immédiatement visible, anomalies détectables
 
 ## Contexte
 
 Utiliser ce pattern quand :
+
 - ✅ Données ETL ont une dimension de catégorisation
 - ✅ Besoin de valider la logique de classification
 - ✅ Détection d'anomalies importante
 - ✅ Transparence envers les utilisateurs/mainteneurs
 
 Ne PAS utiliser quand :
+
 - ❌ Données sans catégorisation naturelle
 - ❌ Trop de catégories (>50) → pollue les logs
 - ❌ Données sensibles (ne pas logger en clair)
@@ -53,23 +61,23 @@ const termCounts = new Map<number, number>();
 
 // 2. Incrément pendant le traitement
 for (const [reference, mainVote] of mainVotesMap) {
-  const term = extractTermFromReference(reference) ?? fallbackTerm;
+	const term = extractTermFromReference(reference) ?? fallbackTerm;
 
-  // Incrémenter le compteur
-  termCounts.set(term, (termCounts.get(term) ?? 0) + 1);
+	// Incrémenter le compteur
+	termCounts.set(term, (termCounts.get(term) ?? 0) + 1);
 
-  // ... reste du traitement
+	// ... reste du traitement
 }
 
 // 3. Log de la distribution (après traitement)
 for (const [term, count] of [...termCounts.entries()].sort((a, b) => a[0] - b[0])) {
-  console.log(`[EuroParl Laws] Term ${term}: ${count} procedures`);
+	console.log(`[EuroParl Laws] Term ${term}: ${count} procedures`);
 }
 ```
 
 ### Pattern générique réutilisable
 
-```typescript
+````typescript
 /**
  * Fonction helper pour logger une distribution
  *
@@ -94,35 +102,35 @@ for (const [term, count] of [...termCounts.entries()].sort((a, b) => a[0] - b[0]
  * ```
  */
 function logDistribution<K extends string | number, V extends number>(
-  data: Map<K, V>,
-  label: string,
-  sortBy: 'key' | 'value' = 'key',
-  prefix: string = ''
+	data: Map<K, V>,
+	label: string,
+	sortBy: 'key' | 'value' = 'key',
+	prefix: string = ''
 ): void {
-  const entries = [...data.entries()];
+	const entries = [...data.entries()];
 
-  // Tri
-  if (sortBy === 'key') {
-    entries.sort((a, b) => {
-      // Tri numérique si clés sont des nombres
-      if (typeof a[0] === 'number' && typeof b[0] === 'number') {
-        return a[0] - b[0];
-      }
-      // Tri lexicographique sinon
-      return String(a[0]).localeCompare(String(b[0]));
-    });
-  } else {
-    // Tri par valeur (descendant)
-    entries.sort((a, b) => b[1] - a[1]);
-  }
+	// Tri
+	if (sortBy === 'key') {
+		entries.sort((a, b) => {
+			// Tri numérique si clés sont des nombres
+			if (typeof a[0] === 'number' && typeof b[0] === 'number') {
+				return a[0] - b[0];
+			}
+			// Tri lexicographique sinon
+			return String(a[0]).localeCompare(String(b[0]));
+		});
+	} else {
+		// Tri par valeur (descendant)
+		entries.sort((a, b) => b[1] - a[1]);
+	}
 
-  // Affichage
-  console.log(`${prefix}${label} Distribution:`);
-  for (const [key, value] of entries) {
-    console.log(`${prefix}  ${key}: ${value}`);
-  }
+	// Affichage
+	console.log(`${prefix}${label} Distribution:`);
+	for (const [key, value] of entries) {
+		console.log(`${prefix}  ${key}: ${value}`);
+	}
 }
-```
+````
 
 ### Cas d'usage réel : Distribution des termes PE
 
@@ -132,19 +140,20 @@ function logDistribution<K extends string | number, V extends number>(
 const termCounts = new Map<number, number>();
 
 for (const [reference, mainVote] of mainVotesMap) {
-  const term = extractTermFromReference(reference) ?? fallbackTerm;
-  termCounts.set(term, (termCounts.get(term) ?? 0) + 1);
+	const term = extractTermFromReference(reference) ?? fallbackTerm;
+	termCounts.set(term, (termCounts.get(term) ?? 0) + 1);
 
-  // ... traitement
+	// ... traitement
 }
 
 // Log term distribution avec tri numérique
 for (const [term, count] of [...termCounts.entries()].sort((a, b) => a[0] - b[0])) {
-  console.log(`[EuroParl Laws] Term ${term}: ${count} procedures`);
+	console.log(`[EuroParl Laws] Term ${term}: ${count} procedures`);
 }
 ```
 
 **Output** :
+
 ```
 [EuroParl Laws] Term 8: 11 procedures
 [EuroParl Laws] Term 9: 1664 procedures
@@ -157,18 +166,18 @@ for (const [term, count] of [...termCounts.entries()].sort((a, b) => a[0] - b[0]
 
 ```typescript
 function logDistributionWithPercentages<K extends string | number>(
-  data: Map<K, number>,
-  label: string,
-  prefix: string = ''
+	data: Map<K, number>,
+	label: string,
+	prefix: string = ''
 ): void {
-  const total = [...data.values()].reduce((sum, v) => sum + v, 0);
-  const entries = [...data.entries()].sort((a, b) => b[1] - a[1]);
+	const total = [...data.values()].reduce((sum, v) => sum + v, 0);
+	const entries = [...data.entries()].sort((a, b) => b[1] - a[1]);
 
-  console.log(`${prefix}${label} Distribution (total: ${total}):`);
-  for (const [key, value] of entries) {
-    const percentage = ((value / total) * 100).toFixed(1);
-    console.log(`${prefix}  ${key}: ${value} (${percentage}%)`);
-  }
+	console.log(`${prefix}${label} Distribution (total: ${total}):`);
+	for (const [key, value] of entries) {
+		const percentage = ((value / total) * 100).toFixed(1);
+		console.log(`${prefix}  ${key}: ${value} (${percentage}%)`);
+	}
 }
 
 // Output:
@@ -182,52 +191,52 @@ function logDistributionWithPercentages<K extends string | number>(
 
 ```typescript
 interface DistributionOptions {
-  minCount?: number;
-  maxCount?: number;
-  expectedKeys?: Set<string | number>;
+	minCount?: number;
+	maxCount?: number;
+	expectedKeys?: Set<string | number>;
 }
 
 function logDistributionWithAlerts<K extends string | number>(
-  data: Map<K, number>,
-  label: string,
-  options: DistributionOptions = {},
-  prefix: string = ''
+	data: Map<K, number>,
+	label: string,
+	options: DistributionOptions = {},
+	prefix: string = ''
 ): void {
-  const { minCount, maxCount, expectedKeys } = options;
+	const { minCount, maxCount, expectedKeys } = options;
 
-  console.log(`${prefix}${label} Distribution:`);
+	console.log(`${prefix}${label} Distribution:`);
 
-  for (const [key, value] of [...data.entries()].sort()) {
-    let alert = '';
+	for (const [key, value] of [...data.entries()].sort()) {
+		let alert = '';
 
-    if (minCount !== undefined && value < minCount) {
-      alert = ' ⚠️ BELOW THRESHOLD';
-    } else if (maxCount !== undefined && value > maxCount) {
-      alert = ' ⚠️ ABOVE THRESHOLD';
-    }
+		if (minCount !== undefined && value < minCount) {
+			alert = ' ⚠️ BELOW THRESHOLD';
+		} else if (maxCount !== undefined && value > maxCount) {
+			alert = ' ⚠️ ABOVE THRESHOLD';
+		}
 
-    console.log(`${prefix}  ${key}: ${value}${alert}`);
-  }
+		console.log(`${prefix}  ${key}: ${value}${alert}`);
+	}
 
-  // Vérifier les clés manquantes
-  if (expectedKeys) {
-    for (const key of expectedKeys) {
-      if (!data.has(key)) {
-        console.warn(`${prefix}  ${key}: 0 ⚠️ MISSING`);
-      }
-    }
-  }
+	// Vérifier les clés manquantes
+	if (expectedKeys) {
+		for (const key of expectedKeys) {
+			if (!data.has(key)) {
+				console.warn(`${prefix}  ${key}: 0 ⚠️ MISSING`);
+			}
+		}
+	}
 }
 
 // Usage
 logDistributionWithAlerts(
-  termCounts,
-  'PE Terms',
-  {
-    minCount: 10,
-    expectedKeys: new Set([8, 9, 10])
-  },
-  '[ETL] '
+	termCounts,
+	'PE Terms',
+	{
+		minCount: 10,
+		expectedKeys: new Set([8, 9, 10])
+	},
+	'[ETL] '
 );
 
 // Output:
@@ -241,24 +250,30 @@ logDistributionWithAlerts(
 
 ```typescript
 interface MultiDimDistribution {
-  [category: string]: Map<string | number, number>;
+	[category: string]: Map<string | number, number>;
 }
 
-function logMultiDimDistribution(
-  data: MultiDimDistribution,
-  prefix: string = ''
-): void {
-  for (const [category, distribution] of Object.entries(data)) {
-    logDistribution(distribution, category, 'key', prefix);
-    console.log(''); // Ligne vide entre catégories
-  }
+function logMultiDimDistribution(data: MultiDimDistribution, prefix: string = ''): void {
+	for (const [category, distribution] of Object.entries(data)) {
+		logDistribution(distribution, category, 'key', prefix);
+		console.log(''); // Ligne vide entre catégories
+	}
 }
 
 // Usage
 const distributions: MultiDimDistribution = {
-  'By Legislature': new Map([[17, 150], [16, 300]]),
-  'By Type': new Map([['loi', 100], ['résolution', 350]]),
-  'By Status': new Map([['adopté', 400], ['rejeté', 50]])
+	'By Legislature': new Map([
+		[17, 150],
+		[16, 300]
+	]),
+	'By Type': new Map([
+		['loi', 100],
+		['résolution', 350]
+	]),
+	'By Status': new Map([
+		['adopté', 400],
+		['rejeté', 50]
+	])
 };
 
 logMultiDimDistribution(distributions, '[AN] ');
@@ -281,21 +296,21 @@ logMultiDimDistribution(distributions, '[AN] ');
 
 ```typescript
 function logDistributionHistogram<K extends string | number>(
-  data: Map<K, number>,
-  label: string,
-  maxBarLength: number = 50,
-  prefix: string = ''
+	data: Map<K, number>,
+	label: string,
+	maxBarLength: number = 50,
+	prefix: string = ''
 ): void {
-  const max = Math.max(...data.values());
-  const entries = [...data.entries()].sort((a, b) => b[1] - a[1]);
+	const max = Math.max(...data.values());
+	const entries = [...data.entries()].sort((a, b) => b[1] - a[1]);
 
-  console.log(`${prefix}${label} Distribution:`);
+	console.log(`${prefix}${label} Distribution:`);
 
-  for (const [key, value] of entries) {
-    const barLength = Math.round((value / max) * maxBarLength);
-    const bar = '█'.repeat(barLength);
-    console.log(`${prefix}  ${String(key).padEnd(12)} ${bar} ${value}`);
-  }
+	for (const [key, value] of entries) {
+		const barLength = Math.round((value / max) * maxBarLength);
+		const bar = '█'.repeat(barLength);
+		console.log(`${prefix}  ${String(key).padEnd(12)} ${bar} ${value}`);
+	}
 }
 
 // Output:
@@ -329,8 +344,8 @@ function logDistributionHistogram<K extends string | number>(
 const legislatureCounts = new Map<number, number>();
 
 for (const scrutin of scrutins) {
-  const leg = extractLegislature(scrutin.id);
-  legislatureCounts.set(leg, (legislatureCounts.get(leg) ?? 0) + 1);
+	const leg = extractLegislature(scrutin.id);
+	legislatureCounts.set(leg, (legislatureCounts.get(leg) ?? 0) + 1);
 }
 
 logDistribution(legislatureCounts, 'Scrutins par Législature', 'key', '[AN] ');
@@ -347,10 +362,10 @@ logDistribution(legislatureCounts, 'Scrutins par Législature', 'key', '[AN] ');
 
 ```typescript
 const positionCounts = new Map([
-  ['Pour', 350],
-  ['Contre', 120],
-  ['Abstention', 30],
-  ['Non-votant', 50]
+	['Pour', 350],
+	['Contre', 120],
+	['Abstention', 30],
+	['Non-votant', 50]
 ]);
 
 logDistribution(positionCounts, 'Votes', 'value', '[Scrutin] ');
@@ -367,9 +382,9 @@ logDistribution(positionCounts, 'Votes', 'value', '[Scrutin] ');
 
 ```typescript
 const chamberCounts = new Map([
-  ['AN', 12000],
-  ['Sénat', 9000],
-  ['PE', 2000]
+	['AN', 12000],
+	['Sénat', 9000],
+	['PE', 2000]
 ]);
 
 logDistributionWithPercentages(chamberCounts, 'Lois par Chambre', '[ETL] ');
@@ -385,36 +400,44 @@ logDistributionWithPercentages(chamberCounts, 'Lois par Chambre', '[ETL] ');
 
 ```typescript
 describe('logDistribution', () => {
-  let consoleSpy: jest.SpyInstance;
+	let consoleSpy: jest.SpyInstance;
 
-  beforeEach(() => {
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-  });
+	beforeEach(() => {
+		consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+	});
 
-  afterEach(() => {
-    consoleSpy.mockRestore();
-  });
+	afterEach(() => {
+		consoleSpy.mockRestore();
+	});
 
-  it('should log distribution sorted by key', () => {
-    const data = new Map([[10, 100], [8, 50], [9, 75]]);
+	it('should log distribution sorted by key', () => {
+		const data = new Map([
+			[10, 100],
+			[8, 50],
+			[9, 75]
+		]);
 
-    logDistribution(data, 'Terms', 'key', '[Test] ');
+		logDistribution(data, 'Terms', 'key', '[Test] ');
 
-    expect(consoleSpy).toHaveBeenCalledWith('[Test] Terms Distribution:');
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   8: 50');
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   9: 75');
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   10: 100');
-  });
+		expect(consoleSpy).toHaveBeenCalledWith('[Test] Terms Distribution:');
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   8: 50');
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   9: 75');
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   10: 100');
+	});
 
-  it('should log distribution sorted by value', () => {
-    const data = new Map([[10, 100], [8, 50], [9, 75]]);
+	it('should log distribution sorted by value', () => {
+		const data = new Map([
+			[10, 100],
+			[8, 50],
+			[9, 75]
+		]);
 
-    logDistribution(data, 'Terms', 'value', '[Test] ');
+		logDistribution(data, 'Terms', 'value', '[Test] ');
 
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   10: 100');
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   9: 75');
-    expect(consoleSpy).toHaveBeenCalledWith('[Test]   8: 50');
-  });
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   10: 100');
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   9: 75');
+		expect(consoleSpy).toHaveBeenCalledWith('[Test]   8: 50');
+	});
 });
 ```
 
@@ -446,17 +469,17 @@ describe('logDistribution', () => {
 ```typescript
 // ❌ MAUVAIS : Pollue les logs
 for (const item of items) {
-  const category = classify(item);
-  counts.set(category, (counts.get(category) ?? 0) + 1);
+	const category = classify(item);
+	counts.set(category, (counts.get(category) ?? 0) + 1);
 
-  console.log(`Category ${category}: ${counts.get(category)}`);
-  // → Log à chaque itération (2000+ logs)
+	console.log(`Category ${category}: ${counts.get(category)}`);
+	// → Log à chaque itération (2000+ logs)
 }
 
 // ✅ BON : Logger après traitement
 for (const item of items) {
-  const category = classify(item);
-  counts.set(category, (counts.get(category) ?? 0) + 1);
+	const category = classify(item);
+	counts.set(category, (counts.get(category) ?? 0) + 1);
 }
 
 // Logger une seule fois
@@ -468,13 +491,13 @@ logDistribution(counts, 'Categories');
 ```typescript
 // ❌ MAUVAIS : Ordre imprévisible (insertion order)
 for (const [key, value] of termCounts) {
-  console.log(`${key}: ${value}`);
+	console.log(`${key}: ${value}`);
 }
 // Output peut être : 10, 8, 9 (ordre d'insertion)
 
 // ✅ BON : Ordre déterministe
 for (const [key, value] of [...termCounts.entries()].sort((a, b) => a[0] - b[0])) {
-  console.log(`${key}: ${value}`);
+	console.log(`${key}: ${value}`);
 }
 ```
 
@@ -488,18 +511,18 @@ import { Counter, Registry } from 'prom-client';
 const register = new Registry();
 
 const lawsImportedCounter = new Counter({
-  name: 'laws_imported_total',
-  help: 'Total number of laws imported',
-  labelNames: ['chamber', 'legislature'],
-  registers: [register]
+	name: 'laws_imported_total',
+	help: 'Total number of laws imported',
+	labelNames: ['chamber', 'legislature'],
+	registers: [register]
 });
 
 // Incrément pendant ETL
 for (const law of laws) {
-  lawsImportedCounter.inc({
-    chamber: law.chamber,
-    legislature: law.legislature
-  });
+	lawsImportedCounter.inc({
+		chamber: law.chamber,
+		legislature: law.legislature
+	});
 }
 
 // Métriques disponibles pour Grafana/Prometheus
@@ -508,19 +531,18 @@ for (const law of laws) {
 ### Logging structuré (JSON)
 
 ```typescript
-function logDistributionJSON<K extends string | number>(
-  data: Map<K, number>,
-  label: string
-): void {
-  const distribution = Object.fromEntries(data);
+function logDistributionJSON<K extends string | number>(data: Map<K, number>, label: string): void {
+	const distribution = Object.fromEntries(data);
 
-  console.log(JSON.stringify({
-    type: 'distribution',
-    label,
-    data: distribution,
-    total: [...data.values()].reduce((sum, v) => sum + v, 0),
-    timestamp: new Date().toISOString()
-  }));
+	console.log(
+		JSON.stringify({
+			type: 'distribution',
+			label,
+			data: distribution,
+			total: [...data.values()].reduce((sum, v) => sum + v, 0),
+			timestamp: new Date().toISOString()
+		})
+	);
 }
 
 // Output (une ligne, parseable):
@@ -540,6 +562,6 @@ function logDistributionJSON<K extends string | number>(
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                              |
+| ---------- | --------------------------------------------------------- |
 | 2026-02-07 | Création suite à implémentation term distribution logging |

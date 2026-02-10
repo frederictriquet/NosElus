@@ -5,6 +5,7 @@
 
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let searchInput = $state(data.query || '');
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 

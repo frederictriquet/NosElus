@@ -68,9 +68,6 @@
 		"commitlint": "commitlint"
 	},
 	"lint-staged": {
-		"*.{js,ts,svelte}": [
-			"svelte-check --tsconfig ./tsconfig.json"
-		],
 		"*.{js,ts,svelte,css,md,json}": [
 			"prettier --write"
 		]

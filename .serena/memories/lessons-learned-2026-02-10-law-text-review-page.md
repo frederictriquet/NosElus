@@ -1,6 +1,7 @@
 # Lessons Learned : Page Admin de Revue Manuelle des Textes de Loi
 
 ## Date
+
 2026-02-10
 
 ## Contexte
@@ -8,6 +9,7 @@
 Feature `/admin/law-text-review` pour gérer manuellement les lois dont le matching automatique Légifrance (Jaccard) a échoué. Les échecs sont stockés dans `law_text_skip_list`.
 
 **Objectif** : Interface admin pour :
+
 1. Voir les entrées skip list (filtrables par raison)
 2. Approuver le meilleur candidat proposé
 3. Rechercher manuellement sur Légifrance si le candidat ne convient pas
@@ -79,15 +81,17 @@ Feature `/admin/law-text-review` pour gérer manuellement les lois dont le match
 ### 💡 Insights Techniques
 
 1. **SvelteKit streaming pattern** 💡
+
    ```typescript
    // ✅ Promise non résolue = streaming
    return {
-     syncStatus: loadSyncStatus(),  // Pas de await
-     etlChecks: loadETLChecks()
+   	syncStatus: loadSyncStatus(), // Pas de await
+   	etlChecks: loadETLChecks()
    };
-   
+
    // Le template gère {#await} côté client
    ```
+
    - Permet affichage progressif (skeleton → contenu)
 
 2. **Jaccard avec bonus pour mots discriminants** 💡
@@ -108,16 +112,16 @@ Feature `/admin/law-text-review` pour gérer manuellement les lois dont le match
 
 ## Métriques
 
-| Indicateur | Valeur |
-|------------|--------|
-| Lignes ajoutées | +2678 (commits + non commités) |
-| Fichiers créés | 8 |
-| Fichiers modifiés | ~45 |
-| Commits | 9 |
-| Durée totale | ~2 jours |
-| Tests ajoutés | 0 (page admin manuelle) |
+| Indicateur              | Valeur                            |
+| ----------------------- | --------------------------------- |
+| Lignes ajoutées         | +2678 (commits + non commités)    |
+| Fichiers créés          | 8                                 |
+| Fichiers modifiés       | ~45                               |
+| Commits                 | 9                                 |
+| Durée totale            | ~2 jours                          |
+| Tests ajoutés           | 0 (page admin manuelle)           |
 | Bugs détectés en review | 5 (1 blocker, 2 majors, 2 minors) |
-| Bugs échappés en prod | 0 |
+| Bugs échappés en prod   | 0                                 |
 
 ## Décisions Architecturales
 

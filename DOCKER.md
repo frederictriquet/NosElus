@@ -11,6 +11,7 @@ This project includes a complete Docker setup with Traefik as a reverse proxy an
 ## Prerequisites
 
 1. **Docker & Docker Compose**
+
    ```bash
    docker --version  # Should be 20.10+
    docker compose version  # Should be 2.0+
@@ -29,11 +30,13 @@ This project includes a complete Docker setup with Traefik as a reverse proxy an
 ### 1. Setup Environment Variables
 
 Copy the example environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your configuration:
+
 ```env
 DOMAIN=yourdomain.com
 CF_API_EMAIL=your-email@example.com
@@ -66,6 +69,7 @@ docker compose up -d
 ```
 
 Check the logs:
+
 ```bash
 docker compose logs -f
 ```
@@ -74,12 +78,12 @@ docker compose logs -f
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DOMAIN` | Your domain name | Yes |
-| `CF_API_EMAIL` | Cloudflare account email | Yes |
-| `CF_DNS_API_TOKEN` | Cloudflare API token | Yes |
-| `TRAEFIK_DASHBOARD_USERS` | Basic auth for Traefik dashboard | Yes |
+| Variable                  | Description                      | Required |
+| ------------------------- | -------------------------------- | -------- |
+| `DOMAIN`                  | Your domain name                 | Yes      |
+| `CF_API_EMAIL`            | Cloudflare account email         | Yes      |
+| `CF_DNS_API_TOKEN`        | Cloudflare API token             | Yes      |
+| `TRAEFIK_DASHBOARD_USERS` | Basic auth for Traefik dashboard | Yes      |
 
 ### Cloudflare API Token
 
@@ -102,11 +106,13 @@ Once deployed:
 ## Docker Commands
 
 ### View Running Containers
+
 ```bash
 docker compose ps
 ```
 
 ### View Logs
+
 ```bash
 # All services
 docker compose logs -f
@@ -117,6 +123,7 @@ docker compose logs -f traefik
 ```
 
 ### Restart Services
+
 ```bash
 # All services
 docker compose restart
@@ -126,16 +133,19 @@ docker compose restart app
 ```
 
 ### Stop Services
+
 ```bash
 docker compose down
 ```
 
 ### Rebuild and Restart
+
 ```bash
 docker compose up -d --build
 ```
 
 ### Remove Everything (including volumes)
+
 ```bash
 docker compose down -v
 ```
@@ -157,6 +167,7 @@ docker compose down -v
 ### Force Certificate Renewal
 
 If you need to force renewal:
+
 ```bash
 # Stop services
 docker compose down
@@ -175,6 +186,7 @@ docker compose up -d
 ### Static Configuration
 
 Located in `traefik/traefik.yml`:
+
 - API/Dashboard settings
 - Entry points (HTTP/HTTPS)
 - Certificate resolvers
@@ -183,6 +195,7 @@ Located in `traefik/traefik.yml`:
 ### Dynamic Configuration
 
 Located in `traefik/config.yml`:
+
 - Middlewares (headers, redirects)
 - Security settings
 - IP whitelists
@@ -197,6 +210,7 @@ Located in `traefik/config.yml`:
 ### Security Headers
 
 Automatically applied headers:
+
 - `X-Frame-Options: SAMEORIGIN`
 - `X-XSS-Protection: 1; mode=block`
 - `X-Content-Type-Options: nosniff`
@@ -213,12 +227,14 @@ Automatically applied headers:
 Both services include health checks:
 
 **App Container:**
+
 - Endpoint: http://localhost:3000
 - Interval: 30 seconds
 - Timeout: 3 seconds
 - Retries: 3
 
 **Check health status:**
+
 ```bash
 docker compose ps
 ```
@@ -228,11 +244,13 @@ docker compose ps
 ### Certificates Not Generated
 
 1. Check Cloudflare API credentials:
+
    ```bash
    docker compose logs traefik | grep cloudflare
    ```
 
 2. Verify DNS records point to your server:
+
    ```bash
    dig yourdomain.com
    ```
@@ -242,11 +260,13 @@ docker compose ps
 ### App Not Accessible
 
 1. Check if containers are running:
+
    ```bash
    docker compose ps
    ```
 
 2. Check app logs:
+
    ```bash
    docker compose logs app
    ```
@@ -259,6 +279,7 @@ docker compose ps
 ### Port Conflicts
 
 If ports 80 or 443 are already in use:
+
 ```bash
 # Check what's using the ports
 sudo lsof -i :80
@@ -279,6 +300,7 @@ chmod 600 traefik/acme.json
 ### Multiple Instances
 
 To run multiple app instances:
+
 ```yaml
 services:
   app:
@@ -289,6 +311,7 @@ services:
 ### Resource Limits
 
 Add resource constraints:
+
 ```yaml
 services:
   app:
@@ -304,10 +327,11 @@ services:
 ### Monitoring
 
 Add monitoring labels for Prometheus:
+
 ```yaml
 labels:
-  - "traefik.http.services.noselus.loadbalancer.healthcheck.path=/health"
-  - "traefik.http.services.noselus.loadbalancer.healthcheck.interval=10s"
+  - 'traefik.http.services.noselus.loadbalancer.healthcheck.path=/health'
+  - 'traefik.http.services.noselus.loadbalancer.healthcheck.interval=10s'
 ```
 
 ## CI/CD Integration

@@ -288,9 +288,7 @@ export async function getUnanalyzedLaws(
 
 	// Filtre par chambre
 	if (chamber === 'AN') {
-		conditions.push(
-			or(like(laws.legislature, 'AN-%'), sql`${laws.legislature} ~ '^[0-9]+$'`)!
-		);
+		conditions.push(or(like(laws.legislature, 'AN-%'), sql`${laws.legislature} ~ '^[0-9]+$'`)!);
 	} else if (chamber === 'PE') {
 		conditions.push(like(laws.legislature, 'PE-%'));
 	}

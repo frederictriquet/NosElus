@@ -1,9 +1,11 @@
 # Standard : Code Review Systématique Avant Merge
 
 ## Catégorie
+
 Quality Assurance / Process
 
 ## Date d'adoption
+
 2026-02-01
 
 ## Règle
@@ -11,6 +13,7 @@ Quality Assurance / Process
 **TOUJOURS effectuer une code review complète avant de merger**, même pour du code écrit par soi-même.
 
 La review utilise la skill `/code-review` avec checklist complète :
+
 - Correctness (exactitude)
 - Security (sécurité)
 - Performance
@@ -43,27 +46,32 @@ Lors de la review de la phase 2.2, **3 améliorations** ont été identifiées e
 ## Checklist de Review
 
 ### 1. Correctness ✓
+
 - [ ] Le code fait ce qu'il est censé faire
 - [ ] Les edge cases sont gérés
 - [ ] Pas de bugs évidents
 
 ### 2. Security 🔒
+
 - [ ] Pas de secrets hardcodés
 - [ ] Validation des entrées
 - [ ] Pas d'injection SQL/XSS
 
 ### 3. Performance ⚡
+
 - [ ] Pas de N+1 queries
 - [ ] Pas de boucles inutiles
 - [ ] Index DB utilisés
 
 ### 4. Maintainability 🔧
+
 - [ ] Code lisible
 - [ ] Noms de variables clairs
 - [ ] Pas de duplication
 - [ ] Respect des conventions
 
 ### 5. Testing ✅
+
 - [ ] Tests présents
 - [ ] Couverture suffisante
 - [ ] Tests maintenables
@@ -81,12 +89,12 @@ Lors de la review de la phase 2.2, **3 améliorations** ont été identifiées e
 
 ## Niveaux de Sévérité
 
-| Niveau | Action | Exemple |
-|--------|--------|---------|
-| 🚨 **Blocker** | Obligatoire | Fuite de sécurité |
-| ⚠️ **Major** | Fortement recommandé | N+1 query |
-| 💡 **Minor** | Optionnel | Amélioration lisibilité |
-| 📝 **Nitpick** | À discrétion | Style/préférence |
+| Niveau         | Action               | Exemple                 |
+| -------------- | -------------------- | ----------------------- |
+| 🚨 **Blocker** | Obligatoire          | Fuite de sécurité       |
+| ⚠️ **Major**   | Fortement recommandé | N+1 query               |
+| 💡 **Minor**   | Optionnel            | Amélioration lisibilité |
+| 📝 **Nitpick** | À discrétion         | Style/préférence        |
 
 ## Exemples
 
@@ -98,6 +106,7 @@ Lors de la review de la phase 2.2, **3 améliorations** ont été identifiées e
 Verdict : ✅ Approuvé avec suggestions mineures
 
 ### Suggestions appliquées :
+
 1. 💡 Import statique au lieu de dynamique
 2. 📝 Tri explicite avec asc()
 3. 💡 Attributs d'accessibilité
@@ -125,13 +134,13 @@ git log -1 --stat
 
 ## Métriques de Succès
 
-| Indicateur | Phase 2.2 |
-|------------|-----------|
-| Review effectuée | ✅ Oui |
-| Suggestions identifiées | 3 |
-| Suggestions appliquées | 3/3 (100%) |
-| Regressions introduites | 0 |
-| Tests passants | 24/24 |
+| Indicateur              | Phase 2.2  |
+| ----------------------- | ---------- |
+| Review effectuée        | ✅ Oui     |
+| Suggestions identifiées | 3          |
+| Suggestions appliquées  | 3/3 (100%) |
+| Regressions introduites | 0          |
+| Tests passants          | 24/24      |
 
 ## Outils
 

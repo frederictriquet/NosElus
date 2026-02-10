@@ -1,4 +1,3 @@
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -9,11 +8,11 @@ services:
       POSTGRES_PASSWORD: noselus
       POSTGRES_DB: noselus
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U noselus"]
+      test: ['CMD-SHELL', 'pg_isready -U noselus']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,8 +26,8 @@ services:
     networks:
       - web
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     environment:
       - CF_API_EMAIL=${CF_API_EMAIL}
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
@@ -39,21 +38,21 @@ services:
       - ./traefik/acme.json:/acme.json
       - ./traefik/config.yml:/config.yml:ro
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.entrypoints=http"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_USERS}"
-      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
-      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
-      - "traefik.http.routers.traefik-secure.entrypoints=https"
-      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DOMAIN}`)"
-      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
-      - "traefik.http.routers.traefik-secure.tls=true"
-      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.traefik-secure.tls.domains[0].main=${DOMAIN}"
-      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${DOMAIN}"
-      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.entrypoints=http'
+      - 'traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_USERS}'
+      - 'traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https'
+      - 'traefik.http.routers.traefik.middlewares=traefik-https-redirect'
+      - 'traefik.http.routers.traefik-secure.entrypoints=https'
+      - 'traefik.http.routers.traefik-secure.rule=Host(`traefik.${DOMAIN}`)'
+      - 'traefik.http.routers.traefik-secure.middlewares=traefik-auth'
+      - 'traefik.http.routers.traefik-secure.tls=true'
+      - 'traefik.http.routers.traefik-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].main=${DOMAIN}'
+      - 'traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${DOMAIN}'
+      - 'traefik.http.routers.traefik-secure.service=api@internal'
 
   app:
     build:
@@ -68,20 +67,26 @@ services:
       - PORT=3000
       - HOST=0.0.0.0
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.noselus.entrypoints=http"
-      - "traefik.http.routers.noselus.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      - "traefik.http.middlewares.noselus-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.noselus.middlewares=noselus-https-redirect"
-      - "traefik.http.routers.noselus-secure.entrypoints=https"
-      - "traefik.http.routers.noselus-secure.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      - "traefik.http.routers.noselus-secure.tls=true"
-      - "traefik.http.routers.noselus-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.noselus-secure.service=noselus"
-      - "traefik.http.services.noselus.loadbalancer.server.port=3000"
-      - "traefik.docker.network=web"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.noselus.entrypoints=http'
+      - 'traefik.http.routers.noselus.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)'
+      - 'traefik.http.middlewares.noselus-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.noselus.middlewares=noselus-https-redirect'
+      - 'traefik.http.routers.noselus-secure.entrypoints=https'
+      - 'traefik.http.routers.noselus-secure.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)'
+      - 'traefik.http.routers.noselus-secure.tls=true'
+      - 'traefik.http.routers.noselus-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.noselus-secure.service=noselus'
+      - 'traefik.http.services.noselus.loadbalancer.server.port=3000'
+      - 'traefik.docker.network=web'
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+        ]
       interval: 30s
       timeout: 3s
       retries: 3

@@ -1,1540 +1,1494 @@
 {
-  "id": "30fff5dd-0410-4895-973b-b3944d9312ab",
-  "prevId": "28ce4105-3226-475b-a3c2-e8649fbb58f6",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.actors": {
-      "name": "actors",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(20)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "civility": {
-          "name": "civility",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "first_name": {
-          "name": "first_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_name": {
-          "name": "last_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(200)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "birth_date": {
-          "name": "birth_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "birth_place": {
-          "name": "birth_place",
-          "type": "varchar(200)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "death_date": {
-          "name": "death_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "profession": {
-          "name": "profession",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "photo_url": {
-          "name": "photo_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "chamber": {
-          "name": "chamber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "actors_chamber_idx": {
-          "name": "actors_chamber_idx",
-          "columns": [
-            {
-              "expression": "chamber",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "actors_last_name_idx": {
-          "name": "actors_last_name_idx",
-          "columns": [
-            {
-              "expression": "last_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "actors_full_name_idx": {
-          "name": "actors_full_name_idx",
-          "columns": [
-            {
-              "expression": "full_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "actors_uid_unique": {
-          "name": "actors_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.amendments": {
-      "name": "amendments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(50)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "number": {
-          "name": "number",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "law_id": {
-          "name": "law_id",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "author_id": {
-          "name": "author_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "article": {
-          "name": "article",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "position": {
-          "name": "position",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "dispositif": {
-          "name": "dispositif",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expose_sommaire": {
-          "name": "expose_sommaire",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deposit_date": {
-          "name": "deposit_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "exam_date": {
-          "name": "exam_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sort_order": {
-          "name": "sort_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "chamber": {
-          "name": "chamber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "amendments_law_id_idx": {
-          "name": "amendments_law_id_idx",
-          "columns": [
-            {
-              "expression": "law_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "amendments_author_id_idx": {
-          "name": "amendments_author_id_idx",
-          "columns": [
-            {
-              "expression": "author_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "amendments_legislature_idx": {
-          "name": "amendments_legislature_idx",
-          "columns": [
-            {
-              "expression": "legislature",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "amendments_status_idx": {
-          "name": "amendments_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "amendments_deposit_date_idx": {
-          "name": "amendments_deposit_date_idx",
-          "columns": [
-            {
-              "expression": "deposit_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "amendments_law_id_laws_id_fk": {
-          "name": "amendments_law_id_laws_id_fk",
-          "tableFrom": "amendments",
-          "tableTo": "laws",
-          "columnsFrom": [
-            "law_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "amendments_author_id_actors_id_fk": {
-          "name": "amendments_author_id_actors_id_fk",
-          "tableFrom": "amendments",
-          "tableTo": "actors",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "amendments_uid_unique": {
-          "name": "amendments_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.laws": {
-      "name": "laws",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(50)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "number": {
-          "name": "number",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "short_title": {
-          "name": "short_title",
-          "type": "varchar(300)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deposit_date": {
-          "name": "deposit_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "adoption_date_an": {
-          "name": "adoption_date_an",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "adoption_date_senat": {
-          "name": "adoption_date_senat",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "promulgation_date": {
-          "name": "promulgation_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "publication_date": {
-          "name": "publication_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "theme": {
-          "name": "theme",
-          "type": "varchar(200)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sub_themes": {
-          "name": "sub_themes",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "initiator": {
-          "name": "initiator",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_url": {
-          "name": "source_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "laws_legislature_idx": {
-          "name": "laws_legislature_idx",
-          "columns": [
-            {
-              "expression": "legislature",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "laws_type_idx": {
-          "name": "laws_type_idx",
-          "columns": [
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "laws_status_idx": {
-          "name": "laws_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "laws_deposit_date_idx": {
-          "name": "laws_deposit_date_idx",
-          "columns": [
-            {
-              "expression": "deposit_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "laws_uid_unique": {
-          "name": "laws_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.mandates": {
-      "name": "mandates",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(50)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "actor_id": {
-          "name": "actor_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "organ_id": {
-          "name": "organ_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quality": {
-          "name": "quality",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "department": {
-          "name": "department",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "department_code": {
-          "name": "department_code",
-          "type": "varchar(5)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "constituency": {
-          "name": "constituency",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "constituency_number": {
-          "name": "constituency_number",
-          "type": "varchar(5)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "election_cause": {
-          "name": "election_cause",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mandate_end_cause": {
-          "name": "mandate_end_cause",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "mandates_actor_id_idx": {
-          "name": "mandates_actor_id_idx",
-          "columns": [
-            {
-              "expression": "actor_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mandates_organ_id_idx": {
-          "name": "mandates_organ_id_idx",
-          "columns": [
-            {
-              "expression": "organ_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mandates_type_idx": {
-          "name": "mandates_type_idx",
-          "columns": [
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mandates_legislature_idx": {
-          "name": "mandates_legislature_idx",
-          "columns": [
-            {
-              "expression": "legislature",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mandates_dates_idx": {
-          "name": "mandates_dates_idx",
-          "columns": [
-            {
-              "expression": "start_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "end_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "mandates_actor_id_actors_id_fk": {
-          "name": "mandates_actor_id_actors_id_fk",
-          "tableFrom": "mandates",
-          "tableTo": "actors",
-          "columnsFrom": [
-            "actor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "mandates_organ_id_organs_id_fk": {
-          "name": "mandates_organ_id_organs_id_fk",
-          "tableFrom": "mandates",
-          "tableTo": "organs",
-          "columnsFrom": [
-            "organ_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.organs": {
-      "name": "organs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(20)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(300)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "short_name": {
-          "name": "short_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "color": {
-          "name": "color",
-          "type": "varchar(7)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "chamber": {
-          "name": "chamber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "organs_type_idx": {
-          "name": "organs_type_idx",
-          "columns": [
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "organs_chamber_idx": {
-          "name": "organs_chamber_idx",
-          "columns": [
-            {
-              "expression": "chamber",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "organs_legislature_idx": {
-          "name": "organs_legislature_idx",
-          "columns": [
-            {
-              "expression": "legislature",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "organs_parent_id_organs_id_fk": {
-          "name": "organs_parent_id_organs_id_fk",
-          "tableFrom": "organs",
-          "tableTo": "organs",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "organs_uid_unique": {
-          "name": "organs_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.scrutins": {
-      "name": "scrutins",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(20)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "uid": {
-          "name": "uid",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "number": {
-          "name": "number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "session_ordinary": {
-          "name": "session_ordinary",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "session_extraordinary": {
-          "name": "session_extraordinary",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sort_type": {
-          "name": "sort_type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "total_voters": {
-          "name": "total_voters",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_for": {
-          "name": "total_for",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_against": {
-          "name": "total_against",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_abstention": {
-          "name": "total_abstention",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_non_voting": {
-          "name": "total_non_voting",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "result": {
-          "name": "result",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "group_results": {
-          "name": "group_results",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "law_id": {
-          "name": "law_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "amendment_ref": {
-          "name": "amendment_ref",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "scrutins_legislature_idx": {
-          "name": "scrutins_legislature_idx",
-          "columns": [
-            {
-              "expression": "legislature",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "scrutins_date_idx": {
-          "name": "scrutins_date_idx",
-          "columns": [
-            {
-              "expression": "date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "scrutins_type_idx": {
-          "name": "scrutins_type_idx",
-          "columns": [
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "scrutins_number_idx": {
-          "name": "scrutins_number_idx",
-          "columns": [
-            {
-              "expression": "number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "scrutins_law_id_idx": {
-          "name": "scrutins_law_id_idx",
-          "columns": [
-            {
-              "expression": "law_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "scrutins_uid_unique": {
-          "name": "scrutins_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "uid"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sync_metadata": {
-      "name": "sync_metadata",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(100)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "source": {
-          "name": "source",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "legislature": {
-          "name": "legislature",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_sync_at": {
-          "name": "last_sync_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_sync_status": {
-          "name": "last_sync_status",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "records_processed": {
-          "name": "records_processed",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "records_inserted": {
-          "name": "records_inserted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "records_updated": {
-          "name": "records_updated",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "records_skipped": {
-          "name": "records_skipped",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "records_errored": {
-          "name": "records_errored",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "last_modified_filter": {
-          "name": "last_modified_filter",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_cursor": {
-          "name": "last_cursor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.votes": {
-      "name": "votes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(50)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "scrutin_id": {
-          "name": "scrutin_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "actor_id": {
-          "name": "actor_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "group_id": {
-          "name": "group_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "position": {
-          "name": "position",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "delegation": {
-          "name": "delegation",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "delegator_id": {
-          "name": "delegator_id",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "votes_scrutin_id_idx": {
-          "name": "votes_scrutin_id_idx",
-          "columns": [
-            {
-              "expression": "scrutin_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "votes_actor_id_idx": {
-          "name": "votes_actor_id_idx",
-          "columns": [
-            {
-              "expression": "actor_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "votes_group_id_idx": {
-          "name": "votes_group_id_idx",
-          "columns": [
-            {
-              "expression": "group_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "votes_position_idx": {
-          "name": "votes_position_idx",
-          "columns": [
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "votes_scrutin_actor_idx": {
-          "name": "votes_scrutin_actor_idx",
-          "columns": [
-            {
-              "expression": "scrutin_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "actor_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "votes_scrutin_id_scrutins_id_fk": {
-          "name": "votes_scrutin_id_scrutins_id_fk",
-          "tableFrom": "votes",
-          "tableTo": "scrutins",
-          "columnsFrom": [
-            "scrutin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "votes_actor_id_actors_id_fk": {
-          "name": "votes_actor_id_actors_id_fk",
-          "tableFrom": "votes",
-          "tableTo": "actors",
-          "columnsFrom": [
-            "actor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "votes_group_id_organs_id_fk": {
-          "name": "votes_group_id_organs_id_fk",
-          "tableFrom": "votes",
-          "tableTo": "organs",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "votes_delegator_id_actors_id_fk": {
-          "name": "votes_delegator_id_actors_id_fk",
-          "tableFrom": "votes",
-          "tableTo": "actors",
-          "columnsFrom": [
-            "delegator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {},
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "30fff5dd-0410-4895-973b-b3944d9312ab",
+	"prevId": "28ce4105-3226-475b-a3c2-e8649fbb58f6",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.actors": {
+			"name": "actors",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(20)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"uid": {
+					"name": "uid",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"civility": {
+					"name": "civility",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"first_name": {
+					"name": "first_name",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"last_name": {
+					"name": "last_name",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"full_name": {
+					"name": "full_name",
+					"type": "varchar(200)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"birth_date": {
+					"name": "birth_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"birth_place": {
+					"name": "birth_place",
+					"type": "varchar(200)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"death_date": {
+					"name": "death_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"profession": {
+					"name": "profession",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"photo_url": {
+					"name": "photo_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"chamber": {
+					"name": "chamber",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"actors_chamber_idx": {
+					"name": "actors_chamber_idx",
+					"columns": [
+						{
+							"expression": "chamber",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"actors_last_name_idx": {
+					"name": "actors_last_name_idx",
+					"columns": [
+						{
+							"expression": "last_name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"actors_full_name_idx": {
+					"name": "actors_full_name_idx",
+					"columns": [
+						{
+							"expression": "full_name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"actors_uid_unique": {
+					"name": "actors_uid_unique",
+					"nullsNotDistinct": false,
+					"columns": ["uid"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.amendments": {
+			"name": "amendments",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(50)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"uid": {
+					"name": "uid",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"number": {
+					"name": "number",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"law_id": {
+					"name": "law_id",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"author_id": {
+					"name": "author_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"article": {
+					"name": "article",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"dispositif": {
+					"name": "dispositif",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"expose_sommaire": {
+					"name": "expose_sommaire",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"deposit_date": {
+					"name": "deposit_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"exam_date": {
+					"name": "exam_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"sort_order": {
+					"name": "sort_order",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"chamber": {
+					"name": "chamber",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"amendments_law_id_idx": {
+					"name": "amendments_law_id_idx",
+					"columns": [
+						{
+							"expression": "law_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"amendments_author_id_idx": {
+					"name": "amendments_author_id_idx",
+					"columns": [
+						{
+							"expression": "author_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"amendments_legislature_idx": {
+					"name": "amendments_legislature_idx",
+					"columns": [
+						{
+							"expression": "legislature",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"amendments_status_idx": {
+					"name": "amendments_status_idx",
+					"columns": [
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"amendments_deposit_date_idx": {
+					"name": "amendments_deposit_date_idx",
+					"columns": [
+						{
+							"expression": "deposit_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"amendments_law_id_laws_id_fk": {
+					"name": "amendments_law_id_laws_id_fk",
+					"tableFrom": "amendments",
+					"tableTo": "laws",
+					"columnsFrom": ["law_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"amendments_author_id_actors_id_fk": {
+					"name": "amendments_author_id_actors_id_fk",
+					"tableFrom": "amendments",
+					"tableTo": "actors",
+					"columnsFrom": ["author_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"amendments_uid_unique": {
+					"name": "amendments_uid_unique",
+					"nullsNotDistinct": false,
+					"columns": ["uid"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.laws": {
+			"name": "laws",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(50)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"uid": {
+					"name": "uid",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"number": {
+					"name": "number",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"short_title": {
+					"name": "short_title",
+					"type": "varchar(300)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"type": {
+					"name": "type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"deposit_date": {
+					"name": "deposit_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"adoption_date_an": {
+					"name": "adoption_date_an",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"adoption_date_senat": {
+					"name": "adoption_date_senat",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"promulgation_date": {
+					"name": "promulgation_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"publication_date": {
+					"name": "publication_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"theme": {
+					"name": "theme",
+					"type": "varchar(200)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"sub_themes": {
+					"name": "sub_themes",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"initiator": {
+					"name": "initiator",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_url": {
+					"name": "source_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"laws_legislature_idx": {
+					"name": "laws_legislature_idx",
+					"columns": [
+						{
+							"expression": "legislature",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"laws_type_idx": {
+					"name": "laws_type_idx",
+					"columns": [
+						{
+							"expression": "type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"laws_status_idx": {
+					"name": "laws_status_idx",
+					"columns": [
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"laws_deposit_date_idx": {
+					"name": "laws_deposit_date_idx",
+					"columns": [
+						{
+							"expression": "deposit_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"laws_uid_unique": {
+					"name": "laws_uid_unique",
+					"nullsNotDistinct": false,
+					"columns": ["uid"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.mandates": {
+			"name": "mandates",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(50)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"actor_id": {
+					"name": "actor_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"organ_id": {
+					"name": "organ_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"quality": {
+					"name": "quality",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"start_date": {
+					"name": "start_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"end_date": {
+					"name": "end_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"department": {
+					"name": "department",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"department_code": {
+					"name": "department_code",
+					"type": "varchar(5)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"constituency": {
+					"name": "constituency",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"constituency_number": {
+					"name": "constituency_number",
+					"type": "varchar(5)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"election_cause": {
+					"name": "election_cause",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"mandate_end_cause": {
+					"name": "mandate_end_cause",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"mandates_actor_id_idx": {
+					"name": "mandates_actor_id_idx",
+					"columns": [
+						{
+							"expression": "actor_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"mandates_organ_id_idx": {
+					"name": "mandates_organ_id_idx",
+					"columns": [
+						{
+							"expression": "organ_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"mandates_type_idx": {
+					"name": "mandates_type_idx",
+					"columns": [
+						{
+							"expression": "type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"mandates_legislature_idx": {
+					"name": "mandates_legislature_idx",
+					"columns": [
+						{
+							"expression": "legislature",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"mandates_dates_idx": {
+					"name": "mandates_dates_idx",
+					"columns": [
+						{
+							"expression": "start_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "end_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"mandates_actor_id_actors_id_fk": {
+					"name": "mandates_actor_id_actors_id_fk",
+					"tableFrom": "mandates",
+					"tableTo": "actors",
+					"columnsFrom": ["actor_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"mandates_organ_id_organs_id_fk": {
+					"name": "mandates_organ_id_organs_id_fk",
+					"tableFrom": "mandates",
+					"tableTo": "organs",
+					"columnsFrom": ["organ_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.organs": {
+			"name": "organs",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(20)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"uid": {
+					"name": "uid",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"type": {
+					"name": "type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(300)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"short_name": {
+					"name": "short_name",
+					"type": "varchar(100)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"color": {
+					"name": "color",
+					"type": "varchar(7)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"chamber": {
+					"name": "chamber",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"start_date": {
+					"name": "start_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"end_date": {
+					"name": "end_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"organs_type_idx": {
+					"name": "organs_type_idx",
+					"columns": [
+						{
+							"expression": "type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"organs_chamber_idx": {
+					"name": "organs_chamber_idx",
+					"columns": [
+						{
+							"expression": "chamber",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"organs_legislature_idx": {
+					"name": "organs_legislature_idx",
+					"columns": [
+						{
+							"expression": "legislature",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"organs_parent_id_organs_id_fk": {
+					"name": "organs_parent_id_organs_id_fk",
+					"tableFrom": "organs",
+					"tableTo": "organs",
+					"columnsFrom": ["parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"organs_uid_unique": {
+					"name": "organs_uid_unique",
+					"nullsNotDistinct": false,
+					"columns": ["uid"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.scrutins": {
+			"name": "scrutins",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(20)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"uid": {
+					"name": "uid",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"number": {
+					"name": "number",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"session_ordinary": {
+					"name": "session_ordinary",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"session_extraordinary": {
+					"name": "session_extraordinary",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"date": {
+					"name": "date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"sort_type": {
+					"name": "sort_type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"total_voters": {
+					"name": "total_voters",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_for": {
+					"name": "total_for",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_against": {
+					"name": "total_against",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_abstention": {
+					"name": "total_abstention",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_non_voting": {
+					"name": "total_non_voting",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"result": {
+					"name": "result",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"group_results": {
+					"name": "group_results",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"law_id": {
+					"name": "law_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"amendment_ref": {
+					"name": "amendment_ref",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"scrutins_legislature_idx": {
+					"name": "scrutins_legislature_idx",
+					"columns": [
+						{
+							"expression": "legislature",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"scrutins_date_idx": {
+					"name": "scrutins_date_idx",
+					"columns": [
+						{
+							"expression": "date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"scrutins_type_idx": {
+					"name": "scrutins_type_idx",
+					"columns": [
+						{
+							"expression": "type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"scrutins_number_idx": {
+					"name": "scrutins_number_idx",
+					"columns": [
+						{
+							"expression": "number",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"scrutins_law_id_idx": {
+					"name": "scrutins_law_id_idx",
+					"columns": [
+						{
+							"expression": "law_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"scrutins_uid_unique": {
+					"name": "scrutins_uid_unique",
+					"nullsNotDistinct": false,
+					"columns": ["uid"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.sync_metadata": {
+			"name": "sync_metadata",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(100)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"source": {
+					"name": "source",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"entity_type": {
+					"name": "entity_type",
+					"type": "varchar(50)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"legislature": {
+					"name": "legislature",
+					"type": "varchar(10)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"last_sync_at": {
+					"name": "last_sync_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"last_sync_status": {
+					"name": "last_sync_status",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"records_processed": {
+					"name": "records_processed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"records_inserted": {
+					"name": "records_inserted",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"records_updated": {
+					"name": "records_updated",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"records_skipped": {
+					"name": "records_skipped",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"records_errored": {
+					"name": "records_errored",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"last_modified_filter": {
+					"name": "last_modified_filter",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"last_cursor": {
+					"name": "last_cursor",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"metadata": {
+					"name": "metadata",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.votes": {
+			"name": "votes",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(50)",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"scrutin_id": {
+					"name": "scrutin_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"actor_id": {
+					"name": "actor_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"group_id": {
+					"name": "group_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"delegation": {
+					"name": "delegation",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"delegator_id": {
+					"name": "delegator_id",
+					"type": "varchar(20)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"votes_scrutin_id_idx": {
+					"name": "votes_scrutin_id_idx",
+					"columns": [
+						{
+							"expression": "scrutin_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"votes_actor_id_idx": {
+					"name": "votes_actor_id_idx",
+					"columns": [
+						{
+							"expression": "actor_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"votes_group_id_idx": {
+					"name": "votes_group_id_idx",
+					"columns": [
+						{
+							"expression": "group_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"votes_position_idx": {
+					"name": "votes_position_idx",
+					"columns": [
+						{
+							"expression": "position",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"votes_scrutin_actor_idx": {
+					"name": "votes_scrutin_actor_idx",
+					"columns": [
+						{
+							"expression": "scrutin_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "actor_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"votes_scrutin_id_scrutins_id_fk": {
+					"name": "votes_scrutin_id_scrutins_id_fk",
+					"tableFrom": "votes",
+					"tableTo": "scrutins",
+					"columnsFrom": ["scrutin_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"votes_actor_id_actors_id_fk": {
+					"name": "votes_actor_id_actors_id_fk",
+					"tableFrom": "votes",
+					"tableTo": "actors",
+					"columnsFrom": ["actor_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"votes_group_id_organs_id_fk": {
+					"name": "votes_group_id_organs_id_fk",
+					"tableFrom": "votes",
+					"tableTo": "organs",
+					"columnsFrom": ["group_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"votes_delegator_id_actors_id_fk": {
+					"name": "votes_delegator_id_actors_id_fk",
+					"tableFrom": "votes",
+					"tableTo": "actors",
+					"columnsFrom": ["delegator_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
 }

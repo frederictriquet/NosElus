@@ -1,6 +1,7 @@
 # ADR-005 : Migrations de Base de Données Idempotentes
 
 ## Métadonnées
+
 - **Date** : 2026-02-06
 - **Statut** : ✅ Accepté
 - **Décideurs** : Équipe technique NosElus
@@ -13,11 +14,13 @@
 ### Problème
 
 Les migrations de base de données générées par Drizzle ORM ne sont pas idempotentes. Si elles sont ré-exécutées manuellement (hors du système de tracking), elles échouent avec des erreurs du type :
+
 - `ERROR: relation "table_name" already exists`
 - `ERROR: column "column_name" of relation "table_name" already exists`
 - `ERROR: duplicate key value violates unique constraint`
 
 Cela pose problème dans plusieurs scénarios :
+
 1. **Environnements de développement** : Reset fréquent de la base nécessite re-run des migrations
 2. **Récupération après erreur** : Si une migration échoue partiellement, impossible de la ré-exécuter
 3. **Tests d'intégration** : Setup/teardown nécessite migrations idempotentes
@@ -81,20 +84,21 @@ git commit → Code review vérifie idempotence
 
 ## Options Considérées
 
-| Option | Score | Effort | Verdict |
-|--------|-------|--------|---------|
-| 1. Manuel + Checklist | 103/130 | Faible | ❌ Trop de risque d'oubli |
-| 2. Script Post-Processing | 100/130 | Moyen | ❌ Parser trop complexe |
-| 3. Wrapper Drizzle Custom | 51/130 | Élevé | ❌ Maintenance cauchemardesque |
-| 4. Full Manual | 100/130 | Élevé | ❌ Perte avantages Drizzle |
-| 5. NPM Hook Simple | 108/130 | Faible | ⚠️ Pas de doc pour cas edge |
-| **6. Hybrid (Script + Doc)** | **114/130** | **Moyen** | **✅ CHOISI** |
+| Option                       | Score       | Effort    | Verdict                        |
+| ---------------------------- | ----------- | --------- | ------------------------------ |
+| 1. Manuel + Checklist        | 103/130     | Faible    | ❌ Trop de risque d'oubli      |
+| 2. Script Post-Processing    | 100/130     | Moyen     | ❌ Parser trop complexe        |
+| 3. Wrapper Drizzle Custom    | 51/130      | Élevé     | ❌ Maintenance cauchemardesque |
+| 4. Full Manual               | 100/130     | Élevé     | ❌ Perte avantages Drizzle     |
+| 5. NPM Hook Simple           | 108/130     | Faible    | ⚠️ Pas de doc pour cas edge    |
+| **6. Hybrid (Script + Doc)** | **114/130** | **Moyen** | **✅ CHOISI**                  |
 
 ---
 
 ## Conséquences
 
 ### Positives
+
 - ✅ Migrations futures (0012+) idempotentes
 - ✅ 80% des transformations automatiques
 - ✅ Documentation claire pour cas complexes
@@ -102,6 +106,7 @@ git commit → Code review vérifie idempotence
 - ✅ Moins de galères en dev
 
 ### Négatives (mitigées)
+
 - ⚠️ Regex limitées → Doc couvre les cas edge + review humaine
 - ⚠️ Discipline requise → Checklist code review obligatoire
 - ⚠️ Maintenance script → Simple (~50 lignes), facile à ajuster
@@ -129,4 +134,5 @@ git commit → Code review vérifie idempotence
 ---
 
 ## Date de création
+
 2026-02-06

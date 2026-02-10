@@ -32,13 +32,14 @@
 	<div
 		class="modal-content"
 		role="dialog"
+		tabindex="-1"
 		aria-modal="true"
 		aria-label="Détail de l'alignement avec {result.groupName}"
 		onclick={(e) => e.stopPropagation()}
 	>
 		<div class="modal-header">
 			<h2>Détail de l'alignement</h2>
-			<button class="close-btn" onclick={onClose} type="button">
+			<button class="close-btn" onclick={onClose} type="button" aria-label="Fermer">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="24"

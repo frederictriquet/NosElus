@@ -5,6 +5,7 @@
 Les LLM génèrent naturellement des tags en français avec accents ("Économie", "Santé") mais les bases de données utilisent souvent des slugs ASCII comme clés primaires ("economie", "sante") pour éviter les problèmes d'encodage et de normalisation.
 
 **Symptômes** :
+
 - Le LLM retourne `["économie", "santé"]`
 - La DB attend des slugs `["economie", "sante"]` pour les foreign keys
 - Sans mapping, les tags ne sont pas reconnus et sont perdus
@@ -12,6 +13,7 @@ Les LLM génèrent naturellement des tags en français avec accents ("Économie"
 ## Contexte
 
 Ce pattern s'applique quand :
+
 - ✅ Utilisation d'un LLM pour générer des catégories/tags en français
 - ✅ Base de données avec slugs ASCII (sans accents) comme clés primaires
 - ✅ Besoin de mapping bidirectionnel : LLM ↔ DB
@@ -25,12 +27,12 @@ Ce pattern s'applique quand :
  * Mapping entre le nom affiché au LLM et le slug DB.
  */
 export interface TagMapping {
-  /** Slug ASCII utilisé comme clé primaire DB (ex: "economie") */
-  slug: string;
-  /** Nom affiché avec accents (ex: "Économie") */
-  name: string;
-  /** Nom lowercase pour le prompt LLM (ex: "économie") */
-  promptName: string;
+	/** Slug ASCII utilisé comme clé primaire DB (ex: "economie") */
+	slug: string;
+	/** Nom affiché avec accents (ex: "Économie") */
+	name: string;
+	/** Nom lowercase pour le prompt LLM (ex: "économie") */
+	promptName: string;
 }
 ```
 
@@ -41,16 +43,16 @@ export interface TagMapping {
  * Charge les tags disponibles depuis la table `tags`.
  */
 export async function getAvailableTags(): Promise<TagMapping[]> {
-  const dbTags = await db
-    .select({ slug: tags.slug, name: tags.name })
-    .from(tags)
-    .orderBy(asc(tags.name));
+	const dbTags = await db
+		.select({ slug: tags.slug, name: tags.name })
+		.from(tags)
+		.orderBy(asc(tags.name));
 
-  return dbTags.map((t) => ({
-    slug: t.slug,           // "economie"
-    name: t.name,           // "Économie"
-    promptName: t.name.toLowerCase()  // "économie"
-  }));
+	return dbTags.map((t) => ({
+		slug: t.slug, // "economie"
+		name: t.name, // "Économie"
+		promptName: t.name.toLowerCase() // "économie"
+	}));
 }
 ```
 
@@ -58,7 +60,7 @@ export async function getAvailableTags(): Promise<TagMapping[]> {
 
 ```typescript
 const tagMappings = await getAvailableTags();
-const tagNames = tagMappings.map((t) => t.promptName);  // ["économie", "santé", ...]
+const tagNames = tagMappings.map((t) => t.promptName); // ["économie", "santé", ...]
 
 const prompt = `
 Tags disponibles : ${tagNames.join(', ')}
@@ -71,19 +73,17 @@ Choisis 2-4 tags parmi cette liste.
 
 ```typescript
 function parseResponse(rawText: string, tagMappings: TagMapping[]): { tags: string[] } {
-  // Lookup: nom lowercase accentué → slug DB
-  const nameToSlug = new Map(
-    tagMappings.map((t) => [t.promptName, t.slug])
-  );
-  
-  const data = JSON.parse(rawText);
-  
-  // Convertit les tags LLM (accentués) en slugs DB (ASCII)
-  const validTags = (data.tags || [])
-    .map((t: string) => nameToSlug.get(t.toLowerCase()))
-    .filter((slug: string | undefined): slug is string => slug !== undefined);
-    
-  return { tags: validTags };  // ["economie", "sante"]
+	// Lookup: nom lowercase accentué → slug DB
+	const nameToSlug = new Map(tagMappings.map((t) => [t.promptName, t.slug]));
+
+	const data = JSON.parse(rawText);
+
+	// Convertit les tags LLM (accentués) en slugs DB (ASCII)
+	const validTags = (data.tags || [])
+		.map((t: string) => nameToSlug.get(t.toLowerCase()))
+		.filter((slug: string | undefined): slug is string => slug !== undefined);
+
+	return { tags: validTags }; // ["economie", "sante"]
 }
 ```
 
@@ -144,14 +144,17 @@ WHERE lower(unaccent(tag_value)) IN (SELECT slug FROM tags);
 ## Alternatives considérées
 
 ### Option A : Slugs accentués dans la DB
+
 - **Avantages** : Pas de mapping nécessaire
 - **Inconvénients** : Problèmes de collation (é = e ?), sensibilité aux encodages, complexité des comparaisons
 
 ### Option B : LLM génère directement des slugs ASCII
+
 - **Avantages** : Pas de mapping post-parsing
 - **Inconvénients** : Moins naturel pour le LLM, risque d'erreurs ("Economie" vs "economie"), perte de lisibilité
 
 ### Option C : Normalisation dynamique avec `unaccent`
+
 - **Avantages** : Flexibilité maximale
 - **Inconvénients** : Performance (appel `unaccent` à chaque requête), complexité des requêtes
 
@@ -165,6 +168,6 @@ WHERE lower(unaccent(tag_value)) IN (SELECT slug FROM tags);
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                       |
+| ---------- | -------------------------------------------------- |
 | 2026-02-05 | Création suite à implémentation filtrage tags lois |

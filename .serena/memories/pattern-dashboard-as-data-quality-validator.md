@@ -1,25 +1,30 @@
 # Pattern : Dashboard comme Validateur de Qualité de Données
 
 ## Catégorie
+
 Data Quality / Monitoring / Dashboard
 
 ## Date d'adoption
+
 2026-02-09
 
 ## Problème
 
 Les **incohérences de définition** entre composants sont difficiles à détecter :
+
 - Code fonctionne sans erreur
 - Tests unitaires passent (chaque composant est correct isolément)
 - Bug visible uniquement avec données réelles en production
 
 **Exemple concret (2026-02-09)** :
+
 - Dashboard affichait "100% résumés IA" vs "0% textes complets" pour PE
 - Révélait que l'ETL LLM utilisait `isNotNull(description)` alors que le dashboard utilisait `length(description) > 100`
 
 ## Contexte
 
 Ce pattern s'applique quand :
+
 - Plusieurs composants utilisent les **mêmes concepts métier** (ex: "texte complet", "actif", "valide")
 - Les définitions peuvent diverger silencieusement
 - Les incohérences ne causent pas d'erreurs immédiates mais corrompent les données
@@ -33,15 +38,16 @@ Créer des vues dashboard qui **comparent** des métriques qui devraient être c
 ```typescript
 // Exemple : Dashboard data-quality
 const stats = {
-  totalLaws: 1000,
-  lawsWithDescription: 800,    // count(description IS NOT NULL)
-  lawsWithFullText: 600,        // count(length(description) > 100)
-  lawsWithAISummary: 900,       // count(law_summaries)
-  lawsWithTags: 850             // count(law_tags)
+	totalLaws: 1000,
+	lawsWithDescription: 800, // count(description IS NOT NULL)
+	lawsWithFullText: 600, // count(length(description) > 100)
+	lawsWithAISummary: 900, // count(law_summaries)
+	lawsWithTags: 850 // count(law_tags)
 };
 ```
 
 **Indicateurs d'incohérence** :
+
 - ✅ `lawsWithAISummary ≤ lawsWithFullText` → Cohérent (pas de résumés sans texte)
 - ❌ `lawsWithAISummary > lawsWithFullText` → **INCOHÉRENCE** (résumés générés sans texte complet)
 
@@ -49,10 +55,10 @@ const stats = {
 
 Afficher des pourcentages côte à côte pour faciliter la détection visuelle :
 
-| Legislature | Textes Complets | Résumés IA | Tags | Votes |
-|-------------|-----------------|------------|------|-------|
-| AN-17 | 85% | 80% | 75% | 90% |
-| PE-10 | **0%** | **100%** ❌ | 100% | 50% |
+| Legislature | Textes Complets | Résumés IA  | Tags | Votes |
+| ----------- | --------------- | ----------- | ---- | ----- |
+| AN-17       | 85%             | 80%         | 75%  | 90%   |
+| PE-10       | **0%**          | **100%** ❌ | 100% | 50%   |
 
 L'incohérence PE-10 saute aux yeux : impossible d'avoir 100% résumés avec 0% textes.
 
@@ -62,7 +68,7 @@ Le dashboard doit utiliser les **mêmes critères** que les composants qu'il sur
 
 ```sql
 -- Dashboard (référence)
-SELECT 
+SELECT
   COUNT(*) FILTER (WHERE length(description) > 100) as with_full_text,
   COUNT(*) FILTER (WHERE summary IS NOT NULL) as with_ai_summary
 FROM laws l
@@ -75,18 +81,18 @@ Si l'ETL utilise un critère différent, l'incohérence sera visible immédiatem
 
 ### Étape 1 : Identifier les Concepts Métier Critiques
 
-| Concept | Où utilisé | Définition possible |
-|---------|------------|---------------------|
-| "Texte complet" | ETL LLM, Dashboard, Quiz | `length(description) > 100` |
-| "Actif" | Mandates, Organs | `end_date IS NULL OR end_date > NOW()` |
-| "Vote significatif" | Scrutins, Stats | `total_votes > 50` |
+| Concept             | Où utilisé               | Définition possible                    |
+| ------------------- | ------------------------ | -------------------------------------- |
+| "Texte complet"     | ETL LLM, Dashboard, Quiz | `length(description) > 100`            |
+| "Actif"             | Mandates, Organs         | `end_date IS NULL OR end_date > NOW()` |
+| "Vote significatif" | Scrutins, Stats          | `total_votes > 50`                     |
 
 ### Étape 2 : Créer des Vues de Cohérence
 
 ```typescript
 // src/routes/stats/data-quality/+page.server.ts
 export const load: PageServerLoad = async () => {
-  const cohesionChecks = await db.execute(sql`
+	const cohesionChecks = await db.execute(sql`
     SELECT 
       legislature,
       -- Métrique A
@@ -101,11 +107,11 @@ export const load: PageServerLoad = async () => {
     FROM table
     GROUP BY legislature
   `);
-  
-  // Alerter si ratio incohérent
-  const incoherent = cohesionChecks.filter(c => c.cohesion_ratio > 100);
-  
-  return { cohesionChecks, incoherent };
+
+	// Alerter si ratio incohérent
+	const incoherent = cohesionChecks.filter((c) => c.cohesion_ratio > 100);
+
+	return { cohesionChecks, incoherent };
 };
 ```
 
@@ -113,24 +119,24 @@ export const load: PageServerLoad = async () => {
 
 ```svelte
 {#each stats as row}
-  <tr class:incoherent={row.ai_summary_pct > row.full_text_pct}>
-    <td>{row.legislature}</td>
-    <td>{row.full_text_pct}%</td>
-    <td>{row.ai_summary_pct}%</td>
-    {#if row.ai_summary_pct > row.full_text_pct}
-      <td class="alert">⚠️ Incohérence détectée</td>
-    {/if}
-  </tr>
+	<tr class:incoherent={row.ai_summary_pct > row.full_text_pct}>
+		<td>{row.legislature}</td>
+		<td>{row.full_text_pct}%</td>
+		<td>{row.ai_summary_pct}%</td>
+		{#if row.ai_summary_pct > row.full_text_pct}
+			<td class="alert">⚠️ Incohérence détectée</td>
+		{/if}
+	</tr>
 {/each}
 
 <style>
-  .incoherent {
-    background: var(--color-error-bg);
-  }
-  .alert {
-    color: var(--color-error);
-    font-weight: bold;
-  }
+	.incoherent {
+		background: var(--color-error-bg);
+	}
+	.alert {
+		color: var(--color-error);
+		font-weight: bold;
+	}
 </style>
 ```
 
@@ -153,9 +159,11 @@ export const load: PageServerLoad = async () => {
 ### Exemple 1 : PE Laws Summaries (2026-02-09)
 
 **Dashboard révèle** :
+
 - PE-10 : 0% textes complets, 100% résumés IA ❌
 
 **Investigation** :
+
 - ETL : `isNotNull(description)` → accepte "Proposition de résolution" (25 chars)
 - Dashboard : `length(description) > 100` → rejette les descriptions courtes
 
@@ -164,18 +172,19 @@ export const load: PageServerLoad = async () => {
 ### Exemple 2 : Votes Without Scrutins (hypothétique)
 
 **Dashboard pourrait révéler** :
+
 - AN-17 : 1000 votes individuels, 800 scrutins
 - Ratio attendu : ~120 votes/scrutin
 - Ratio observé : 1.25 → **Possible data loss** (scrutins manquants)
 
 ## Comparaison avec Alternatives
 
-| Approche | Détection | Prévention | Coût |
-|----------|-----------|------------|------|
-| **Dashboard QA** (ce pattern) | ✅ Rapide | ❌ Non | Faible |
-| Tests d'intégration cross-composants | ⚠️ Lent | ✅ Oui | Moyen |
-| Constantes partagées | N/A | ✅ Oui | Faible |
-| Type-level constraints | N/A | ✅ Oui | Élevé (TypeScript avancé) |
+| Approche                             | Détection | Prévention | Coût                      |
+| ------------------------------------ | --------- | ---------- | ------------------------- |
+| **Dashboard QA** (ce pattern)        | ✅ Rapide | ❌ Non     | Faible                    |
+| Tests d'intégration cross-composants | ⚠️ Lent   | ✅ Oui     | Moyen                     |
+| Constantes partagées                 | N/A       | ✅ Oui     | Faible                    |
+| Type-level constraints               | N/A       | ✅ Oui     | Élevé (TypeScript avancé) |
 
 **Recommandation** : Combiner dashboard QA + constantes partagées pour détection ET prévention.
 
@@ -206,7 +215,7 @@ export const MIN_DESCRIPTION_LENGTH = 100;
 
 // Utiliser partout
 if (description && description.length > MIN_DESCRIPTION_LENGTH) {
-  // ETL, Dashboard, Quiz utilisent la même constante
+	// ETL, Dashboard, Quiz utilisent la même constante
 }
 ```
 
@@ -217,7 +226,7 @@ Encapsuler les critères dans des helpers :
 ```typescript
 // src/lib/server/db/helpers.ts
 export function hasFullText(law: Law): boolean {
-  return law.description !== null && law.description.length > MIN_DESCRIPTION_LENGTH;
+	return law.description !== null && law.description.length > MIN_DESCRIPTION_LENGTH;
 }
 
 // SQL equivalent
@@ -226,11 +235,11 @@ export const fullTextFilter = gt(sql`length(${laws.description})`, MIN_DESCRIPTI
 
 ## Métriques de Succès
 
-| Indicateur | Avant | Après (avec dashboard QA) |
-|------------|-------|---------------------------|
-| Temps de détection incohérence | Semaines/mois | Heures/jours |
-| Données corrompues | 1190 résumés invalides | 0 (détection précoce) |
-| Confiance dans les stats | Faible | Élevée |
+| Indicateur                     | Avant                  | Après (avec dashboard QA) |
+| ------------------------------ | ---------------------- | ------------------------- |
+| Temps de détection incohérence | Semaines/mois          | Heures/jours              |
+| Données corrompues             | 1190 résumés invalides | 0 (détection précoce)     |
+| Confiance dans les stats       | Faible                 | Élevée                    |
 
 ## Tests de Régression
 
@@ -239,12 +248,12 @@ Après implémentation, tester que le dashboard détecte les incohérences :
 ```typescript
 // test-dashboard-coherence.test.ts
 it('should flag incoherence when AI summaries > full texts', () => {
-  const stats = {
-    fullTextPct: 0,
-    aiSummaryPct: 100
-  };
-  
-  expect(isCoherent(stats)).toBe(false);
+	const stats = {
+		fullTextPct: 0,
+		aiSummaryPct: 100
+	};
+
+	expect(isCoherent(stats)).toBe(false);
 });
 ```
 
@@ -255,12 +264,14 @@ it('should flag incoherence when AI summaries > full texts', () => {
 **Fichier** : `src/routes/stats/data-quality/+page.server.ts`
 
 **Métriques comparées** :
+
 - Textes complets (`length(description) > 100`)
 - Résumés IA (`law_summaries` count)
 - Tags (`law_tags` count)
 - Votes (`scrutins` count)
 
 **Détection visuelle** :
+
 - Tableau avec colonnes % côte à côte
 - CSS highlights pour anomalies
 
@@ -277,6 +288,6 @@ it('should flag incoherence when AI summaries > full texts', () => {
 
 ## Changelog
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                        |
+| ---------- | --------------------------------------------------- |
 | 2026-02-09 | Création suite à détection incohérence PE summaries |

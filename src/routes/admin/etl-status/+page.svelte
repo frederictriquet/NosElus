@@ -265,7 +265,9 @@
 										</div>
 									</td>
 									<td class="text-right number">
-										{(check.total - check.current).toLocaleString('fr-FR')} / {check.total.toLocaleString('fr-FR')}
+										{(check.total - check.current).toLocaleString('fr-FR')} / {check.total.toLocaleString(
+											'fr-FR'
+										)}
 									</td>
 									<td>
 										<div class="command-cell">

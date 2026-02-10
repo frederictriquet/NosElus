@@ -52,8 +52,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name displayed in list
-		const listGroupShortName = await groupElement.locator('.group-short').textContent() ||
-			await groupElement.textContent();
+		const listGroupShortName =
+			(await groupElement.locator('.group-short').textContent()) ||
+			(await groupElement.textContent());
 
 		// Navigate to deputy detail page
 		await page.goto(deputyLink);
@@ -75,8 +76,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name from detail page
-		const detailGroupShortName = await detailGroupElement.locator('.group-short').textContent() ||
-			await detailGroupElement.textContent();
+		const detailGroupShortName =
+			(await detailGroupElement.locator('.group-short').textContent()) ||
+			(await detailGroupElement.textContent());
 
 		// Compare: group names should match
 		expect(listGroupShortName?.trim()).toBe(detailGroupShortName?.trim());
@@ -107,8 +109,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name displayed in list
-		const listGroupShortName = await groupElement.locator('.group-short').textContent() ||
-			await groupElement.textContent();
+		const listGroupShortName =
+			(await groupElement.locator('.group-short').textContent()) ||
+			(await groupElement.textContent());
 
 		// Navigate to MEP detail page
 		await page.goto(mepLink);
@@ -124,8 +127,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name from detail page
-		const detailGroupShortName = await detailGroupElement.locator('.group-short').textContent() ||
-			await detailGroupElement.textContent();
+		const detailGroupShortName =
+			(await detailGroupElement.locator('.group-short').textContent()) ||
+			(await detailGroupElement.textContent());
 
 		// Compare: group names should match
 		expect(listGroupShortName?.trim()).toBe(detailGroupShortName?.trim());
@@ -156,8 +160,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name displayed in list
-		const listGroupShortName = await groupElement.locator('.group-short').textContent() ||
-			await groupElement.textContent();
+		const listGroupShortName =
+			(await groupElement.locator('.group-short').textContent()) ||
+			(await groupElement.textContent());
 
 		// Navigate to senator detail page
 		await page.goto(senatorLink);
@@ -173,8 +178,9 @@ test.describe('Data Consistency - Group Names', () => {
 		}
 
 		// Get the short name from detail page
-		const detailGroupShortName = await detailGroupElement.locator('.group-short').textContent() ||
-			await detailGroupElement.textContent();
+		const detailGroupShortName =
+			(await detailGroupElement.locator('.group-short').textContent()) ||
+			(await detailGroupElement.textContent());
 
 		// Compare: group names should match
 		expect(listGroupShortName?.trim()).toBe(detailGroupShortName?.trim());
@@ -216,7 +222,9 @@ test.describe('Data Consistency - Search Results', () => {
 		}
 
 		// Get group name from search result
-		const searchGroupElement = resultCard.locator('.group-name-hover, .group-name-simple, [class*="group"]').first();
+		const searchGroupElement = resultCard
+			.locator('.group-name-hover, .group-name-simple, [class*="group"]')
+			.first();
 		const searchGroupExists = await searchGroupElement.count();
 
 		if (searchGroupExists === 0) {
@@ -224,15 +232,18 @@ test.describe('Data Consistency - Search Results', () => {
 			return;
 		}
 
-		const searchGroupName = await searchGroupElement.locator('.group-short').textContent() ||
-			await searchGroupElement.textContent();
+		const searchGroupName =
+			(await searchGroupElement.locator('.group-short').textContent()) ||
+			(await searchGroupElement.textContent());
 
 		// Navigate to detail page
 		await page.goto(detailLink);
 		await page.waitForLoadState('networkidle');
 
 		// Get group name from detail page
-		const detailGroupElement = page.locator('.group-name-stacked, .group-label, .group-name-hover').first();
+		const detailGroupElement = page
+			.locator('.group-name-stacked, .group-label, .group-name-hover')
+			.first();
 		const detailGroupExists = await detailGroupElement.count();
 
 		if (detailGroupExists === 0) {
@@ -240,8 +251,9 @@ test.describe('Data Consistency - Search Results', () => {
 			return;
 		}
 
-		const detailGroupName = await detailGroupElement.locator('.group-short').textContent() ||
-			await detailGroupElement.textContent();
+		const detailGroupName =
+			(await detailGroupElement.locator('.group-short').textContent()) ||
+			(await detailGroupElement.textContent());
 
 		// Compare: group names should match
 		expect(searchGroupName?.trim()).toBe(detailGroupName?.trim());
@@ -266,10 +278,13 @@ test.describe('Data Consistency - Compare Pages', () => {
 		await page.waitForLoadState('networkidle');
 
 		const deputyLinks = await page.locator('.elected-card a').evaluateAll((links) =>
-			links.slice(0, 2).map((link) => {
-				const href = link.getAttribute('href');
-				return href ? href.split('/').pop() : null;
-			}).filter(Boolean)
+			links
+				.slice(0, 2)
+				.map((link) => {
+					const href = link.getAttribute('href');
+					return href ? href.split('/').pop() : null;
+				})
+				.filter(Boolean)
 		);
 
 		if (deputyLinks.length < 2) {

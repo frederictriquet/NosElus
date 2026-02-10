@@ -11,6 +11,7 @@
 Les 31 scripts ETL du projet s'exécutent en tâche de fond (cron, CI) sans monitoring actif. En cas d'échec ou de succès partiel, il faut consulter manuellement les logs pour détecter les problèmes.
 
 **Besoin** : Recevoir une notification automatique à la fin de chaque ETL avec :
+
 - Statut (succès, partiel, échec)
 - Statistiques détaillées (total, inserted, updated, skipped, errors)
 - Législature concernée
@@ -21,26 +22,34 @@ Les 31 scripts ETL du projet s'exécutent en tâche de fond (cron, CI) sans moni
 ## Options Évaluées
 
 ### Option 1 : Nodemailer (email)
+
 ❌ **Rejetée**
+
 - Configuration SMTP complexe
 - Pas de notification temps réel mobile
 - Risque spam/filtrage
 
 ### Option 2 : Winston + Transport custom
-❌ **Rejetée**  
+
+❌ **Rejetée**
+
 - Winston trop lourd pour ce besoin simple
 - Pas de transport Telegram officiel
 - Overhead de configuration
 
 ### Option 3 : FemtoLogger
+
 ✅ **Retenue**
+
 - Package ultra-léger (@frederictriquet/femtologger)
 - TelegramTransport natif avec HTML formatting
 - Configuration minimale (2 variables d'environnement)
 - Maintenu activement (v0.1.4)
 
 ### Option 4 : Appels directs Telegram Bot API
+
 ❌ **Rejetée**
+
 - Réinventer la roue (gestion tokens, retry, formatting)
 - Code boilerplate dans chaque script
 - Pas de type-safety
@@ -98,9 +107,9 @@ import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 const stats = await runETL(config);
 
 await notifyETLComplete('nom-script', stats, {
-  dryRun: process.argv.includes('--dry-run'),
-  legislature: config.legislature,  // optionnel
-  additionalInfo: { key: value }    // optionnel
+	dryRun: process.argv.includes('--dry-run'),
+	legislature: config.legislature, // optionnel
+	additionalInfo: { key: value } // optionnel
 });
 ```
 
@@ -113,20 +122,20 @@ const scrutinsStats = await importScrutins(config);
 const votesStats = await importVotes(config);
 
 const combinedStats = {
-  total: scrutinsStats.total + votesStats.total,
-  inserted: scrutinsStats.inserted + votesStats.inserted,
-  updated: scrutinsStats.updated + votesStats.updated,
-  skipped: scrutinsStats.skipped + votesStats.skipped,
-  errors: scrutinsStats.errors + votesStats.errors
+	total: scrutinsStats.total + votesStats.total,
+	inserted: scrutinsStats.inserted + votesStats.inserted,
+	updated: scrutinsStats.updated + votesStats.updated,
+	skipped: scrutinsStats.skipped + votesStats.skipped,
+	errors: scrutinsStats.errors + votesStats.errors
 };
 
 await notifyETLComplete('import-scrutins', combinedStats, {
-  dryRun: process.argv.includes('--dry-run'),
-  legislature: config.legislature,
-  additionalInfo: { 
-    scrutins: scrutinsStats.inserted, 
-    votes: votesStats.inserted 
-  }
+	dryRun: process.argv.includes('--dry-run'),
+	legislature: config.legislature,
+	additionalInfo: {
+		scrutins: scrutinsStats.inserted,
+		votes: votesStats.inserted
+	}
 });
 ```
 
@@ -137,22 +146,26 @@ await notifyETLComplete('import-scrutins', combinedStats, {
 **31 scripts ETL intégrés** :
 
 ### Assemblée Nationale (9)
+
 - import-actors.ts, import-scrutins.ts, import-laws.ts
 - import-nosdeputes.ts, import-nosdeputes-stats.ts
 - import-dossiers-an.ts, import-amendements.ts
 - import-an.ts (multi-flags), import-all.ts (orchestrateur)
 
 ### Sénat (5)
+
 - import-senat-laws.ts, import-senat-senators.ts
 - import-senat-activity-stats.ts, import-senat-mandates-history.ts
 - import-nossenateurs-stats.ts
 
 ### Parlement Européen (6)
+
 - import-europarl-laws.ts, import-europarl-votes.ts
 - import-europarl-meps.ts, import-europarl-activity-stats.ts
 - import-europarl-historical.ts, enrich-pe-group-names.ts
 
 ### Utilitaires (11)
+
 - classify-scrutins.ts, link-scrutins-by-title.ts
 - analyze-laws.ts, import-law-texts-piste.ts
 - enrich-europarl-law-texts.ts
@@ -168,24 +181,17 @@ await notifyETLComplete('import-scrutins', combinedStats, {
 
 ```typescript
 function getStatusEmoji(stats: ImportStats): string {
-  if (stats.errors === 0) return '✅';  // 100% succès
-  const errorRate = stats.errors / stats.total;
-  return errorRate < 0.1 ? '⚠️' : '❌';  // <10% = partiel, ≥10% = échec
+	if (stats.errors === 0) return '✅'; // 100% succès
+	const errorRate = stats.errors / stats.total;
+	return errorRate < 0.1 ? '⚠️' : '❌'; // <10% = partiel, ≥10% = échec
 }
 ```
 
 ### Exemple de message (HTML)
 
 ```html
-✅ ETL Terminé: import-scrutins (AN-17)
-
-📊 Résultats:
-  • Total: 1250
-  • Insérés: 1180
-  • Mis à jour: 50
-  • Ignorés: 10
-  • Erreurs: 10
-  • Taux de succès: 99.2%
+✅ ETL Terminé: import-scrutins (AN-17) 📊 Résultats: • Total: 1250 • Insérés: 1180 • Mis à jour: 50
+• Ignorés: 10 • Erreurs: 10 • Taux de succès: 99.2%
 ```
 
 ---
@@ -201,6 +207,7 @@ TELEGRAM_CHAT_ID=123456789
 ```
 
 **Obtention** :
+
 - Token : @BotFather sur Telegram (`/newbot`)
 - Chat ID : @userinfobot sur Telegram (`/start`)
 
@@ -208,16 +215,16 @@ TELEGRAM_CHAT_ID=123456789
 
 ```typescript
 function loadTelegramEnv(): { token: string; chatId: string } | null {
-  // Charge .env manuellement (pattern existant du projet)
-  // Regex robuste : /^(TELEGRAM_\w+)=["']?(.+?)["']?$/
-  // Supporte TELEGRAM_BOT_TOKEN=value ET TELEGRAM_BOT_TOKEN="value"
-  
-  if (!token || !chatId) {
-    console.warn('⚠️  Telegram credentials not configured.');
-    console.warn('   ETL notifications will be skipped.');
-    return null;
-  }
-  return { token, chatId };
+	// Charge .env manuellement (pattern existant du projet)
+	// Regex robuste : /^(TELEGRAM_\w+)=["']?(.+?)["']?$/
+	// Supporte TELEGRAM_BOT_TOKEN=value ET TELEGRAM_BOT_TOKEN="value"
+
+	if (!token || !chatId) {
+		console.warn('⚠️  Telegram credentials not configured.');
+		console.warn('   ETL notifications will be skipped.');
+		return null;
+	}
+	return { token, chatId };
 }
 ```
 
@@ -228,6 +235,7 @@ function loadTelegramEnv(): { token: string; chatId: string } | null {
 ### Code Review (4 suggestions appliquées)
 
 1. **Regex .env** : Ajouter support des valeurs quotées
+
    ```typescript
    // Avant : /^(TELEGRAM_\w+)=(.+)$/
    // Après : /^(TELEGRAM_\w+)=["']?(.+?)["']?$/
@@ -249,24 +257,26 @@ function loadTelegramEnv(): { token: string; chatId: string } | null {
 ### Patterns découverts
 
 1. **Singleton lazy avec guard** :
+
    ```typescript
    let telegramLogger: FemtoLogger | null | undefined;
    // null = credentials manquants, undefined = pas encore initialisé
-   
+
    function getLogger(): FemtoLogger | null {
-     if (telegramLogger !== undefined) return telegramLogger;
-     // ... initialisation ...
+   	if (telegramLogger !== undefined) return telegramLogger;
+   	// ... initialisation ...
    }
    ```
 
 2. **Graceful error handling** :
+
    ```typescript
    try {
-     await logger.telegram(message);
-     console.log('✅ Telegram notification sent');
+   	await logger.telegram(message);
+   	console.log('✅ Telegram notification sent');
    } catch (error) {
-     console.warn('⚠️  Failed to send notification:', error.message);
-     // Script continue normalement
+   	console.warn('⚠️  Failed to send notification:', error.message);
+   	// Script continue normalement
    }
    ```
 

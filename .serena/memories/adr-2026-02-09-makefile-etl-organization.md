@@ -47,12 +47,14 @@ Nous choisissons **l'Option 1 : Groupement par catégories avec `##@`** parce qu
 #### 1. Modifier la target `help` (Makefile ligne 26-36)
 
 **Avant** :
+
 ```makefile
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(RESET) %s\n", $$1, $$2}'
 ```
 
 **Après** :
+
 ```makefile
 help: ## Affiche cette aide
 	@echo ""
@@ -138,11 +140,13 @@ etl-all-legislatures: ## Import toutes les législatures (14→17)
 #### 3. Réorganiser `.PHONY` en multi-lignes (ligne 7)
 
 **Avant** :
+
 ```makefile
 .PHONY: help install dev build preview clean clean-cache db-up db-down db-migrate db-push db-studio db-reset etl-download etl-all etl-incremental etl-actors etl-scrutins etl-laws etl-senat-laws [...]
 ```
 
 **Après** :
+
 ```makefile
 .PHONY: help install dev build preview clean clean-cache \
         db-up db-down db-migrate db-push db-studio db-generate db-reset \
@@ -162,18 +166,20 @@ etl-all-legislatures: ## Import toutes les législatures (14→17)
 #### 4. Standardiser les appels ETL (package.json)
 
 **Ajouter les scripts npm manquants** :
+
 ```json
 {
-  "scripts": {
-    "etl:amendements": "node --import tsx scripts/etl/import-amendements.ts",
-    "etl:colors": "node --import tsx scripts/etl/sync-group-colors.ts",
-    "etl:political-positions": "node --import tsx scripts/etl/import-political-positions.ts",
-    "etl:seed-pe-positions": "node --import tsx scripts/etl/seed-pe-positions.ts"
-  }
+	"scripts": {
+		"etl:amendements": "node --import tsx scripts/etl/import-amendements.ts",
+		"etl:colors": "node --import tsx scripts/etl/sync-group-colors.ts",
+		"etl:political-positions": "node --import tsx scripts/etl/import-political-positions.ts",
+		"etl:seed-pe-positions": "node --import tsx scripts/etl/seed-pe-positions.ts"
+	}
 }
 ```
 
 **Mettre à jour les targets Makefile** :
+
 ```makefile
 etl-amendements: ## Import des amendements AN
 	@echo "$(CYAN)Import des amendements...$(RESET)"
@@ -198,7 +204,6 @@ En choisissant cette option, nous acceptons :
 
 1. **Format `##@` spécifique** : Si un jour on change de système de build (ex: Justfile, Task), il faudra migrer
    - Mitigation : Convention largement adoptée, peu de risque d'obsolescence
-   
 2. **Modification du script `help`** : La regex awk devient légèrement plus complexe
    - Mitigation : Pattern bien documenté, facile à maintenir
 
@@ -226,7 +231,6 @@ En choisissant cette option, nous acceptons :
 
 1. ⚠️ **Ordre d'affichage** : Si un développeur s'attend à un ordre alphabétique strict
    - Action : Mentionner le regroupement par catégorie dans la documentation
-   
 2. ⚠️ **Maintenance de la catégorisation** : Si de nombreux ETL sont ajoutés, il faudra peut-être subdiviser
    - Action : Monitorer le nombre de targets par catégorie (max ~8 par catégorie recommandé)
 

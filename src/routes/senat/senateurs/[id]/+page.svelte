@@ -476,31 +476,6 @@
 		font-weight: 500;
 	}
 
-	.notice {
-		margin-top: 2rem;
-		padding: 1rem 1.25rem;
-		background: var(--color-bg);
-		border-radius: var(--radius);
-		border-left: 4px solid var(--color-primary);
-	}
-
-	.notice p {
-		margin: 0;
-		font-size: 0.875rem;
-		color: var(--color-text-muted);
-	}
-
-	.notice strong {
-		color: var(--color-text);
-	}
-
-	.notice code {
-		background: var(--color-surface);
-		padding: 0.125rem 0.375rem;
-		border-radius: 4px;
-		font-size: 0.8125rem;
-	}
-
 	/* Alignment card */
 	.alignment-card {
 		margin-bottom: 1.5rem;
@@ -516,49 +491,6 @@
 		margin: 0;
 	}
 
-	/* Activity stats */
-	.activity-card {
-		margin-bottom: 1.5rem;
-	}
-
-	.activity-stats {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1.5rem;
-	}
-
-	.stat-group h3 {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--color-text-muted);
-		margin-bottom: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	.stat-items {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.stat-item {
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
-	}
-
-	.stat-value {
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: var(--color-primary);
-	}
-
-	.stat-label {
-		font-size: 0.875rem;
-		color: var(--color-text-muted);
-	}
-
 	@media (max-width: 640px) {
 		.info-item {
 			flex-direction: column;
@@ -567,10 +499,6 @@
 
 		.info-item dd {
 			text-align: left;
-		}
-
-		.activity-stats {
-			grid-template-columns: 1fr 1fr;
 		}
 	}
 </style>

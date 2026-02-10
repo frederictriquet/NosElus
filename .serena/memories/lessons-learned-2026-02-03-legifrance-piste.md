@@ -21,6 +21,7 @@ Intégration de l'API Légifrance PISTE pour enrichir les textes de loi avec leu
 `/analyze → /explore-options → /tech-choice → /implement → /code-review → /pre-merge → /capitalize`
 
 **Impact** :
+
 - Toutes les options évaluées systématiquement (6 sources candidates)
 - Décision documentée (ADR-003)
 - PR complète et bien documentée
@@ -33,6 +34,7 @@ Intégration de l'API Légifrance PISTE pour enrichir les textes de loi avec leu
 **Ce qui a fonctionné** : Algorithme de matching robuste avec normalisation NLP.
 
 **Détails techniques** :
+
 ```typescript
 // Normalisation : lowercase + stop words + accents + ponctuation
 // Tokenisation
@@ -42,6 +44,7 @@ Intégration de l'API Légifrance PISTE pour enrichir les textes de loi avec leu
 ```
 
 **Résultats** :
+
 - 96% de success rate (32/50 scrutins matchés)
 - Robuste aux variations de titres
 - Paramétrable (seuil ajustable)
@@ -73,6 +76,7 @@ private async getAccessToken(): Promise<string> {
 ```
 
 **Impact** :
+
 - Réduit les requêtes OAuth (1 toutes les 3600s au lieu de 1 par requête)
 - Améliore les performances
 - Respecte les quotas API
@@ -91,6 +95,7 @@ await new Promise((r) => setTimeout(r, delay));
 ```
 
 **Impact** :
+
 - Évite les bans API
 - Respecte les politiques d'usage raisonnable
 - Simple à implémenter
@@ -104,23 +109,27 @@ await new Promise((r) => setTimeout(r, delay));
 **Problème initial** : Entités HTML dans les textes Légifrance (`&nbsp;`, `&laquo;`, `&#8217;`).
 
 **Solution** :
+
 ```typescript
 function cleanHtml(html: string): string {
-  return html
-    // Entités nommées courantes
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&laquo;/g, '«')
-    .replace(/&raquo;/g, '»')
-    .replace(/&ndash;/g, '–')
-    .replace(/&oelig;/g, 'œ')
-    // Entités numériques (décimales et hexa)
-    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
-    // ...
+	return (
+		html
+			// Entités nommées courantes
+			.replace(/&nbsp;/g, ' ')
+			.replace(/&laquo;/g, '«')
+			.replace(/&raquo;/g, '»')
+			.replace(/&ndash;/g, '–')
+			.replace(/&oelig;/g, 'œ')
+			// Entités numériques (décimales et hexa)
+			.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+			.replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
+	);
+	// ...
 }
 ```
 
 **Impact** :
+
 - Textes propres et lisibles
 - Résumés IA de qualité
 - Pas de corruption de caractères
@@ -133,12 +142,12 @@ function cleanHtml(html: string): string {
 
 ```svelte
 <span class="ai-disclaimer">
-  Ce résumé peut contenir des erreurs. 
-  Consultez le texte complet pour plus de certitude.
+	Ce résumé peut contenir des erreurs. Consultez le texte complet pour plus de certitude.
 </span>
 ```
 
 **Impact** :
+
 - Transparence vis-à-vis des utilisateurs
 - Confiance accrue
 - Responsabilité assumée
@@ -149,12 +158,14 @@ function cleanHtml(html: string): string {
 
 **Ce qui a fonctionné** : Documenter explicitement les compromis acceptés.
 
-**Exemple** : 
+**Exemple** :
+
 - **Trade-off** : Couverture ~30% (PISTE) vs 100% (titres seuls)
 - **Justification** : Qualité maximale > couverture maximale
 - **Documentation** : ADR-003 + PR description + README
 
 **Impact** :
+
 - Décision claire et justifiée
 - Pas de surprise pour les reviewers
 - Facilite les évolutions futures
@@ -168,11 +179,13 @@ function cleanHtml(html: string): string {
 **Problème** : Inscription PISTE requiert validation manuelle (email, CGU, application).
 
 **Impact** :
+
 - Impossible d'automatiser complètement
 - Dépendance utilisateur pour configuration
 - Barrière à l'entrée
 
 **Solution** :
+
 - Documentation claire dans `.env.example`
 - Instructions step-by-step dans PR
 - Mode `--test-connection` pour valider setup
@@ -184,6 +197,7 @@ function cleanHtml(html: string): string {
 **Problème** : Titres AN ≠ Titres Légifrance (abréviations, ordre des mots, articles manquants).
 
 **Exemples** :
+
 ```
 AN:          "Projet de loi de finances pour 2025"
 Légifrance:  "LOI n° 2025-123 du 1er janvier 2025 de finances pour 2025"
@@ -197,6 +211,7 @@ Légifrance:  "Loi du 15 mars 2025 visant à..."
 **Résultat** : 96% de matching, mais certains cas complexes échouent.
 
 **Leçon** : Le matching fuzzy a ses limites. Pour 100% de couverture, il faudrait :
+
 - Un identifiant commun (NOR, UID Légifrance)
 - Ou un mapping manuel pour les cas difficiles
 
@@ -209,7 +224,7 @@ Légifrance:  "Loi du 15 mars 2025 visant à..."
 ```typescript
 const MAX_DESCRIPTION_LENGTH = 50000;
 if (fullText.length > MAX_DESCRIPTION_LENGTH) {
-  fullText = fullText.slice(0, MAX_DESCRIPTION_LENGTH) + '...';
+	fullText = fullText.slice(0, MAX_DESCRIPTION_LENGTH) + '...';
 }
 ```
 
@@ -226,6 +241,7 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 **Contexte** : Comment obtenir les textes complets des lois ?
 
 **Options évaluées** :
+
 1. API NosDéputés.fr
 2. API Assemblée Nationale OpenData
 3. DILA LEGI bulk (20GB XML)
@@ -236,6 +252,7 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 **Choix** : Option 4 (PISTE API)
 
 **Justification** :
+
 - ✅ Source officielle (DILA)
 - ✅ Données structurées
 - ✅ API moderne (OAuth, JSON)
@@ -243,6 +260,7 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 - ⚠️ Inscription manuelle requise
 
 **Rejetées** :
+
 - Option 1 : API cassée (404)
 - Option 2 : Pas de textes complets
 - Option 3 : 20GB, complexité élevée
@@ -253,19 +271,19 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 
 ## Métriques de Session
 
-| Métrique | Valeur |
-|----------|--------|
-| **Commits** | 6 |
-| **Lignes ajoutées** | +1022 (ETL + Client + UI) |
-| **Fichiers créés** | 3 (client.ts, import-law-texts-piste.ts, ADR-003) |
-| **Fichiers modifiés** | 5 (UI, Makefile, package.json, .env.example, README) |
-| **Lois enrichies** | 32 (avec texte complet) |
-| **Résumés IA générés** | 50 (Mistral via Ollama) |
-| **Success rate matching** | 96% (48/50 titres) |
-| **Build TypeScript** | 0 erreurs |
-| **Temps build** | 21.98s |
-| **ADR créés** | 1 (ADR-003) |
-| **PR créées** | 1 (#8) |
+| Métrique                  | Valeur                                               |
+| ------------------------- | ---------------------------------------------------- |
+| **Commits**               | 6                                                    |
+| **Lignes ajoutées**       | +1022 (ETL + Client + UI)                            |
+| **Fichiers créés**        | 3 (client.ts, import-law-texts-piste.ts, ADR-003)    |
+| **Fichiers modifiés**     | 5 (UI, Makefile, package.json, .env.example, README) |
+| **Lois enrichies**        | 32 (avec texte complet)                              |
+| **Résumés IA générés**    | 50 (Mistral via Ollama)                              |
+| **Success rate matching** | 96% (48/50 titres)                                   |
+| **Build TypeScript**      | 0 erreurs                                            |
+| **Temps build**           | 21.98s                                               |
+| **ADR créés**             | 1 (ADR-003)                                          |
+| **PR créées**             | 1 (#8)                                               |
 
 ## Best Practices Établies
 
@@ -274,6 +292,7 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 Pour toute intégration API externe :
 
 ✅ **MUST**
+
 - OAuth token caching (si applicable)
 - Rate limiting (200-300ms entre requêtes)
 - Error handling exhaustif
@@ -281,6 +300,7 @@ Pour toute intégration API externe :
 - Documentation des prérequis (credentials, inscription)
 
 ✅ **SHOULD**
+
 - Support sandbox + production
 - Logs détaillés avec stats
 - Mode `--dry-run` pour simulation
@@ -291,6 +311,7 @@ Pour toute intégration API externe :
 Pour tout script ETL d'import de données :
 
 ✅ **MUST**
+
 - Flags CLI (`--dry-run`, `--verbose`, `--limit`)
 - Logging avec statistiques finales
 - Validation des données avant insertion
@@ -298,6 +319,7 @@ Pour tout script ETL d'import de données :
 - Documentation inline pour algorithmes complexes
 
 ✅ **SHOULD**
+
 - Progress bar ou compteur (1/100, 2/100, ...)
 - Mode ciblé (`--with-scrutins`) pour import partiel
 - Idempotence (ré-exécution sans doublon)
@@ -307,6 +329,7 @@ Pour tout script ETL d'import de données :
 Pour tout matching fuzzy entre textes :
 
 ✅ **MUST**
+
 - Normalisation (lowercase, accents, ponctuation)
 - Tokenisation
 - Métrique de similarité claire (Jaccard, Levenshtein, cosine)
@@ -314,6 +337,7 @@ Pour tout matching fuzzy entre textes :
 - Logging des non-matchés pour analyse
 
 ✅ **SHOULD**
+
 - Stop words removal
 - Bonus pour mots discriminants (longs, années, noms propres)
 - Fallback sur patterns multiples si premier matching échoue
@@ -323,11 +347,13 @@ Pour tout matching fuzzy entre textes :
 Pour tout contenu généré par IA :
 
 ✅ **MUST**
+
 - Badge "IA" ou "Généré par IA" visible
 - Disclaimer "peut contenir des erreurs"
 - Incitation à consulter la source originale
 
 ✅ **SHOULD**
+
 - Nom du modèle utilisé (tooltip)
 - Date de génération
 - Possibilité de signaler une erreur
@@ -402,19 +428,23 @@ Cette session a généré/mis à jour :
 Cette session a généré :
 
 ### ADR
+
 - `adr-2026-02-03-legifrance-piste.md` (ADR-003)
 
 ### Patterns (à créer)
+
 - `pattern-oauth-token-caching.md`
 - `pattern-jaccard-title-matching.md`
 - `pattern-rate-limiting-etl.md`
 - `pattern-ai-content-transparency.md`
 
 ### Standards (à créer)
+
 - `std-api-integration.md`
 - `std-etl-scripts.md`
 
 ### Lessons Learned
+
 - `lessons-learned-2026-02-03-legifrance-piste.md` (ce fichier)
 
 ## Conclusion
@@ -422,6 +452,7 @@ Cette session a généré :
 Session productive avec **intégration API complexe, matching intelligent et transparence IA**.
 
 **Points forts** :
+
 - Workflow skills orchestré (standard confirmé)
 - Décision technique documentée (ADR-003)
 - PR complète et professionnelle
@@ -429,6 +460,7 @@ Session productive avec **intégration API complexe, matching intelligent et tra
 - Trade-offs explicites
 
 **Points d'attention** :
+
 - Couverture partielle (~30%) due aux limites PISTE
 - Matching fuzzy non parfait (96%)
 - Dépendance inscription manuelle PISTE

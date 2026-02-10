@@ -1,6 +1,7 @@
 # ADR-006 : Quiz Politique Interactif
 
 ## Métadonnées
+
 - **Date** : 2026-02-06
 - **Statut** : ✅ Accepté
 - **Décideurs** : Équipe NosElus + utilisateur
@@ -38,50 +39,50 @@ Les citoyens ont du mal à se positionner politiquement de manière objective. L
 
 ### 1. Sélection des Lois
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **1A - Aléatoire pure** | ORDER BY RANDOM() | 70/120 | ❌ Rejeté |
-| **1B - Stratifiée par tags** | Diversité thématique garantie | 85/120 | ⚠️ Alternative |
-| **1C - Curée manuellement** | 15-20 lois choisies à la main | 75/120 | ❌ Rejeté |
-| **1D - Mixte (stratifiée + importance)** | Tags + filtre scrutins | **95/120** | ✅ **Retenue** |
+| Option                                   | Description                   | Score      | Verdict        |
+| ---------------------------------------- | ----------------------------- | ---------- | -------------- |
+| **1A - Aléatoire pure**                  | ORDER BY RANDOM()             | 70/120     | ❌ Rejeté      |
+| **1B - Stratifiée par tags**             | Diversité thématique garantie | 85/120     | ⚠️ Alternative |
+| **1C - Curée manuellement**              | 15-20 lois choisies à la main | 75/120     | ❌ Rejeté      |
+| **1D - Mixte (stratifiée + importance)** | Tags + filtre scrutins        | **95/120** | ✅ **Retenue** |
 
 ### 2. Calcul d'Alignement
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **2A - Similarité Jaccard** | % d'accord simple | **117/120** | ✅ **Retenue** |
-| **2B - Pondérée** | Poids par importance | 88/120 | ❌ Rejeté |
-| **2C - Distance cosinus** | Vecteurs mathématiques | 65/120 | ❌ Rejeté |
+| Option                      | Description            | Score       | Verdict        |
+| --------------------------- | ---------------------- | ----------- | -------------- |
+| **2A - Similarité Jaccard** | % d'accord simple      | **117/120** | ✅ **Retenue** |
+| **2B - Pondérée**           | Poids par importance   | 88/120      | ❌ Rejeté      |
+| **2C - Distance cosinus**   | Vecteurs mathématiques | 65/120      | ❌ Rejeté      |
 
 ### 3. Présentation Résultats
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **3A - Barres horizontales** | Liste simple avec barres | 92/120 | ⚠️ Alternative |
-| **3B - Radar chart** | Graphique araignée | 70/120 | ❌ Rejeté |
-| **3C - Podium + tableau** | Top 3 + détails | **99/120** | ✅ **Retenue** |
+| Option                       | Description              | Score      | Verdict        |
+| ---------------------------- | ------------------------ | ---------- | -------------- |
+| **3A - Barres horizontales** | Liste simple avec barres | 92/120     | ⚠️ Alternative |
+| **3B - Radar chart**         | Graphique araignée       | 70/120     | ❌ Rejeté      |
+| **3C - Podium + tableau**    | Top 3 + détails          | **99/120** | ✅ **Retenue** |
 
 ### 4. Architecture Routing
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **4A - Route unique + state** | Tout dans /an/quiz | 85/120 | ❌ Rejeté |
-| **4B - Routes séparées** | /quiz + /quiz/resultats | **103/120** | ✅ **Retenue** |
-| **4C - SPA full client** | Navigation JS pure | 60/120 | ❌ Rejeté |
+| Option                        | Description             | Score       | Verdict        |
+| ----------------------------- | ----------------------- | ----------- | -------------- |
+| **4A - Route unique + state** | Tout dans /an/quiz      | 85/120      | ❌ Rejeté      |
+| **4B - Routes séparées**      | /quiz + /quiz/resultats | **103/120** | ✅ **Retenue** |
+| **4C - SPA full client**      | Navigation JS pure      | 60/120      | ❌ Rejeté      |
 
 ### 5. Stockage Votes
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **5A - localStorage** | Navigateur uniquement | **110/120** | ✅ **Retenue** |
-| **5B - Session cookie** | Cookie serveur | 85/120 | ❌ Rejeté |
-| **5C - DB + Auth** | Sauvegarde persistante | 55/120 | ❌ Rejeté |
+| Option                  | Description            | Score       | Verdict        |
+| ----------------------- | ---------------------- | ----------- | -------------- |
+| **5A - localStorage**   | Navigateur uniquement  | **110/120** | ✅ **Retenue** |
+| **5B - Session cookie** | Cookie serveur         | 85/120      | ❌ Rejeté      |
+| **5C - DB + Auth**      | Sauvegarde persistante | 55/120      | ❌ Rejeté      |
 
 ### 6. Composants UI
 
-| Option | Description | Score | Verdict |
-|--------|-------------|-------|---------|
-| **6A - From scratch** | Tous nouveaux composants | 70/120 | ❌ Rejeté |
+| Option                            | Description                   | Score       | Verdict        |
+| --------------------------------- | ----------------------------- | ----------- | -------------- |
+| **6A - From scratch**             | Tous nouveaux composants      | 70/120      | ❌ Rejeté      |
 | **6B - Réutilisation + nouveaux** | AsyncCard + composants ciblés | **107/120** | ✅ **Retenue** |
 
 ---
@@ -92,14 +93,14 @@ Les citoyens ont du mal à se positionner politiquement de manière objective. L
 
 Nous choisissons l'architecture suivante :
 
-| Aspect | Choix | Justification |
-|--------|-------|---------------|
-| **Sélection lois** | Mixte (1D) | Diversité thématique + filtre importance (≥3 scrutins) |
-| **Calcul alignement** | Jaccard simple (2A) | Transparent, compréhensible, suffisant |
-| **Présentation** | Podium + tableau (3C) | Hiérarchie visuelle claire, mobile-friendly |
-| **Routing** | Routes séparées (4B) | Deep-linking, navigation claire, SEO |
-| **Stockage** | localStorage (5A) | Simple, privé, sans backend |
-| **Composants** | Réutilisation (6B) | Cohérence avec l'existant, rapidité |
+| Aspect                | Choix                 | Justification                                          |
+| --------------------- | --------------------- | ------------------------------------------------------ |
+| **Sélection lois**    | Mixte (1D)            | Diversité thématique + filtre importance (≥3 scrutins) |
+| **Calcul alignement** | Jaccard simple (2A)   | Transparent, compréhensible, suffisant                 |
+| **Présentation**      | Podium + tableau (3C) | Hiérarchie visuelle claire, mobile-friendly            |
+| **Routing**           | Routes séparées (4B)  | Deep-linking, navigation claire, SEO                   |
+| **Stockage**          | localStorage (5A)     | Simple, privé, sans backend                            |
+| **Composants**        | Réutilisation (6B)    | Cohérence avec l'existant, rapidité                    |
 
 ### Architecture Détaillée
 
@@ -137,13 +138,13 @@ const MIN_SCRUTINS = 3; // Filtre lois débattues
 
 // 1. Récupérer les lois éligibles
 const eligibleLaws = await db
-  .select()
-  .from(laws)
-  .innerJoin(lawSummaries)
-  .innerJoin(scrutins) // Au moins 1 scrutin
-  .where(legislature = '17')
-  .having(count(scrutins) >= MIN_SCRUTINS)
-  .groupBy(lawId);
+	.select()
+	.from(laws)
+	.innerJoin(lawSummaries)
+	.innerJoin(scrutins) // Au moins 1 scrutin
+	.where((legislature = '17'))
+	.having(count(scrutins) >= MIN_SCRUTINS)
+	.groupBy(lawId);
 
 // 2. Grouper par tag principal
 const lawsByTag = groupBy(eligibleLaws, 'primaryTag');
@@ -151,8 +152,8 @@ const lawsByTag = groupBy(eligibleLaws, 'primaryTag');
 // 3. Stratifier : prendre 1-2 lois par tag aléatoirement
 const selectedLaws = [];
 for (const [tag, laws] of lawsByTag) {
-  const sample = randomSample(laws, Math.ceil(QUIZ_SIZE / uniqueTags.length));
-  selectedLaws.push(...sample);
+	const sample = randomSample(laws, Math.ceil(QUIZ_SIZE / uniqueTags.length));
+	selectedLaws.push(...sample);
 }
 
 // 4. Limiter à QUIZ_SIZE
@@ -163,18 +164,17 @@ return selectedLaws.slice(0, QUIZ_SIZE);
 
 ```typescript
 function calculateAlignment(
-  userVotes: { lawId: string; position: 'pour' | 'contre' }[],
-  groupVotes: { lawId: string; position: 'pour' | 'contre' }[]
+	userVotes: { lawId: string; position: 'pour' | 'contre' }[],
+	groupVotes: { lawId: string; position: 'pour' | 'contre' }[]
 ): number {
-  const matches = userVotes.filter((uv, i) => 
-    uv.position === groupVotes[i].position
-  ).length;
-  
-  return Math.round((matches / userVotes.length) * 100);
+	const matches = userVotes.filter((uv, i) => uv.position === groupVotes[i].position).length;
+
+	return Math.round((matches / userVotes.length) * 100);
 }
 ```
 
 **Exemple** :
+
 - User vote : [pour, contre, pour, contre, pour, ...] (15 lois)
 - Groupe LFI : [pour, contre, contre, contre, pour, ...]
 - Accords : 4/15 = 27%
@@ -188,15 +188,18 @@ function calculateAlignment(
 ### Pourquoi Sélection Mixte (1D) ?
 
 **Rejet de l'aléatoire pure (1A)** :
+
 - Risque de 5 lois sur l'économie → expérience déséquilibrée
 - Pas de garantie de diversité thématique
 
 **Rejet de la curation manuelle (1C)** :
+
 - Biais éditorial inacceptable pour un outil citoyen
 - Maintenance lourde (nouvelle curation chaque législature)
 - Pas scalable
 
 **Choix du mixte** :
+
 - Garantit diversité via stratification par tags
 - Filtre importance via seuil de scrutins (≥3) élimine lois anecdotiques
 - Pas de maintenance manuelle
@@ -205,16 +208,19 @@ function calculateAlignment(
 ### Pourquoi Jaccard Simple (2A) ?
 
 **Rejet de la pondération (2B)** :
+
 - Complexe à expliquer à l'utilisateur
 - Risque de paraître arbitraire ("pourquoi cette loi compte double ?")
 - Gain marginal par rapport à la complexité ajoutée
 
 **Rejet de la distance cosinus (2C)** :
+
 - Overkill mathématique pour un quiz grand public
 - Résultats peu différents de Jaccard en pratique
 - Incompréhensible pour l'utilisateur moyen
 
 **Choix de Jaccard** :
+
 - **Transparence** : "Tu es d'accord avec X% des votes de ce groupe"
 - **Simplicité** : Concept accessible à tous
 - **Suffisance** : Donne une indication claire d'alignement
@@ -222,11 +228,13 @@ function calculateAlignment(
 ### Pourquoi Podium + Tableau (3C) ?
 
 **Rejet du radar chart (3B)** :
+
 - Illisible sur mobile (trop de groupes = axes)
 - Nécessite bibliothèque de charts (dépendance supplémentaire)
 - Ordre des groupes sur le radar impacte la perception
 
 **Choix du podium** :
+
 - **Hiérarchie visuelle** : Top 3 mis en avant immédiatement
 - **Progressive disclosure** : Aperçu → détails au clic
 - **Mobile-friendly** : Vertical scrolling naturel
@@ -235,16 +243,19 @@ function calculateAlignment(
 ### Pourquoi Routes Séparées (4B) ?
 
 **Rejet de la route unique (4A)** :
+
 - Pas de deep-linking (impossible de partager résultats)
 - Perte d'état au refresh (frustration utilisateur)
 - URL ne reflète pas l'étape (mauvais UX)
 
 **Rejet du SPA full client (4C)** :
+
 - Contre les patterns SvelteKit (SSR)
 - SEO problématique
 - Chargement initial plus lourd
 
 **Choix des routes séparées** :
+
 - **Deep-linking** : `/an/quiz/resultats?session=abc` partageable
 - **Navigation native** : Back button fonctionne
 - **SEO** : Deux pages indexables
@@ -253,16 +264,19 @@ function calculateAlignment(
 ### Pourquoi localStorage (5A) ?
 
 **Rejet des cookies (5B)** :
+
 - Overhead inutile pour un quiz anonyme
 - Nécessite backend pour gérer sessions
 - Expire à la fermeture du navigateur (mauvais UX)
 
 **Rejet de la DB (5C)** :
+
 - Hors scope v1 (nécessite authentification complète)
 - RGPD complexe (consentement, suppression, etc.)
 - Overhead technique élevé
 
 **Choix de localStorage** :
+
 - **Simplicité** : API native, 5 lignes de code
 - **Vie privée** : Aucune donnée côté serveur
 - **Persistence** : Survit aux refreshs, pas aux fermetures
@@ -276,7 +290,8 @@ function calculateAlignment(
 
 **Inconvénient** : L'utilisateur qui commence le quiz sur mobile et veut finir sur desktop ne peut pas.
 
-**Mitigation** : 
+**Mitigation** :
+
 - Acceptable pour v1 (cas d'usage rare pour un quiz de 5-10 min)
 - Pourrait être ajouté en v2 avec authentification optionnelle
 
@@ -285,6 +300,7 @@ function calculateAlignment(
 **Inconvénient** : Si l'utilisateur efface ses cookies/données, il perd ses résultats.
 
 **Mitigation** :
+
 - Message d'avertissement avant de quitter la page de résultats
 - Bouton "Recommencer" permet de refaire facilement
 - Acceptable pour un quiz ludique (non critique)
@@ -294,6 +310,7 @@ function calculateAlignment(
 **Inconvénient** : Ne tient pas compte de l'importance relative des lois (PLF 2025 = même poids qu'une PPL mineure).
 
 **Mitigation** :
+
 - La sélection mixte filtre déjà les lois anecdotiques (≥3 scrutins)
 - Transparence > sophistication pour ce cas d'usage
 - Pourrait être amélioré en v2 si besoin exprimé
@@ -303,6 +320,7 @@ function calculateAlignment(
 **Inconvénient** : Pas de comparaison historique ou multi-législatures.
 
 **Mitigation** :
+
 - Acceptable pour v1 (focus sur l'actualité)
 - Architecture extensible : ajout d'un sélecteur de législature trivial
 - Données disponibles pour L15/L16 si besoin futur
@@ -318,7 +336,7 @@ function calculateAlignment(
 ✅ **Objectivité** : Basé sur des votes réels, pas des déclarations  
 ✅ **Simplicité** : Aucune authentification requise (barrière d'entrée basse)  
 ✅ **Performance** : localStorage = pas de latence réseau  
-✅ **Cohérence** : Réutilise patterns existants (AsyncCard, routes)  
+✅ **Cohérence** : Réutilise patterns existants (AsyncCard, routes)
 
 ### Impacts Négatifs (à Monitorer)
 
@@ -334,11 +352,13 @@ function calculateAlignment(
 ### Actions Requises
 
 #### Avant implémentation
+
 - [ ] Valider le nombre final de lois (15, 20 ou autre)
 - [ ] Confirmer si abstention utilisateur est permise
 - [ ] Décider si partage de résultats est nécessaire v1
 
 #### Pendant implémentation
+
 - [ ] Créer les 4 nouveaux composants (QuizLawCard, QuizProgress, AlignmentPodium, VoteDetailModal)
 - [ ] Implémenter store Svelte pour état quiz
 - [ ] Implémenter fonction calculateAlignment()
@@ -346,6 +366,7 @@ function calculateAlignment(
 - [ ] Ajouter lien vers quiz dans navigation AN
 
 #### Après implémentation
+
 - [ ] Mesurer performance de la requête de sélection
 - [ ] Tester localStorage sur différents navigateurs
 - [ ] Valider mobile-responsiveness
@@ -356,20 +377,24 @@ function calculateAlignment(
 ## Références
 
 ### ADR Liés
+
 - ADR-001 : Classification scrutins (utilise la colonne `category`)
 - ADR-002 : Votes décisifs (pourrait être utilisé pour filtrer lois "importantes")
 
 ### Patterns Réutilisés
+
 - `ui-best-practices.md` : AsyncCard pour chargement progressif
 - `std-reusable-components.md` : Création de composants réutilisables
 - `routes-structure.md` : Organisation des routes par chambre
 
 ### Documentation Externe
+
 - [Jaccard Similarity](https://en.wikipedia.org/wiki/Jaccard_index)
 - [SvelteKit Routing](https://kit.svelte.dev/docs/routing)
 - [localStorage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 
 ### Données Sources
+
 - **267 lois** avec résumé IA disponibles
 - **85 lois** en législature 17 avec votes de groupes
 - **19 tags** thématiques pour stratification
@@ -423,17 +448,17 @@ function calculateAlignment(
 
 ### Risques Techniques Identifiés
 
-| Risque | Probabilité | Impact | Mitigation |
-|--------|-------------|--------|------------|
-| Requête de sélection lente | Moyenne | Moyen | Mesurer perf, ajouter index DB si besoin |
-| localStorage incompatible (vieux navigateurs) | Faible | Faible | Fallback sessionStorage + message |
-| groupResults JSONB mal formaté | Faible | Élevé | Validation en dev, fallback sur votes individuels |
-| Expérience mobile dégradée | Moyenne | Moyen | Tests mobile early, design mobile-first |
+| Risque                                        | Probabilité | Impact | Mitigation                                        |
+| --------------------------------------------- | ----------- | ------ | ------------------------------------------------- |
+| Requête de sélection lente                    | Moyenne     | Moyen  | Mesurer perf, ajouter index DB si besoin          |
+| localStorage incompatible (vieux navigateurs) | Faible      | Faible | Fallback sessionStorage + message                 |
+| groupResults JSONB mal formaté                | Faible      | Élevé  | Validation en dev, fallback sur votes individuels |
+| Expérience mobile dégradée                    | Moyenne     | Moyen  | Tests mobile early, design mobile-first           |
 
 ---
 
 ## Historique des Modifications
 
-| Date | Auteur | Modification |
-|------|--------|--------------|
+| Date       | Auteur        | Modification               |
+| ---------- | ------------- | -------------------------- |
 | 2026-02-06 | Claude + User | Création initiale de l'ADR |

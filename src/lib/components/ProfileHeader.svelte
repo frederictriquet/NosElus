@@ -48,7 +48,7 @@
 	}: Props = $props();
 
 	const placeholder = '/placeholder.svg';
-	const proxiedPhoto = getProxiedPhotoUrl(photoUrl);
+	const proxiedPhoto = $derived(getProxiedPhotoUrl(photoUrl));
 	const typeLabels = {
 		depute: 'Député',
 		senateur: 'Sénateur',

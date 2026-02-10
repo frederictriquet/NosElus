@@ -7,18 +7,15 @@
 
 import { describe, it, expect } from 'vitest';
 import { load } from '../+page.server';
-import type { PageServerLoad } from '../$types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const callLoad = () => (load as any)({});
 
 describe('Admin ETL Status Page - Integration', () => {
 	describe('Loader Function', () => {
 		it('should return object with syncStatus and etlChecks promises', async () => {
-			// Cast pour utiliser la fonction load
-			const loadFn = load as PageServerLoad;
+			const result = await callLoad();
 
-			// Appeler le loader (sans params car pas utilisés)
-			const result = await loadFn({} as any);
-
-			// Vérifier structure de retour
 			expect(result).toHaveProperty('syncStatus');
 			expect(result).toHaveProperty('etlChecks');
 
@@ -28,8 +25,7 @@ describe('Admin ETL Status Page - Integration', () => {
 		});
 
 		it('should resolve syncStatus to array of sync rows', async () => {
-			const loadFn = load as PageServerLoad;
-			const result = await loadFn({} as any);
+			const result = await callLoad();
 
 			// Résoudre la promise
 			const syncStatus = await result.syncStatus;
@@ -55,8 +51,7 @@ describe('Admin ETL Status Page - Integration', () => {
 		});
 
 		it('should resolve etlChecks to array of check results', async () => {
-			const loadFn = load as PageServerLoad;
-			const result = await loadFn({} as any);
+			const result = await callLoad();
 
 			// Résoudre la promise
 			const etlChecks = await result.etlChecks;
@@ -81,10 +76,7 @@ describe('Admin ETL Status Page - Integration', () => {
 		});
 
 		it('should not await promises (SvelteKit streaming pattern)', () => {
-			const loadFn = load as PageServerLoad;
-
-			// Vérifier que load() retourne immédiatement (pas d'await interne)
-			const result = loadFn({} as any);
+			const result = callLoad();
 
 			// Result ne doit pas être une promise
 			expect(result).not.toBeInstanceOf(Promise);
@@ -97,8 +89,7 @@ describe('Admin ETL Status Page - Integration', () => {
 
 	describe('SvelteKit Streaming Pattern', () => {
 		it('should allow progressive rendering of sections', async () => {
-			const loadFn = load as PageServerLoad;
-			const result = loadFn({} as any);
+			const result = callLoad();
 
 			// Les promises doivent être indépendantes
 			// On peut en résoudre une sans l'autre

@@ -1,14 +1,17 @@
 # Pattern : Documentation de Composants Réutilisables
 
 ## Catégorie
+
 Documentation / Best Practices / Svelte
 
 ## Date d'adoption
+
 2026-02-04
 
 ## Contexte
 
 Les composants réutilisables nécessitent une documentation complète pour :
+
 - Faciliter la compréhension et l'utilisation
 - Réduire les questions récurrentes
 - Améliorer la maintenabilité à long terme
@@ -29,12 +32,14 @@ src/lib/components/
 ### 1. JSDoc dans le fichier .utils.ts
 
 **Obligatoire pour** :
+
 - Interfaces publiques
 - Fonctions exportées
 - Constantes exportées
 
 **Format** :
-```typescript
+
+````typescript
 /**
  * Description courte de la fonction
  *
@@ -52,12 +57,13 @@ src/lib/components/
  * @see {@link RelatedComponent} - Lien vers composant lié
  */
 export function myFunction(paramName: Type): ReturnType {
-  // ...
+	// ...
 }
-```
+````
 
 **Exemple réel** (GroupVotesStackedBar.utils.ts) :
-```typescript
+
+````typescript
 /**
  * Trie les groupes par total de votes (descendant) et limite le nombre
  *
@@ -78,13 +84,13 @@ export function myFunction(paramName: Type): ReturnType {
  * // => [{ id: 'B', total: 30 }, { id: 'A', total: 10 }]
  * ```
  */
-```
+````
 
 ### 2. Commentaire de composant dans .svelte
 
 Placer **avant** le `<script>` :
 
-```svelte
+````svelte
 <!--
   NomComposant - Description courte
 
@@ -104,14 +110,16 @@ Placer **avant** le `<script>` :
     prop1="value"
     prop2={42}
   />
-  ```
+````
 
-  @see {@link fichier-lié.ts} - Description du lien
+@see {@link fichier-lié.ts} - Description du lien
 -->
+
 <script lang="ts">
   // ...
 </script>
-```
+
+````
 
 ### 3. Documentation des Props
 
@@ -119,20 +127,20 @@ Placer **avant** le `<script>` :
 interface Props {
   /** Description de prop1 (requis si pas de valeur par défaut) */
   prop1: string;
-  
+
   /** Description de prop2 avec détails (défaut: 42) */
   prop2?: number;
-  
+
   /** Description de prop3 avec enum (défaut: "mode-a") */
   prop3?: 'mode-a' | 'mode-b';
 }
-```
+````
 
 ### 4. Fichier README.md
 
 **Template complet** :
 
-```markdown
+````markdown
 # NomComposant
 
 Description d'une ligne.
@@ -143,10 +151,10 @@ Contexte et utilité du composant.
 
 ### Cas d'usage principaux
 
-| Cas | Description |
-|-----|-------------|
-| Cas 1 | ... |
-| Cas 2 | ... |
+| Cas   | Description |
+| ----- | ----------- |
+| Cas 1 | ...         |
+| Cas 2 | ...         |
 
 ## Installation
 
@@ -156,37 +164,42 @@ Interne au projet / npm install si package externe
 
 ```svelte
 <script>
-  import MonComposant from '...';
+	import MonComposant from '...';
 </script>
 
 <MonComposant prop="value" />
 ```
+````
 
 ## Props
 
-| Prop | Type | Défaut | Description |
-|------|------|--------|-------------|
-| prop1 | string | **requis** | ... |
-| prop2 | number | 42 | ... |
+| Prop  | Type   | Défaut     | Description |
+| ----- | ------ | ---------- | ----------- |
+| prop1 | string | **requis** | ...         |
+| prop2 | number | 42         | ...         |
 
 ### Interfaces TypeScript
 
 ```typescript
 interface MonInterface {
-  // ...
+	// ...
 }
 ```
 
 ## Exemples d'utilisation
 
 ### Exemple 1 : Cas basique
+
 ### Exemple 2 : Cas avancé
+
 ### Exemple 3 : Intégration avec autre composant
 
 ## Architecture
 
 ### Fichiers
+
 ### Séparation des responsabilités
+
 ### Flux de données
 
 ## Tests
@@ -206,7 +219,7 @@ Liste des standards respectés avec checkboxes
 ### Pages utilisant ce composant
 
 | Page | Description |
-|------|-------------|
+| ---- | ----------- |
 
 ### Évolutions possibles
 
@@ -216,10 +229,12 @@ Liste des standards respectés avec checkboxes
 ## Dépannage
 
 ### Problème 1
+
 **Cause** : ...
 **Solution** : ...
 
 ### Problème 2
+
 **Cause** : ...
 **Solution** : ...
 
@@ -231,12 +246,13 @@ Liste des standards respectés avec checkboxes
 ## Changelog
 
 | Version | Date | Changements |
-|---------|------|-------------|
+| ------- | ---- | ----------- |
 
 ## License
 
 MIT / Autre
-```
+
+````
 
 ## Niveaux de Documentation
 
@@ -329,9 +345,10 @@ export interface GroupData {
   id: string;
   // ...
 }
-```
+````
 
 ### Constante
+
 ```typescript
 /**
  * Positions de vote dans l'ordre d'affichage standard
@@ -345,6 +362,7 @@ export const VOTE_POSITIONS = ['Pour', 'Contre', 'Abstention', 'Non-votant'] as 
 ```
 
 ### Fonction avec @internal
+
 ```typescript
 /**
  * Mapping interne - ne pas utiliser directement
@@ -357,6 +375,7 @@ const internalMap = { ... };
 ## Outils
 
 ### Vérification
+
 ```bash
 # Vérifier les liens markdown
 npx markdown-link-check *.README.md
@@ -366,16 +385,17 @@ npx typedoc --out docs src/
 ```
 
 ### Templates
+
 Sauvegarder ce pattern dans SERENA pour référence future.
 
 ## Metrics de Qualité
 
-| Indicateur | Cible | GroupVotesStackedBar |
-|------------|-------|----------------------|
-| Lignes README | 100+ | 250+ ✅ |
-| Exemples fonctionnels | ≥3 | 4 ✅ |
-| Sections dépannage | ≥2 | 3 ✅ |
-| JSDoc coverage | 100% public API | 100% ✅ |
+| Indicateur            | Cible           | GroupVotesStackedBar |
+| --------------------- | --------------- | -------------------- |
+| Lignes README         | 100+            | 250+ ✅              |
+| Exemples fonctionnels | ≥3              | 4 ✅                 |
+| Sections dépannage    | ≥2              | 3 ✅                 |
+| JSDoc coverage        | 100% public API | 100% ✅              |
 
 ## Voir Aussi
 
@@ -385,6 +405,6 @@ Sauvegarder ce pattern dans SERENA pour référence future.
 
 ## Historique
 
-| Date | Modification |
-|------|--------------|
+| Date       | Modification                                        |
+| ---------- | --------------------------------------------------- |
 | 2026-02-04 | Création suite à documentation GroupVotesStackedBar |

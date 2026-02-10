@@ -20,12 +20,14 @@
 ## Vue d'ensemble
 
 Le système de notifications Telegram permet de recevoir une notification automatique à la fin de chaque script ETL, indiquant :
+
 - Le statut d'exécution (succès ✅, partiel ⚠️, échec ❌)
 - Les statistiques détaillées (total, insérés, mis à jour, ignorés, erreurs)
 - Le taux de succès calculé automatiquement
 - La législature concernée (si applicable)
 
 **Fonctionnalités clés** :
+
 - **Graceful degradation** : Si Telegram n'est pas configuré, l'ETL continue normalement avec un warning
 - **Respect du --dry-run** : Aucune notification envoyée en mode simulation
 - **Error handling** : Un échec de notification ne crashe jamais l'ETL
@@ -59,6 +61,7 @@ npm install @frederictriquet/femtologger@^0.1.4
 3. **Copier l'ID fourni** (format: `123456789`)
 
 Alternativement, pour un groupe :
+
 1. Ajouter le bot au groupe
 2. Envoyer un message dans le groupe
 3. Visiter `https://api.telegram.org/bot<TOKEN>/getUpdates`
@@ -84,6 +87,7 @@ TELEGRAM_CHAT_ID=123456789
 ```
 
 **⚠️ Important** :
+
 - Ne **jamais committer** le fichier `.env` (déjà dans `.gitignore`)
 - Utiliser `.env.example` comme référence
 - En production, configurer les variables via votre hébergeur
@@ -112,24 +116,24 @@ import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 import type { ImportStats } from '../../src/lib/server/etl/types.js';
 
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+	const dryRun = process.argv.includes('--dry-run');
 
-  // ... logique ETL ...
+	// ... logique ETL ...
 
-  const stats: ImportStats = {
-    total: 100,
-    inserted: 80,
-    updated: 15,
-    skipped: 3,
-    errors: 2
-  };
+	const stats: ImportStats = {
+		total: 100,
+		inserted: 80,
+		updated: 15,
+		skipped: 3,
+		errors: 2
+	};
 
-  // Notification Telegram
-  await notifyETLComplete('mon-etl-script', stats, {
-    dryRun,
-    legislature: 'AN-17', // optionnel
-    additionalInfo: { duration: '45s' } // optionnel
-  });
+	// Notification Telegram
+	await notifyETLComplete('mon-etl-script', stats, {
+		dryRun,
+		legislature: 'AN-17', // optionnel
+		additionalInfo: { duration: '45s' } // optionnel
+	});
 }
 ```
 
@@ -144,6 +148,7 @@ npm run etl:import-actors
 ```
 
 En mode `--dry-run`, le script affiche dans les logs :
+
 ```
 [DRY-RUN] Would send Telegram notification for: import-actors
 [DRY-RUN] Stats: {"total":577,"inserted":450,...}
@@ -160,21 +165,21 @@ const mandatesStats = await importMandates(config);
 
 // Combiner les stats
 const combinedStats: ImportStats = {
-  total: organsStats.total + actorsStats.total + mandatesStats.total,
-  inserted: organsStats.inserted + actorsStats.inserted + mandatesStats.inserted,
-  updated: organsStats.updated + actorsStats.updated + mandatesStats.updated,
-  skipped: organsStats.skipped + actorsStats.skipped + mandatesStats.skipped,
-  errors: organsStats.errors + actorsStats.errors + mandatesStats.errors
+	total: organsStats.total + actorsStats.total + mandatesStats.total,
+	inserted: organsStats.inserted + actorsStats.inserted + mandatesStats.inserted,
+	updated: organsStats.updated + actorsStats.updated + mandatesStats.updated,
+	skipped: organsStats.skipped + actorsStats.skipped + mandatesStats.skipped,
+	errors: organsStats.errors + actorsStats.errors + mandatesStats.errors
 };
 
 await notifyETLComplete('import-all', combinedStats, {
-  dryRun,
-  legislature: config.legislature,
-  additionalInfo: {
-    organs: organsStats.inserted,
-    actors: actorsStats.inserted,
-    mandates: mandatesStats.inserted
-  }
+	dryRun,
+	legislature: config.legislature,
+	additionalInfo: {
+		organs: organsStats.inserted,
+		actors: actorsStats.inserted,
+		mandates: mandatesStats.inserted
+	}
 });
 ```
 
@@ -227,6 +232,7 @@ await notifyETLComplete('import-all', combinedStats, {
 ### Formatage HTML
 
 Les messages utilisent le formatage HTML de Telegram :
+
 - **Gras** : `<b>texte</b>`
 - Emojis : ✅ ⚠️ ❌ 📊
 - Retours à la ligne : `\n`
@@ -240,6 +246,7 @@ Les messages utilisent le formatage HTML de Telegram :
 **Vérifications** :
 
 1. **Variables d'environnement** :
+
    ```bash
    # Vérifier que les variables sont chargées
    node -e "require('dotenv').config(); console.log(process.env.TELEGRAM_BOT_TOKEN)"
@@ -270,6 +277,7 @@ Les messages utilisent le formatage HTML de Telegram :
 **Cause** : Problème avec le package FemtoLogger
 
 **Solution** :
+
 ```bash
 # Réinstaller le package
 rm -rf node_modules package-lock.json
@@ -281,6 +289,7 @@ npm install
 **Cause** : Version de FemtoLogger < 0.1.4
 
 **Solution** :
+
 ```bash
 # Mettre à jour vers v0.1.4+
 npm install @frederictriquet/femtologger@^0.1.4
@@ -289,6 +298,7 @@ npm install @frederictriquet/femtologger@^0.1.4
 ### Problème : Warning "credentials not configured"
 
 **Symptôme** :
+
 ```
 ⚠️  Telegram credentials not configured (TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing).
    ETL notifications will be skipped. See .env.example for setup instructions.
@@ -297,6 +307,7 @@ npm install @frederictriquet/femtologger@^0.1.4
 **Cause** : Variables manquantes dans `.env`
 
 **Solution** :
+
 1. Créer/compléter le fichier `.env` à la racine du projet
 2. Ajouter `TELEGRAM_BOT_TOKEN` et `TELEGRAM_CHAT_ID`
 3. Relancer le script
@@ -373,29 +384,29 @@ graph TD
 
 ```typescript
 async function notifyETLComplete(
-  scriptName: string,
-  stats: ImportStats,
-  options?: NotifyOptions
-): Promise<void>
+	scriptName: string,
+	stats: ImportStats,
+	options?: NotifyOptions
+): Promise<void>;
 ```
 
 **Paramètres** :
 
-| Param | Type | Requis | Description |
-|-------|------|--------|-------------|
-| `scriptName` | `string` | ✅ | Nom du script ETL (ex: "import-actors") |
-| `stats` | `ImportStats` | ✅ | Statistiques d'import |
-| `options` | `NotifyOptions` | ❌ | Options supplémentaires |
+| Param        | Type            | Requis | Description                             |
+| ------------ | --------------- | ------ | --------------------------------------- |
+| `scriptName` | `string`        | ✅     | Nom du script ETL (ex: "import-actors") |
+| `stats`      | `ImportStats`   | ✅     | Statistiques d'import                   |
+| `options`    | `NotifyOptions` | ❌     | Options supplémentaires                 |
 
 **Interface `ImportStats`** :
 
 ```typescript
 interface ImportStats {
-  total: number;      // Nombre total d'entités traitées
-  inserted: number;   // Nombre d'entités insérées
-  updated: number;    // Nombre d'entités mises à jour
-  skipped: number;    // Nombre d'entités ignorées
-  errors: number;     // Nombre d'erreurs rencontrées
+	total: number; // Nombre total d'entités traitées
+	inserted: number; // Nombre d'entités insérées
+	updated: number; // Nombre d'entités mises à jour
+	skipped: number; // Nombre d'entités ignorées
+	errors: number; // Nombre d'erreurs rencontrées
 }
 ```
 
@@ -403,9 +414,9 @@ interface ImportStats {
 
 ```typescript
 interface NotifyOptions {
-  dryRun?: boolean;                    // Mode simulation (défaut: false)
-  legislature?: string;                // Legislature concernée (ex: "AN-17")
-  additionalInfo?: Record<string, unknown>;  // Infos supplémentaires
+	dryRun?: boolean; // Mode simulation (défaut: false)
+	legislature?: string; // Legislature concernée (ex: "AN-17")
+	additionalInfo?: Record<string, unknown>; // Infos supplémentaires
 }
 ```
 
@@ -427,28 +438,29 @@ await notifyETLComplete('mon-script', stats, { dryRun: true });
 
 // Avec legislature
 await notifyETLComplete('mon-script', stats, {
-  dryRun: process.argv.includes('--dry-run'),
-  legislature: 'AN-17'
+	dryRun: process.argv.includes('--dry-run'),
+	legislature: 'AN-17'
 });
 
 // Avec infos additionnelles
 await notifyETLComplete('mon-script', stats, {
-  dryRun: false,
-  legislature: 'PE-10',
-  additionalInfo: {
-    duration: '45s',
-    mode: 'incremental'
-  }
+	dryRun: false,
+	legislature: 'PE-10',
+	additionalInfo: {
+		duration: '45s',
+		mode: 'incremental'
+	}
 });
 ```
 
 ### `getStatusEmoji()`
 
 ```typescript
-function getStatusEmoji(stats: ImportStats): string
+function getStatusEmoji(stats: ImportStats): string;
 ```
 
 Détermine l'emoji approprié selon le taux de succès :
+
 - `✅` : 0 erreur (100% succès)
 - `⚠️` : < 10% d'erreurs (succès partiel)
 - `❌` : ≥ 10% d'erreurs (échec significatif)
@@ -460,6 +472,7 @@ Détermine l'emoji approprié selon le taux de succès :
 Tous les 31 scripts ETL du projet ont des notifications Telegram :
 
 ### Assemblée Nationale
+
 - `import-actors.ts` - Import des organes, acteurs, mandats
 - `import-scrutins.ts` - Import des scrutins et votes
 - `import-laws.ts` - Import des lois et liens scrutins↔lois
@@ -471,6 +484,7 @@ Tous les 31 scripts ETL du projet ont des notifications Telegram :
 - `import-all.ts` - Import complet toutes sources
 
 ### Sénat
+
 - `import-senat-laws.ts` - Lois du Sénat
 - `import-senat-senators.ts` - Sénateurs
 - `import-senat-activity-stats.ts` - Statistiques activité
@@ -478,6 +492,7 @@ Tous les 31 scripts ETL du projet ont des notifications Telegram :
 - `import-nossenateurs-stats.ts` - Statistiques NosSénateurs.fr
 
 ### Parlement Européen
+
 - `import-europarl-laws.ts` - Lois/procédures PE
 - `import-europarl-votes.ts` - Votes PE
 - `import-europarl-meps.ts` - Députés européens
@@ -486,6 +501,7 @@ Tous les 31 scripts ETL du projet ont des notifications Telegram :
 - `enrich-pe-group-names.ts` - Enrichissement noms groupes PE
 
 ### Utilitaires
+
 - `classify-scrutins.ts` - Classification automatique scrutins
 - `link-scrutins-by-title.ts` - Liaison scrutins↔lois par titre
 - `analyze-laws.ts` - Analyse LLM des lois
@@ -513,10 +529,10 @@ Tous les 31 scripts ETL du projet ont des notifications Telegram :
 
 ## Historique
 
-| Version | Date | Changements |
-|---------|------|-------------|
-| 1.0.0 | 2026-02-07 | Intégration initiale FemtoLogger v0.1.4 dans 31 scripts ETL |
-| 1.0.1 | 2026-02-08 | Corrections code review (regex `.env`, dryRun, compteur erreurs) |
+| Version | Date       | Changements                                                      |
+| ------- | ---------- | ---------------------------------------------------------------- |
+| 1.0.0   | 2026-02-07 | Intégration initiale FemtoLogger v0.1.4 dans 31 scripts ETL      |
+| 1.0.1   | 2026-02-08 | Corrections code review (regex `.env`, dryRun, compteur erreurs) |
 
 ---
 

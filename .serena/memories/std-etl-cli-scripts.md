@@ -1,20 +1,22 @@
 # Standard : ETL CLI Scripts
 
 ## Catégorie
+
 ETL / Scripting / Developer Experience
 
 ## Règle
 
 **Tous les scripts ETL doivent implémenter les options CLI standards suivantes** :
 
-| Option | Flags | Type | Description | Requis |
-|--------|-------|------|-------------|--------|
-| `--dry-run` | `-n` | boolean | Simulation (pas d'écriture en base) | ✅ Obligatoire |
-| `--limit` | `-l` | number | Nombre max d'entités à traiter | ✅ Obligatoire |
-| `--verbose` | `-v` | boolean | Logs détaillés | ✅ Obligatoire |
-| `--help` | `-h` | boolean | Affiche l'aide | ✅ Obligatoire |
+| Option      | Flags | Type    | Description                         | Requis         |
+| ----------- | ----- | ------- | ----------------------------------- | -------------- |
+| `--dry-run` | `-n`  | boolean | Simulation (pas d'écriture en base) | ✅ Obligatoire |
+| `--limit`   | `-l`  | number  | Nombre max d'entités à traiter      | ✅ Obligatoire |
+| `--verbose` | `-v`  | boolean | Logs détaillés                      | ✅ Obligatoire |
+| `--help`    | `-h`  | boolean | Affiche l'aide                      | ✅ Obligatoire |
 
 Options additionnelles recommandées :
+
 - `--force` : Ignore les checks de sécurité (avec avertissement)
 - `--incremental` : Mode incrémental (seulement nouvelles données)
 - `--resume` : Reprendre après échec (avec checkpoint)
@@ -28,6 +30,7 @@ Options additionnelles recommandées :
 **Solution** : Mode simulation pour tester sans side-effects.
 
 **Avantages** :
+
 - Validation du script avant exécution réelle
 - Debugging sans risque
 - Estimation du nombre de modifications
@@ -39,6 +42,7 @@ Options additionnelles recommandées :
 **Solution** : Limiter le nombre d'entités pour tester rapidement.
 
 **Avantages** :
+
 - Tests rapides sur échantillon (ex: --limit 10)
 - Validation incrémentale (ex: --limit 100, puis 1000, puis all)
 - Économie de ressources (CPU, RAM, API calls)
@@ -50,6 +54,7 @@ Options additionnelles recommandées :
 **Solution** : Mode verbose pour logs détaillés.
 
 **Avantages** :
+
 - Debugging facilité (voir requêtes SQL, fetches HTTP, etc.)
 - Traçabilité (savoir exactement ce qui a été fait)
 - Monitoring (voir progression en temps réel)
@@ -61,6 +66,7 @@ Options additionnelles recommandées :
 **Solution** : Afficher l'aide avec `-h` ou `--help`.
 
 **Avantages** :
+
 - Self-documenting (pas besoin d'aller lire le code)
 - UX standard (convention Unix)
 - Exemples d'utilisation
@@ -74,47 +80,47 @@ Options additionnelles recommandées :
 import { parseArgs } from 'util';
 
 interface Args {
-  dryRun: boolean;
-  limit: number;
-  verbose: boolean;
-  help: boolean;
+	dryRun: boolean;
+	limit: number;
+	verbose: boolean;
+	help: boolean;
 }
 
 function parseCliArgs(argv: string[]): Args {
-  const args: Args = {
-    dryRun: false,
-    limit: 100,
-    verbose: false,
-    help: false
-  };
+	const args: Args = {
+		dryRun: false,
+		limit: 100,
+		verbose: false,
+		help: false
+	};
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    switch (arg) {
-      case '--dry-run':
-      case '-n':
-        args.dryRun = true;
-        break;
-      case '--limit':
-      case '-l':
-        args.limit = parseInt(argv[++i], 10) || 100;
-        break;
-      case '--verbose':
-      case '-v':
-        args.verbose = true;
-        break;
-      case '--help':
-      case '-h':
-        args.help = true;
-        break;
-    }
-  }
+	for (let i = 0; i < argv.length; i++) {
+		const arg = argv[i];
+		switch (arg) {
+			case '--dry-run':
+			case '-n':
+				args.dryRun = true;
+				break;
+			case '--limit':
+			case '-l':
+				args.limit = parseInt(argv[++i], 10) || 100;
+				break;
+			case '--verbose':
+			case '-v':
+				args.verbose = true;
+				break;
+			case '--help':
+			case '-h':
+				args.help = true;
+				break;
+		}
+	}
 
-  return args;
+	return args;
 }
 
 function printHelp() {
-  console.log(`
+	console.log(`
 Usage: npm run etl:europarl-law-texts [options]
 
 Options:
@@ -131,35 +137,35 @@ Examples:
 }
 
 async function main() {
-  const args = parseCliArgs(process.argv.slice(2));
+	const args = parseCliArgs(process.argv.slice(2));
 
-  if (args.help) {
-    printHelp();
-    process.exit(0);
-  }
+	if (args.help) {
+		printHelp();
+		process.exit(0);
+	}
 
-  console.log('Configuration:');
-  console.log(`  Limite: ${args.limit} lois`);
-  if (args.dryRun) {
-    console.log("  Mode: DRY RUN (pas d'écriture en base)");
-  }
-  if (args.verbose) {
-    console.log('  Mode verbeux activé');
-  }
+	console.log('Configuration:');
+	console.log(`  Limite: ${args.limit} lois`);
+	if (args.dryRun) {
+		console.log("  Mode: DRY RUN (pas d'écriture en base)");
+	}
+	if (args.verbose) {
+		console.log('  Mode verbeux activé');
+	}
 
-  const config = {
-    dryRun: args.dryRun,
-    limit: args.limit,
-    verbose: args.verbose
-  };
+	const config = {
+		dryRun: args.dryRun,
+		limit: args.limit,
+		verbose: args.verbose
+	};
 
-  const stats = await enrichPELawTexts(config);
+	const stats = await enrichPELawTexts(config);
 
-  console.log('RÉSUMÉ');
-  console.log(`  Lois traitées:   ${stats.total}`);
-  console.log(`  Enrichies:       ${stats.updated}`);
-  console.log(`  Ignorées:        ${stats.skipped}`);
-  console.log(`  Erreurs:         ${stats.errors}`);
+	console.log('RÉSUMÉ');
+	console.log(`  Lois traitées:   ${stats.total}`);
+	console.log(`  Enrichies:       ${stats.updated}`);
+	console.log(`  Ignorées:        ${stats.skipped}`);
+	console.log(`  Erreurs:         ${stats.errors}`);
 }
 
 main();
@@ -170,12 +176,12 @@ main();
 ```typescript
 // ❌ MAUVAIS : Pas d'options CLI
 async function main() {
-  const laws = await db.select().from(laws);  // Traite TOUTES les lois
-  
-  for (const law of laws) {
-    await enrichLaw(law);  // Écrit directement en base
-    // Pas de logs, impossible de debugger
-  }
+	const laws = await db.select().from(laws); // Traite TOUTES les lois
+
+	for (const law of laws) {
+		await enrichLaw(law); // Écrit directement en base
+		// Pas de logs, impossible de debugger
+	}
 }
 
 main();
@@ -231,6 +237,7 @@ etl-europarl-law-texts-dry: ## [DRY RUN] Test enrichissement PE
 ```
 
 Usage :
+
 ```bash
 make etl-europarl-law-texts-dry  # Test
 make etl-europarl-law-texts      # Production
@@ -240,17 +247,17 @@ make etl-europarl-law-texts      # Production
 
 ```typescript
 try {
-  const stats = await enrichPELawTexts(config);
-  
-  if (stats.errors > 0) {
-    console.error(`⚠️  ${stats.errors} erreur(s) rencontrée(s)`);
-    process.exit(1);  // Exit code 1 = échec
-  }
-  
-  process.exit(0);  // Exit code 0 = succès
+	const stats = await enrichPELawTexts(config);
+
+	if (stats.errors > 0) {
+		console.error(`⚠️  ${stats.errors} erreur(s) rencontrée(s)`);
+		process.exit(1); // Exit code 1 = échec
+	}
+
+	process.exit(0); // Exit code 0 = succès
 } catch (error) {
-  console.error('Erreur fatale:', error);
-  process.exit(1);
+	console.error('Erreur fatale:', error);
+	process.exit(1);
 }
 ```
 
@@ -260,9 +267,9 @@ try {
 
 ```typescript
 if (config.verbose) {
-  console.log(`[PE Law Texts] Traitement de ${reference}: ${law.title}`);
-  console.log(`  → Fetch: ${url}`);
-  console.log(`  → Récupéré: ${text.length} chars`);
+	console.log(`[PE Law Texts] Traitement de ${reference}: ${law.title}`);
+	console.log(`  → Fetch: ${url}`);
+	console.log(`  → Récupéré: ${text.length} chars`);
 }
 
 // Toujours logger les actions importantes
@@ -286,63 +293,63 @@ console.log('='.repeat(60));
 import { parseArgs } from 'util';
 
 interface Args {
-  dryRun: boolean;
-  limit: number;
-  verbose: boolean;
-  help: boolean;
+	dryRun: boolean;
+	limit: number;
+	verbose: boolean;
+	help: boolean;
 }
 
 function parseCliArgs(argv: string[]): Args {
-  // ... (voir exemple ci-dessus)
+	// ... (voir exemple ci-dessus)
 }
 
 function printHelp() {
-  // ... (voir exemple ci-dessus)
+	// ... (voir exemple ci-dessus)
 }
 
 async function main() {
-  const args = parseCliArgs(process.argv.slice(2));
+	const args = parseCliArgs(process.argv.slice(2));
 
-  if (args.help) {
-    printHelp();
-    process.exit(0);
-  }
+	if (args.help) {
+		printHelp();
+		process.exit(0);
+	}
 
-  console.log('='.repeat(60));
-  console.log('NosElus ETL - [Nom du script]');
-  console.log('Source: [Description source]');
-  console.log('='.repeat(60));
-  console.log('');
+	console.log('='.repeat(60));
+	console.log('NosElus ETL - [Nom du script]');
+	console.log('Source: [Description source]');
+	console.log('='.repeat(60));
+	console.log('');
 
-  console.log('Configuration:');
-  console.log(`  Limite: ${args.limit} entités`);
-  if (args.dryRun) console.log("  Mode: DRY RUN");
-  if (args.verbose) console.log('  Mode verbeux activé');
-  console.log('');
+	console.log('Configuration:');
+	console.log(`  Limite: ${args.limit} entités`);
+	if (args.dryRun) console.log('  Mode: DRY RUN');
+	if (args.verbose) console.log('  Mode verbeux activé');
+	console.log('');
 
-  try {
-    const config = {
-      dryRun: args.dryRun,
-      limit: args.limit,
-      verbose: args.verbose
-    };
+	try {
+		const config = {
+			dryRun: args.dryRun,
+			limit: args.limit,
+			verbose: args.verbose
+		};
 
-    const stats = await runETL(config);
+		const stats = await runETL(config);
 
-    console.log('');
-    console.log('='.repeat(60));
-    console.log('RÉSUMÉ');
-    console.log('='.repeat(60));
-    console.log(`  Total:     ${stats.total}`);
-    console.log(`  Succès:    ${stats.inserted}`);
-    console.log(`  Erreurs:   ${stats.errors}`);
-    console.log('='.repeat(60));
+		console.log('');
+		console.log('='.repeat(60));
+		console.log('RÉSUMÉ');
+		console.log('='.repeat(60));
+		console.log(`  Total:     ${stats.total}`);
+		console.log(`  Succès:    ${stats.inserted}`);
+		console.log(`  Erreurs:   ${stats.errors}`);
+		console.log('='.repeat(60));
 
-    process.exit(stats.errors > 0 ? 1 : 0);
-  } catch (error) {
-    console.error('Erreur fatale:', error);
-    process.exit(1);
-  }
+		process.exit(stats.errors > 0 ? 1 : 0);
+	} catch (error) {
+		console.error('Erreur fatale:', error);
+		process.exit(1);
+	}
 }
 
 main();

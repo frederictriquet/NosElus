@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { ETLCheckResult, ETLChamber } from '$lib/server/etl/checks';
-	import AsyncCard from '$lib/components/AsyncCard.svelte';
 
 	interface Props {
 		data: PageData;
@@ -11,17 +10,6 @@
 
 	/** Filtre chambre actif */
 	let activeChamber = $state<ETLChamber | 'ALL'>('ALL');
-
-	/** Checks filtrés par chambre */
-	const filteredChecks = $derived.by(() => {
-		const checks = data.etlChecks;
-		if (checks instanceof Promise) return checks;
-
-		if (activeChamber === 'ALL') {
-			return checks;
-		}
-		return checks.filter((c: ETLCheckResult) => c.chamber === activeChamber || c.chamber === 'ALL');
-	});
 
 	/** Copie la commande dans le clipboard */
 	function copyCommand(command: string) {
@@ -70,59 +58,53 @@
 	<!-- Section 1 : Dernières synchronisations -->
 	<section class="section">
 		<h2>Dernières synchronisations</h2>
-		<AsyncCard promise={data.syncStatus}>
-			{#snippet loading()}
-				<div class="skeleton" style="height: 200px;"></div>
-			{/snippet}
-
-			{#snippet success(syncRows)}
-				{#if syncRows.length === 0}
-					<p class="empty">Aucune synchronisation enregistrée.</p>
-				{:else}
-					<div class="table-wrapper">
-						<table class="sync-table">
-							<thead>
+		{#await data.syncStatus}
+			<div class="skeleton" style="height: 200px;"></div>
+		{:then syncRows}
+			{#if syncRows.length === 0}
+				<p class="empty">Aucune synchronisation enregistrée.</p>
+			{:else}
+				<div class="table-wrapper">
+					<table class="sync-table">
+						<thead>
+							<tr>
+								<th>Source</th>
+								<th>Type</th>
+								<th>Dernier sync</th>
+								<th>Status</th>
+								<th>Âge</th>
+								<th>Enregistrements</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each syncRows as row}
 								<tr>
-									<th>Source</th>
-									<th>Type</th>
-									<th>Dernier sync</th>
-									<th>Status</th>
-									<th>Âge</th>
-									<th>Enregistrements</th>
+									<td><code>{row.source}</code></td>
+									<td>{row.entityType}</td>
+									<td>{formatDate(row.lastSyncAt)}</td>
+									<td>
+										<span class="badge badge-{row.lastSyncStatus}">
+											{row.lastSyncStatus === 'success' ? '✅' : '⚠️'}
+											{row.lastSyncStatus}
+										</span>
+									</td>
+									<td>
+										<span class:stale={row.daysSinceSync > 30}>
+											{row.daysSinceSync}j
+										</span>
+									</td>
+									<td class="number">{row.recordsProcessed.toLocaleString('fr-FR')}</td>
 								</tr>
-							</thead>
-							<tbody>
-								{#each syncRows as row}
-									<tr>
-										<td><code>{row.source}</code></td>
-										<td>{row.entityType}</td>
-										<td>{formatDate(row.lastSyncAt)}</td>
-										<td>
-											<span class="badge badge-{row.lastSyncStatus}">
-												{row.lastSyncStatus === 'success' ? '✅' : '⚠️'}
-												{row.lastSyncStatus}
-											</span>
-										</td>
-										<td>
-											<span class:stale={row.daysSinceSync > 30}>
-												{row.daysSinceSync}j
-											</span>
-										</td>
-										<td class="number">{row.recordsProcessed.toLocaleString('fr-FR')}</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{/if}
-			{/snippet}
-
-			{#snippet error(err)}
-				<div class="error">
-					<p>❌ Erreur lors du chargement : {err.message}</p>
+							{/each}
+						</tbody>
+					</table>
 				</div>
-			{/snippet}
-		</AsyncCard>
+			{/if}
+		{:catch err}
+			<div class="error">
+				<p>❌ Erreur lors du chargement : {err.message}</p>
+			</div>
+		{/await}
 	</section>
 
 	<!-- Section 2 : Suggestions ETL -->
@@ -161,60 +143,60 @@
 			</div>
 		</div>
 
-		<AsyncCard promise={filteredChecks}>
-			{#snippet loading()}
-				<div class="skeleton" style="height: 400px;"></div>
-			{/snippet}
-
-			{#snippet success(checks)}
-				{#if checks.length === 0}
-					<p class="empty">Aucune suggestion pour cette chambre.</p>
-				{:else}
-					<div class="checks-list">
-						{#each checks as check}
-							{@const badge = getSeverityBadge(check.severity)}
-							<div class="check-card severity-{check.severity}">
-								<div class="check-header">
-									<div class="check-title">
-										<span class="severity-icon" style="color: {badge.color}">{badge.icon}</span>
-										<h3>{check.label}</h3>
-										<span class="chamber-badge">{check.chamber}</span>
-									</div>
-									<div class="check-stats">
-										<span class="pct">{check.pct.toFixed(1)}%</span>
-										<span class="counts">
-											{check.current.toLocaleString('fr-FR')} / {check.total.toLocaleString(
-												'fr-FR'
-											)}
-										</span>
-									</div>
+		{#await data.etlChecks}
+			<div class="skeleton" style="height: 400px;"></div>
+		{:then allChecks}
+			{@const checks =
+				activeChamber === 'ALL'
+					? allChecks
+					: allChecks.filter(
+							(c: ETLCheckResult) => c.chamber === activeChamber || c.chamber === 'ALL'
+						)}
+			{#if checks.length === 0}
+				<p class="empty">Aucune suggestion pour cette chambre.</p>
+			{:else}
+				<div class="checks-list">
+					{#each checks as check}
+						{@const badge = getSeverityBadge(check.severity)}
+						<div class="check-card severity-{check.severity}">
+							<div class="check-header">
+								<div class="check-title">
+									<span class="severity-icon" style="color: {badge.color}">{badge.icon}</span>
+									<h3>{check.label}</h3>
+									<span class="chamber-badge">{check.chamber}</span>
 								</div>
-
-								<p class="check-description">{check.description}</p>
-
-								<div class="check-action">
-									<code class="command">{check.command}</code>
-									<button
-										class="copy-btn"
-										onclick={() => copyCommand(check.command)}
-										title="Copier la commande"
-										aria-label="Copier la commande {check.command}"
-									>
-										📋 Copier
-									</button>
+								<div class="check-stats">
+									<span class="pct">{check.pct.toFixed(1)}%</span>
+									<span class="counts">
+										{check.current.toLocaleString('fr-FR')} / {check.total.toLocaleString(
+											'fr-FR'
+										)}
+									</span>
 								</div>
 							</div>
-						{/each}
-					</div>
-				{/if}
-			{/snippet}
 
-			{#snippet error(err)}
-				<div class="error">
-					<p>❌ Erreur lors du chargement : {err.message}</p>
+							<p class="check-description">{check.description}</p>
+
+							<div class="check-action">
+								<code class="command">{check.command}</code>
+								<button
+									class="copy-btn"
+									onclick={() => copyCommand(check.command)}
+									title="Copier la commande"
+									aria-label="Copier la commande {check.command}"
+								>
+									📋 Copier
+								</button>
+							</div>
+						</div>
+					{/each}
 				</div>
-			{/snippet}
-		</AsyncCard>
+			{/if}
+		{:catch err}
+			<div class="error">
+				<p>❌ Erreur lors du chargement : {err.message}</p>
+			</div>
+		{/await}
 	</section>
 </div>
 

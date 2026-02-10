@@ -254,7 +254,7 @@ try {
 }
 ```
 
-**Pourquoi** : Exit codes permettent de chaîner scripts (`make etl-all` s'arrête si échec).
+**Pourquoi** : Exit codes permettent de chaîner scripts (`make etl-an-all` s'arrête si échec).
 
 ## Logs structurés
 

@@ -452,7 +452,12 @@
 
 	/* Skeleton & états */
 	.skeleton {
-		background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-bg) 50%, var(--color-surface) 75%);
+		background: linear-gradient(
+			90deg,
+			var(--color-surface) 25%,
+			var(--color-bg) 50%,
+			var(--color-surface) 75%
+		);
 		background-size: 200% 100%;
 		animation: loading 1.5s infinite;
 		border-radius: 8px;

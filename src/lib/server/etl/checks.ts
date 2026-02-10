@@ -257,7 +257,8 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 	// Check 5: Lois AN sans résumé IA
 	const lawsANNoSummary = Number(row.laws_an_no_summary) || 0;
 	const totalLawsANWithText = totalLawsAN - lawsANNoFulltext;
-	const pctANNoSummary = totalLawsANWithText > 0 ? (lawsANNoSummary / totalLawsANWithText) * 100 : 0;
+	const pctANNoSummary =
+		totalLawsANWithText > 0 ? (lawsANNoSummary / totalLawsANWithText) * 100 : 0;
 	checks.push({
 		id: 'laws-an-no-ai-summary',
 		label: 'Lois AN sans résumé IA',
@@ -273,7 +274,8 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 	// Check 6: Lois PE sans résumé IA
 	const lawsPENoSummary = Number(row.laws_pe_no_summary) || 0;
 	const totalLawsPEWithText = totalLawsPE - lawsPENoFulltext;
-	const pctPENoSummary = totalLawsPEWithText > 0 ? (lawsPENoSummary / totalLawsPEWithText) * 100 : 0;
+	const pctPENoSummary =
+		totalLawsPEWithText > 0 ? (lawsPENoSummary / totalLawsPEWithText) * 100 : 0;
 	checks.push({
 		id: 'laws-pe-no-ai-summary',
 		label: 'Lois PE sans résumé IA',

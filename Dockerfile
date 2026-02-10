@@ -13,6 +13,8 @@ RUN npm ci
 COPY . .
 
 # Build the application
+# SvelteKit postbuild analysis imports server modules requiring DATABASE_URL
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/noselus
 RUN npm run build
 
 # Production stage

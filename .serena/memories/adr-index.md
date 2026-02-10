@@ -16,7 +16,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 | ADR-006 | 2026-02-06 | Quiz politique interactif | ✅ Accepté | - | `adr-2026-02-06-political-quiz.md` |
 | ADR-007 | 2026-02-07 | Expansion des lois du Parlement Européen | ✅ Accepté | 2.1 | `adr-2026-02-07-pe-laws-expansion.md` |
 | ADR-008 | 2026-02-07 | Notifications Telegram des ETL avec FemtoLogger | ✅ Accepté | Infrastructure | `adr-2026-02-07-femtologger-etl-notifications.md` |
-| ADR-008 | 2026-02-07 | Notifications Telegram des ETL avec FemtoLogger | ✅ Accepté | Infrastructure | `adr-2026-02-07-femtologger-etl-notifications.md` |
+| ADR-009 | 2026-02-09 | Organisation des targets ETL du Makefile | ✅ Accepté | Developer Experience | `adr-2026-02-09-makefile-etl-organization.md` |
 
 ## Par catégorie
 
@@ -30,6 +30,9 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 
 ### Infrastructure / Monitoring
 - **ADR-008** : Notifications Telegram des ETL (helper centralisé)
+
+### Developer Experience
+- **ADR-009** : Organisation Makefile ETL avec catégories `##@` (aide structurée)
 
 ### Sources de données
 - **ADR-004** : ParlGov comme source de positionnement politique
@@ -46,7 +49,7 @@ Cet index centralise toutes les décisions architecturales documentées du proje
 
 ## Statuts
 
-- ✅ **Accepté** : Décision validée et implémentée (8 ADRs)
+- ✅ **Accepté** : Décision validée et implémentée (9 ADRs)
 - 📋 **Proposé** : Décision documentée, en attente validation/implémentation (0)
 - ⏸️ **Déprécié** : Décision remplacée par une autre (0)
 - ❌ **Rejeté** : Décision abandonnée (0)

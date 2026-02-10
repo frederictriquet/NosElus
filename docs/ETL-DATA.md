@@ -57,8 +57,8 @@ make etl-all
 make etl-download
 
 # Télécharge les dossiers législatifs AN
-# (fait automatiquement par etl-dossiers-an si absent)
-make etl-dossiers-an
+# (fait automatiquement par etl-an-dossiers si absent)
+make etl-an-dossiers
 
 # Les autres sources (Sénat, PE) sont des APIs et téléchargent à la volée
 make etl-senat-senators

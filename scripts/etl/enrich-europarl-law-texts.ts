@@ -1,7 +1,7 @@
 /**
  * ETL : Enrichissement des textes de lois PE
  *
- * Récupère le contenu des pages liées dans les caches HowTheyVote.eu
+ * Récupère le contenu des pages liées via l'API HowTheyVote.eu
  * pour enrichir laws.description des lois du Parlement Européen.
  *
  * Sources par priorité :
@@ -84,7 +84,7 @@ async function main() {
 
 	console.log('='.repeat(60));
 	console.log('NosElus ETL - Enrichissement textes lois PE');
-	console.log('Source: Caches HowTheyVote.eu + pages web');
+	console.log('Source: API HowTheyVote.eu + pages web');
 	console.log('='.repeat(60));
 	console.log('');
 

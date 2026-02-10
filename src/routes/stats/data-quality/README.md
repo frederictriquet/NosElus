@@ -21,13 +21,14 @@ Le loader serveur retourne des **promises non résolues** pour un affichage prog
 ```typescript
 // ✅ Correct : promise non résolue
 return {
-  globalStats: loadGlobalStats(), // Pas de await !
-  legislatureStats: loadLegislatureStats(),
-  chamberStats: loadChamberStats()
+	globalStats: loadGlobalStats(), // Pas de await !
+	legislatureStats: loadLegislatureStats(),
+	chamberStats: loadChamberStats()
 };
 ```
 
 **Avantages** :
+
 - TTFB quasi-instantané (~170ms)
 - Chaque panel charge indépendamment
 - UX perçue améliorée (skeleton au lieu d'écran blanc)
@@ -38,13 +39,14 @@ Chaque section utilise `AsyncCard.svelte` pour gérer le streaming :
 
 ```svelte
 <AsyncCard title="Vue d'ensemble" promise={data.globalStats}>
-  {#snippet children(stats)}
-    <!-- Contenu affiché une fois la promise résolue -->
-  {/snippet}
+	{#snippet children(stats)}
+		<!-- Contenu affiché une fois la promise résolue -->
+	{/snippet}
 </AsyncCard>
 ```
 
 États gérés automatiquement :
+
 - ⏳ Loading : affiche un skeleton/spinner
 - ✅ Success : affiche le contenu
 - ❌ Error : affiche un message d'erreur
@@ -76,7 +78,7 @@ LEFT JOIN scrutin_stats ss ON ls.legislature = ss.legislature
 
 **Performance** : 1 requête au lieu de N (où N = nombre de législatures).
 
-### COUNT(*) FILTER (WHERE ...)
+### COUNT(\*) FILTER (WHERE ...)
 
 Agrège plusieurs métriques en 1 requête :
 
@@ -99,9 +101,9 @@ Problème : tri lexicographique de "1", "10", "17" donne → 1, 10, 17, 2
 Solution : `extractLegislatureNumber()` extrait le numéro pour tri naturel → 1, 2, 10, 17
 
 ```typescript
-extractLegislatureNumber('17')      // → 17
-extractLegislatureNumber('PE-10')   // → 10
-extractLegislatureNumber('SE-2023') // → 2023
+extractLegislatureNumber('17'); // → 17
+extractLegislatureNumber('PE-10'); // → 10
+extractLegislatureNumber('SE-2023'); // → 2023
 ```
 
 ### Configuration Déclarative
@@ -110,19 +112,19 @@ Les colonnes sont définies dans `COLUMNS` pour éviter la duplication :
 
 ```typescript
 export const COLUMNS: ColumnConfig[] = [
-  {
-    key: 'legislature',
-    label: 'Mandature',
-    align: 'left',
-    getValue: (row) => extractLegislatureNumber(row.legislature)
-  },
-  {
-    key: 'totalLaws',
-    label: 'Lois',
-    align: 'right',
-    getValue: (row) => row.totalLaws
-  },
-  // ... 5 autres colonnes
+	{
+		key: 'legislature',
+		label: 'Mandature',
+		align: 'left',
+		getValue: (row) => extractLegislatureNumber(row.legislature)
+	},
+	{
+		key: 'totalLaws',
+		label: 'Lois',
+		align: 'right',
+		getValue: (row) => row.totalLaws
+	}
+	// ... 5 autres colonnes
 ];
 ```
 
@@ -130,9 +132,9 @@ Rendu générique côté template :
 
 ```svelte
 {#each COLUMNS as col}
-  <th onclick={() => handleSort(col.key)}>
-    {col.label}
-  </th>
+	<th onclick={() => handleSort(col.key)}>
+		{col.label}
+	</th>
 {/each}
 ```
 
@@ -201,6 +203,7 @@ Seuils de couleur des barres de progression :
 ### Filtre Chambre (client-side)
 
 Boutons AN / PE / SENAT changent dynamiquement :
+
 - Section 2 : affiche les stats de la chambre sélectionnée
 - Section 3 : filtre le tableau sur la chambre
 
@@ -213,6 +216,7 @@ Boutons AN / PE / SENAT changent dynamiquement :
 **Quand utiliser** : Datasets < 1000 lignes, besoin de réactivité instantanée
 
 **Avantages** :
+
 - Tri instantané (pas de round-trip serveur)
 - Pas de rechargement de page
 - Préserve l'état du filtre chambre
@@ -224,6 +228,7 @@ Boutons AN / PE / SENAT changent dynamiquement :
 **Principe** : Définir la structure des données dans une config, générer l'UI en boucle
 
 **Avantages** :
+
 - DRY : pas de duplication template
 - Facilite l'ajout de colonnes
 - Type-safe avec TypeScript
@@ -233,6 +238,7 @@ Boutons AN / PE / SENAT changent dynamiquement :
 **Principe** : Loader retourne des promises non résolues, composant gère le {#await}
 
 **Avantages** :
+
 - Skeleton automatique
 - Erreur handling centralisé
 - Parallélisation des requêtes

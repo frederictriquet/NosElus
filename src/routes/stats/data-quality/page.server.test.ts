@@ -147,9 +147,7 @@ describe('/stats/data-quality - Integration', () => {
 
 			// Numériques → AN
 			stats
-				.filter(
-					(s: any) => !s.legislature.startsWith('PE-') && !s.legislature.startsWith('SE-')
-				)
+				.filter((s: any) => !s.legislature.startsWith('PE-') && !s.legislature.startsWith('SE-'))
 				.forEach((s: any) => {
 					expect(s.chamber).toBe('AN');
 				});
@@ -235,16 +233,10 @@ describe('/stats/data-quality - Integration', () => {
 			if (!dbAvailable) return;
 
 			const result = await getResult();
-			const [global, chambers] = await Promise.all([
-				result.globalStats,
-				result.chamberStats
-			]);
+			const [global, chambers] = await Promise.all([result.globalStats, result.chamberStats]);
 
 			// La somme des acteurs par chambre doit être égale au total global
-			const sumActors = chambers.reduce(
-				(sum: number, s: any) => sum + s.totalActors,
-				0
-			);
+			const sumActors = chambers.reduce((sum: number, s: any) => sum + s.totalActors, 0);
 			expect(sumActors).toBe(global.totalActors);
 		});
 
@@ -258,10 +250,7 @@ describe('/stats/data-quality - Integration', () => {
 			]);
 
 			// La somme des lois par mandature doit être égale au total global
-			const sumLaws = legislatures.reduce(
-				(sum: number, s: any) => sum + s.totalLaws,
-				0
-			);
+			const sumLaws = legislatures.reduce((sum: number, s: any) => sum + s.totalLaws, 0);
 			expect(sumLaws).toBe(global.totalLaws);
 		});
 	});

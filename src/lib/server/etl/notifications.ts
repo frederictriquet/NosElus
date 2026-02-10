@@ -206,8 +206,7 @@ export async function notifyETLComplete(
 		const table = `${headerRow}\n${separator}\n${valueRow}`;
 
 		const message =
-			`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}\n\n` +
-			`<pre>${table}</pre>`;
+			`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}\n\n` + `<pre>${table}</pre>`;
 
 		// Métadonnées pour le logger
 		const metadata = {

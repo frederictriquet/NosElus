@@ -169,10 +169,19 @@
 								<th
 									class="{col.align === 'right' ? 'text-right ' : ''}sortable"
 									class:sorted={sortColumn === col.key}
-									aria-sort={sortColumn === col.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+									aria-sort={sortColumn === col.key
+										? sortDirection === 'asc'
+											? 'ascending'
+											: 'descending'
+										: 'none'}
 									tabindex="0"
 									onclick={() => handleSort(col.key)}
-									onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col.key); } }}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											handleSort(col.key);
+										}
+									}}
 								>
 									{col.label}
 									{#if sortColumn === col.key}

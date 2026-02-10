@@ -3,6 +3,33 @@ traite le TODO de src/routes/api/quiz/group-votes/+server.ts:98
  
 dans le dashboard de stats globales, je vois qu'il y a 100% des textes du parlement européen qui ont été analysés par IA alors qu'il y a 0% des textes complets. Je croyais qu'il était interdit d'analyser des lois sans avoir leur texte complet
 
+
+  IN scope :
+  - Aligner la définition de "texte complet" entre dashboard et ETL LLM
+  - Empêcher la génération de résumés sans texte complet réel
+  - Nettoyer les 1190 résumés PE générés sans texte complet (PE-10: 364, PE-9: 821, PE-8: 5)
+  - Documenter la règle : pas de résumé LLM si length(description) <= 100
+
+  OUT of scope :
+  - Récupération du vrai texte complet des lois PE (nécessite intégration EUR-Lex, ADR séparée)
+  - Régénération des résumés après récupération des textes (sera fait après EUR-Lex)
+
+  Contraintes
+
+  1. Convention existante : Le dashboard utilise length(description) > 100 comme définition de "texte complet"
+  2. Cohérence : Le seuil de 100 chars est utilisé partout (AN, Sénat, PE)
+  3. Données PE : Actuellement aucune loi PE n'a de vrai texte complet dans la DB
+
+  Critères d'Acceptation
+
+  - getUnanalyzedLaws() utilise le même seuil que le dashboard (length(description) > 100)
+  - Dashboard affiche 100% cohérence entre "textes complets" et "résumés IA"
+  - Les 1190 résumés PE existants (paraphrases de titres) sont supprimés
+  - Les stats du dashboard affichent 0% sur les deux colonnes pour PE
+
+
+
+
 Les photos sont chargées directement depuis assemblee-nationale.fr. Plusieurs optimisations sont possibles :
 1. Court terme : Ajouter loading="lazy" et dimensions fixes aux images
 2. Moyen terme : Proxy avec cache côté serveur

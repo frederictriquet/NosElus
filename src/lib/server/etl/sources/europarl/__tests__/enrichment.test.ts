@@ -48,9 +48,7 @@ describe('PE Law Texts Enrichment - Integration', () => {
 				.from(laws)
 				.where(like(laws.id, 'LWPE10%'));
 
-			const substantial = enrichedLaws.filter(
-				(l: any) => (l.description?.length || 0) > 200
-			);
+			const substantial = enrichedLaws.filter((l: any) => (l.description?.length || 0) > 200);
 
 			expect(substantial.length).toBeGreaterThan(0);
 		});
@@ -274,9 +272,7 @@ describe('PE Law Texts Enrichment - Integration', () => {
 				.from(laws)
 				.where(like(laws.id, 'LWPE10%'));
 
-			const enrichedCount = peLaws.filter(
-				(l: any) => (l.description?.length || 0) > 500
-			).length;
+			const enrichedCount = peLaws.filter((l: any) => (l.description?.length || 0) > 500).length;
 
 			expect(enrichedCount).toBeGreaterThanOrEqual(Math.ceil(peLaws.length * 0.5));
 		});

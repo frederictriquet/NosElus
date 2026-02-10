@@ -8,7 +8,8 @@
         etl-an-actors etl-an-scrutins etl-an-laws etl-an-link-laws etl-an-dossiers etl-an-amendements etl-an-nosdeputes \
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
-        etl-classify-scrutins etl-analyze-laws etl-law-texts \
+        etl-classify-scrutins etl-analyze-laws \
+        etl-law-texts \
         etl-an-nosdeputes-stats etl-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
         etl-leg14 etl-leg15 etl-leg16 etl-leg17 etl-all-legislatures \
@@ -183,16 +184,19 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
 	npm run etl:pe-enrich-groups
 
-##@ ETL - Enrichissement & Analyse
+##@ ETL - Analyse IA (nécessite Ollama)
 
-etl-classify-scrutins: ## Classifier scrutins par catégorie sémantique
-	@echo "$(CYAN)Classification des scrutins...$(RESET)"
+etl-classify-scrutins: ## Classifier scrutins par catégorie sémantique (LLM)
+	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
+	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:classify-scrutins
 
 etl-analyze-laws: ## Analyser lois avec LLM (Ollama)
 	@echo "$(CYAN)Analyse des lois avec LLM (Ollama)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:analyze-laws -- $(ARGS)
+
+##@ ETL - Enrichissement
 
 etl-law-texts: ## Import textes complets via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"

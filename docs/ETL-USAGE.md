@@ -9,7 +9,8 @@ Documentation synthétique des 35 pipelines ETL disponibles.
 | Assemblée Nationale | 10 | Import députés, scrutins, lois, amendements |
 | Sénat | 4 | Import sénateurs, lois, statistiques |
 | Parlement Européen | 7 | Import eurodéputés, votes, lois PE |
-| Enrichissement | 8 | Analyses LLM, classifications, textes |
+| Analyse IA | 2 | Classifications et analyses LLM (Ollama) |
+| Enrichissement | 1 | Textes complets via API |
 | Utilitaires | 6 | Couleurs, positions politiques, stats |
 
 ## 🔧 Options CLI Standard
@@ -73,12 +74,21 @@ Tous les scripts ETL supportent :
 
 ---
 
-## 🤖 ETL Enrichissement & Analyse
+## 🤖 ETL Analyse IA (nécessite Ollama)
+
+⚠️ **Prérequis** : `ollama serve` + `ollama pull mistral-nemo`
 
 | Objectif | Commande | Prérequis | Résultats |
 |----------|----------|-----------|-----------|
 | **Classifier scrutins** | `make etl-classify-scrutins` | `etl-an-scrutins` ou `etl-europarl-votes` | Catégories sémantiques (via LLM) |
 | **Analyser lois (LLM)** | `make etl-analyze-laws` | `etl-an-laws` ou `etl-europarl-laws` | Analyses texte complet (Ollama) |
+
+---
+
+## 📄 ETL Enrichissement
+
+| Objectif | Commande | Prérequis | Résultats |
+|----------|----------|-----------|-----------|
 | **Textes via Légifrance** | `make etl-law-texts` | `etl-an-laws` | Textes complets via API PISTE |
 
 ---

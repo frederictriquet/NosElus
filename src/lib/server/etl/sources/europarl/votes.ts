@@ -4,10 +4,11 @@ import { logProgress } from '../../utils';
 import { sql, eq, and, inArray } from 'drizzle-orm';
 import type { NewScrutin, NewVote } from '../../../db';
 import { getCache, setCache, type CacheOptions } from '../../cache';
-import { PE_SOURCES, PE_GROUP_CODE_MAP, PE_POSITION_MAP, ETL_CONFIG } from '../../config';
+import { PE_GROUP_CODE_MAP, PE_POSITION_MAP, ETL_CONFIG } from '../../config';
 import { getCurrentTerm as getCurrentPETerm } from '../../../periods/pe-terms';
+// Fonctions partagées entre modules PE ETL pour garantir la cohérence des IDs de lois
+import { generateLawId, fetchHTV } from './shared';
 
-const HTV_API_BASE = PE_SOURCES.howTheyVoteApiUrl;
 const CACHE_KEY_PREFIX = 'htv_votes';
 const CACHE_OPTIONS: CacheOptions = { ttlHours: ETL_CONFIG.cacheTtl.votes };
 
@@ -74,31 +75,12 @@ interface HTVVoteListResponse {
 }
 
 /**
- * Fetch data from HowTheyVote API
- */
-async function fetchHTV<T>(endpoint: string): Promise<T> {
-	const url = `${HTV_API_BASE}${endpoint}`;
-	const response = await fetch(url, {
-		headers: {
-			Accept: 'application/json',
-			'User-Agent': 'NosElus/1.0 (https://noselus.fr)'
-		}
-	});
-
-	if (!response.ok) {
-		throw new Error(`HTV API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
-}
-
-/**
  * Get list of votes with French MEPs involved
  */
 async function fetchVotesList(page = 1, pageSize = 100): Promise<HTVVoteListResponse> {
-	// Filter by France to get votes relevant to French MEPs
+	// No geo_areas filter: French MEP votes are filtered downstream via mepIdMap
 	return fetchHTV<HTVVoteListResponse>(
-		`/votes?geo_areas=FRA&page=${page}&page_size=${pageSize}&sort_by=timestamp&sort_order=desc`
+		`/votes?page=${page}&page_size=${pageSize}&sort_by=timestamp&sort_order=desc`
 	);
 }
 
@@ -169,20 +151,9 @@ function buildGroupResults(
 }
 
 /**
- * Generate law ID for PE laws (must match europarl/laws.ts format)
- */
-function generateLawId(reference: string, term: number): string {
-	return `LWPE${term}-${reference.replace(/\//g, '-')}`;
-}
-
-/**
  * Map HTV vote to scrutin
  */
-function mapToScrutin(
-	vote: HTVVote,
-	term: number,
-	groupIdMap: Map<string, string>
-): NewScrutin {
+function mapToScrutin(vote: HTVVote, term: number, groupIdMap: Map<string, string>): NewScrutin {
 	const id = generateScrutinId(vote.id, term);
 	const date = vote.timestamp.split('T')[0];
 	const totals = vote.stats.total;

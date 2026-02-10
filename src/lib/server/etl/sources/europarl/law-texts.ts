@@ -1,37 +1,40 @@
 /**
- * ETL : Enrichissement des textes de lois PE depuis les caches HowTheyVote.eu
+ * ETL : Enrichissement des textes de lois PE depuis l'API HowTheyVote.eu
  *
  * Stratégie :
  * 1. Lit les lois PE en base (legislature PE-*)
- * 2. Retrouve le cache HTV correspondant via le numéro de référence
- * 3. Extrait les URLs des liens (Summary, Press release, Report)
+ * 2. Retrouve le vote HTV correspondant via la table scrutins (lawId → uid HTV-{id})
+ * 3. Appelle l'API HTV /votes/{id} pour obtenir les liens (Summary, Press, Report)
  * 4. Fetch les pages et nettoie le HTML
  * 5. Combine les sources et met à jour laws.description + laws.sourceUrl
  */
 
-import { db, laws } from '../../../db';
-import { eq, like } from 'drizzle-orm';
+import { db, laws, scrutins } from '../../../db';
+import { eq, like, and, or, isNull, isNotNull, sql, desc } from 'drizzle-orm';
 import { createImportStats, type ImportStats } from '../../types';
-import { readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { getCache, setCache } from '../../cache';
+import { ETL_CONFIG } from '../../config';
+// Fonction partagée pour accéder à l'API HTV (cohérence entre modules PE ETL)
+import { fetchHTV } from './shared';
 
 const MAX_DESCRIPTION_LENGTH = 50000;
 const RATE_LIMIT_MS = 500;
 const FETCH_TIMEOUT_MS = 30000;
+const CACHE_KEY_PREFIX = 'htv_votes';
+const CACHE_OPTIONS = { ttlHours: ETL_CONFIG.cacheTtl.laws };
 
-interface HTVCacheData {
-	data: {
-		id: number;
-		reference: string | null;
-		display_title: string;
-		description: string | null;
-		snippet: { text: string; source_type: string; source_url: string } | null;
-		links: Array<{ title: string; url: string; description: string }>;
-		sources: Array<{ url: string; name: string }>;
-	};
+/** Réponse complète de l'API HTV /votes/{id} incluant liens et snippet */
+interface HTVVoteFullResponse {
+	id: number;
+	reference: string | null;
+	display_title: string;
+	description: string | null;
+	snippet: { text: string; source_type: string; source_url: string } | null;
+	links: Array<{ title: string; url: string; description: string }>;
+	sources: Array<{ url: string; name: string }>;
 }
 
-interface LawTextSources {
+export interface LawTextSources {
 	summaryText: string | null;
 	pressText: string | null;
 	snippetText: string | null;
@@ -48,24 +51,32 @@ export interface EnrichConfig {
 export async function enrichPELawTexts(config: EnrichConfig): Promise<ImportStats> {
 	const stats = createImportStats();
 
-	// Get PE laws with minimal description
+	// Get PE laws not yet enriched (no description or short description)
 	const peLaws = await db
 		.select({
 			id: laws.id,
 			number: laws.number,
-			title: laws.title,
-			description: laws.description
+			title: laws.title
 		})
 		.from(laws)
-		.where(like(laws.legislature, 'PE-%'))
+		.where(
+			and(
+				like(laws.legislature, 'PE-%'),
+				or(isNull(laws.description), sql`LENGTH(${laws.description}) <= 500`)
+			)
+		)
+		.orderBy(desc(laws.createdAt))
 		.limit(config.limit);
 
 	stats.total = peLaws.length;
 	console.log(`[PE Law Texts] ${peLaws.length} lois PE trouvées`);
 
-	// Load all HTV caches
-	const cacheMap = loadHTVCaches();
-	console.log(`[PE Law Texts] ${cacheMap.size} caches HTV chargés`);
+	// Build lawId → HTV vote ID map from DB (single query)
+	const voteIdMap = await buildLawToVoteMap();
+	console.log(`[PE Law Texts] ${voteIdMap.size} lois liées à un vote HTV`);
+
+	let apiCalls = 0;
+	let cacheHits = 0;
 
 	for (const law of peLaws) {
 		const reference = law.number;
@@ -75,28 +86,25 @@ export async function enrichPELawTexts(config: EnrichConfig): Promise<ImportStat
 			continue;
 		}
 
-		const cache = cacheMap.get(reference);
-		if (!cache) {
-			if (config.verbose) console.log(`  → ${law.id} (${reference}): pas de cache HTV trouvé`);
+		// Look up HTV vote ID from DB mapping
+		const htvVoteId = voteIdMap.get(law.id);
+		if (!htvVoteId) {
+			if (config.verbose) console.log(`  → ${law.id} (${reference}): pas de vote HTV lié en base`);
 			stats.skipped++;
 			continue;
 		}
 
-		// Check if already has a substantial description
-		if (law.description && law.description.length > 500) {
-			if (config.verbose)
-				console.log(
-					`  → ${law.id}: description existante (${law.description.length} chars), ignoré`
-				);
-			stats.skipped++;
-			continue;
-		}
-
-		console.log(`[PE Law Texts] Traitement de ${reference}: ${law.title.length > 60 ? law.title.slice(0, 60) + '...' : law.title}`);
+		console.log(
+			`[PE Law Texts] Traitement de ${reference}: ${law.title.length > 60 ? law.title.slice(0, 60) + '...' : law.title}`
+		);
 
 		try {
-			const sources = await fetchLawTextSources(cache, config.verbose);
-			const description = buildDescription(sources, cache.data.display_title);
+			const { voteData, fromCache } = await fetchVoteData(htvVoteId);
+			if (fromCache) cacheHits++;
+			else apiCalls++;
+
+			const sources = await fetchLawTextSources(voteData, config.verbose);
+			const description = buildDescription(sources, voteData.display_title);
 
 			if (!description || description.length < 50) {
 				console.log(`  → Texte insuffisant (${description?.length || 0} chars)`);
@@ -129,38 +137,59 @@ export async function enrichPELawTexts(config: EnrichConfig): Promise<ImportStat
 		}
 	}
 
+	console.log(`[PE Law Texts] API: ${apiCalls} appels, cache: ${cacheHits} hits`);
 	return stats;
 }
 
-function loadHTVCaches(): Map<string, HTVCacheData> {
-	const cacheDir = join(process.cwd(), 'data', 'cache');
-	const map = new Map<string, HTVCacheData>();
+/**
+ * Construit un mapping lawId → HTV vote ID depuis la table scrutins.
+ * Les scrutins PE ont un uid au format "HTV-{id}" et un lawId lié aux lois.
+ */
+async function buildLawToVoteMap(): Promise<Map<string, string>> {
+	const rows = await db
+		.select({
+			lawId: scrutins.lawId,
+			uid: scrutins.uid
+		})
+		.from(scrutins)
+		.where(
+			and(like(scrutins.legislature, 'PE-%'), isNotNull(scrutins.lawId), isNotNull(scrutins.uid))
+		);
 
-	let files: string[];
-	try {
-		files = readdirSync(cacheDir).filter((f) => f.startsWith('htv_votes_') && f.endsWith('.json'));
-	} catch {
-		console.warn('[PE Law Texts] Répertoire de cache introuvable:', cacheDir);
-		return map;
-	}
-
-	for (const file of files) {
-		try {
-			const content = readFileSync(join(cacheDir, file), 'utf-8');
-			const cache: HTVCacheData = JSON.parse(content);
-			const ref = cache.data?.reference;
-			if (ref) {
-				map.set(ref, cache);
-			}
-		} catch {
-			// Skip malformed cache files
+	const map = new Map<string, string>();
+	for (const row of rows) {
+		if (!row.lawId || !row.uid) continue;
+		const match = row.uid.match(/^HTV-(\d+)$/);
+		if (match) {
+			map.set(row.lawId, match[1]);
 		}
 	}
-
 	return map;
 }
 
-async function fetchLawTextSources(cache: HTVCacheData, verbose: boolean): Promise<LawTextSources> {
+/** Récupère les données d'un vote HTV (cache → API → setCache) */
+async function fetchVoteData(
+	voteId: string
+): Promise<{ voteData: HTVVoteFullResponse; fromCache: boolean }> {
+	const cacheKey = `${CACHE_KEY_PREFIX}_${voteId}`;
+	const cached = await getCache<HTVVoteFullResponse>(cacheKey, CACHE_OPTIONS);
+	if (cached) {
+		return { voteData: cached, fromCache: true };
+	}
+
+	const voteData = await fetchHTV<HTVVoteFullResponse>(`/votes/${voteId}`);
+	await setCache(cacheKey, voteData, CACHE_OPTIONS);
+
+	// Rate limiting between API calls
+	await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
+
+	return { voteData, fromCache: false };
+}
+
+async function fetchLawTextSources(
+	voteData: HTVVoteFullResponse,
+	verbose: boolean
+): Promise<LawTextSources> {
 	const sources: LawTextSources = {
 		summaryText: null,
 		pressText: null,
@@ -169,11 +198,11 @@ async function fetchLawTextSources(cache: HTVCacheData, verbose: boolean): Promi
 		sourceUrl: null
 	};
 
-	const links = cache.data.links || [];
+	const links = voteData.links || [];
 
-	// Extract snippet from cache (already available, no fetch needed)
-	if (cache.data.snippet?.text) {
-		sources.snippetText = cleanHtml(cache.data.snippet.text);
+	// Extract snippet from vote data (already available, no fetch needed)
+	if (voteData.snippet?.text) {
+		sources.snippetText = cleanHtml(voteData.snippet.text);
 		if (verbose) console.log(`  → Snippet: ${sources.snippetText.length} chars`);
 	}
 
@@ -261,7 +290,7 @@ async function fetchPageText(url: string, verbose: boolean): Promise<string | nu
 	}
 }
 
-function cleanHtml(html: string): string {
+export function cleanHtml(html: string): string {
 	return (
 		html
 			// Balises de structure
@@ -296,7 +325,7 @@ function cleanHtml(html: string): string {
 	);
 }
 
-function buildDescription(sources: LawTextSources, displayTitle: string): string {
+export function buildDescription(sources: LawTextSources, displayTitle: string): string {
 	const sections: string[] = [];
 
 	// Title context

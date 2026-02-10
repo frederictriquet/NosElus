@@ -34,7 +34,7 @@ export const scrutins = pgTable(
 		// Détails par groupe (JSONB pour flexibilité)
 		groupResults: jsonb('group_results'), // Résultats détaillés par groupe parlementaire
 		// Contexte législatif
-		lawId: varchar('law_id', { length: 20 }), // Référence au dossier législatif
+		lawId: varchar('law_id', { length: 50 }), // Référence au dossier législatif
 		amendmentRef: varchar('amendment_ref', { length: 50 }), // Référence à un amendement si applicable
 		description: text('description'),
 		createdAt: timestamp('created_at').defaultNow().notNull(),

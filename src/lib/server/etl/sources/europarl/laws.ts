@@ -4,10 +4,11 @@ import { logProgress } from '../../utils';
 import { sql } from 'drizzle-orm';
 import type { NewLaw } from '../../../db';
 import { getCache, setCache, type CacheOptions } from '../../cache';
-import { PE_SOURCES, ETL_CONFIG } from '../../config';
+import { ETL_CONFIG } from '../../config';
 import { getCurrentTerm as getCurrentPETerm } from '../../../periods/pe-terms';
+// Fonctions partagées entre modules PE ETL pour garantir la cohérence des IDs de lois
+import { generateLawId, extractTermFromReference, fetchHTV } from './shared';
 
-const HTV_API_BASE = PE_SOURCES.howTheyVoteApiUrl;
 const CACHE_KEY_PREFIX = 'htv_procedures';
 const CACHE_OPTIONS: CacheOptions = { ttlHours: ETL_CONFIG.cacheTtl.laws };
 
@@ -37,25 +38,6 @@ interface HTVVoteListResponse {
 }
 
 /**
- * Fetch data from HowTheyVote API
- */
-async function fetchHTV<T>(endpoint: string): Promise<T> {
-	const url = `${HTV_API_BASE}${endpoint}`;
-	const response = await fetch(url, {
-		headers: {
-			Accept: 'application/json',
-			'User-Agent': 'NosElus/1.0 (https://noselus.fr)'
-		}
-	});
-
-	if (!response.ok) {
-		throw new Error(`HTV API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
-}
-
-/**
  * Get paginated list of all EP plenary votes from HowTheyVote.eu
  */
 async function fetchVotesList(page = 1, pageSize = 100): Promise<HTVVoteListResponse> {
@@ -65,30 +47,9 @@ async function fetchVotesList(page = 1, pageSize = 100): Promise<HTVVoteListResp
 }
 
 /**
- * Generate law ID for PE laws
- */
-function generateLawId(reference: string, term: number): string {
-	return `LWPE${term}-${reference.replace(/\//g, '-')}`;
-}
-
-/**
- * Extracts the EP term number from a procedure reference.
- * References follow patterns like A10-0270/2025, B9-0063/2026, RC-B10-0071/2026, C10-0263/2025.
- * The digit(s) after the letter prefix (A, B, C) represent the term.
- */
-function extractTermFromReference(reference: string): number | null {
-	const match = reference.match(/[ABC](\d+)-/);
-	return match ? parseInt(match[1], 10) : null;
-}
-
-/**
  * Map HTV procedure reference to law
  */
-function mapToLaw(
-	reference: string,
-	mainVote: HTVVoteListItem,
-	term: number
-): NewLaw {
+function mapToLaw(reference: string, mainVote: HTVVoteListItem, term: number): NewLaw {
 	const id = generateLawId(reference, term);
 	const voteDate = mainVote.timestamp.split('T')[0];
 	const displayTitle = mainVote.display_title || 'Procédure sans titre';
@@ -104,7 +65,8 @@ function mapToLaw(
 				? displayTitle.slice(0, 297).replace(/\s+\S*$/, '') + '...'
 				: displayTitle,
 		type: 'procedure', // Type générique pour PE
-		status: mainVote.result === 'ADOPTED' ? 'adopté' : mainVote.result === 'REJECTED' ? 'rejeté' : null,
+		status:
+			mainVote.result === 'ADOPTED' ? 'adopté' : mainVote.result === 'REJECTED' ? 'rejeté' : null,
 		// Use main vote date as deposit date (PE procedures don't have clear deposit dates)
 		depositDate: voteDate,
 		description: mainVote.description || null,

@@ -226,7 +226,7 @@ export async function importEuroparlActivityStats(config: ETLConfig): Promise<Im
 				.insert(actorStats)
 				.values(batch)
 				.onConflictDoUpdate({
-					target: [actorStats.actorId, actorStats.source],
+					target: [actorStats.actorId, actorStats.source, actorStats.period],
 					set: {
 						weeksPresent: sql`excluded.weeks_present`,
 						commissionPresences: sql`excluded.commission_presences`,

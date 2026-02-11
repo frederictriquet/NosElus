@@ -80,7 +80,7 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
 	model: 'mistral-nemo',
 	baseUrl: 'http://localhost:11434',
 	temperature: 0.3, // Bas pour des réponses cohérentes
-	maxTokens: 200,
+	maxTokens: 512,
 	timeout: 300000 // 5 minutes (textes de loi complets)
 };
 
@@ -140,9 +140,27 @@ function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis 
 	try {
 		// Essaie de trouver le JSON dans la réponse
 		const start = rawText.indexOf('{');
-		const end = rawText.lastIndexOf('}') + 1;
+		let end = rawText.lastIndexOf('}') + 1;
+
+		// Si le LLM a tronqué la réponse (pas de } final), tente de fermer le JSON
+		let textToParse = rawText;
+		if (start >= 0 && end <= start) {
+			const truncated = rawText.slice(start).trimEnd();
+			let repaired = truncated;
+			// Ferme une chaîne ouverte
+			const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+			if (quoteCount % 2 !== 0) repaired += '"';
+			// Ferme un tableau ouvert
+			if ((repaired.match(/\[/g) || []).length > (repaired.match(/]/g) || []).length)
+				repaired += ']';
+			repaired += '}';
+			console.warn(`  [Parse] Réponse tronquée, tentative de réparation JSON`);
+			textToParse = rawText.slice(0, start) + repaired;
+			end = start + repaired.length;
+		}
+
 		if (start >= 0 && end > start) {
-			const jsonStr = rawText.slice(start, end);
+			const jsonStr = textToParse.slice(start, end);
 			const data = JSON.parse(jsonStr);
 
 			// Debug: afficher les clés reçues

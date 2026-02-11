@@ -120,7 +120,7 @@ export async function importNosDeputesActivityStats(config: ETLConfig): Promise<
 				.insert(actorStats)
 				.values(batch)
 				.onConflictDoUpdate({
-					target: [actorStats.actorId, actorStats.source],
+					target: [actorStats.actorId, actorStats.source, actorStats.period],
 					set: {
 						weeksPresent: sql`excluded.weeks_present`,
 						commissionPresences: sql`excluded.commission_presences`,

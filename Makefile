@@ -182,7 +182,7 @@ etl-europarl-law-texts: ## Enrichit textes des lois PE
 
 etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
-	npm run etl:pe-enrich-groups
+	npm run etl:europarl-enrich-groups
 
 ##@ ETL - Analyse IA (nécessite Ollama)
 

@@ -189,24 +189,17 @@ export async function notifyETLComplete(
 		// Legislature info (optionnel)
 		const legislatureInfo = options.legislature ? ` (${options.legislature})` : '';
 
-		// Formatage du message en HTML
-		// Note: Telegram HTML ne supporte que <b>, <i>, <code>, <pre>, <a>
-		const cols = [
-			['Total', `${stats.total}`],
-			['Inserés', `${stats.inserted}`],
-			['MàJ', `${stats.updated}`],
-			['Ignorés', `${stats.skipped}`],
-			['Erreur', `${stats.errors}`],
-			['OK', `${successRate}%`]
-		];
-		const widths = cols.map(([h, v]) => Math.max(h.length, v.length));
-		const headerRow = cols.map(([h], i) => h.padStart(widths[i])).join(' │ ');
-		const separator = widths.map((w) => '─'.repeat(w)).join('─┼─');
-		const valueRow = cols.map(([, v], i) => v.padStart(widths[i])).join(' │ ');
-		const table = `${headerRow}\n${separator}\n${valueRow}`;
+		// Formatage du message avec emojis (sans tableau HTML)
+		const lines: string[] = [`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}`];
+		lines.push('');
+		lines.push(`📊 <b>${stats.total}</b> traités`);
+		if (stats.inserted > 0) lines.push(`  ✏️ ${stats.inserted} insérés`);
+		if (stats.updated > 0) lines.push(`  🔄 ${stats.updated} mis à jour`);
+		if (stats.skipped > 0) lines.push(`  ⏭️ ${stats.skipped} ignorés`);
+		if (stats.errors > 0) lines.push(`  ❌ ${stats.errors} erreurs`);
+		lines.push(`  📈 ${successRate}% succès`);
 
-		const message =
-			`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}\n\n` + `<pre>${table}</pre>`;
+		const message = lines.join('\n');
 
 		// Métadonnées pour le logger
 		const metadata = {

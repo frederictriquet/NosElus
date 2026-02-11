@@ -192,12 +192,17 @@ export async function notifyETLComplete(
 		// Formatage du message avec emojis (sans tableau HTML)
 		const lines: string[] = [`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}`];
 		lines.push('');
-		lines.push(`📊 <b>${stats.total}</b> traités`);
-		if (stats.inserted > 0) lines.push(`  ✏️ ${stats.inserted} insérés`);
-		if (stats.updated > 0) lines.push(`  🔄 ${stats.updated} mis à jour`);
-		if (stats.skipped > 0) lines.push(`  ⏭️ ${stats.skipped} ignorés`);
-		if (stats.errors > 0) lines.push(`  ❌ ${stats.errors} erreurs`);
-		lines.push(`  📈 ${successRate}% succès`);
+
+		if (stats.total === 0) {
+			lines.push('💤 Rien à traiter — données à jour');
+		} else {
+			lines.push(`📊 <b>${stats.total}</b> traités`);
+			if (stats.inserted > 0) lines.push(`  ✏️ ${stats.inserted} insérés`);
+			if (stats.updated > 0) lines.push(`  🔄 ${stats.updated} mis à jour`);
+			if (stats.skipped > 0) lines.push(`  ⏭️ ${stats.skipped} ignorés`);
+			if (stats.errors > 0) lines.push(`  ❌ ${stats.errors} erreurs`);
+			lines.push(`  📈 ${successRate}% succès`);
+		}
 
 		const message = lines.join('\n');
 

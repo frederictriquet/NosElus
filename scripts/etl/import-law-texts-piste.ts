@@ -342,6 +342,11 @@ async function main() {
 
 	if (lawsToEnrich.length === 0) {
 		console.log('Aucun dossier à enrichir.');
+		await notifyETLComplete(
+			'import-law-texts-piste',
+			{ total: 0, inserted: 0, updated: 0, skipped: 0, errors: 0 },
+			{ dryRun: args.dryRun }
+		);
 		process.exit(0);
 	}
 

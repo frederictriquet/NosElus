@@ -20,6 +20,6 @@ else
   exit 1
 fi
 
-TARGET="etl-an-law-texts"
+TARGET="etl-an-analyze-laws"
 
 exec make -C "$PROJECT_DIR" "$TARGET" ARGS="--limit 1"

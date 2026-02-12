@@ -1,6 +1,7 @@
 import { db, actorStats, actors } from '../../../db';
 import { createImportStats, type ImportStats, type ETLConfig } from '../../types';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import { actorStatsUpsertConfig } from '../../utils';
 
 const NOSDEPUTES_API_URL = 'https://www.nosdeputes.fr/synthese/data/json';
 
@@ -116,27 +117,7 @@ export async function importNosDeputesActivityStats(config: ETLConfig): Promise<
 		const BATCH_SIZE = 100;
 		for (let i = 0; i < statsBatch.length; i += BATCH_SIZE) {
 			const batch = statsBatch.slice(i, i + BATCH_SIZE);
-			await db
-				.insert(actorStats)
-				.values(batch)
-				.onConflictDoUpdate({
-					target: [actorStats.actorId, actorStats.source, actorStats.period],
-					set: {
-						weeksPresent: sql`excluded.weeks_present`,
-						commissionPresences: sql`excluded.commission_presences`,
-						hemicycleInterventions: sql`excluded.hemicycle_interventions`,
-						hemicycleShortInterventions: sql`excluded.hemicycle_short_interventions`,
-						commissionInterventions: sql`excluded.commission_interventions`,
-						amendmentsSigned: sql`excluded.amendments_signed`,
-						amendmentsAdopted: sql`excluded.amendments_adopted`,
-						reports: sql`excluded.reports`,
-						writtenProposals: sql`excluded.written_proposals`,
-						signedProposals: sql`excluded.signed_proposals`,
-						writtenQuestions: sql`excluded.written_questions`,
-						oralQuestions: sql`excluded.oral_questions`,
-						updatedAt: sql`now()`
-					}
-				});
+			await db.insert(actorStats).values(batch).onConflictDoUpdate(actorStatsUpsertConfig);
 			stats.inserted += batch.length;
 		}
 

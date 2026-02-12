@@ -22,4 +22,9 @@ fi
 
 TARGET="etl-an-analyze-laws"
 # TARGET="etl-an-law-texts"
-exec make -C "$PROJECT_DIR" "$TARGET" ARGS="--limit 100"
+if [ $# -gt 0 ]; then
+  ARGS="$*"
+else
+  ARGS="--limit 100"
+fi
+exec make -C "$PROJECT_DIR" "$TARGET" ARGS="$ARGS"

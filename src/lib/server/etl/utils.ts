@@ -1,6 +1,6 @@
 import type { ImportStats } from './types';
-import { db, syncMetadata, type SyncMetadata, type NewSyncMetadata } from '../db';
-import { eq } from 'drizzle-orm';
+import { db, syncMetadata, actorStats, type SyncMetadata, type NewSyncMetadata } from '../db';
+import { eq, sql } from 'drizzle-orm';
 
 export function formatDate(date: Date | string | undefined | null): string | null {
 	if (!date) return null;
@@ -114,6 +114,29 @@ export async function updateSyncMetadata(
 			}
 		});
 }
+
+/**
+ * Shared upsert config for actorStats inserts.
+ * Usage: db.insert(actorStats).values(batch).onConflictDoUpdate(actorStatsUpsertConfig)
+ */
+export const actorStatsUpsertConfig = {
+	target: [actorStats.actorId, actorStats.source, actorStats.period],
+	set: {
+		weeksPresent: sql`excluded.weeks_present`,
+		commissionPresences: sql`excluded.commission_presences`,
+		hemicycleInterventions: sql`excluded.hemicycle_interventions`,
+		hemicycleShortInterventions: sql`excluded.hemicycle_short_interventions`,
+		commissionInterventions: sql`excluded.commission_interventions`,
+		amendmentsSigned: sql`excluded.amendments_signed`,
+		amendmentsAdopted: sql`excluded.amendments_adopted`,
+		reports: sql`excluded.reports`,
+		writtenProposals: sql`excluded.written_proposals`,
+		signedProposals: sql`excluded.signed_proposals`,
+		writtenQuestions: sql`excluded.written_questions`,
+		oralQuestions: sql`excluded.oral_questions`,
+		updatedAt: sql`now()`
+	}
+};
 
 export function parseArgs(args: string[]): {
 	incremental: boolean;

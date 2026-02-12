@@ -208,7 +208,7 @@ etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser tout
 etl-an-law-texts: ## Import textes complets AN via Légifrance PISTE
 	@echo "$(CYAN)Import des textes de loi (Légifrance PISTE)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: PISTE_CLIENT_ID et PISTE_CLIENT_SECRET dans .env$(RESET)"
-	npm run etl:law-texts -- $(ARGS)
+	npm run etl:an-law-texts -- $(ARGS)
 
 ##@ ETL - Statistiques d'activité
 
@@ -218,7 +218,7 @@ etl-an-nosdeputes-stats: ## Statistiques députés (NosDéputés.fr)
 
 etl-senat-nossenateurs-stats: ## Statistiques sénateurs (NosSénateurs.fr)
 	@echo "$(CYAN)Import statistiques d'assiduité des sénateurs...$(RESET)"
-	npm run etl:nossenateurs-stats
+	npm run etl:senat-nossenateurs-stats
 
 etl-senat-activity-stats: ## Statistiques sénateurs (senat.fr officiel)
 	@echo "$(CYAN)Import statistiques d'activité des sénateurs (source officielle)...$(RESET)"
@@ -376,13 +376,13 @@ status: ## Affiche le statut du projet
 	@docker compose ps 2>/dev/null || echo "  Docker non disponible"
 	@echo ""
 	@echo "$(YELLOW)Base de données:$(RESET)"
-	@docker compose exec -T db psql -U postgres -d noselus -c "SELECT COUNT(*) as actors FROM actors;" 2>/dev/null || echo "  DB non accessible"
-	@docker compose exec -T db psql -U postgres -d noselus -c "SELECT COUNT(*) as scrutins FROM scrutins;" 2>/dev/null || true
+	@./scripts/db-query.sh "SELECT COUNT(*) as actors FROM actors;" 2>/dev/null || echo "  DB non accessible"
+	@./scripts/db-query.sh "SELECT COUNT(*) as scrutins FROM scrutins;" 2>/dev/null || true
 	@echo ""
 
 stats: ## Affiche les statistiques de la base de données
 	@echo "$(CYAN)=== Statistiques DB ===$(RESET)"
-	@docker compose exec -T db psql -U postgres -d noselus -c "\
+	@./scripts/db-query.sh "\
 		SELECT 'actors' as table_name, COUNT(*) as count FROM actors \
 		UNION ALL SELECT 'organs', COUNT(*) FROM organs \
 		UNION ALL SELECT 'mandates', COUNT(*) FROM mandates \

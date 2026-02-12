@@ -380,7 +380,7 @@ Layout partagé avec barre de navigation persistante :
 # Enrichir les lois sans texte complet
 make etl-an-law-texts
 # ou
-npm run etl:law-texts -- --limit 50
+npm run etl:an-law-texts -- --limit 50
 ```
 
 **Résultat** : Les échecs sont ajoutés à `law_text_skip_list`.
@@ -441,19 +441,19 @@ Utiliser les boutons `< 1 2 3 >` en bas de page pour naviguer entre les 20 entr�
 
 ```bash
 # Limite de lois à traiter
-npm run etl:law-texts -- --limit 100
+npm run etl:an-law-texts -- --limit 100
 
 # Ajuster le seuil de similarité (défaut: 0.4)
-npm run etl:law-texts -- --threshold 0.5
+npm run etl:an-law-texts -- --threshold 0.5
 
 # Mode verbeux (affiche détails matching)
-npm run etl:law-texts -- --verbose
+npm run etl:an-law-texts -- --verbose
 
 # Mode dry-run (n'écrit pas en base)
-npm run etl:law-texts -- --dry-run
+npm run etl:an-law-texts -- --dry-run
 
 # Forcer re-tentative (ignore skip list)
-npm run etl:law-texts -- --force
+npm run etl:an-law-texts -- --force
 ```
 
 ### Seuil de Similarité
@@ -555,7 +555,7 @@ Si l'algorithme de matching est amélioré, re-tenter les échecs précédents :
 # psql -c "TRUNCATE law_text_skip_list;"
 
 # Re-lancer l'ETL avec --force
-npm run etl:law-texts -- --force --limit 100
+npm run etl:an-law-texts -- --force --limit 100
 ```
 
 ### Mise à Jour de l'Algorithme
@@ -715,7 +715,7 @@ test('law text review workflow', async ({ page }) => {
 **Solution** :
 
 1. Vérifier `.env` : `PISTE_CLIENT_ID` et `PISTE_CLIENT_SECRET`
-2. Tester connexion : `npm run etl:law-texts -- --test-connection`
+2. Tester connexion : `npm run etl:an-law-texts -- --test-connection`
 3. Si échec : régénérer credentials sur https://piste.gouv.fr
 
 ### Problème : Beaucoup de `not_found` dans skip list

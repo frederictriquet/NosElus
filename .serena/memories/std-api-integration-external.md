@@ -383,7 +383,7 @@ PISTE_ENV=production  # or 'sandbox' for testing
 .PHONY: etl-law-texts
 etl-an-law-texts:
 	@echo "Importing law texts from Légifrance PISTE..."
-	npm run etl:law-texts -- $(filter-out $@,$(MAKECMDGOALS))
+	npm run etl:an-law-texts -- $(filter-out $@,$(MAKECMDGOALS))
 ```
 
 ### Phase 5 : Tests et Validation

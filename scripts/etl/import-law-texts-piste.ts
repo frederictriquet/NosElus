@@ -8,10 +8,10 @@
  * - N'enrichit que si le score dépasse le seuil de confiance
  *
  * Usage:
- *   npm run etl:law-texts
- *   npm run etl:law-texts -- --limit 50
- *   npm run etl:law-texts -- --test-connection
- *   npm run etl:law-texts -- --threshold 0.5  # Score minimum (défaut: 0.4)
+ *   npm run etl:an-law-texts
+ *   npm run etl:an-law-texts -- --limit 50
+ *   npm run etl:an-law-texts -- --test-connection
+ *   npm run etl:an-law-texts -- --threshold 0.5  # Score minimum (défaut: 0.4)
  *
  * Prérequis:
  *   - Compte PISTE: https://piste.gouv.fr/registration
@@ -97,7 +97,7 @@ function parseArgs(argv: string[]): Args {
 
 function printHelp() {
 	console.log(`
-Usage: npm run etl:law-texts -- [options]
+Usage: npm run etl:an-law-texts -- [options]
 
 Options:
   -l, --limit <n>       Nombre max de lois à enrichir (défaut: 50)
@@ -110,11 +110,11 @@ Options:
   -h, --help            Affiche cette aide
 
 Exemples:
-  npm run etl:law-texts -- --test-connection
-  npm run etl:law-texts -- --limit 10 --dry-run
-  npm run etl:law-texts -- --with-scrutins --limit 20
-  npm run etl:law-texts -- --threshold 0.5 --verbose
-  npm run etl:law-texts -- --force --limit 10  # Re-tente les lois de la skip list
+  npm run etl:an-law-texts -- --test-connection
+  npm run etl:an-law-texts -- --limit 10 --dry-run
+  npm run etl:an-law-texts -- --with-scrutins --limit 20
+  npm run etl:an-law-texts -- --threshold 0.5 --verbose
+  npm run etl:an-law-texts -- --force --limit 10  # Re-tente les lois de la skip list
 
 Configuration requise (.env):
   PISTE_CLIENT_ID=your-oauth-client-id
@@ -133,6 +133,9 @@ Configuration requise (.env):
  * @param withScrutins - Si true, cible les lois liées aux scrutins
  */
 async function getLawsToEnrich(limit: number, withScrutins: boolean, force: boolean) {
+	// Filtre de statut commun : promulguées, adoptées, ou sans statut
+	const statusFilter = or(inArray(laws.status, ['promulgué', 'adopté']), isNull(laws.status))!;
+
 	if (withScrutins) {
 		// Lois liées aux scrutins, sans description
 		const query = db
@@ -152,16 +155,15 @@ async function getLawsToEnrich(limit: number, withScrutins: boolean, force: bool
 		const results = await query
 			.where(
 				force
-					? isNull(laws.description)
-					: and(isNull(laws.description), isNull(lawTextSkipList.lawId))
+					? and(statusFilter, isNull(laws.description))
+					: and(statusFilter, isNull(laws.description), isNull(lawTextSkipList.lawId))
 			)
 			.limit(limit);
 
 		return results;
 	}
 
-	// Mode par défaut: lois sans description (promulguées, adoptées, ou sans statut)
-	const statusFilter = or(inArray(laws.status, ['promulgué', 'adopté']), isNull(laws.status))!;
+	// Mode par défaut: lois sans description
 
 	const query = db
 		.select({

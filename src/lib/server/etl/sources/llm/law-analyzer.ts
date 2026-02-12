@@ -80,7 +80,7 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
 	model: 'mistral-nemo',
 	baseUrl: 'http://localhost:11434',
 	temperature: 0.3, // Bas pour des réponses cohérentes
-	maxTokens: 512,
+	maxTokens: 768,
 	timeout: 300000 // 5 minutes (textes de loi complets)
 };
 
@@ -116,6 +116,51 @@ TON JSON:`;
 }
 
 /**
+ * Répare un JSON tronqué en utilisant une state machine pour tracker
+ * les strings, arrays et objects ouverts.
+ * Ne compte les crochets/accolades que hors des strings.
+ */
+function repairTruncatedJson(truncated: string): string {
+	let repaired = truncated;
+	let inString = false;
+	const stack: string[] = []; // track open structures: '{', '['
+
+	for (let i = 0; i < repaired.length; i++) {
+		const ch = repaired[i];
+		// Skip escaped characters inside strings
+		if (ch === '\\' && inString) {
+			i++;
+			continue;
+		}
+		if (ch === '"') {
+			inString = !inString;
+			continue;
+		}
+		if (inString) continue;
+		if (ch === '{') stack.push('{');
+		else if (ch === '[') stack.push('[');
+		else if (ch === '}') {
+			if (stack.length > 0 && stack[stack.length - 1] === '{') stack.pop();
+		} else if (ch === ']') {
+			if (stack.length > 0 && stack[stack.length - 1] === '[') stack.pop();
+		}
+	}
+
+	// Ferme une string ouverte
+	if (inString) repaired += '"';
+
+	// Supprime les virgules pendantes avant de fermer
+	repaired = repaired.replace(/,\s*$/, '');
+
+	// Ferme les structures ouvertes dans l'ordre inverse
+	for (let i = stack.length - 1; i >= 0; i--) {
+		repaired += stack[i] === '{' ? '}' : ']';
+	}
+
+	return repaired;
+}
+
+/**
  * Parse la réponse JSON du modèle LLM.
  *
  * Le LLM retourne des tags avec accents ("économie", "santé") mais la DB
@@ -133,7 +178,7 @@ TON JSON:`;
  * // => { summary: "Cette loi...", tags: ["economie", "sante"] }
  * ```
  */
-function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis {
+export function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis {
 	// Lookup: nom lowercase accentué → slug DB
 	const nameToSlug = new Map(tagMappings.map((t) => [t.promptName, t.slug]));
 
@@ -146,21 +191,16 @@ function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAnalysis 
 		let textToParse = rawText;
 		if (start >= 0 && end <= start) {
 			const truncated = rawText.slice(start).trimEnd();
-			let repaired = truncated;
-			// Ferme une chaîne ouverte
-			const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
-			if (quoteCount % 2 !== 0) repaired += '"';
-			// Ferme un tableau ouvert
-			if ((repaired.match(/\[/g) || []).length > (repaired.match(/]/g) || []).length)
-				repaired += ']';
-			repaired += '}';
+			const repaired = repairTruncatedJson(truncated);
 			console.warn(`  [Parse] Réponse tronquée, tentative de réparation JSON`);
 			textToParse = rawText.slice(0, start) + repaired;
 			end = start + repaired.length;
 		}
 
 		if (start >= 0 && end > start) {
-			const jsonStr = textToParse.slice(start, end);
+			let jsonStr = textToParse.slice(start, end);
+			// Supprime les virgules pendantes avant } ou ] (ex: {"a": 1,} → {"a": 1})
+			jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
 			const data = JSON.parse(jsonStr);
 
 			// Debug: afficher les clés reçues
@@ -311,6 +351,11 @@ export async function getUnanalyzedLaws(
 		conditions.push(like(laws.legislature, 'PE-%'));
 	}
 
+	// Filtre par législature dans la requête SQL (avant le LIMIT)
+	if (legislature) {
+		conditions.push(eq(laws.legislature, legislature));
+	}
+
 	const query = db
 		.select()
 		.from(laws)
@@ -318,14 +363,7 @@ export async function getUnanalyzedLaws(
 		.orderBy(desc(laws.depositDate))
 		.limit(limit);
 
-	const results = await query;
-
-	// Filtrer par législature si spécifié (post-query pour simplifier)
-	if (legislature) {
-		return results.filter((l) => l.legislature === legislature);
-	}
-
-	return results;
+	return await query;
 }
 
 /**
@@ -345,30 +383,32 @@ export async function saveLawAnalysis(
 		updatedAt: new Date()
 	};
 
-	// Upsert du résumé
-	await db
-		.insert(lawSummaries)
-		.values(newSummary)
-		.onConflictDoUpdate({
-			target: lawSummaries.lawId,
-			set: {
-				summary: newSummary.summary,
-				model: newSummary.model,
-				updatedAt: new Date()
-			}
-		});
+	await db.transaction(async (tx) => {
+		// Upsert du résumé
+		await tx
+			.insert(lawSummaries)
+			.values(newSummary)
+			.onConflictDoUpdate({
+				target: lawSummaries.lawId,
+				set: {
+					summary: newSummary.summary,
+					model: newSummary.model,
+					updatedAt: new Date()
+				}
+			});
 
-	// Supprimer les anciens tags et insérer les nouveaux
-	await db.delete(lawTags).where(eq(lawTags.lawId, lawId));
+		// Supprimer les anciens tags et insérer les nouveaux
+		await tx.delete(lawTags).where(eq(lawTags.lawId, lawId));
 
-	if (analysis.tags.length > 0) {
-		const tagValues: NewLawTag[] = analysis.tags.map((tag) => ({
-			lawId,
-			tagSlug: tag
-		}));
+		if (analysis.tags.length > 0) {
+			const tagValues: NewLawTag[] = analysis.tags.map((tag) => ({
+				lawId,
+				tagSlug: tag
+			}));
 
-		await db.insert(lawTags).values(tagValues);
-	}
+			await tx.insert(lawTags).values(tagValues);
+		}
+	});
 }
 
 export interface AnalyzeBatchResult {
@@ -391,7 +431,7 @@ export async function analyzeLawsBatch(
 		dryRun?: boolean;
 	} = {}
 ): Promise<AnalyzeBatchResult> {
-	const { limit = 100, legislature, chamber, model = 'mistral', dryRun = false } = options;
+	const { limit = 100, legislature, chamber, model = 'mistral-nemo', dryRun = false } = options;
 
 	const [lawsToAnalyze, tagMappings] = await Promise.all([
 		getUnanalyzedLaws(limit, legislature, chamber),

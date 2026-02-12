@@ -179,23 +179,23 @@ export async function notifyETLComplete(
 	}
 
 	try {
-		// Calcul du taux de succès
-		const successRate =
-			stats.total > 0 ? (((stats.total - stats.errors) / stats.total) * 100).toFixed(1) : '100.0';
-
 		// Emoji contextuel selon taux de succès
 		const emoji = getStatusEmoji(stats);
 
-		// Legislature info (optionnel)
-		const legislatureInfo = options.legislature ? ` (${options.legislature})` : '';
+		// Legislature info (optionnel), échappé pour HTML Telegram
+		const legislatureInfo = options.legislature ? ` (${escapeHtml(options.legislature)})` : '';
 
 		// Formatage du message avec emojis (sans tableau HTML)
-		const lines: string[] = [`${emoji} <b>ETL Terminé</b>: ${scriptName}${legislatureInfo}`];
+		const lines: string[] = [
+			`${emoji} <b>ETL Terminé</b>: ${escapeHtml(scriptName)}${legislatureInfo}`
+		];
 		lines.push('');
 
-		if (stats.total === 0) {
+		if (stats.total === 0 && stats.errors === 0) {
 			lines.push('💤 Rien à traiter — données à jour');
 		} else {
+			const successRate =
+				stats.total > 0 ? (((stats.total - stats.errors) / stats.total) * 100).toFixed(1) : '0.0';
 			lines.push(`📊 <b>${stats.total}</b> traités`);
 			if (stats.inserted > 0) lines.push(`  ✏️ ${stats.inserted} insérés`);
 			if (stats.updated > 0) lines.push(`  🔄 ${stats.updated} mis à jour`);
@@ -206,16 +206,7 @@ export async function notifyETLComplete(
 
 		const message = lines.join('\n');
 
-		// Métadonnées pour le logger
-		const metadata = {
-			script: scriptName,
-			legislature: options.legislature,
-			...stats,
-			...options.additionalInfo
-		};
-
 		// Envoi de la notification
-		// await logger.info(message, metadata);
 		await logger.info(message);
 
 		console.log('✓ Telegram notification sent successfully');
@@ -227,8 +218,18 @@ export async function notifyETLComplete(
 }
 
 /**
+ * Échappe les caractères spéciaux HTML pour Telegram.
+ * Telegram n'accepte que certaines balises HTML (<b>, <i>, <code>, etc.)
+ * et rejette tout le reste. Les caractères &, < et > doivent être échappés.
+ */
+function escapeHtml(s: string): string {
+	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
  * Détermine l'emoji approprié selon le taux de succès.
  *
+ * - 💤 Rien à traiter (total=0, 0 erreurs)
  * - ✅ Succès total (0 erreurs)
  * - ⚠️ Succès partiel (< 10% d'erreurs)
  * - ❌ Échec significatif (≥ 10% d'erreurs)
@@ -237,6 +238,10 @@ export async function notifyETLComplete(
  * @returns Emoji contextuel
  */
 function getStatusEmoji(stats: ImportStats): string {
+	if (stats.total === 0 && stats.errors === 0) {
+		return '💤'; // Rien à traiter
+	}
+
 	if (stats.errors === 0) {
 		return '✅'; // Succès total
 	}

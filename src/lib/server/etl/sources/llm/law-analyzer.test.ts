@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { parseResponse, type TagMapping } from './law-analyzer';
 
 // Mock minimal pour tester buildUserPrompt
 // Note: Cette fonction n'est pas exportée, donc on teste via son comportement
@@ -101,5 +102,134 @@ describe('law-analyzer - Unit', () => {
 			const minimumValidDescription = 'A'.repeat(101);
 			expect(minimumValidDescription.length).toBeGreaterThan(100);
 		});
+	});
+});
+
+const TEST_TAG_MAPPINGS: TagMapping[] = [
+	{ slug: 'economie', name: 'Économie', promptName: 'économie' },
+	{ slug: 'sante', name: 'Santé', promptName: 'santé' },
+	{ slug: 'travail', name: 'Travail', promptName: 'travail' },
+	{ slug: 'education', name: 'Éducation', promptName: 'éducation' },
+	{ slug: 'securite', name: 'Sécurité', promptName: 'sécurité' }
+];
+
+describe('parseResponse', () => {
+	it('should parse valid JSON with resume and tags', () => {
+		const raw = '{"resume": "Cette loi augmente le SMIC.", "tags": ["économie", "travail"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Cette loi augmente le SMIC.');
+		expect(result.tags).toEqual(['economie', 'travail']);
+		expect(result.rawResponse).toBe(raw);
+	});
+
+	it('should extract JSON surrounded by LLM chatter', () => {
+		const raw = `Voici mon analyse de cette loi:\n{"resume": "Cette loi renforce la sécurité.", "tags": ["sécurité"]}\nJ'espère que cela vous aide!`;
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Cette loi renforce la sécurité.');
+		expect(result.tags).toEqual(['securite']);
+	});
+
+	it('should repair truncated JSON (missing closing brace)', () => {
+		const raw = '{"resume": "Cette loi modifie le code du travail.", "tags": ["travail"';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Cette loi modifie le code du travail.');
+		expect(result.tags).toEqual(['travail']);
+	});
+
+	it('should handle trailing comma in tags array', () => {
+		const raw = '{"resume": "Réforme de la santé.", "tags": ["santé",]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Réforme de la santé.');
+		expect(result.tags).toEqual(['sante']);
+	});
+
+	it('should handle trailing comma before closing brace', () => {
+		const raw = '{"resume": "Réforme fiscale.", "tags": ["économie"],}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Réforme fiscale.');
+		expect(result.tags).toEqual(['economie']);
+	});
+
+	it('should return error for empty response', () => {
+		const result = parseResponse('', TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Erreur: impossible de parser la réponse');
+		expect(result.tags).toEqual([]);
+		expect(result.rawResponse).toBe('');
+	});
+
+	it('should return fallback summary when resume key is missing', () => {
+		const raw = '{"description": "Pas la bonne clé", "tags": ["économie"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Résumé non disponible');
+		expect(result.tags).toEqual(['economie']);
+	});
+
+	it('should accept "summary" as alternative key to "resume"', () => {
+		const raw = '{"summary": "Texte via summary.", "tags": ["santé"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Texte via summary.');
+	});
+
+	it('should accept "résumé" as alternative key to "resume"', () => {
+		const raw = '{"résumé": "Texte via résumé.", "tags": ["travail"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Texte via résumé.');
+	});
+
+	it('should filter out invalid tags and keep valid ones', () => {
+		const raw =
+			'{"resume": "Une loi importante.", "tags": ["économie", "inexistant", "santé", "blabla"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Une loi importante.');
+		expect(result.tags).toEqual(['economie', 'sante']);
+	});
+
+	it('should return empty tags when all tags are invalid', () => {
+		const raw = '{"resume": "Une loi.", "tags": ["fake", "inexistant"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Une loi.');
+		expect(result.tags).toEqual([]);
+	});
+
+	it('should handle missing tags key gracefully', () => {
+		const raw = '{"resume": "Pas de tags ici."}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Pas de tags ici.');
+		expect(result.tags).toEqual([]);
+	});
+
+	it('should handle response with no JSON at all', () => {
+		const raw = 'Je ne suis pas capable de répondre en JSON pour cette loi.';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Erreur: impossible de parser la réponse');
+		expect(result.tags).toEqual([]);
+	});
+
+	it('should be case-insensitive for tag matching', () => {
+		const raw = '{"resume": "Test.", "tags": ["ÉCONOMIE", "Santé"]}';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.tags).toEqual(['economie', 'sante']);
+	});
+
+	it('should repair truncated JSON with open string and array', () => {
+		const raw = '{"resume": "Cette loi concerne la san';
+		const result = parseResponse(raw, TEST_TAG_MAPPINGS);
+
+		expect(result.summary).toBe('Cette loi concerne la san');
+		expect(result.tags).toEqual([]);
 	});
 });

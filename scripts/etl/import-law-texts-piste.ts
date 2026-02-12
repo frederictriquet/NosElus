@@ -29,7 +29,7 @@ import {
 	extractTextFromResponse
 } from '../../src/lib/server/etl/sources/legifrance/text-matching.js';
 import { db, laws, scrutins, lawTextSkipList } from '../../src/lib/server/db/index.js';
-import { eq, isNull, and, desc, sql } from 'drizzle-orm';
+import { eq, isNull, and, or, inArray, desc, sql } from 'drizzle-orm';
 import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
 
 interface Args {
@@ -160,7 +160,9 @@ async function getLawsToEnrich(limit: number, withScrutins: boolean, force: bool
 		return results;
 	}
 
-	// Mode par défaut: lois promulguées sans description
+	// Mode par défaut: lois sans description (promulguées, adoptées, ou sans statut)
+	const statusFilter = or(inArray(laws.status, ['promulgué', 'adopté']), isNull(laws.status))!;
+
 	const query = db
 		.select({
 			id: laws.id,
@@ -177,8 +179,8 @@ async function getLawsToEnrich(limit: number, withScrutins: boolean, force: bool
 	const results = await query
 		.where(
 			force
-				? and(eq(laws.status, 'promulgué'), isNull(laws.description))
-				: and(eq(laws.status, 'promulgué'), isNull(laws.description), isNull(lawTextSkipList.lawId))
+				? and(statusFilter, isNull(laws.description))
+				: and(statusFilter, isNull(laws.description), isNull(lawTextSkipList.lawId))
 		)
 		.orderBy(desc(laws.promulgationDate))
 		.limit(limit);
@@ -320,7 +322,7 @@ async function main() {
 	if (args.withScrutins) {
 		console.log('  Cible: lois liées aux scrutins');
 	} else {
-		console.log('  Cible: lois promulguées');
+		console.log('  Cible: lois sans texte complet');
 	}
 	if (args.dryRun) {
 		console.log("  Mode: DRY RUN (pas d'écriture en base)");
@@ -334,8 +336,8 @@ async function main() {
 	console.log('');
 
 	// Récupérer les dossiers à enrichir
-	const targetDesc = args.withScrutins ? 'liés aux scrutins' : 'promulgués';
-	console.log(`Recherche des dossiers ${targetDesc} sans texte complet...`);
+	const targetDesc = args.withScrutins ? 'liés aux scrutins' : 'sans texte complet';
+	console.log(`Recherche des dossiers ${targetDesc}...`);
 	const lawsToEnrich = await getLawsToEnrich(args.limit, args.withScrutins, args.force);
 	console.log(`  ${lawsToEnrich.length} dossiers trouvés`);
 	console.log('');

@@ -119,6 +119,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		laws_pe_no_summary: number;
 		laws_an_no_tags: number;
 		total_cosignatories_an: number;
+		laws_an_skiplist_low_score: number;
 		// Scrutins
 		total_scrutins_an: number;
 		scrutins_an_with_law: number;
@@ -175,7 +176,12 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
 					AND id NOT LIKE 'SEN-%'
 					AND NOT EXISTS (SELECT 1 FROM law_tags lt WHERE lt.law_id = l.id)) as laws_an_no_tags,
-				(SELECT COUNT(*) FROM law_cosignatories) as total_cosignatories_an
+				(SELECT COUNT(*) FROM law_cosignatories) as total_cosignatories_an,
+				(SELECT COUNT(*) FROM law_text_skip_list s
+					JOIN laws l2 ON l2.id = s.law_id
+					WHERE s.reason = 'low_score'
+					AND l2.id NOT LIKE 'SEN-%' AND l2.id NOT LIKE 'PE-%'
+					AND l2.description IS NULL) as laws_an_skiplist_low_score
 			FROM laws l
 		),
 		scrutin_stats AS (
@@ -463,6 +469,21 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		total: totalLawsAN,
 		pct: pctANNoFulltext,
 		command: 'make etl-an-law-texts',
+		chamber: 'AN'
+	});
+
+	// Check 31: Lois AN en skip list (score faible sur Légifrance)
+	const lawsANSkiplistLowScore = Number(row.laws_an_skiplist_low_score) || 0;
+	checks.push({
+		id: 'laws-an-skiplist-low-score',
+		label: 'Lois AN bloquées (score faible Légifrance)',
+		description: `${lawsANSkiplistLowScore} lois sans texte car matching titre trop faible`,
+		severity:
+			lawsANSkiplistLowScore > 1000 ? 'warning' : lawsANSkiplistLowScore > 0 ? 'info' : 'ok',
+		current: lawsANSkiplistLowScore,
+		total: totalLawsAN,
+		pct: totalLawsAN > 0 ? (lawsANSkiplistLowScore / totalLawsAN) * 100 : 0,
+		command: 'make etl-an-law-texts ARGS="--force --threshold 0.3"',
 		chamber: 'AN'
 	});
 

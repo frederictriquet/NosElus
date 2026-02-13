@@ -20,10 +20,6 @@ else
   exit 1
 fi
 
-TARGET="etl-an-analyze-laws etl-europarl-analyze-laws"
-if [ $# -gt 0 ]; then
-  ARGS="$*"
-else
-  ARGS="--limit 10"
-fi
-exec make -C "$PROJECT_DIR" $TARGET ARGS="$ARGS"
+TARGETS="etl-an-download etl-an-incremental etl-an-dossiers etl-an-link-laws etl-europarl-votes etl-europarl-laws etl-an-law-texts etl-europarl-law-texts etl-an-nosdeputes-stats etl-senat-activity-stats etl-europarl-activity-stats etl-senat-senators"
+
+exec make -C "$PROJECT_DIR" $TARGETS

@@ -133,16 +133,55 @@ make etl-an-nosdeputes-stats   # Stats députés
 make etl-senat-activity-stats  # Stats sénateurs
 ```
 
-### Mise à jour incrémentale
+### Mise à jour régulière (hebdomadaire)
+
+Suivre cet ordre pour rester à jour avec l'actualité législative :
 
 ```bash
-# Nouveaux scrutins/votes uniquement
-make etl-an-incremental
+# 1. Données brutes — nouveaux scrutins, votes, dossiers
+make etl-an-download              # Télécharge les derniers fichiers JSON AN
+make etl-an-incremental           # Import incrémental acteurs + scrutins + votes
+make etl-an-dossiers              # Met à jour les dossiers (statuts, promulgations, cosignataires)
+make etl-an-link-laws             # Lie les nouveaux scrutins aux dossiers législatifs
+make etl-europarl-votes           # Nouveaux votes du Parlement Européen
+make etl-europarl-laws            # Nouvelles procédures PE
 
-# Nouvelles statistiques
-make etl-an-nosdeputes-stats
-make etl-senat-activity-stats
-make etl-europarl-activity-stats
+# 2. Enrichissement — textes complets des nouvelles lois promulguées
+make etl-an-law-texts             # Textes AN via Légifrance PISTE
+make etl-europarl-law-texts       # Textes PE via OEIL/communiqués
+
+# 3. Analyse IA — résumés et classification (nécessite Ollama)
+make etl-an-analyze-laws          # Résumés IA des nouvelles lois AN
+make etl-europarl-analyze-laws    # Résumés IA des nouvelles lois PE
+make etl-an-classify-scrutins     # Classification sémantique des scrutins
+```
+
+### Mise à jour mensuelle
+
+```bash
+# Statistiques d'activité parlementaire
+make etl-an-nosdeputes-stats          # Stats députés (NosDéputés.fr)
+make etl-senat-activity-stats         # Stats sénateurs (senat.fr)
+make etl-europarl-activity-stats      # Stats eurodéputés (HowTheyVote.eu)
+
+# Données Sénat (évolue lentement)
+make etl-senat-senators               # Nouveaux sénateurs / changements de groupe
+make etl-senat-laws                   # Nouveaux dossiers législatifs Sénat
+```
+
+### Setup ponctuel (rarement)
+
+Ces targets ne changent quasi jamais, à relancer uniquement après un changement de
+composition des groupes ou de législature :
+
+```bash
+make etl-colors                   # Couleurs des groupes AN
+make etl-external-colors          # Couleurs PE/Sénat (sources externes)
+make etl-political-positions      # Positions gauche-droite (ParlGov)
+make etl-seed-pe-positions        # Positions PE (Chapel Hill Expert Survey)
+make etl-europarl-historical      # Historique eurodéputés (2004-présent)
+make etl-senat-mandates-history   # Historique mandats sénatoriaux
+make etl-europarl-enrich-groups   # Noms longs des groupes PE
 ```
 
 ### Test d'un ETL

@@ -39,6 +39,9 @@ interface ActeLegislatif {
 	uid: string;
 	codeActe: string;
 	dateActe?: string;
+	statutConclusion?: {
+		libelle?: string;
+	};
 	actesLegislatifs?: {
 		acteLegislatif: ActeLegislatif | ActeLegislatif[];
 	};
@@ -96,6 +99,72 @@ function extractFirstDate(actes: ActeLegislatif | ActeLegislatif[] | undefined):
 	}
 
 	return null;
+}
+
+/**
+ * Extrait le statut et les dates d'adoption/promulgation des actes législatifs.
+ * Parcourt récursivement tous les actes pour détecter :
+ * - PROM / PROM-PUB → promulgation (PROM-PUB porte la date réelle)
+ * - AN1..AN3, ANLDEF, ANLUNI → adoption AN (si libellé "adopté")
+ * - SN1..SN3 → adoption Sénat (si libellé "adopté")
+ */
+function extractStatusAndDates(actes: ActeLegislatif | ActeLegislatif[] | undefined): {
+	status: string;
+	promulgationDate: string | null;
+	adoptionDateAN: string | null;
+	adoptionDateSenat: string | null;
+} {
+	let promulgationDate: string | null = null;
+	let adoptionDateAN: string | null = null;
+	let adoptionDateSenat: string | null = null;
+
+	function formatDateStr(d?: string): string | null {
+		if (!d) return null;
+		return d.includes('T') ? d.split('T')[0] : d;
+	}
+
+	function processActes(items: ActeLegislatif | ActeLegislatif[] | undefined) {
+		if (!items) return;
+		const list = Array.isArray(items) ? items : [items];
+
+		for (const acte of list) {
+			const code = acte.codeActe;
+
+			// Promulgation : PROM est le parent (dateActe souvent null),
+			// PROM-PUB est le sous-acte avec la date réelle
+			if (code === 'PROM' || code === 'PROM-PUB') {
+				promulgationDate = formatDateStr(acte.dateActe) ?? promulgationDate;
+			}
+
+			// Adoption AN (AN1, AN2, AN3, ANLDEF, ANLUNI — mais pas ANNLEC)
+			if (
+				code.startsWith('AN') &&
+				!code.startsWith('ANNLEC') &&
+				acte.statutConclusion?.libelle === 'adopté'
+			) {
+				adoptionDateAN = formatDateStr(acte.dateActe);
+			}
+
+			// Adoption Sénat (SN1, SN2, SN3)
+			if (code.startsWith('SN') && acte.statutConclusion?.libelle === 'adopté') {
+				adoptionDateSenat = formatDateStr(acte.dateActe);
+			}
+
+			// Récursion dans les sous-actes
+			processActes(acte.actesLegislatifs?.acteLegislatif);
+		}
+	}
+
+	processActes(actes);
+
+	let status = 'en cours';
+	if (promulgationDate) {
+		status = 'promulgué';
+	} else if (adoptionDateAN || adoptionDateSenat) {
+		status = 'adopté';
+	}
+
+	return { status, promulgationDate, adoptionDateAN, adoptionDateSenat };
 }
 
 /**
@@ -173,6 +242,9 @@ export async function importDossiersAN(
 			stats.dossiersProcessed++;
 
 			const depositDate = extractFirstDate(dossier.actesLegislatifs?.acteLegislatif);
+			const { status, promulgationDate, adoptionDateAN, adoptionDateSenat } = extractStatusAndDates(
+				dossier.actesLegislatifs?.acteLegislatif
+			);
 
 			const newLaw: NewLaw = {
 				id: dossier.uid,
@@ -184,7 +256,11 @@ export async function importDossiersAN(
 						? dossier.titreDossier.titre.substring(0, 97) + '...'
 						: dossier.titreDossier.titre,
 				type: mapProcedureType(dossier.procedureParlementaire),
+				status,
 				depositDate,
+				adoptionDateAN,
+				adoptionDateSenat,
+				promulgationDate,
 				initiator: dossier.procedureParlementaire?.libelle.toLowerCase().includes('projet')
 					? 'gouvernement'
 					: 'assemblée',
@@ -293,7 +369,11 @@ export async function importDossiersAN(
 						title: sql`excluded.title`,
 						shortTitle: sql`excluded.short_title`,
 						type: sql`excluded.type`,
+						status: sql`excluded.status`,
 						depositDate: sql`excluded.deposit_date`,
+						adoptionDateAN: sql`excluded.adoption_date_an`,
+						adoptionDateSenat: sql`excluded.adoption_date_senat`,
+						promulgationDate: sql`excluded.promulgation_date`,
 						sourceUrl: sql`excluded.source_url`,
 						updatedAt: sql`now()`
 					}

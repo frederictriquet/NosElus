@@ -57,9 +57,10 @@ export function mapDossierToLaw(dossier: DossierParlementaire): NewLaw {
 			if (isAdoptionSenat(acte.codeActe) && acte.statutConclusion?.libelle === 'adopté') {
 				adoptionDateSenat = acte.dateActe ?? null;
 			}
-			// Promulgation
-			if (acte.codeActe === CodeActe.Prom) {
-				promulgationDate = acte.dateActe ?? null;
+			// Promulgation : PROM est l'acte parent (dateActe souvent null),
+			// PROM-PUB est le sous-acte avec la date réelle de promulgation
+			if (acte.codeActe === CodeActe.Prom || acte.codeActe === CodeActe.PromPub) {
+				promulgationDate = acte.dateActe ?? promulgationDate;
 			}
 			// Publication JO
 			if (acte.infoJo?.dateJo) {

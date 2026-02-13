@@ -197,6 +197,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 	const result = await db.execute<{
 		// Laws
 		total_laws_an: number;
+		total_laws_an_enrichable: number;
 		total_laws_pe: number;
 		total_laws_senat: number;
 		laws_an_no_fulltext: number;
@@ -206,6 +207,8 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		laws_an_no_tags: number;
 		total_cosignatories_an: number;
 		laws_an_skiplist_low_score: number;
+		laws_an_promulgated_no_text: number;
+		laws_an_not_promulgated_no_text: number;
 		// Scrutins
 		total_scrutins_an: number;
 		scrutins_an_with_law: number;
@@ -243,10 +246,14 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 			SELECT
 				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
 					AND id NOT LIKE 'SEN-%') as total_laws_an,
+				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
+					AND id NOT LIKE 'SEN-%'
+					AND (status IN ('promulgué', 'adopté') OR status IS NULL)) as total_laws_an_enrichable,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%') as total_laws_pe,
 				COUNT(*) FILTER (WHERE id LIKE 'SEN-%') as total_laws_senat,
 				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
 					AND id NOT LIKE 'SEN-%'
+					AND (status IN ('promulgué', 'adopté') OR status IS NULL)
 					AND (description IS NULL OR length(description) <= ${MIN_DESCRIPTION_LENGTH})) as laws_an_no_fulltext,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%'
 					AND (description IS NULL OR length(description) <= ${MIN_DESCRIPTION_LENGTH})) as laws_pe_no_fulltext,
@@ -271,7 +278,15 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 					WHERE s.reason = 'low_score'
 					AND (l2.legislature LIKE 'AN-%' OR l2.legislature ~ '^[0-9]+$')
 					AND l2.id NOT LIKE 'SEN-%'
-					AND l2.description IS NULL) as laws_an_skiplist_low_score
+					AND l2.description IS NULL) as laws_an_skiplist_low_score,
+				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
+					AND id NOT LIKE 'SEN-%'
+					AND status = 'promulgué'
+					AND (description IS NULL OR length(description) <= ${MIN_DESCRIPTION_LENGTH})) as laws_an_promulgated_no_text,
+				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
+					AND id NOT LIKE 'SEN-%'
+					AND (status IS NULL OR status != 'promulgué')
+					AND (description IS NULL OR length(description) <= ${MIN_DESCRIPTION_LENGTH})) as laws_an_not_promulgated_no_text
 			FROM laws l
 		),
 		scrutin_stats AS (
@@ -511,33 +526,53 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 
 	// === TEXTES & ANALYSES ===
 
+	// Ne compte que les lois enrichissables (promulguées, adoptées, NULL) — pas les "en cours"
+	const totalLawsANEnrichable = Number(row.total_laws_an_enrichable) || 0;
 	const lawsANNoFulltext = Number(row.laws_an_no_fulltext) || 0;
 	checks.push(
 		completenessCheck(
 			'laws-an-no-fulltext',
 			'Lois AN avec texte complet',
-			`${lawsANNoFulltext} lois sans description >100 caractères`,
+			`${lawsANNoFulltext} lois (promulguées/adoptées) sans texte Légifrance`,
 			lawsANNoFulltext,
-			totalLawsAN,
+			totalLawsANEnrichable,
 			{ critical: 50, warning: 25, info: 10 },
 			'make etl-an-law-texts',
 			'AN'
 		)
 	);
 
-	const lawsANSkiplistLowScore = Number(row.laws_an_skiplist_low_score) || 0;
+	// Lois promulguées sans texte : vrai problème à corriger (devrait être ~0)
+	const lawsANPromulgatedNoText = Number(row.laws_an_promulgated_no_text) || 0;
 	checks.push(
 		completenessCheck(
-			'laws-an-skiplist-low-score',
-			'Lois AN bloquées (score faible Légifrance)',
-			`${lawsANSkiplistLowScore} lois sans texte car matching titre trop faible`,
-			lawsANSkiplistLowScore,
-			totalLawsAN,
-			{ warning: totalLawsAN > 0 ? (1000 / totalLawsAN) * 100 : Infinity, info: 0 },
+			'laws-an-promulgated-no-text',
+			'Lois AN promulguées avec texte',
+			lawsANPromulgatedNoText === 0
+				? 'Toutes les lois promulguées ont leur texte Légifrance'
+				: `${lawsANPromulgatedNoText} lois promulguées sans texte (matching Jaccard à vérifier)`,
+			lawsANPromulgatedNoText,
+			totalLawsAN - (Number(row.laws_an_not_promulgated_no_text) || 0),
+			{ critical: 5, warning: 1 },
 			'make etl-an-law-texts ARGS="--force --threshold 0.3"',
 			'AN'
 		)
 	);
+
+	// Lois non promulguées sans texte : normal (le texte n'existe pas dans Légifrance)
+	// current=0 car rien à corriger ; total=count pour affichage informatif
+	const lawsANNotPromulgatedNoText = Number(row.laws_an_not_promulgated_no_text) || 0;
+	checks.push({
+		id: 'laws-an-not-promulgated',
+		label: 'Lois AN non promulguées (sans texte attendu)',
+		description: `${lawsANNotPromulgatedNoText} propositions non promulguées — texte inexistant dans Légifrance (normal)`,
+		severity: 'ok' as ETLCheckSeverity,
+		current: 0,
+		total: lawsANNotPromulgatedNoText,
+		pct: 0,
+		command: 'make etl-an-dossiers',
+		chamber: 'AN' as ETLChamber
+	});
 
 	const lawsPENoFulltext = Number(row.laws_pe_no_fulltext) || 0;
 	const totalLawsPE = Number(row.total_laws_pe) || 0;
@@ -555,7 +590,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 	);
 
 	const lawsANNoSummary = Number(row.laws_an_no_summary) || 0;
-	const totalLawsANWithText = totalLawsAN - lawsANNoFulltext;
+	const totalLawsANWithText = totalLawsANEnrichable - lawsANNoFulltext;
 	checks.push(
 		completenessCheck(
 			'laws-an-no-ai-summary',

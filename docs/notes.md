@@ -113,3 +113,51 @@ make etl-europarl-votes
 → Error: The operation was aborted due to timeout
 [95/100] Analyzing: SEN-ppl23-542 - proposition de loi pour améliorer la prise en char...
 → Error: The operation was aborted due to timeout
+
+⏺ Voici le classement par fréquence de mise à jour :
+
+Mise à jour régulière (hebdomadaire/bihebdomadaire)  
+ ┌───────┬─────────────────────────┬──────────────────────────────────────────────────────────────┐  
+ │ Ordre │ Target │ Ce qu'elle fait │  
+ ├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤  
+ │ 1 │ make etl-an-download │ Télécharge les derniers fichiers JSON AN │  
+ ├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 2 │ make etl-an-incremental │ Import incrémental acteurs + scrutins + votes │
+├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 3 │ make etl-an-dossiers │ Met à jour les dossiers législatifs (statuts, promulgations) │
+├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 4 │ make etl-an-link-laws │ Lie les nouveaux scrutins aux dossiers │
+├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 5 │ make etl-europarl-votes │ Nouveaux votes du Parlement Européen │
+├───────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ 6 │ make etl-europarl-laws │ Nouvelles procédures PE │
+└───────┴─────────────────────────┴──────────────────────────────────────────────────────────────┘
+Enrichissement (après chaque import)
+┌───────┬────────────────────────────────┬────────────────────────────────────────────────────────────────────┐
+│ Ordre │ Target │ Ce qu'elle fait │
+├───────┼────────────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ 7 │ make etl-an-law-texts │ Récupère les textes Légifrance pour les nouvelles lois promulguées │
+├───────┼────────────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ 8 │ make etl-europarl-law-texts │ Textes des lois PE │
+├───────┼────────────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ 9 │ make etl-an-analyze-laws │ Résumés IA des nouvelles lois AN │
+├───────┼────────────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ 10 │ make etl-europarl-analyze-laws │ Résumés IA des nouvelles lois PE │
+├───────┼────────────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ 11 │ make etl-an-classify-scrutins │ Classification sémantique des scrutins │
+└───────┴────────────────────────────────┴────────────────────────────────────────────────────────────────────┘
+Mise à jour mensuelle
+┌──────────────────────────────────┬────────────────────────────┐
+│ Target │ Ce qu'elle fait │
+├──────────────────────────────────┼────────────────────────────┤
+│ make etl-an-nosdeputes-stats │ Stats activité députés │
+├──────────────────────────────────┼────────────────────────────┤
+│ make etl-senat-activity-stats │ Stats activité sénateurs │
+├──────────────────────────────────┼────────────────────────────┤
+│ make etl-europarl-activity-stats │ Stats activité eurodéputés │
+├──────────────────────────────────┼────────────────────────────┤
+│ make etl-senat-senators │ Nouveaux sénateurs │
+└──────────────────────────────────┴────────────────────────────┘
+Setup unique (rarement)
+
+etl-colors, etl-external-colors, etl-political-positions, etl-seed-pe-positions, etl-europarl-historical, etl-senat-mandates-history — ne changent quasi jamais.

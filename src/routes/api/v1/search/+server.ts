@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db, actors, organs, scrutins } from '$lib/server/db';
+import { db, actors, organs } from '$lib/server/db';
 import { ilike, or } from 'drizzle-orm';
-import { badRequest, searchLaws } from '$lib/server/api/helpers';
+import { badRequest, searchLaws, searchScrutins } from '$lib/server/api/helpers';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const query = url.searchParams.get('q');
@@ -60,16 +60,13 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	// Search scrutins
 	if (!type || type === 'scrutins') {
-		results.scrutins = await db
-			.select({
-				id: scrutins.id,
-				title: scrutins.title,
-				date: scrutins.date,
-				number: scrutins.number
-			})
-			.from(scrutins)
-			.where(ilike(scrutins.title, searchTerm))
-			.limit(limit);
+		const scrutinsRaw = await searchScrutins(query, limit);
+		results.scrutins = scrutinsRaw.map((s) => ({
+			id: s.id,
+			title: s.title,
+			date: s.date,
+			number: s.number
+		}));
 	}
 
 	// Search laws

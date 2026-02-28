@@ -1105,7 +1105,7 @@ function authorMatchLawIds(searchTerm: string) {
 }
 
 /**
- * Recherche full-text sur les lois avec ranking par pertinence.
+ * Recherche full-text sur les lois avec ranking par pertinence (ts_rank).
  * Cherche dans : title, description, theme (via index GIN) + noms des auteurs/cosignataires.
  * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
  */
@@ -1129,7 +1129,7 @@ export async function searchLaws(query: string, limit = 20) {
 			})
 			.from(laws)
 			.where(or(sql`${lawsSearchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatch)))
-			.orderBy(desc(laws.depositDate))
+			.orderBy(desc(sql`ts_rank(${lawsSearchVector}, ${tsQuery})`))
 			.limit(limit);
 	} catch {
 		// Fallback ILIKE si tsquery échoue
@@ -1147,6 +1147,97 @@ export async function searchLaws(query: string, limit = 20) {
 			.from(laws)
 			.where(or(ilike(laws.title, searchTerm), inArray(laws.id, authorMatch)))
 			.orderBy(desc(laws.depositDate))
+			.limit(limit);
+	}
+}
+
+// ===== Full-Text Search Scrutins =====
+
+/**
+ * Expression tsvector pour la recherche full-text sur les scrutins.
+ * DOIT matcher exactement l'expression de l'index GIN `scrutins_search_idx`.
+ */
+const scrutinsSearchVector = sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, ''))`;
+
+/**
+ * Résultat de vote d'un groupe pour un scrutin, calculé depuis groupResults.
+ */
+export interface GroupVoteResult {
+	groupId: string;
+	pour: number;
+	contre: number;
+	abstention: number;
+	total: number;
+	pctPour: number;
+	pctContre: number;
+	pctAbstention: number;
+}
+
+/**
+ * Extrait le résultat de vote d'un groupe depuis le JSONB groupResults d'un scrutin.
+ */
+export function extractGroupVote(groupResults: unknown, groupId: string): GroupVoteResult | null {
+	if (!groupResults || typeof groupResults !== 'object') return null;
+	const data = (groupResults as Record<string, unknown>)[groupId];
+	if (!data || typeof data !== 'object') return null;
+
+	const d = data as Record<string, unknown>;
+	const pour = (d.pour ?? d.for ?? 0) as number;
+	const contre = (d.contre ?? d.against ?? 0) as number;
+	const abstention = (d.abstention ?? 0) as number;
+	const total = pour + contre + abstention;
+	if (total === 0) return null;
+
+	return {
+		groupId,
+		pour,
+		contre,
+		abstention,
+		total,
+		pctPour: Math.round((pour / total) * 100),
+		pctContre: Math.round((contre / total) * 100),
+		pctAbstention: Math.round((abstention / total) * 100)
+	};
+}
+
+/**
+ * Recherche full-text sur les scrutins avec ranking par pertinence (ts_rank).
+ * Cherche dans : title, description (via index GIN).
+ * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
+ */
+export async function searchScrutins(query: string, limit = 20) {
+	try {
+		const tsQuery = sql`plainto_tsquery('french', ${query})`;
+
+		return await db
+			.select({
+				id: scrutins.id,
+				title: scrutins.title,
+				date: scrutins.date,
+				number: scrutins.number,
+				legislature: scrutins.legislature,
+				result: scrutins.result,
+				groupResults: scrutins.groupResults
+			})
+			.from(scrutins)
+			.where(sql`${scrutinsSearchVector} @@ ${tsQuery}`)
+			.orderBy(desc(sql`ts_rank(${scrutinsSearchVector}, ${tsQuery})`))
+			.limit(limit);
+	} catch {
+		// Fallback ILIKE si tsquery échoue
+		return db
+			.select({
+				id: scrutins.id,
+				title: scrutins.title,
+				date: scrutins.date,
+				number: scrutins.number,
+				legislature: scrutins.legislature,
+				result: scrutins.result,
+				groupResults: scrutins.groupResults
+			})
+			.from(scrutins)
+			.where(ilike(scrutins.title, `%${query}%`))
+			.orderBy(desc(scrutins.date))
 			.limit(limit);
 	}
 }

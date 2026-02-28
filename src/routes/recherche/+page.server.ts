@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { db, actors, organs, scrutins, mandates } from '$lib/server/db';
+import { db, actors, organs, mandates } from '$lib/server/db';
 import { ilike, or, eq, sql, desc } from 'drizzle-orm';
-import { searchLaws } from '$lib/server/api/helpers';
+import { searchLaws, searchScrutins, extractGroupVote } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q') || '';
@@ -89,26 +89,37 @@ export const load: PageServerLoad = async ({ url }) => {
 		)
 		.limit(limit);
 
-	// Search scrutins
-	const scrutinsResults = await db
-		.select({
-			id: scrutins.id,
-			title: scrutins.title,
-			date: scrutins.date,
-			number: scrutins.number,
-			legislature: scrutins.legislature,
-			result: scrutins.result
-		})
-		.from(scrutins)
-		.where(ilike(scrutins.title, searchTerm))
-		.orderBy(sql`${scrutins.date} DESC`)
-		.limit(limit);
+	// Détecter un nom de groupe dans la requête (ex: "RN", "LFI", "NFP")
+	const allGroups = await db
+		.select({ id: organs.id, shortName: organs.shortName })
+		.from(organs)
+		.where(sql`${organs.type} = 'GP' AND ${organs.shortName} IS NOT NULL`);
 
-	// Search laws (full-text search)
+	const queryLower = query.toLowerCase();
+	const matchedGroup = allGroups.find(
+		(g) => g.shortName && queryLower.includes(g.shortName.toLowerCase())
+	);
+
+	// Search scrutins (fulltext + ranking ts_rank)
+	const rawScrutins = await searchScrutins(query, limit);
+
+	// Enrichir avec le % de vote du groupe détecté
+	const scrutinsResults = rawScrutins.map((s) => ({
+		id: s.id,
+		title: s.title,
+		date: s.date,
+		number: s.number,
+		legislature: s.legislature,
+		result: s.result,
+		groupVote: matchedGroup ? extractGroupVote(s.groupResults, matchedGroup.id) : null
+	}));
+
+	// Search laws (full-text search, ranking ts_rank)
 	const lawsResults = await searchLaws(query, limit);
 
 	return {
 		query,
+		matchedGroupShortName: matchedGroup?.shortName ?? null,
 		results: {
 			actors: actorsWithGroups,
 			groups: groupsResults,

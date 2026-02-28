@@ -196,6 +196,20 @@
 									<span class="scrutin-leg">{getLegislatureLabel(scrutin.legislature)}</span>
 								{/if}
 							</div>
+							{#if scrutin.groupVote}
+								<div class="group-vote">
+									<span class="group-vote-label">{data.matchedGroupShortName} :</span>
+									{#if scrutin.groupVote.pctPour >= scrutin.groupVote.pctContre && scrutin.groupVote.pctPour >= scrutin.groupVote.pctAbstention}
+										<span class="group-vote-pour">✅ {scrutin.groupVote.pctPour}% pour</span>
+									{:else if scrutin.groupVote.pctContre >= scrutin.groupVote.pctPour && scrutin.groupVote.pctContre >= scrutin.groupVote.pctAbstention}
+										<span class="group-vote-contre">❌ {scrutin.groupVote.pctContre}% contre</span>
+									{:else}
+										<span class="group-vote-abstention"
+											>🟡 {scrutin.groupVote.pctAbstention}% abstention</span
+										>
+									{/if}
+								</div>
+							{/if}
 						</div>
 						{#if scrutin.result}
 							<span
@@ -428,6 +442,31 @@
 		font-weight: 500;
 		text-transform: capitalize;
 		flex-shrink: 0;
+	}
+
+	.group-vote {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-top: 0.25rem;
+		font-size: 0.75rem;
+	}
+
+	.group-vote-label {
+		font-weight: 600;
+		color: var(--color-text-muted);
+	}
+
+	.group-vote-pour {
+		color: var(--color-success);
+	}
+
+	.group-vote-contre {
+		color: var(--color-danger);
+	}
+
+	.group-vote-abstention {
+		color: var(--color-warning, #92400e);
 	}
 
 	.scrutin-result.adopte {

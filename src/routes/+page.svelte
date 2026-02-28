@@ -1,10 +1,32 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+
 	let { data } = $props();
+	let searchInput = $state('');
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		if (searchInput.trim().length >= 2) {
+			goto(`/recherche?q=${encodeURIComponent(searchInput.trim())}`);
+		}
+	}
 </script>
 
 <div class="page-header">
 	<h1 class="page-title">Suivi de l'activité parlementaire</h1>
 	<p class="page-subtitle">Explorez les votes et activités des élus français</p>
+</div>
+
+<div class="home-search">
+	<form onsubmit={handleSearch} class="home-search-form">
+		<input
+			type="text"
+			class="input home-search-input"
+			placeholder="Rechercher : SMIC RN vote, retraites LFI, immigration..."
+			bind:value={searchInput}
+		/>
+		<button type="submit" class="btn btn-primary">Rechercher</button>
+	</form>
 </div>
 
 <div class="chambers-grid">
@@ -139,6 +161,27 @@
 {/if}
 
 <style>
+	.home-search {
+		margin-bottom: 2rem;
+	}
+
+	.home-search-form {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.home-search-input {
+		flex: 1;
+		font-size: 1rem;
+		padding: 0.75rem 1rem;
+	}
+
+	@media (max-width: 640px) {
+		.home-search-form {
+			flex-direction: column;
+		}
+	}
+
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 600;

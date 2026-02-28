@@ -8,7 +8,8 @@
 	const navItems = [
 		{ href: '/admin', label: 'Positions', exact: true },
 		{ href: '/admin/etl-status', label: 'État ETL' },
-		{ href: '/admin/law-text-review', label: 'Revue textes de loi' }
+		{ href: '/admin/law-text-review', label: 'Revue textes de loi' },
+		{ href: '/admin/search-synonyms', label: 'Synonymes recherche' }
 	];
 
 	function isActive(href: string, exact: boolean = false): boolean {

@@ -95,13 +95,18 @@ export const load: PageServerLoad = async ({ url }) => {
 		.from(organs)
 		.where(sql`${organs.type} = 'GP' AND ${organs.shortName} IS NOT NULL`);
 
-	const queryLower = query.toLowerCase();
 	const matchedGroup = allGroups.find(
-		(g) => g.shortName && queryLower.includes(g.shortName.toLowerCase())
+		(g) => g.shortName && new RegExp(`\\b${g.shortName}\\b`, 'i').test(query)
 	);
 
-	// Search scrutins (fulltext + ranking ts_rank)
-	const rawScrutins = await searchScrutins(query, limit);
+	// Retirer le nom de groupe de la requête de recherche pour le fulltext
+	// Ex: "SMIC RN" → on cherche "SMIC" et on montre le vote RN séparément
+	const searchQuery = matchedGroup?.shortName
+		? query.replace(new RegExp(matchedGroup.shortName, 'gi'), '').trim()
+		: query;
+
+	// Search scrutins (fulltext + ranking ts_rank, sans le nom de groupe)
+	const rawScrutins = await searchScrutins(searchQuery || query, limit);
 
 	// Enrichir avec le % de vote du groupe détecté
 	const scrutinsResults = rawScrutins.map((s) => ({

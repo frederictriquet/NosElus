@@ -7,7 +7,8 @@ import {
 	scrutins,
 	votes,
 	laws,
-	lawCosignatories
+	lawCosignatories,
+	searchSynonyms
 } from '$lib/server/db';
 import { eq, and, or, sql, notLike, inArray, count, desc, asc, ilike, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
@@ -1084,6 +1085,30 @@ export async function getActorGroups(
 	return groupByActor;
 }
 
+// ===== Expansion de termes via table search_synonyms =====
+
+/**
+ * Remplace les termes connus (acronymes, noms courants) par leur expansion officielle
+ * en interrogeant la table search_synonyms.
+ * Ex: "SMIC augmentation" → "salaire minimum interprofessionnel de croissance augmentation"
+ */
+export async function expandQueryTerms(query: string): Promise<string> {
+	const words = query.split(/\s+/).filter(Boolean);
+	if (words.length === 0) return query;
+	const upperWords = words.map((w) => w.toUpperCase());
+
+	// Les termes sont stockés en majuscules dans search_synonyms (ex: "SMIC")
+	const synonyms = await db
+		.select({ term: searchSynonyms.term, expansion: searchSynonyms.expansion })
+		.from(searchSynonyms)
+		.where(inArray(searchSynonyms.term, upperWords));
+
+	if (synonyms.length === 0) return query;
+
+	const map = new Map(synonyms.map((s) => [s.term.toUpperCase(), s.expansion]));
+	return words.map((w) => map.get(w.toUpperCase()) ?? w).join(' ');
+}
+
 // ===== Full-Text Search Laws =====
 
 /**
@@ -1110,11 +1135,12 @@ function authorMatchLawIds(searchTerm: string) {
  * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
  */
 export async function searchLaws(query: string, limit = 20) {
+	const expandedQuery = await expandQueryTerms(query);
 	const searchTerm = `%${query}%`;
 	const authorMatch = authorMatchLawIds(searchTerm);
 
 	try {
-		const tsQuery = sql`plainto_tsquery('french', ${query})`;
+		const tsQuery = sql`plainto_tsquery('french', ${expandedQuery})`;
 
 		return await db
 			.select({
@@ -1200,41 +1226,64 @@ export function extractGroupVote(groupResults: unknown, groupId: string): GroupV
 	};
 }
 
+const scrutinFields = {
+	id: scrutins.id,
+	title: scrutins.title,
+	date: scrutins.date,
+	number: scrutins.number,
+	legislature: scrutins.legislature,
+	result: scrutins.result,
+	groupResults: scrutins.groupResults
+};
+
 /**
- * Recherche full-text sur les scrutins avec ranking par pertinence (ts_rank).
- * Cherche dans : title, description (via index GIN).
- * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
+ * Recherche fulltext sur les scrutins.
+ * Stratégie double :
+ * 1. Direct : fulltext ts_rank sur title + description du scrutin
+ * 2. Indirect : via les lois liées (title + description + theme), pour les termes
+ *    absents des titres parlementaires formels (acronymes, noms courants…)
+ * Fallback ILIKE si tsquery échoue.
  */
 export async function searchScrutins(query: string, limit = 20) {
+	const expandedQuery = await expandQueryTerms(query);
 	try {
-		const tsQuery = sql`plainto_tsquery('french', ${query})`;
-
-		return await db
-			.select({
-				id: scrutins.id,
-				title: scrutins.title,
-				date: scrutins.date,
-				number: scrutins.number,
-				legislature: scrutins.legislature,
-				result: scrutins.result,
-				groupResults: scrutins.groupResults
-			})
+		// 1. Scrutins dont le titre/description matche directement
+		const direct = await db
+			.select(scrutinFields)
 			.from(scrutins)
-			.where(sql`${scrutinsSearchVector} @@ ${tsQuery}`)
-			.orderBy(desc(sql`ts_rank(${scrutinsSearchVector}, ${tsQuery})`))
+			.where(
+				sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')) @@ plainto_tsquery('french', ${expandedQuery})`
+			)
+			.orderBy(
+				desc(
+					sql`ts_rank(to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')), plainto_tsquery('french', ${expandedQuery}))`
+				)
+			)
 			.limit(limit);
+
+		if (direct.length >= limit) return direct;
+
+		// 2. Scrutins liés à des lois dont la description/theme matche
+		const lawsVec = sql`to_tsvector('french', coalesce(${laws.title}, '') || ' ' || coalesce(${laws.description}, '') || ' ' || coalesce(${laws.theme}, ''))`;
+		const scrutinsVec = sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, ''))`;
+		const viaLaws = await db
+			.selectDistinct(scrutinFields)
+			.from(scrutins)
+			.innerJoin(laws, eq(scrutins.lawId, laws.id))
+			.where(
+				and(
+					sql`${lawsVec} @@ plainto_tsquery('french', ${expandedQuery})`,
+					sql`NOT (${scrutinsVec} @@ plainto_tsquery('french', ${expandedQuery}))`
+				)
+			)
+			.orderBy(desc(scrutins.date))
+			.limit(limit - direct.length);
+
+		return [...direct, ...viaLaws];
 	} catch {
 		// Fallback ILIKE si tsquery échoue
 		return db
-			.select({
-				id: scrutins.id,
-				title: scrutins.title,
-				date: scrutins.date,
-				number: scrutins.number,
-				legislature: scrutins.legislature,
-				result: scrutins.result,
-				groupResults: scrutins.groupResults
-			})
+			.select(scrutinFields)
 			.from(scrutins)
 			.where(ilike(scrutins.title, `%${query}%`))
 			.orderBy(desc(scrutins.date))

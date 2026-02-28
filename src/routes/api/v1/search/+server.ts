@@ -2,11 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db, actors, organs, scrutins } from '$lib/server/db';
 import { ilike, or } from 'drizzle-orm';
-import { badRequest } from '$lib/server/api/helpers';
+import { badRequest, searchLaws } from '$lib/server/api/helpers';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const query = url.searchParams.get('q');
-	const type = url.searchParams.get('type'); // 'actors', 'organs', 'scrutins', or null for all
+	const type = url.searchParams.get('type'); // 'actors', 'organs', 'scrutins', 'laws', or null for all
 	const limit = Math.min(20, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10)));
 
 	if (!query || query.length < 2) {
@@ -18,6 +18,16 @@ export const GET: RequestHandler = async ({ url }) => {
 		actors?: Array<{ id: string; fullName: string; chamber: string; photoUrl: string | null }>;
 		organs?: Array<{ id: string; name: string; shortName: string | null; type: string }>;
 		scrutins?: Array<{ id: string; title: string; date: string | null; number: number }>;
+		laws?: Array<{
+			id: string;
+			title: string;
+			shortTitle: string | null;
+			type: string;
+			status: string | null;
+			depositDate: string | null;
+			legislature: string;
+			theme: string | null;
+		}>;
 	} = {};
 
 	// Search actors
@@ -60,6 +70,11 @@ export const GET: RequestHandler = async ({ url }) => {
 			.from(scrutins)
 			.where(ilike(scrutins.title, searchTerm))
 			.limit(limit);
+	}
+
+	// Search laws
+	if (!type || type === 'laws') {
+		results.laws = await searchLaws(query, limit);
 	}
 
 	return json({

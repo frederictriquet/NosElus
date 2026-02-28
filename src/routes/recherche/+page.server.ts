@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, scrutins, mandates } from '$lib/server/db';
 import { ilike, or, eq, sql, desc } from 'drizzle-orm';
+import { searchLaws } from '$lib/server/api/helpers';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q') || '';
@@ -103,13 +104,18 @@ export const load: PageServerLoad = async ({ url }) => {
 		.orderBy(sql`${scrutins.date} DESC`)
 		.limit(limit);
 
+	// Search laws (full-text search)
+	const lawsResults = await searchLaws(query, limit);
+
 	return {
 		query,
 		results: {
 			actors: actorsWithGroups,
 			groups: groupsResults,
 			scrutins: scrutinsResults,
-			total: actorsWithGroups.length + groupsResults.length + scrutinsResults.length
+			laws: lawsResults,
+			total:
+				actorsWithGroups.length + groupsResults.length + scrutinsResults.length + lawsResults.length
 		}
 	};
 };

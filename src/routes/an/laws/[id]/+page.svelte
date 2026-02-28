@@ -36,6 +36,52 @@
 			year: 'numeric'
 		});
 	}
+
+	function getStatusExplanation(status: string | null): string {
+		switch (status) {
+			case 'en cours':
+				return 'Ce dossier est en cours d\u2019examen parlementaire.';
+			case 'retiré':
+				return 'Ce dossier a été retiré.';
+			case 'adopté':
+				return 'Ce dossier a été adopté par le Parlement.';
+			case 'promulgué':
+				return 'Ce dossier a été promulgué.';
+			case 'rejeté':
+				return 'Ce dossier a été rejeté par le Parlement.';
+			default:
+				return '';
+		}
+	}
+
+	function getScrutinExplanation(status: string | null, count: number): string {
+		if (count > 0) {
+			return count === 1
+				? 'Un scrutin solennel en séance publique est rattaché à ce dossier.'
+				: `${count} scrutins solennels en séance publique sont rattachés à ce dossier.`;
+		}
+		switch (status) {
+			case 'en cours':
+				return 'Ce dossier n\u2019a pas encore fait l\u2019objet de scrutins en séance publique.';
+			case 'retiré':
+				return 'Ce dossier a été retiré avant d\u2019avoir fait l\u2019objet de scrutins en séance publique.';
+			default:
+				return 'Aucun scrutin solennel en séance publique n\u2019est rattaché à ce dossier dans nos données.';
+		}
+	}
+
+	function getSummaryExplanation(hasSummary: boolean): string {
+		if (hasSummary) return '';
+		return 'Le résumé automatique n\u2019a pas encore été généré pour ce dossier.';
+	}
+
+	function getContributorsExplanation(status: string | null, count: number): string {
+		if (count > 0) return '';
+		if (status === 'en cours' || status === 'retiré') {
+			return 'Aucun auteur ou cosignataire parlementaire n\u2019est enregistré pour ce dossier.';
+		}
+		return 'Aucun auteur ou cosignataire parlementaire n\u2019est rattaché à ce dossier dans nos données.';
+	}
 </script>
 
 <svelte:head>
@@ -49,6 +95,18 @@
 		<p class="page-subtitle">{data.law.shortTitle}</p>
 	{/if}
 </div>
+
+{#if getStatusExplanation(data.law.status)}
+	<div
+		class="status-context"
+		class:status-context-pending={data.law.status === 'en cours'}
+		class:status-context-adopted={data.law.status === 'adopté' || data.law.status === 'promulgué'}
+		class:status-context-rejected={data.law.status === 'rejeté'}
+		class:status-context-withdrawn={data.law.status === 'retiré'}
+	>
+		<p>{getStatusExplanation(data.law.status)}</p>
+	</div>
+{/if}
 
 <!-- Timeline -->
 {#if data.timeline.length > 0}
@@ -77,7 +135,7 @@
 		{#if summary}
 			<LawSummaryCard summary={summary.summary} tags={summary.tags || []} model={summary.model} />
 		{:else}
-			<p class="empty-state">Aucun résumé disponible pour ce dossier législatif.</p>
+			<p class="empty-state-contextual">{getSummaryExplanation(false)}</p>
 		{/if}
 	{/snippet}
 </AsyncCard>
@@ -85,8 +143,9 @@
 <!-- Stats -->
 <AsyncCard title="Scrutins liés" promise={data.scrutinStats}>
 	{#snippet children(stats)}
+		<p class="section-context">{getScrutinExplanation(data.law.status, stats.total)}</p>
 		{#if stats.total === 0}
-			<p class="empty-state">Aucun scrutin lié à ce dossier</p>
+			<!-- pas de stats à afficher -->
 		{:else}
 			<div class="stats-grid" style="margin-bottom: 1rem;">
 				<div class="stat-card">
@@ -131,7 +190,7 @@
 	<AsyncCard title="Liste des scrutins" promise={data.relatedScrutins} minHeight="200px">
 		{#snippet children(scrutins)}
 			{#if scrutins.length === 0}
-				<p class="empty-state">Aucun scrutin lié à ce dossier législatif</p>
+				<!-- message contextuel déjà affiché dans la section stats -->
 			{:else}
 				<div class="scrutins-list">
 					{#each scrutins as scrutin}
@@ -172,7 +231,7 @@
 	<AsyncCard title="Contributeurs" promise={data.contributors} minHeight="200px">
 		{#snippet children(contributors)}
 			{#if contributors.length === 0}
-				<p class="empty-state">Aucun contributeur enregistré</p>
+				<p class="empty-state-contextual">{getContributorsExplanation(data.law.status, 0)}</p>
 			{:else}
 				{@const authors = contributors.filter((c) => c.role === 'author')}
 				{@const cosignatories = contributors.filter((c) => c.role === 'cosignatory')}
@@ -298,6 +357,57 @@
 		font-weight: 500;
 		color: var(--color-text-muted);
 		margin-bottom: 0.5rem;
+	}
+
+	/* Status context banner */
+	.status-context {
+		margin-top: 1.5rem;
+		padding: 0.75rem 1rem;
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		border-left: 3px solid var(--color-border);
+		background: var(--color-bg-secondary);
+	}
+
+	.status-context p {
+		margin: 0;
+	}
+
+	.status-context-pending {
+		border-left-color: var(--color-warning, #d97706);
+		background: var(--color-warning-bg, #fef3c7);
+		color: var(--color-warning, #92400e);
+	}
+
+	.status-context-adopted {
+		border-left-color: var(--color-success);
+		background: var(--color-success-bg, #dcfce7);
+		color: var(--color-success);
+	}
+
+	.status-context-rejected {
+		border-left-color: var(--color-danger);
+		background: var(--color-danger-bg, #fde2e2);
+		color: var(--color-danger);
+	}
+
+	.status-context-withdrawn {
+		border-left-color: var(--color-text-muted);
+	}
+
+	/* Contextual explanations in sections */
+	.section-context {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		margin: 0 0 1rem 0;
+		font-style: italic;
+	}
+
+	.empty-state-contextual {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+		font-style: italic;
 	}
 
 	.law-type-badge {

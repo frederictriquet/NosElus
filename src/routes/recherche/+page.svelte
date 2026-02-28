@@ -85,6 +85,21 @@
 		if (legislature.startsWith('PE-')) return 'Parlement européen';
 		return `${legislature}e législature`;
 	}
+
+	function getLawStatusClass(status: string | null): string {
+		if (!status) return '';
+		switch (status.toLowerCase()) {
+			case 'adopté':
+			case 'promulgué':
+				return 'law-status-adopte';
+			case 'rejeté':
+				return 'law-status-rejete';
+			case 'en cours':
+				return 'law-status-encours';
+			default:
+				return '';
+		}
+	}
 </script>
 
 <svelte:head>
@@ -101,7 +116,7 @@
 		<input
 			type="text"
 			class="input search-input"
-			placeholder="Rechercher un élu, un groupe, un scrutin..."
+			placeholder="Rechercher un élu, un groupe, un scrutin, un texte de loi..."
 			bind:value={searchInput}
 		/>
 		<button type="submit" class="btn btn-primary">Rechercher</button>
@@ -197,6 +212,48 @@
 		</section>
 	{/if}
 
+	{#if data.results.laws.length > 0}
+		<section class="results-section">
+			<h2>
+				Dossiers législatifs
+				<span class="section-count">({data.results.laws.length})</span>
+			</h2>
+			<div class="laws-list">
+				{#each data.results.laws as law}
+					<a href="/an/laws/{law.id}" class="law-item">
+						<div class="law-info">
+							<div class="law-badges">
+								{#if law.type}
+									<span class="law-type">{law.type}</span>
+								{/if}
+								{#if law.status}
+									<span class="law-status {getLawStatusClass(law.status)}">{law.status}</span>
+								{/if}
+							</div>
+							<span class="law-title">
+								{(law.shortTitle || law.title).slice(0, 120)}{(law.shortTitle || law.title).length >
+								120
+									? '...'
+									: ''}
+							</span>
+							<div class="law-meta">
+								{#if law.depositDate}
+									<span>{new Date(law.depositDate).toLocaleDateString('fr-FR')}</span>
+								{/if}
+								{#if law.theme}
+									<span class="law-theme">{law.theme}</span>
+								{/if}
+								{#if law.legislature}
+									<span class="scrutin-leg">{getLegislatureLabel(law.legislature)}</span>
+								{/if}
+							</div>
+						</div>
+					</a>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	{#if data.results.total === 0}
 		<div class="empty-state">
 			<p>Aucun résultat pour « {data.query} »</p>
@@ -211,7 +268,7 @@
 	<div class="empty-state">
 		<p>Entrez un terme de recherche</p>
 		<p class="empty-hint">
-			Vous pouvez rechercher par nom d'élu, groupe politique, ou titre de scrutin
+			Vous pouvez rechercher par nom d'élu, groupe politique, titre de scrutin ou texte de loi
 		</p>
 	</div>
 {/if}
@@ -381,6 +438,93 @@
 	.scrutin-result.rejete {
 		background: var(--color-danger-bg, #fde2e2);
 		color: var(--color-danger);
+	}
+
+	/* Laws list */
+	.laws-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.law-item {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+		padding: 0.75rem 1rem;
+		background: var(--color-surface);
+		border-radius: var(--radius);
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow 0.2s;
+	}
+
+	.law-item:hover {
+		box-shadow: var(--shadow-md);
+		text-decoration: none;
+	}
+
+	.law-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.law-badges {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.law-type {
+		padding: 0.125rem 0.375rem;
+		background: var(--color-bg);
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
+	}
+
+	.law-status {
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-transform: capitalize;
+	}
+
+	.law-status-adopte {
+		background: var(--color-success-bg, #dcfce7);
+		color: var(--color-success);
+	}
+
+	.law-status-rejete {
+		background: var(--color-danger-bg, #fde2e2);
+		color: var(--color-danger);
+	}
+
+	.law-status-encours {
+		background: var(--color-warning-bg, #fef3c7);
+		color: var(--color-warning, #92400e);
+	}
+
+	.law-title {
+		display: block;
+		font-weight: 500;
+		line-height: 1.4;
+	}
+
+	.law-meta {
+		display: flex;
+		gap: 1rem;
+		margin-top: 0.25rem;
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.law-theme {
+		padding: 0.125rem 0.375rem;
+		background: var(--color-bg);
+		border-radius: 4px;
 	}
 
 	.empty-hint {

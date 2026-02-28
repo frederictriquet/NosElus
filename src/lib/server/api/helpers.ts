@@ -9,7 +9,7 @@ import {
 	laws,
 	lawCosignatories
 } from '$lib/server/db';
-import { eq, and, sql, notLike, inArray, count, desc, asc, type SQL } from 'drizzle-orm';
+import { eq, and, or, sql, notLike, inArray, count, desc, asc, ilike, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
 // ===== Period Filters =====
@@ -1082,6 +1082,73 @@ export async function getActorGroups(
 	}
 
 	return groupByActor;
+}
+
+// ===== Full-Text Search Laws =====
+
+/**
+ * Expression tsvector pour la recherche full-text sur les lois.
+ * DOIT matcher exactement l'expression de l'index GIN `laws_search_idx`.
+ */
+const lawsSearchVector = sql`to_tsvector('french', coalesce(${laws.title}, '') || ' ' || coalesce(${laws.description}, '') || ' ' || coalesce(${laws.theme}, ''))`;
+
+/**
+ * Sous-requête : IDs des lois dont un auteur/cosignataire matche le terme.
+ * Permet de trouver "loi Duplomb" en cherchant "Duplomb".
+ */
+function authorMatchLawIds(searchTerm: string) {
+	return db
+		.selectDistinct({ lawId: lawCosignatories.lawId })
+		.from(lawCosignatories)
+		.innerJoin(actors, eq(actors.id, lawCosignatories.actorId))
+		.where(or(ilike(actors.lastName, searchTerm), ilike(actors.fullName, searchTerm)));
+}
+
+/**
+ * Recherche full-text sur les lois avec ranking par pertinence.
+ * Cherche dans : title, description, theme (via index GIN) + noms des auteurs/cosignataires.
+ * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
+ */
+export async function searchLaws(query: string, limit = 20) {
+	const searchTerm = `%${query}%`;
+	const authorMatch = authorMatchLawIds(searchTerm);
+
+	try {
+		const tsQuery = sql`plainto_tsquery('french', ${query})`;
+
+		return await db
+			.select({
+				id: laws.id,
+				title: laws.title,
+				shortTitle: laws.shortTitle,
+				type: laws.type,
+				status: laws.status,
+				depositDate: laws.depositDate,
+				legislature: laws.legislature,
+				theme: laws.theme
+			})
+			.from(laws)
+			.where(or(sql`${lawsSearchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatch)))
+			.orderBy(desc(laws.depositDate))
+			.limit(limit);
+	} catch {
+		// Fallback ILIKE si tsquery échoue
+		return db
+			.select({
+				id: laws.id,
+				title: laws.title,
+				shortTitle: laws.shortTitle,
+				type: laws.type,
+				status: laws.status,
+				depositDate: laws.depositDate,
+				legislature: laws.legislature,
+				theme: laws.theme
+			})
+			.from(laws)
+			.where(or(ilike(laws.title, searchTerm), inArray(laws.id, authorMatch)))
+			.orderBy(desc(laws.depositDate))
+			.limit(limit);
+	}
 }
 
 // ===== Law Implication Helpers =====

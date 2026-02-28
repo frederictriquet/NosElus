@@ -99,6 +99,13 @@
 			"when": 1770734326517,
 			"tag": "0013_whole_beyonder",
 			"breakpoints": true
+		},
+		{
+			"idx": 14,
+			"version": "7",
+			"when": 1772092800000,
+			"tag": "0014_law_fulltext_search",
+			"breakpoints": true
 		}
 	]
 }

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { db, laws, lawTags, tags } from '$lib/server/db';
-import { count, ilike, eq, desc, and, asc, inArray, type SQL } from 'drizzle-orm';
+import { db, laws, lawTags, tags, lawCosignatories, actors } from '$lib/server/db';
+import { count, eq, desc, and, or, asc, inArray, ilike, sql, type SQL } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
@@ -15,8 +15,23 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	// Build where conditions
 	const conditions: SQL[] = [];
 
+	// Full-text search expression (doit matcher l'index GIN laws_search_idx)
+	const searchVector = sql`to_tsvector('french', coalesce(${laws.title}, '') || ' ' || coalesce(${laws.description}, '') || ' ' || coalesce(${laws.theme}, ''))`;
+	let hasSearch = false;
+
 	if (search) {
-		conditions.push(ilike(laws.title, `%${search}%`));
+		const tsQuery = sql`plainto_tsquery('french', ${search})`;
+		const searchTerm = `%${search}%`;
+
+		// Sous-requête : lois dont un auteur/cosignataire matche le terme
+		const authorMatchIds = db
+			.selectDistinct({ lawId: lawCosignatories.lawId })
+			.from(lawCosignatories)
+			.innerJoin(actors, eq(actors.id, lawCosignatories.actorId))
+			.where(or(ilike(actors.lastName, searchTerm), ilike(actors.fullName, searchTerm)));
+
+		conditions.push(or(sql`${searchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatchIds))!);
+		hasSearch = true;
 	}
 
 	if (type) {
@@ -83,7 +98,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 				})
 				.from(laws)
 				.where(whereClause)
-				.orderBy(desc(laws.depositDate))
+				.orderBy(
+					...(hasSearch
+						? [sql`ts_rank(${searchVector}, plainto_tsquery('french', ${search})) DESC`]
+						: [desc(laws.depositDate)])
+				)
 				.limit(limit)
 				.offset(offset)
 		]);

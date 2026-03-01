@@ -6,7 +6,7 @@
 > Contexte déclencheur : post viral affirmant "le RN défend les travailleurs" alors que
 > le groupe a voté contre l'augmentation du SMIC à 1500€ net (20/07/2022).
 >
-> Dernière mise à jour : 2026-02-28
+> Dernière mise à jour : 2026-03-01
 
 ---
 
@@ -39,12 +39,17 @@ Recherche langage naturel  ──►  Vérifier une affirmation
 
 **Exemples de requêtes** : "SMIC RN vote", "retraites LFI 2023", "immigration droite abstention"
 
-### Phase A — Fulltext enrichi (court terme)
+### Phase A — Fulltext enrichi ✅ DONE (2026-03-01)
 
-- S'appuie sur l'indexation fulltext PostgreSQL déjà en place (`migration 0014`)
-- Enrichir l'index avec titres de lois, descriptions de scrutins, noms de groupes politiques
-- Ranking par pertinence
-- **Prérequis** : auditer `src/routes/api/v1/search/+server.ts` pour voir ce qui est déjà indexé
+- Index GIN sur `scrutins` (title + description) — migration 0015
+- Ranking `ts_rank` sur scrutins et lois, stratégie double (direct + via lois liées)
+- Expansion d'acronymes via table `search_synonyms` (admin-gérable, 18 entrées : SMIC, TVA, IVG…)
+- Filtrage mots bruit via table `search_noise_words` (admin-gérable : vote, voté, résultat…)
+- Détection du groupe dans la requête + affichage % vote (pour/contre/abstention)
+- Champ de recherche proéminent sur la homepage
+- Fix : "SMIC RN vote" retourne bien les 2 scrutins SMIC
+- Interfaces admin CRUD : `/admin/search-synonyms`, `/admin/search-noise-words`
+- 25 tests (unit + integration)
 
 ### Phase B — Recherche sémantique (moyen terme)
 
@@ -57,7 +62,7 @@ Recherche langage naturel  ──►  Vérifier une affirmation
 - LLM identifie les entités (parti, thème, période) et interroge la base
 - Réponse sourcée avec liens vers les votes
 
-**Point d'entrée UX** : champ de recherche proéminent sur la page d'accueil (actuellement absent ou discret)
+**Point d'entrée UX** : champ de recherche proéminent sur la page d'accueil ✅ (ajouté en Phase A)
 
 ---
 
@@ -219,12 +224,13 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation :
 
-| Étape | Feature                        | Livrable                                                 | Effort      |
-| ----- | ------------------------------ | -------------------------------------------------------- | ----------- |
-| 1     | Recherche + Vérifier (Phase 1) | Champ de recherche enrichi + page `/verifier` basique    | ~1 semaine  |
-| 2     | Cartes texte                   | Bouton "Copier" sur pages scrutin + champ `title_simple` | ~1-2 jours  |
-| 3     | Fiches thématiques (pilote)    | 2-3 thèmes avec tagging manuel                           | ~1 semaine  |
-| 4     | Cartes image (OG)              | Images partageables générées côté serveur                | ~2-3 jours  |
-| 5     | Vérifier (Phase 2)             | Verdict semi-auto via LLM                                | ~1 mois     |
-| 6     | Recherche sémantique           | pgvector + embeddings                                    | À planifier |
-| 7     | RAG complet                    | Réponse en langage naturel sourcée                       | Ambitieux   |
+| Étape | Feature                     | Livrable                                                 | Effort      | Statut  |
+| ----- | --------------------------- | -------------------------------------------------------- | ----------- | ------- |
+| 1     | Recherche Phase A           | Fulltext enrichi, synonymes, mots bruit, UI homepage     | ~1 semaine  | ✅ DONE |
+| 2     | Vérifier (Phase 1)          | Page `/verifier` basique (réutilise infra Phase A)       | ~2-3 jours  | ⬜ TODO |
+| 3     | Cartes texte                | Bouton "Copier" sur pages scrutin + champ `title_simple` | ~1-2 jours  | ⬜ TODO |
+| 4     | Fiches thématiques (pilote) | 2-3 thèmes avec tagging manuel                           | ~1 semaine  | ⬜ TODO |
+| 5     | Cartes image (OG)           | Images partageables générées côté serveur                | ~2-3 jours  | ⬜ TODO |
+| 6     | Vérifier (Phase 2)          | Verdict semi-auto via LLM                                | ~1 mois     | ⬜ TODO |
+| 7     | Recherche sémantique        | pgvector + embeddings                                    | À planifier | ⬜ TODO |
+| 8     | RAG complet                 | Réponse en langage naturel sourcée                       | Ambitieux   | ⬜ TODO |

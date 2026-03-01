@@ -8,7 +8,8 @@ import {
 	votes,
 	laws,
 	lawCosignatories,
-	searchSynonyms
+	searchSynonyms,
+	searchNoiseWords
 } from '$lib/server/db';
 import { eq, and, or, sql, notLike, inArray, count, desc, asc, ilike, type SQL } from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
@@ -1229,6 +1230,30 @@ const scrutinFields = {
 	groupResults: scrutins.groupResults
 };
 
+// Cache en mémoire pour les mots bruit (table stable, TTL 1h)
+let noiseWordsCache: Set<string> | null = null;
+let noiseWordsCacheExpiry = 0;
+
+async function getNoiseWords(): Promise<Set<string>> {
+	const now = Date.now();
+	if (noiseWordsCache && now < noiseWordsCacheExpiry) return noiseWordsCache;
+	const rows = await db.select({ word: searchNoiseWords.word }).from(searchNoiseWords);
+	noiseWordsCache = new Set(rows.map((r) => r.word.toLowerCase()));
+	noiseWordsCacheExpiry = now + 60 * 60 * 1000; // TTL 1h
+	return noiseWordsCache;
+}
+
+/**
+ * Retire les mots bruit (table search_noise_words) d'une requête fulltext scrutins.
+ * Si tous les mots sont du bruit, retourne la requête originale (fallback safe).
+ */
+async function stripScrutinNoiseWords(query: string): Promise<string> {
+	const noiseWords = await getNoiseWords();
+	const words = query.split(/\s+/).filter(Boolean);
+	const filtered = words.filter((w) => !noiseWords.has(w.toLowerCase()));
+	return filtered.length > 0 ? filtered.join(' ') : query;
+}
+
 /**
  * Recherche fulltext sur les scrutins.
  * Stratégie double :
@@ -1239,17 +1264,18 @@ const scrutinFields = {
  */
 export async function searchScrutins(query: string, limit = 20) {
 	const expandedQuery = await expandQueryTerms(query);
+	const ftsQuery = await stripScrutinNoiseWords(expandedQuery);
 	try {
 		// 1. Scrutins dont le titre/description matche directement
 		const direct = await db
 			.select(scrutinFields)
 			.from(scrutins)
 			.where(
-				sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')) @@ plainto_tsquery('french', ${expandedQuery})`
+				sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')) @@ plainto_tsquery('french', ${ftsQuery})`
 			)
 			.orderBy(
 				desc(
-					sql`ts_rank(to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')), plainto_tsquery('french', ${expandedQuery}))`
+					sql`ts_rank(to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')), plainto_tsquery('french', ${ftsQuery}))`
 				)
 			)
 			.limit(limit);
@@ -1265,8 +1291,8 @@ export async function searchScrutins(query: string, limit = 20) {
 			.innerJoin(laws, eq(scrutins.lawId, laws.id))
 			.where(
 				and(
-					sql`${lawsVec} @@ plainto_tsquery('french', ${expandedQuery})`,
-					sql`NOT (${scrutinsVec} @@ plainto_tsquery('french', ${expandedQuery}))`
+					sql`${lawsVec} @@ plainto_tsquery('french', ${ftsQuery})`,
+					sql`NOT (${scrutinsVec} @@ plainto_tsquery('french', ${ftsQuery}))`
 				)
 			)
 			.orderBy(desc(scrutins.date))

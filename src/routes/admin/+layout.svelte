@@ -9,7 +9,8 @@
 		{ href: '/admin', label: 'Positions', exact: true },
 		{ href: '/admin/etl-status', label: 'État ETL' },
 		{ href: '/admin/law-text-review', label: 'Revue textes de loi' },
-		{ href: '/admin/search-synonyms', label: 'Synonymes recherche' }
+		{ href: '/admin/search-synonyms', label: 'Synonymes recherche' },
+		{ href: '/admin/search-noise-words', label: 'Mots bruit' }
 	];
 
 	function isActive(href: string, exact: boolean = false): boolean {

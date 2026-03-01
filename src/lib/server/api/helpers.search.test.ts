@@ -228,4 +228,20 @@ describe('searchScrutins - Integration', () => {
 		const result = await searchScrutins('rejet');
 		expect(Array.isArray(result)).toBe(true);
 	});
+
+	it('should return SMIC scrutins even when query contains "vote" noise word', async () => {
+		if (!dbAvailable) return;
+
+		// "SMIC vote" simule ce que page.server.ts envoie après avoir strippé "RN" de "SMIC RN vote"
+		// Sans le strip des mots bruit, plainto_tsquery ANDait "vote" et trouvait 0 résultats
+		const result = await searchScrutins('SMIC vote');
+		expect(result.length).toBeGreaterThan(0);
+	});
+
+	it('should return SMIC scrutins even when query contains "voté" noise word', async () => {
+		if (!dbAvailable) return;
+
+		const result = await searchScrutins('SMIC voté');
+		expect(result.length).toBeGreaterThan(0);
+	});
 });

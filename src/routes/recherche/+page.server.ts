@@ -3,6 +3,25 @@ import { db, actors, organs, mandates } from '$lib/server/db';
 import { ilike, or, eq, sql, desc } from 'drizzle-orm';
 import { searchLaws, searchScrutins, extractGroupVote } from '$lib/server/api/helpers';
 
+// Cache en mémoire pour la liste des groupes parlementaires (table stable, TTL 1h)
+let groupsCache: Array<{ id: string; shortName: string | null }> | null = null;
+let groupsCacheExpiry = 0;
+
+async function getAllGroups() {
+	const now = Date.now();
+	if (groupsCache && now < groupsCacheExpiry) return groupsCache;
+	groupsCache = await db
+		.select({ id: organs.id, shortName: organs.shortName })
+		.from(organs)
+		.where(sql`${organs.type} = 'GP' AND ${organs.shortName} IS NOT NULL`);
+	groupsCacheExpiry = now + 60 * 60 * 1000; // TTL 1h
+	return groupsCache;
+}
+
+function escapeRegExp(s: string): string {
+	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q') || '';
 	const limit = 20;
@@ -90,19 +109,16 @@ export const load: PageServerLoad = async ({ url }) => {
 		.limit(limit);
 
 	// Détecter un nom de groupe dans la requête (ex: "RN", "LFI", "NFP")
-	const allGroups = await db
-		.select({ id: organs.id, shortName: organs.shortName })
-		.from(organs)
-		.where(sql`${organs.type} = 'GP' AND ${organs.shortName} IS NOT NULL`);
+	const allGroups = await getAllGroups();
 
 	const matchedGroup = allGroups.find(
-		(g) => g.shortName && new RegExp(`\\b${g.shortName}\\b`, 'i').test(query)
+		(g) => g.shortName && new RegExp(`\\b${escapeRegExp(g.shortName)}\\b`, 'i').test(query)
 	);
 
 	// Retirer le nom de groupe de la requête de recherche pour le fulltext
 	// Ex: "SMIC RN" → on cherche "SMIC" et on montre le vote RN séparément
 	const searchQuery = matchedGroup?.shortName
-		? query.replace(new RegExp(matchedGroup.shortName, 'gi'), '').trim()
+		? query.replace(new RegExp(escapeRegExp(matchedGroup.shortName), 'gi'), '').trim()
 		: query;
 
 	// Search scrutins (fulltext + ranking ts_rank, sans le nom de groupe)

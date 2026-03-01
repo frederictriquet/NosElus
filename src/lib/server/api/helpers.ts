@@ -1134,6 +1134,17 @@ function authorMatchLawIds(searchTerm: string) {
  * Cherche dans : title, description, theme (via index GIN) + noms des auteurs/cosignataires.
  * Fallback sur ILIKE si le tsquery échoue (caractères spéciaux, etc.).
  */
+const lawFields = {
+	id: laws.id,
+	title: laws.title,
+	shortTitle: laws.shortTitle,
+	type: laws.type,
+	status: laws.status,
+	depositDate: laws.depositDate,
+	legislature: laws.legislature,
+	theme: laws.theme
+};
+
 export async function searchLaws(query: string, limit = 20) {
 	const expandedQuery = await expandQueryTerms(query);
 	const searchTerm = `%${query}%`;
@@ -1143,16 +1154,7 @@ export async function searchLaws(query: string, limit = 20) {
 		const tsQuery = sql`plainto_tsquery('french', ${expandedQuery})`;
 
 		return await db
-			.select({
-				id: laws.id,
-				title: laws.title,
-				shortTitle: laws.shortTitle,
-				type: laws.type,
-				status: laws.status,
-				depositDate: laws.depositDate,
-				legislature: laws.legislature,
-				theme: laws.theme
-			})
+			.select(lawFields)
 			.from(laws)
 			.where(or(sql`${lawsSearchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatch)))
 			.orderBy(desc(sql`ts_rank(${lawsSearchVector}, ${tsQuery})`))
@@ -1160,16 +1162,7 @@ export async function searchLaws(query: string, limit = 20) {
 	} catch {
 		// Fallback ILIKE si tsquery échoue
 		return db
-			.select({
-				id: laws.id,
-				title: laws.title,
-				shortTitle: laws.shortTitle,
-				type: laws.type,
-				status: laws.status,
-				depositDate: laws.depositDate,
-				legislature: laws.legislature,
-				theme: laws.theme
-			})
+			.select(lawFields)
 			.from(laws)
 			.where(or(ilike(laws.title, searchTerm), inArray(laws.id, authorMatch)))
 			.orderBy(desc(laws.depositDate))

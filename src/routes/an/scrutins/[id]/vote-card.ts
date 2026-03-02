@@ -29,7 +29,9 @@ export type VoteCardScrutin = {
 
 export function formatVoteCard(scrutin: VoteCardScrutin, groups: VoteCardGroup[]): string {
 	const titre = scrutin.titleSimple ?? scrutin.title;
-	const date = new Date(scrutin.date).toLocaleDateString('fr-FR', {
+	// Parsing explicite pour éviter le décalage UTC (new Date('YYYY-MM-DD') = minuit UTC)
+	const [year, month, day] = scrutin.date.split('-').map(Number);
+	const date = new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric'

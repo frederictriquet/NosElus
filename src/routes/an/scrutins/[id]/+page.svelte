@@ -31,6 +31,7 @@
 	type Group = Awaited<typeof data.groupBreakdown>[number];
 
 	let copied = $state(false);
+	let copyError = $state(false);
 	let resolvedGroups = $state<Group[]>([]);
 
 	$effect(() => {
@@ -40,11 +41,18 @@
 	});
 
 	async function copyVoteCard() {
-		await navigator.clipboard.writeText(formatVoteCard(data.scrutin, resolvedGroups));
-		copied = true;
-		setTimeout(() => {
-			copied = false;
-		}, 2000);
+		try {
+			await navigator.clipboard.writeText(formatVoteCard(data.scrutin, resolvedGroups));
+			copied = true;
+			setTimeout(() => {
+				copied = false;
+			}, 2000);
+		} catch {
+			copyError = true;
+			setTimeout(() => {
+				copyError = false;
+			}, 2000);
+		}
 	}
 </script>
 
@@ -85,11 +93,12 @@
 		<button
 			class="copy-btn"
 			class:copied
+			class:copy-error={copyError}
 			onclick={copyVoteCard}
 			disabled={resolvedGroups.length === 0}
 			title="Copier un résumé du vote prêt à partager"
 		>
-			{copied ? '✓ Copié !' : '📋 Copier le résumé'}
+			{copied ? '✓ Copié !' : copyError ? '✗ Échec de la copie' : '📋 Copier le résumé'}
 		</button>
 	</div>
 </div>
@@ -220,6 +229,12 @@
 		background: var(--color-success-bg);
 		border-color: var(--color-success);
 		color: var(--color-success);
+	}
+
+	.copy-btn.copy-error {
+		background: var(--color-danger-bg);
+		border-color: var(--color-danger);
+		color: var(--color-danger);
 	}
 
 	.charts-row {

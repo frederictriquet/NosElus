@@ -18,8 +18,20 @@ function makeGroup(
 	return { shortName: null, ...overrides };
 }
 
-const RN = makeGroup({ name: 'Rassemblement National', shortName: 'RN', pour: 6, contre: 88, abstention: 0 });
-const NFP = makeGroup({ name: 'Nouveau Front Populaire', shortName: 'NFP', pour: 60, contre: 0, abstention: 0 });
+const RN = makeGroup({
+	name: 'Rassemblement National',
+	shortName: 'RN',
+	pour: 6,
+	contre: 88,
+	abstention: 0
+});
+const NFP = makeGroup({
+	name: 'Nouveau Front Populaire',
+	shortName: 'NFP',
+	pour: 60,
+	contre: 0,
+	abstention: 0
+});
 const ENS = makeGroup({ name: 'Ensemble', shortName: 'ENS', pour: 10, contre: 72, abstention: 18 });
 
 // ============================================================
@@ -77,7 +89,13 @@ describe('formatVoteCard — positions', () => {
 	});
 
 	it('should show abstention groups when they have abstention > 0', () => {
-		const abstGroup = makeGroup({ name: 'Groupe A', shortName: 'GA', pour: 0, contre: 0, abstention: 50 });
+		const abstGroup = makeGroup({
+			name: 'Groupe A',
+			shortName: 'GA',
+			pour: 0,
+			contre: 0,
+			abstention: 50
+		});
 		const result = formatVoteCard(scrutin, [abstGroup]);
 		expect(result).toContain('🟡 Abstention : GA (100%)');
 	});
@@ -89,7 +107,13 @@ describe('formatVoteCard — positions', () => {
 
 describe('formatVoteCard — positions vides', () => {
 	it('should show "—" for Pour when no group voted for', () => {
-		const onlyAgainst = makeGroup({ name: 'Groupe X', shortName: 'GX', pour: 0, contre: 50, abstention: 0 });
+		const onlyAgainst = makeGroup({
+			name: 'Groupe X',
+			shortName: 'GX',
+			pour: 0,
+			contre: 50,
+			abstention: 0
+		});
 		const result = formatVoteCard(scrutin, [onlyAgainst]);
 		expect(result).toContain('✅ Pour       : —');
 	});
@@ -150,7 +174,12 @@ describe('formatVoteCard — affichage du nom du groupe', () => {
 	});
 
 	it('should fall back to name when shortName is null', () => {
-		const noShortName = makeGroup({ name: 'Groupe Sans Sigle', pour: 10, contre: 0, abstention: 0 });
+		const noShortName = makeGroup({
+			name: 'Groupe Sans Sigle',
+			pour: 10,
+			contre: 0,
+			abstention: 0
+		});
 		const result = formatVoteCard(scrutin, [noShortName]);
 		expect(result).toContain('Groupe Sans Sigle');
 	});
@@ -162,7 +191,13 @@ describe('formatVoteCard — affichage du nom du groupe', () => {
 
 describe('formatVoteCard — groupes à total zéro', () => {
 	it('should not include groups with all-zero votes in any position', () => {
-		const ghost = makeGroup({ name: 'Fantôme', shortName: 'GHO', pour: 0, contre: 0, abstention: 0 });
+		const ghost = makeGroup({
+			name: 'Fantôme',
+			shortName: 'GHO',
+			pour: 0,
+			contre: 0,
+			abstention: 0
+		});
 		const result = formatVoteCard(scrutin, [ghost, NFP]);
 		expect(result).not.toContain('GHO');
 		expect(result).toContain('NFP');

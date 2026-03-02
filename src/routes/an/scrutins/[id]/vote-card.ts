@@ -37,7 +37,10 @@ export function formatVoteCard(scrutin: VoteCardScrutin, groups: VoteCardGroup[]
 
 	const votingTotal = (g: VoteCardGroup) => g.pour + g.contre + g.abstention;
 
-	const formatGroups = (filtered: VoteCardGroup[], getVal: (g: VoteCardGroup) => number): string => {
+	const formatGroups = (
+		filtered: VoteCardGroup[],
+		getVal: (g: VoteCardGroup) => number
+	): string => {
 		if (filtered.length === 0) return '—';
 		return filtered
 			.sort((a, b) => getVal(b) / votingTotal(b) - getVal(a) / votingTotal(a))
@@ -53,9 +56,18 @@ export function formatVoteCard(scrutin: VoteCardScrutin, groups: VoteCardGroup[]
 		`📊 VOTE : ${titre}`,
 		`📅 ${date} — Assemblée Nationale`,
 		'',
-		`✅ Pour       : ${formatGroups(groups.filter((g) => g.pour > 0), (g) => g.pour)}`,
-		`❌ Contre     : ${formatGroups(groups.filter((g) => g.contre > 0), (g) => g.contre)}`,
-		`🟡 Abstention : ${formatGroups(groups.filter((g) => g.abstention > 0), (g) => g.abstention)}`,
+		`✅ Pour       : ${formatGroups(
+			groups.filter((g) => g.pour > 0),
+			(g) => g.pour
+		)}`,
+		`❌ Contre     : ${formatGroups(
+			groups.filter((g) => g.contre > 0),
+			(g) => g.contre
+		)}`,
+		`🟡 Abstention : ${formatGroups(
+			groups.filter((g) => g.abstention > 0),
+			(g) => g.abstention
+		)}`,
 		'',
 		`Source : nosElus.fr/an/scrutins/${scrutin.id}`
 	].join('\n');

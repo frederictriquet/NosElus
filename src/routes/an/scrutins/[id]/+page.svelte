@@ -24,6 +24,61 @@
 			year: 'numeric'
 		});
 	}
+
+	// --- Carte de vote partageable ---
+
+	type Group = Awaited<typeof data.groupBreakdown>[number];
+
+	let copied = $state(false);
+	let resolvedGroups = $state<Group[]>([]);
+
+	$effect(() => {
+		data.groupBreakdown.then((g) => {
+			resolvedGroups = g;
+		});
+	});
+
+	function formatVoteCard(groups: Group[]): string {
+		const titre = data.scrutin.titleSimple ?? data.scrutin.title;
+		const date = new Date(data.scrutin.date).toLocaleDateString('fr-FR', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+
+		const votingTotal = (g: Group) => g.pour + g.contre + g.abstention;
+
+		const formatGroups = (filtered: Group[], getVal: (g: Group) => number): string => {
+			if (filtered.length === 0) return '—';
+			return filtered
+				.sort((a, b) => getVal(b) / votingTotal(b) - getVal(a) / votingTotal(a))
+				.map((g) => {
+					const name = g.shortName ?? g.name;
+					const pct = Math.round((getVal(g) / votingTotal(g)) * 100);
+					return `${name} (${pct}%)`;
+				})
+				.join(', ');
+		};
+
+		return [
+			`📊 VOTE : ${titre}`,
+			`📅 ${date} — Assemblée Nationale`,
+			'',
+			`✅ Pour       : ${formatGroups(groups.filter((g) => g.pour > 0), (g) => g.pour)}`,
+			`❌ Contre     : ${formatGroups(groups.filter((g) => g.contre > 0), (g) => g.contre)}`,
+			`🟡 Abstention : ${formatGroups(groups.filter((g) => g.abstention > 0), (g) => g.abstention)}`,
+			'',
+			`Source : nosElus.fr/an/scrutins/${data.scrutin.id}`
+		].join('\n');
+	}
+
+	async function copyVoteCard() {
+		await navigator.clipboard.writeText(formatVoteCard(resolvedGroups));
+		copied = true;
+		setTimeout(() => {
+			copied = false;
+		}, 2000);
+	}
 </script>
 
 <svelte:head>
@@ -57,8 +112,19 @@
 			</span>
 		{/if}
 	</div>
-	<h1 class="page-title">{data.scrutin.title}</h1>
+	<h1 class="page-title">{data.scrutin.titleSimple ?? data.scrutin.title}</h1>
 	<p class="page-subtitle">{formatDate(data.scrutin.date)}</p>
+	<div class="vote-card-actions">
+		<button
+			class="copy-btn"
+			class:copied
+			onclick={copyVoteCard}
+			disabled={resolvedGroups.length === 0}
+			title="Copier un résumé du vote prêt à partager"
+		>
+			{copied ? '✓ Copié !' : '📋 Copier le résumé'}
+		</button>
+	</div>
 </div>
 
 <!-- Related Law -->
@@ -155,6 +221,40 @@
 </section>
 
 <style>
+	.vote-card-actions {
+		margin-top: 1rem;
+	}
+
+	.copy-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.5rem 1rem;
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		color: var(--color-text);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.copy-btn:hover:not(:disabled) {
+		background: var(--color-bg-hover);
+		border-color: var(--color-primary);
+	}
+
+	.copy-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	.copy-btn.copied {
+		background: var(--color-success-bg);
+		border-color: var(--color-success);
+		color: var(--color-success);
+	}
+
 	.charts-row {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);

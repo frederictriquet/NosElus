@@ -3,6 +3,7 @@
 	import LawDossierCard from '$lib/components/LawDossierCard.svelte';
 	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
+	import { formatVoteCard } from './vote-card';
 
 	let { data } = $props();
 
@@ -38,42 +39,8 @@
 		});
 	});
 
-	function formatVoteCard(groups: Group[]): string {
-		const titre = data.scrutin.titleSimple ?? data.scrutin.title;
-		const date = new Date(data.scrutin.date).toLocaleDateString('fr-FR', {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric'
-		});
-
-		const votingTotal = (g: Group) => g.pour + g.contre + g.abstention;
-
-		const formatGroups = (filtered: Group[], getVal: (g: Group) => number): string => {
-			if (filtered.length === 0) return '—';
-			return filtered
-				.sort((a, b) => getVal(b) / votingTotal(b) - getVal(a) / votingTotal(a))
-				.map((g) => {
-					const name = g.shortName ?? g.name;
-					const pct = Math.round((getVal(g) / votingTotal(g)) * 100);
-					return `${name} (${pct}%)`;
-				})
-				.join(', ');
-		};
-
-		return [
-			`📊 VOTE : ${titre}`,
-			`📅 ${date} — Assemblée Nationale`,
-			'',
-			`✅ Pour       : ${formatGroups(groups.filter((g) => g.pour > 0), (g) => g.pour)}`,
-			`❌ Contre     : ${formatGroups(groups.filter((g) => g.contre > 0), (g) => g.contre)}`,
-			`🟡 Abstention : ${formatGroups(groups.filter((g) => g.abstention > 0), (g) => g.abstention)}`,
-			'',
-			`Source : nosElus.fr/an/scrutins/${data.scrutin.id}`
-		].join('\n');
-	}
-
 	async function copyVoteCard() {
-		await navigator.clipboard.writeText(formatVoteCard(resolvedGroups));
+		await navigator.clipboard.writeText(formatVoteCard(data.scrutin, resolvedGroups));
 		copied = true;
 		setTimeout(() => {
 			copied = false;

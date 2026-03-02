@@ -13,7 +13,7 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const word = (data.get('word') as string)?.trim().toLowerCase();
 
-		if (!word || word.length < 2) return fail(400, { error: 'Mot trop court' });
+		if (!word || word.length < 1) return fail(400, { error: 'Mot vide' });
 
 		await db.insert(searchNoiseWords).values({ word }).onConflictDoNothing();
 

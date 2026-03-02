@@ -6,7 +6,7 @@
 > Contexte déclencheur : post viral affirmant "le RN défend les travailleurs" alors que
 > le groupe a voté contre l'augmentation du SMIC à 1500€ net (20/07/2022).
 >
-> Dernière mise à jour : 2026-03-01
+> Dernière mise à jour : 2026-03-02
 
 ---
 
@@ -192,12 +192,15 @@ Scrutins trouvés :
 Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationale
 ```
 
-### Phase 1 — Recherche guidée (~1 semaine)
+### Phase 1 — Recherche guidée ✅ DONE (2026-03-02)
 
-- Extraction des mots-clés (stop words supprimés)
-- Recherche fulltext sur les scrutins
-- Pas de verdict automatique — l'utilisateur interprète les résultats
-- **Note** : c'est quasiment la Feature 1 (Recherche langage naturel) — implémenter les deux ensemble
+- Page `/verifier` avec UX "J'ai lu que..." et framing citoyen
+- Réutilisation complète de `searchScrutins` + détection groupe + `extractGroupVote`
+- Affichage focalisé sur les scrutins uniquement (% vote du groupe en premier plan)
+- Fix découvert : auxiliaires FR ("contre", "a", "est"…) bloquaient `plainto_tsquery` → 16 mots bruit ajoutés
+- Lien "Vérifiez-la →" ajouté sur la homepage
+- 11 tests d'intégration
+- **Note** : Pas de verdict automatique — l'utilisateur interprète les résultats
 
 ### Phase 2 — Verdict semi-automatique (~1 mois)
 
@@ -222,15 +225,36 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 ## Séquence de développement recommandée
 
-Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation :
+Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation.
 
-| Étape | Feature                     | Livrable                                                 | Effort      | Statut  |
-| ----- | --------------------------- | -------------------------------------------------------- | ----------- | ------- |
-| 1     | Recherche Phase A           | Fulltext enrichi, synonymes, mots bruit, UI homepage     | ~1 semaine  | ✅ DONE |
-| 2     | Vérifier (Phase 1)          | Page `/verifier` basique (réutilise infra Phase A)       | ~2-3 jours  | ⬜ TODO |
-| 3     | Cartes texte                | Bouton "Copier" sur pages scrutin + champ `title_simple` | ~1-2 jours  | ⬜ TODO |
-| 4     | Fiches thématiques (pilote) | 2-3 thèmes avec tagging manuel                           | ~1 semaine  | ⬜ TODO |
-| 5     | Cartes image (OG)           | Images partageables générées côté serveur                | ~2-3 jours  | ⬜ TODO |
-| 6     | Vérifier (Phase 2)          | Verdict semi-auto via LLM                                | ~1 mois     | ⬜ TODO |
-| 7     | Recherche sémantique        | pgvector + embeddings                                    | À planifier | ⬜ TODO |
-| 8     | RAG complet                 | Réponse en langage naturel sourcée                       | Ambitieux   | ⬜ TODO |
+**Avancement : 2 / 8 étapes**
+
+### ✅ Terminé
+
+- [x] **Étape 1 — Recherche Phase A** _(~1 semaine — 2026-03-01)_
+      Fulltext enrichi, synonymes, mots bruit, détection groupe, UI homepage
+
+- [x] **Étape 2 — Vérifier une affirmation Phase 1** _(~2-3 jours — 2026-03-02)_
+      Page `/verifier` avec UX "J'ai lu que...", scrutins + % vote groupe
+
+### ⬜ À faire (court terme)
+
+- [ ] **Étape 3 — Cartes de vote texte** _(~1-2 jours)_
+      Bouton "Copier le résumé" sur chaque page scrutin + champ `title_simple`
+
+- [ ] **Étape 4 — Fiches thématiques pilote** _(~1 semaine)_
+      2-3 thèmes (Pouvoir d'achat, Retraites) avec tagging manuel de ~20 scrutins
+
+- [ ] **Étape 5 — Cartes image (OG)** _(~2-3 jours)_
+      Images Open Graph générées côté serveur pour partage sur réseaux sociaux
+
+### ⬜ À faire (moyen/long terme)
+
+- [ ] **Étape 6 — Vérifier Phase 2 — Verdict semi-auto** _(~1 mois)_
+      LLM (mistral-nemo) extrait sujet/acteur/direction → verdict ✅ / ❌ / 🟡
+
+- [ ] **Étape 7 — Recherche sémantique** _(à planifier)_
+      pgvector + embeddings sur les scrutins
+
+- [ ] **Étape 8 — RAG complet** _(ambitieux)_
+      Réponse en langage naturel sourcée via LLM

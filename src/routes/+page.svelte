@@ -27,6 +27,11 @@
 		/>
 		<button type="submit" class="btn btn-primary">Rechercher</button>
 	</form>
+	<div class="verifier-hint">
+		<a href="/verifier" class="verifier-link">
+			Vous avez lu une affirmation politique ? Vérifiez-la →
+		</a>
+	</div>
 </div>
 
 <div class="chambers-grid">
@@ -174,6 +179,21 @@
 		flex: 1;
 		font-size: 1rem;
 		padding: 0.75rem 1rem;
+	}
+
+	.verifier-hint {
+		margin-top: 0.625rem;
+		text-align: right;
+	}
+
+	.verifier-link {
+		font-size: 0.875rem;
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	.verifier-link:hover {
+		text-decoration: underline;
 	}
 
 	@media (max-width: 640px) {

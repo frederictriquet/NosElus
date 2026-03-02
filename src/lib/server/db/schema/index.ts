@@ -13,6 +13,7 @@ export { actorStats, type ActorStats, type NewActorStats } from './actor-stats';
 export { adminSettings, type AdminSetting, type NewAdminSetting } from './admin-settings';
 export { tags, type Tag, type NewTag } from './tags';
 export { lawTags, type LawTag, type NewLawTag } from './law-tags';
+export { scrutinTags, type ScrutinTag, type NewScrutinTag } from './scrutin-tags';
 export { lawTextSkipList, type LawTextSkip, type NewLawTextSkip } from './law-text-skip-list';
 export { searchSynonyms, type SearchSynonym, type NewSearchSynonym } from './search-synonyms';
 export {
@@ -34,5 +35,6 @@ export {
 	amendmentsRelations,
 	tagsRelations,
 	lawTagsRelations,
+	scrutinTagsRelations,
 	lawTextSkipListRelations
 } from './relations';

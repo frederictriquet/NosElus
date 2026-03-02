@@ -11,6 +11,7 @@ import { lawSummaries } from './law-summaries';
 import { tags } from './tags';
 import { lawTags } from './law-tags';
 import { lawTextSkipList } from './law-text-skip-list';
+import { scrutinTags } from './scrutin-tags';
 
 // Relations pour actors
 export const actorsRelations = relations(actors, ({ many }) => ({
@@ -50,7 +51,8 @@ export const scrutinsRelations = relations(scrutins, ({ one, many }) => ({
 	law: one(laws, {
 		fields: [scrutins.lawId],
 		references: [laws.id]
-	})
+	}),
+	scrutinTags: many(scrutinTags)
 }));
 
 // Relations pour votes
@@ -126,7 +128,8 @@ export const amendmentsRelations = relations(amendments, ({ one }) => ({
 
 // Relations pour tags
 export const tagsRelations = relations(tags, ({ many }) => ({
-	lawTags: many(lawTags)
+	lawTags: many(lawTags),
+	scrutinTags: many(scrutinTags)
 }));
 
 // Relations pour lawTags
@@ -137,6 +140,18 @@ export const lawTagsRelations = relations(lawTags, ({ one }) => ({
 	}),
 	tag: one(tags, {
 		fields: [lawTags.tagSlug],
+		references: [tags.slug]
+	})
+}));
+
+// Relations pour scrutinTags
+export const scrutinTagsRelations = relations(scrutinTags, ({ one }) => ({
+	scrutin: one(scrutins, {
+		fields: [scrutinTags.scrutinId],
+		references: [scrutins.id]
+	}),
+	tag: one(tags, {
+		fields: [scrutinTags.tagSlug],
 		references: [tags.slug]
 	})
 }));

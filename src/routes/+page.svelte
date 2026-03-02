@@ -27,9 +27,12 @@
 		/>
 		<button type="submit" class="btn btn-primary">Rechercher</button>
 	</form>
-	<div class="verifier-hint">
+	<div class="home-hints">
 		<a href="/verifier" class="verifier-link">
 			Vous avez lu une affirmation politique ? Vérifiez-la →
+		</a>
+		<a href="/themes" class="verifier-link">
+			Explorez par thème : retraites, pouvoir d'achat… →
 		</a>
 	</div>
 </div>
@@ -181,9 +184,12 @@
 		padding: 0.75rem 1rem;
 	}
 
-	.verifier-hint {
+	.home-hints {
 		margin-top: 0.625rem;
-		text-align: right;
+		display: flex;
+		justify-content: flex-end;
+		gap: 1.25rem;
+		flex-wrap: wrap;
 	}
 
 	.verifier-link {

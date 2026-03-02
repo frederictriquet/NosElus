@@ -20,6 +20,7 @@ export const scrutins = pgTable(
 		sessionExtraordinary: varchar('session_extraordinary', { length: 50 }), // Session extraordinaire
 		date: date('date').notNull(),
 		title: text('title').notNull(),
+		titleSimple: varchar('title_simple', { length: 300 }), // Titre en français courant (nullable)
 		type: varchar('type', { length: 50 }).notNull(), // SPO (solennel), SPS (sur projet), etc.
 		sortType: varchar('sort_type', { length: 50 }), // adoption, rejet, etc.
 		category: varchar('category', { length: 30 }), // Catégorie sémantique (vote-final, amendement, etc.)

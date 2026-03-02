@@ -3,6 +3,7 @@
 	import LawDossierCard from '$lib/components/LawDossierCard.svelte';
 	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
+	import { formatVoteCard } from './vote-card';
 
 	let { data } = $props();
 
@@ -23,6 +24,35 @@
 			month: 'long',
 			year: 'numeric'
 		});
+	}
+
+	// --- Carte de vote partageable ---
+
+	type Group = Awaited<typeof data.groupBreakdown>[number];
+
+	let copied = $state(false);
+	let copyError = $state(false);
+	let resolvedGroups = $state<Group[]>([]);
+
+	$effect(() => {
+		data.groupBreakdown.then((g) => {
+			resolvedGroups = g;
+		});
+	});
+
+	async function copyVoteCard() {
+		try {
+			await navigator.clipboard.writeText(formatVoteCard(data.scrutin, resolvedGroups));
+			copied = true;
+			setTimeout(() => {
+				copied = false;
+			}, 2000);
+		} catch {
+			copyError = true;
+			setTimeout(() => {
+				copyError = false;
+			}, 2000);
+		}
 	}
 </script>
 
@@ -57,8 +87,20 @@
 			</span>
 		{/if}
 	</div>
-	<h1 class="page-title">{data.scrutin.title}</h1>
+	<h1 class="page-title">{data.scrutin.titleSimple ?? data.scrutin.title}</h1>
 	<p class="page-subtitle">{formatDate(data.scrutin.date)}</p>
+	<div class="vote-card-actions">
+		<button
+			class="copy-btn"
+			class:copied
+			class:copy-error={copyError}
+			onclick={copyVoteCard}
+			disabled={resolvedGroups.length === 0}
+			title="Copier un résumé du vote prêt à partager"
+		>
+			{copied ? '✓ Copié !' : copyError ? '✗ Échec de la copie' : '📋 Copier le résumé'}
+		</button>
+	</div>
 </div>
 
 <!-- Related Law -->
@@ -155,6 +197,46 @@
 </section>
 
 <style>
+	.vote-card-actions {
+		margin-top: 1rem;
+	}
+
+	.copy-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.5rem 1rem;
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		color: var(--color-text);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.copy-btn:hover:not(:disabled) {
+		background: var(--color-bg-hover);
+		border-color: var(--color-primary);
+	}
+
+	.copy-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	.copy-btn.copied {
+		background: var(--color-success-bg);
+		border-color: var(--color-success);
+		color: var(--color-success);
+	}
+
+	.copy-btn.copy-error {
+		background: var(--color-danger-bg);
+		border-color: var(--color-danger);
+		color: var(--color-danger);
+	}
+
 	.charts-row {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);

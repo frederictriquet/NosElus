@@ -1,3 +1,16 @@
+/**
+ * Page /verifier — Vérification d'affirmations politiques
+ *
+ * Stratégie :
+ * 1. Détecter un nom de groupe dans la requête (ex: "RN", "LFI") via regex \b
+ * 2. Retirer ce nom de groupe avant le fulltext (sinon pas de résultats)
+ * 3. Enrichir chaque scrutin avec le % de vote du groupe si détecté
+ *
+ * Réutilise searchScrutins (noise words + synonymes + fallback ILIKE) de helpers.ts.
+ *
+ * TODO: getAllGroups() et escapeRegExp() sont dupliqués depuis /recherche — à extraire
+ *       vers helpers.ts lors d'un futur refactoring.
+ */
 import type { PageServerLoad } from './$types';
 import { db, organs } from '$lib/server/db';
 import { sql } from 'drizzle-orm';

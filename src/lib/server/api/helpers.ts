@@ -1429,24 +1429,38 @@ export interface ThemeGroupBilan {
 	totalScrutins: number;
 }
 
+/** Résumé d'un thème tel qu'affiché sur la page /themes. */
 export interface ThemeSummary {
+	/** Identifiant URL du thème, ex: "pouvoir-achat" */
 	slug: string;
+	/** Libellé affiché, ex: "Pouvoir d'achat" */
 	name: string;
+	/** Couleur CSS associée au tag, ex: "#f59e0b" */
 	color: string | null;
+	/** Nombre total de scrutins taggés avec ce thème */
 	scrutinCount: number;
+	/** Bilan par groupe — uniquement les groupes présents dans ≥ 50 % des scrutins */
 	groupBilans: ThemeGroupBilan[];
 }
 
+/** Scrutin associé à un thème, tel qu'affiché dans la fiche détaillée. */
 export interface ThemeScrutin {
+	/** Identifiant AN, ex: "VTANR5L16V0001" */
 	id: string;
+	/** Titre/objet du scrutin */
 	title: string;
+	/** Date au format ISO YYYY-MM-DD */
 	date: string;
+	/** Résultat officiel : "adopté", "rejeté" ou null si inconnu */
 	result: string | null;
 }
 
+/** Fiche complète d'un thème, telle que retournée par getThemeDetail(). */
 export interface ThemeDetail {
 	tag: { slug: string; name: string; color: string | null };
+	/** Bilan par groupe — uniquement les groupes présents dans ≥ 50 % des scrutins */
 	groupBilans: ThemeGroupBilan[];
+	/** Liste des scrutins, triés par date décroissante */
 	scrutins: ThemeScrutin[];
 }
 
@@ -1538,6 +1552,9 @@ async function getGroupMap(): Promise<
 /**
  * Retourne la liste des thèmes actifs (tags ayant au moins un scrutin tagué)
  * avec le bilan de vote résumé par groupe.
+ *
+ * @returns Thèmes triés par nombre de scrutins décroissant, puis par nom.
+ *          Un thème sans scrutin n'apparaît jamais dans cette liste.
  */
 export async function getThemesWithBilan(): Promise<ThemeSummary[]> {
 	// 1. Tags avec leur nombre de scrutins
@@ -1586,7 +1603,9 @@ export async function getThemesWithBilan(): Promise<ThemeSummary[]> {
 
 /**
  * Retourne le détail d'un thème : tag + bilan complet par groupe + liste des scrutins.
- * Retourne null si le tag n'existe pas ou n'a aucun scrutin.
+ *
+ * @param slug - Identifiant URL du thème, ex: "pouvoir-achat"
+ * @returns Fiche complète, ou null si le tag n'existe pas ou n'a aucun scrutin.
  */
 export async function getThemeDetail(slug: string): Promise<ThemeDetail | null> {
 	// 1. Vérifier que le tag existe

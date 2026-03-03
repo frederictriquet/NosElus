@@ -3,6 +3,12 @@
 	const tag = $derived(data.theme.tag);
 	const groupBilans = $derived(data.theme.groupBilans);
 	const scrutins = $derived(data.theme.scrutins);
+
+	/** Parse ISO date string (YYYY-MM-DD) in local timezone */
+	function parseLocalDate(isoDate: string): Date {
+		const [y, m, d] = isoDate.split('-').map(Number);
+		return new Date(y, m - 1, d);
+	}
 </script>
 
 <svelte:head>
@@ -112,7 +118,7 @@
 					<div class="scrutin-title">{scrutin.title}</div>
 					<div class="scrutin-meta">
 						{#if scrutin.date}
-							<span>{new Date(scrutin.date).toLocaleDateString('fr-FR')}</span>
+							<span>{parseLocalDate(scrutin.date).toLocaleDateString('fr-FR')}</span>
 						{/if}
 					</div>
 				</div>

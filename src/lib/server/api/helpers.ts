@@ -1429,7 +1429,6 @@ export interface ThemeScrutin {
 	title: string;
 	date: string;
 	result: string | null;
-	groupResults: unknown;
 }
 
 export interface ThemeDetail {
@@ -1603,8 +1602,7 @@ export async function getThemeDetail(slug: string): Promise<ThemeDetail | null> 
 			id: r.id,
 			title: r.title,
 			date: r.date as string,
-			result: r.result,
-			groupResults: r.groupResults
+			result: r.result
 		}))
 	};
 }

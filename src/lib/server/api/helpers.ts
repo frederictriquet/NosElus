@@ -1461,7 +1461,12 @@ function computeGroupBilans(
 			if (!vote) continue;
 
 			if (!totals.has(groupId)) {
-				totals.set(groupId, { scrutinsPour: 0, scrutinsContre: 0, scrutinsAbstention: 0, total: 0 });
+				totals.set(groupId, {
+					scrutinsPour: 0,
+					scrutinsContre: 0,
+					scrutinsAbstention: 0,
+					total: 0
+				});
 			}
 			const t = totals.get(groupId)!;
 			t.total++;
@@ -1500,7 +1505,9 @@ function computeGroupBilans(
  * Retourne les groupes parlementaires actifs sous forme de Map groupId → {shortName, color}.
  * Utilisé pour résoudre les organ IDs présents dans group_results.
  */
-async function getGroupMap(): Promise<Map<string, { shortName: string | null; color: string | null }>> {
+async function getGroupMap(): Promise<
+	Map<string, { shortName: string | null; color: string | null }>
+> {
 	const rows = await db
 		.select({ id: organs.id, shortName: organs.shortName, color: organs.color })
 		.from(organs)

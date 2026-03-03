@@ -183,7 +183,7 @@ describe('getThemeDetail - Integration', () => {
 		if (!result) return;
 
 		expect(result.tag.slug).toBe('pouvoir-achat');
-		expect(result.tag.name).toBe('Pouvoir d\'achat');
+		expect(result.tag.name).toBe("Pouvoir d'achat");
 		expect(typeof result.tag.color).toBe('string');
 	});
 

@@ -31,9 +31,7 @@
 		<a href="/verifier" class="verifier-link">
 			Vous avez lu une affirmation politique ? Vérifiez-la →
 		</a>
-		<a href="/themes" class="verifier-link">
-			Explorez par thème : retraites, pouvoir d'achat… →
-		</a>
+		<a href="/themes" class="verifier-link"> Explorez par thème : retraites, pouvoir d'achat… → </a>
 	</div>
 </div>
 

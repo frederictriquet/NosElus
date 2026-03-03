@@ -29,7 +29,9 @@
 				<div class="theme-header">
 					<span class="theme-dot" style="background: {theme.color ?? '#64748b'}"></span>
 					<h2 class="theme-name">{theme.name}</h2>
-					<span class="theme-count">{theme.scrutinCount} scrutin{theme.scrutinCount > 1 ? 's' : ''}</span>
+					<span class="theme-count"
+						>{theme.scrutinCount} scrutin{theme.scrutinCount > 1 ? 's' : ''}</span
+					>
 				</div>
 
 				{#if theme.groupBilans.length > 0}
@@ -48,12 +50,26 @@
 								<span class="bilan-bar">
 									<span
 										class="bilan-fill {dominant}"
-										style="width: {(bilan[dominant === 'pour' ? 'scrutinsPour' : dominant === 'contre' ? 'scrutinsContre' : 'scrutinsAbstention'] / bilan.totalScrutins) * 100}%"
+										style="width: {(bilan[
+											dominant === 'pour'
+												? 'scrutinsPour'
+												: dominant === 'contre'
+													? 'scrutinsContre'
+													: 'scrutinsAbstention'
+										] /
+											bilan.totalScrutins) *
+											100}%"
 									></span>
 								</span>
 								<span class="bilan-label {dominant}">
 									{dominant === 'pour' ? '✅' : dominant === 'contre' ? '❌' : '🟡'}
-									{bilan[dominant === 'pour' ? 'scrutinsPour' : dominant === 'contre' ? 'scrutinsContre' : 'scrutinsAbstention']}/{bilan.totalScrutins}
+									{bilan[
+										dominant === 'pour'
+											? 'scrutinsPour'
+											: dominant === 'contre'
+												? 'scrutinsContre'
+												: 'scrutinsAbstention'
+									]}/{bilan.totalScrutins}
 								</span>
 							</li>
 						{/each}

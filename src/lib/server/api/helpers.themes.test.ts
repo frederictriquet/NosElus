@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { getThemesWithBilan, getThemeDetail } from './helpers';
 
 /**
@@ -27,21 +27,21 @@ beforeAll(async () => {
 	}
 });
 
+beforeEach((context) => {
+	if (!dbAvailable) context.skip();
+});
+
 // ============================================================
 // getThemesWithBilan
 // ============================================================
 
 describe('getThemesWithBilan - Integration', () => {
 	it('should return an array', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		expect(Array.isArray(result)).toBe(true);
 	});
 
 	it('should contain only themes with at least one scrutin', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		for (const theme of result) {
 			expect(theme.scrutinCount).toBeGreaterThan(0);
@@ -49,8 +49,6 @@ describe('getThemesWithBilan - Integration', () => {
 	});
 
 	it('should return themes with required fields', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		if (result.length === 0) {
 			console.warn('No themes in DB, skipping structure check');
@@ -71,8 +69,6 @@ describe('getThemesWithBilan - Integration', () => {
 	});
 
 	it('should include pouvoir-achat and retraites (pilot tags)', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		const slugs = result.map((t) => t.slug);
 
@@ -81,8 +77,6 @@ describe('getThemesWithBilan - Integration', () => {
 	});
 
 	it('should order themes by scrutin count descending', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		if (result.length < 2) return;
 
@@ -92,8 +86,6 @@ describe('getThemesWithBilan - Integration', () => {
 	});
 
 	it('should have valid groupBilans structure when present', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		const themeWithBilans = result.find((t) => t.groupBilans.length > 0);
 		if (!themeWithBilans) {
@@ -119,20 +111,16 @@ describe('getThemesWithBilan - Integration', () => {
 	});
 
 	it('should respect groupBilan invariant: sum of positions <= totalScrutins', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		for (const theme of result) {
 			for (const bilan of theme.groupBilans) {
 				const sum = bilan.scrutinsPour + bilan.scrutinsContre + bilan.scrutinsAbstention;
-				expect(sum).toBeLessThanOrEqual(bilan.totalScrutins);
+				expect(sum).toBe(bilan.totalScrutins);
 			}
 		}
 	});
 
 	it('should respect threshold: groupBilans only for groups in >= half of scrutins', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemesWithBilan();
 		for (const theme of result) {
 			const threshold = Math.ceil(theme.scrutinCount / 2);
@@ -149,36 +137,26 @@ describe('getThemesWithBilan - Integration', () => {
 
 describe('getThemeDetail - Integration', () => {
 	it('should return null for unknown slug', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('tag-inexistant-xyz123');
 		expect(result).toBeNull();
 	});
 
 	it('should return null for empty string', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('');
 		expect(result).toBeNull();
 	});
 
 	it('should return ThemeDetail for pouvoir-achat', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		expect(result).not.toBeNull();
 	});
 
 	it('should return ThemeDetail for retraites', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('retraites');
 		expect(result).not.toBeNull();
 	});
 
 	it('should return correct tag fields', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		if (!result) return;
 
@@ -188,8 +166,6 @@ describe('getThemeDetail - Integration', () => {
 	});
 
 	it('should return scrutins with required fields', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		if (!result) return;
 
@@ -207,8 +183,6 @@ describe('getThemeDetail - Integration', () => {
 	});
 
 	it('should order scrutins by date descending', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		if (!result || result.scrutins.length < 2) return;
 
@@ -220,8 +194,6 @@ describe('getThemeDetail - Integration', () => {
 	});
 
 	it('should return groupBilans array', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		if (!result) return;
 
@@ -229,22 +201,17 @@ describe('getThemeDetail - Integration', () => {
 	});
 
 	it('should respect groupBilan invariant: sum of positions == totalScrutins', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('pouvoir-achat');
 		if (!result) return;
 
 		for (const bilan of result.groupBilans) {
 			const sum = bilan.scrutinsPour + bilan.scrutinsContre + bilan.scrutinsAbstention;
-			// La somme peut être <= total car un groupe peut voter 0/0/0 sur un scrutin
-			expect(sum).toBeLessThanOrEqual(bilan.totalScrutins);
+			expect(sum).toBe(bilan.totalScrutins);
 			expect(bilan.totalScrutins).toBeGreaterThan(0);
 		}
 	});
 
 	it('should have consistent data: groupBilan.totalScrutins <= scrutins.length', async () => {
-		if (!dbAvailable) return;
-
 		const result = await getThemeDetail('retraites');
 		if (!result) return;
 

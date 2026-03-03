@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 
 /**
  * Tests d'intégration pour les load functions des pages /themes et /themes/[slug]
@@ -32,22 +32,22 @@ beforeAll(async () => {
 	}
 });
 
+beforeEach((context) => {
+	if (!dbAvailable) context.skip();
+});
+
 // ============================================================
 // /themes — load
 // ============================================================
 
 describe('/themes +page.server load - Integration', () => {
 	it('should return an object with themes array', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemes()) as { themes: unknown[] };
 		expect(result).toHaveProperty('themes');
 		expect(Array.isArray(result.themes)).toBe(true);
 	});
 
 	it('should contain pilot themes pouvoir-achat and retraites', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemes()) as { themes: Array<{ slug: string }> };
 		const slugs = result.themes.map((t) => t.slug);
 
@@ -56,8 +56,6 @@ describe('/themes +page.server load - Integration', () => {
 	});
 
 	it('should return themes with scrutinCount > 0', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemes()) as {
 			themes: Array<{ slug: string; scrutinCount: number }>;
 		};
@@ -68,8 +66,6 @@ describe('/themes +page.server load - Integration', () => {
 	});
 
 	it('should include groupBilans array for each theme', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemes()) as {
 			themes: Array<{ groupBilans: unknown[] }>;
 		};
@@ -86,8 +82,6 @@ describe('/themes +page.server load - Integration', () => {
 
 describe('/themes/[slug] +page.server load - Integration', () => {
 	it('should return theme detail for pouvoir-achat', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemeDetail({ params: { slug: 'pouvoir-achat' } })) as {
 			theme: unknown;
 		};
@@ -97,8 +91,6 @@ describe('/themes/[slug] +page.server load - Integration', () => {
 	});
 
 	it('should return theme with correct structure', async () => {
-		if (!dbAvailable) return;
-
 		const result = (await loadThemeDetail({ params: { slug: 'retraites' } })) as {
 			theme: {
 				tag: { slug: string; name: string; color: string | null };
@@ -119,24 +111,8 @@ describe('/themes/[slug] +page.server load - Integration', () => {
 	});
 
 	it('should throw 404 error for unknown slug', async () => {
-		if (!dbAvailable) return;
-
 		await expect(
 			loadThemeDetail({ params: { slug: 'slug-inexistant-xyz' } })
 		).rejects.toMatchObject({ status: 404 });
-	});
-
-	it('should throw 404 with message for unknown slug', async () => {
-		if (!dbAvailable) return;
-
-		let caughtError: unknown;
-		try {
-			await loadThemeDetail({ params: { slug: 'inexistant' } });
-		} catch (e) {
-			caughtError = e;
-		}
-
-		expect(caughtError).toBeDefined();
-		expect((caughtError as { status: number }).status).toBe(404);
 	});
 });

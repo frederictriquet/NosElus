@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getDominant } from '$lib/utils/bilan';
 	let { data } = $props();
 	const tag = $derived(data.theme.tag);
 	const groupBilans = $derived(data.theme.groupBilans);
@@ -48,14 +49,7 @@
 	{:else}
 		<div class="bilan-table">
 			{#each groupBilans as bilan}
-				{@const dominant =
-					bilan.scrutinsPour >= bilan.scrutinsContre &&
-					bilan.scrutinsPour >= bilan.scrutinsAbstention
-						? 'pour'
-						: bilan.scrutinsContre >= bilan.scrutinsPour &&
-							  bilan.scrutinsContre >= bilan.scrutinsAbstention
-							? 'contre'
-							: 'abstention'}
+				{@const dominant = getDominant(bilan)}
 				{@const pctPour = Math.round((bilan.scrutinsPour / bilan.totalScrutins) * 100)}
 				{@const pctContre = Math.round((bilan.scrutinsContre / bilan.totalScrutins) * 100)}
 				{@const pctAbstention = Math.round((bilan.scrutinsAbstention / bilan.totalScrutins) * 100)}
@@ -87,7 +81,10 @@
 						{/if}
 					</div>
 					<div class="bilan-verdict {dominant}">
-						{dominant === 'pour' ? '✅ POUR' : dominant === 'contre' ? '❌ CONTRE' : '🟡 ABST.'}
+						<span aria-hidden="true"
+							>{dominant === 'pour' ? '✅' : dominant === 'contre' ? '❌' : '🟡'}</span
+						>
+						{dominant === 'pour' ? 'POUR' : dominant === 'contre' ? 'CONTRE' : 'ABST.'}
 						<span class="verdict-detail"
 							>{bilan[
 								dominant === 'pour'

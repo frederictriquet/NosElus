@@ -13,7 +13,20 @@ import {
 	tags,
 	scrutinTags
 } from '$lib/server/db';
-import { eq, and, or, sql, notLike, inArray, count, desc, asc, ilike, type SQL } from 'drizzle-orm';
+import {
+	eq,
+	and,
+	or,
+	sql,
+	notLike,
+	inArray,
+	count,
+	desc,
+	asc,
+	ilike,
+	isNotNull,
+	type SQL
+} from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
 // ===== Period Filters =====
@@ -1500,6 +1513,10 @@ function computeGroupBilans(
 		.sort((a, b) => b.totalScrutins - a.totalScrutins);
 }
 
+// Cache en mémoire pour les groupes parlementaires (table stable, TTL 1h)
+let groupMapCache: Map<string, { shortName: string | null; color: string | null }> | null = null;
+let groupMapCacheExpiry = 0;
+
 /**
  * Retourne les groupes parlementaires actifs sous forme de Map groupId → {shortName, color}.
  * Utilisé pour résoudre les organ IDs présents dans group_results.
@@ -1507,11 +1524,15 @@ function computeGroupBilans(
 async function getGroupMap(): Promise<
 	Map<string, { shortName: string | null; color: string | null }>
 > {
+	const now = Date.now();
+	if (groupMapCache && now < groupMapCacheExpiry) return groupMapCache;
 	const rows = await db
 		.select({ id: organs.id, shortName: organs.shortName, color: organs.color })
 		.from(organs)
-		.where(sql`${organs.type} = 'GP' AND ${organs.shortName} IS NOT NULL`);
-	return new Map(rows.map((r) => [r.id, { shortName: r.shortName, color: r.color }]));
+		.where(and(eq(organs.type, 'GP'), isNotNull(organs.shortName)));
+	groupMapCache = new Map(rows.map((r) => [r.id, { shortName: r.shortName, color: r.color }]));
+	groupMapCacheExpiry = now + 60 * 60 * 1000; // TTL 1h
+	return groupMapCache;
 }
 
 /**
@@ -1530,7 +1551,7 @@ export async function getThemesWithBilan(): Promise<ThemeSummary[]> {
 		.from(tags)
 		.innerJoin(scrutinTags, eq(tags.slug, scrutinTags.tagSlug))
 		.groupBy(tags.slug, tags.name, tags.color)
-		.orderBy(desc(count(scrutinTags.scrutinId)));
+		.orderBy(desc(count(scrutinTags.scrutinId)), asc(tags.name));
 
 	if (tagCounts.length === 0) return [];
 

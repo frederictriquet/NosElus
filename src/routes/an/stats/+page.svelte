@@ -939,5 +939,4 @@
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
 	}
-
 </style>

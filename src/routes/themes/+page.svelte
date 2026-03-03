@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getDominant } from '$lib/utils/bilan';
 	let { data } = $props();
 </script>
 
@@ -37,14 +38,7 @@
 				{#if theme.groupBilans.length > 0}
 					<ul class="bilan-list">
 						{#each theme.groupBilans.slice(0, 4) as bilan}
-							{@const dominant =
-								bilan.scrutinsPour >= bilan.scrutinsContre &&
-								bilan.scrutinsPour >= bilan.scrutinsAbstention
-									? 'pour'
-									: bilan.scrutinsContre >= bilan.scrutinsPour &&
-										  bilan.scrutinsContre >= bilan.scrutinsAbstention
-										? 'contre'
-										: 'abstention'}
+							{@const dominant = getDominant(bilan)}
 							<li class="bilan-row">
 								<span class="group-name">{bilan.shortName}</span>
 								<span class="bilan-bar">
@@ -62,7 +56,9 @@
 									></span>
 								</span>
 								<span class="bilan-label {dominant}">
-									{dominant === 'pour' ? '✅' : dominant === 'contre' ? '❌' : '🟡'}
+									<span aria-hidden="true"
+										>{dominant === 'pour' ? '✅' : dominant === 'contre' ? '❌' : '🟡'}</span
+									>
 									{bilan[
 										dominant === 'pour'
 											? 'scrutinsPour'

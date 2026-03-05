@@ -9,9 +9,24 @@ import {
 	laws,
 	lawCosignatories,
 	searchSynonyms,
-	searchNoiseWords
+	searchNoiseWords,
+	tags,
+	scrutinTags
 } from '$lib/server/db';
-import { eq, and, or, sql, notLike, inArray, count, desc, asc, ilike, type SQL } from 'drizzle-orm';
+import {
+	eq,
+	and,
+	or,
+	sql,
+	notLike,
+	inArray,
+	count,
+	desc,
+	asc,
+	ilike,
+	isNotNull,
+	type SQL
+} from 'drizzle-orm';
 import { getCategoryLabel, type ScrutinCategory } from '$lib/server/etl/classify';
 
 // ===== Period Filters =====
@@ -1392,4 +1407,242 @@ export async function getLawContributors(lawId: string): Promise<LawContributor[
 		role: r.role as 'author' | 'cosignatory',
 		signatureOrder: r.signatureOrder
 	}));
+}
+
+// ===== Fiches thématiques =====
+
+/**
+ * Bilan de vote d'un groupe sur l'ensemble des scrutins d'un thème.
+ * Exprimé en nombre de scrutins où la position dominante du groupe est pour/contre/abstention.
+ */
+export interface ThemeGroupBilan {
+	groupId: string;
+	shortName: string;
+	color: string | null;
+	/** Nombre de scrutins où le groupe a voté majoritairement POUR */
+	scrutinsPour: number;
+	/** Nombre de scrutins où le groupe a voté majoritairement CONTRE */
+	scrutinsContre: number;
+	/** Nombre de scrutins où le groupe s'est majoritairement abstenu */
+	scrutinsAbstention: number;
+	/** Nombre total de scrutins où ce groupe a voté */
+	totalScrutins: number;
+}
+
+/** Résumé d'un thème tel qu'affiché sur la page /themes. */
+export interface ThemeSummary {
+	/** Identifiant URL du thème, ex: "pouvoir-achat" */
+	slug: string;
+	/** Libellé affiché, ex: "Pouvoir d'achat" */
+	name: string;
+	/** Couleur CSS associée au tag, ex: "#f59e0b" */
+	color: string | null;
+	/** Nombre total de scrutins taggés avec ce thème */
+	scrutinCount: number;
+	/** Bilan par groupe — uniquement les groupes présents dans ≥ 50 % des scrutins */
+	groupBilans: ThemeGroupBilan[];
+}
+
+/** Scrutin associé à un thème, tel qu'affiché dans la fiche détaillée. */
+export interface ThemeScrutin {
+	/** Identifiant AN, ex: "VTANR5L16V0001" */
+	id: string;
+	/** Titre/objet du scrutin */
+	title: string;
+	/** Date au format ISO YYYY-MM-DD */
+	date: string;
+	/** Résultat officiel : "adopté", "rejeté" ou null si inconnu */
+	result: string | null;
+}
+
+/** Fiche complète d'un thème, telle que retournée par getThemeDetail(). */
+export interface ThemeDetail {
+	tag: { slug: string; name: string; color: string | null };
+	/** Bilan par groupe — uniquement les groupes présents dans ≥ 50 % des scrutins */
+	groupBilans: ThemeGroupBilan[];
+	/** Liste des scrutins, triés par date décroissante */
+	scrutins: ThemeScrutin[];
+}
+
+/**
+ * Calcule le bilan par groupe pour un ensemble de scrutins.
+ * Résout les IDs d'organes via la map fournie, ne retient que les groupes ayant
+ * participé à au moins la moitié des scrutins (évite le bruit des groupes historiques).
+ */
+function computeGroupBilans(
+	scrutinRows: Array<{ groupResults: unknown }>,
+	groupMap: Map<string, { shortName: string | null; color: string | null }>
+): ThemeGroupBilan[] {
+	const totals = new Map<
+		string,
+		{ scrutinsPour: number; scrutinsContre: number; scrutinsAbstention: number; total: number }
+	>();
+
+	for (const row of scrutinRows) {
+		if (!row.groupResults || typeof row.groupResults !== 'object') continue;
+		const gr = row.groupResults as Record<string, unknown>;
+
+		for (const groupId of Object.keys(gr)) {
+			const vote = extractGroupVote(row.groupResults, groupId);
+			if (!vote) continue;
+
+			if (!totals.has(groupId)) {
+				totals.set(groupId, {
+					scrutinsPour: 0,
+					scrutinsContre: 0,
+					scrutinsAbstention: 0,
+					total: 0
+				});
+			}
+			const t = totals.get(groupId)!;
+			t.total++;
+
+			if (vote.pctPour >= vote.pctContre && vote.pctPour >= vote.pctAbstention) {
+				t.scrutinsPour++;
+			} else if (vote.pctContre >= vote.pctPour && vote.pctContre >= vote.pctAbstention) {
+				t.scrutinsContre++;
+			} else {
+				t.scrutinsAbstention++;
+			}
+		}
+	}
+
+	// Seuil : groupe présent dans au moins la moitié des scrutins
+	const threshold = Math.ceil(scrutinRows.length / 2);
+
+	return Array.from(totals.entries())
+		.filter(([groupId, t]) => t.total >= threshold && groupMap.has(groupId))
+		.map(([groupId, t]) => {
+			const g = groupMap.get(groupId)!;
+			return {
+				groupId,
+				shortName: g.shortName ?? groupId,
+				color: g.color,
+				scrutinsPour: t.scrutinsPour,
+				scrutinsContre: t.scrutinsContre,
+				scrutinsAbstention: t.scrutinsAbstention,
+				totalScrutins: t.total
+			};
+		})
+		.sort((a, b) => b.totalScrutins - a.totalScrutins);
+}
+
+// Cache en mémoire pour les groupes parlementaires (table stable, TTL 1h)
+let groupMapCache: Map<string, { shortName: string | null; color: string | null }> | null = null;
+let groupMapCacheExpiry = 0;
+
+/**
+ * Retourne les groupes parlementaires actifs sous forme de Map groupId → {shortName, color}.
+ * Utilisé pour résoudre les organ IDs présents dans group_results.
+ */
+async function getGroupMap(): Promise<
+	Map<string, { shortName: string | null; color: string | null }>
+> {
+	const now = Date.now();
+	if (groupMapCache && now < groupMapCacheExpiry) return groupMapCache;
+	const rows = await db
+		.select({ id: organs.id, shortName: organs.shortName, color: organs.color })
+		.from(organs)
+		.where(and(eq(organs.type, 'GP'), isNotNull(organs.shortName)));
+	groupMapCache = new Map(rows.map((r) => [r.id, { shortName: r.shortName, color: r.color }]));
+	groupMapCacheExpiry = now + 60 * 60 * 1000; // TTL 1h
+	return groupMapCache;
+}
+
+/**
+ * Retourne la liste des thèmes actifs (tags ayant au moins un scrutin tagué)
+ * avec le bilan de vote résumé par groupe.
+ *
+ * @returns Thèmes triés par nombre de scrutins décroissant, puis par nom.
+ *          Un thème sans scrutin n'apparaît jamais dans cette liste.
+ */
+export async function getThemesWithBilan(): Promise<ThemeSummary[]> {
+	// 1. Tags avec leur nombre de scrutins
+	const tagCounts = await db
+		.select({
+			slug: tags.slug,
+			name: tags.name,
+			color: tags.color,
+			scrutinCount: count(scrutinTags.scrutinId)
+		})
+		.from(tags)
+		.innerJoin(scrutinTags, eq(tags.slug, scrutinTags.tagSlug))
+		.groupBy(tags.slug, tags.name, tags.color)
+		.orderBy(desc(count(scrutinTags.scrutinId)), asc(tags.name));
+
+	if (tagCounts.length === 0) return [];
+
+	// 2. Tous les scrutins taggés (group_results pour le bilan)
+	const allTaggedScrutins = await db
+		.select({
+			tagSlug: scrutinTags.tagSlug,
+			groupResults: scrutins.groupResults
+		})
+		.from(scrutinTags)
+		.innerJoin(scrutins, eq(scrutinTags.scrutinId, scrutins.id))
+		.where(sql`${scrutins.groupResults} IS NOT NULL`);
+
+	// 3. Groupes parlementaires pour résoudre les IDs
+	const groupMap = await getGroupMap();
+
+	// 4. Regrouper les scrutins par tag slug
+	const scrutinsByTag = new Map<string, Array<{ groupResults: unknown }>>();
+	for (const row of allTaggedScrutins) {
+		if (!scrutinsByTag.has(row.tagSlug)) scrutinsByTag.set(row.tagSlug, []);
+		scrutinsByTag.get(row.tagSlug)!.push({ groupResults: row.groupResults });
+	}
+
+	return tagCounts.map((tag) => ({
+		slug: tag.slug,
+		name: tag.name,
+		color: tag.color,
+		scrutinCount: tag.scrutinCount,
+		groupBilans: computeGroupBilans(scrutinsByTag.get(tag.slug) ?? [], groupMap)
+	}));
+}
+
+/**
+ * Retourne le détail d'un thème : tag + bilan complet par groupe + liste des scrutins.
+ *
+ * @param slug - Identifiant URL du thème, ex: "pouvoir-achat"
+ * @returns Fiche complète, ou null si le tag n'existe pas ou n'a aucun scrutin.
+ */
+export async function getThemeDetail(slug: string): Promise<ThemeDetail | null> {
+	// 1. Vérifier que le tag existe
+	const [tag] = await db
+		.select({ slug: tags.slug, name: tags.name, color: tags.color })
+		.from(tags)
+		.where(eq(tags.slug, slug));
+
+	if (!tag) return null;
+
+	// 2. Scrutins du thème
+	const rows = await db
+		.select({
+			id: scrutins.id,
+			title: scrutins.title,
+			date: scrutins.date,
+			result: scrutins.result,
+			groupResults: scrutins.groupResults
+		})
+		.from(scrutinTags)
+		.innerJoin(scrutins, eq(scrutinTags.scrutinId, scrutins.id))
+		.where(eq(scrutinTags.tagSlug, slug))
+		.orderBy(desc(scrutins.date));
+
+	if (rows.length === 0) return null;
+
+	// 3. Groupes pour résoudre les IDs
+	const groupMap = await getGroupMap();
+
+	return {
+		tag,
+		groupBilans: computeGroupBilans(rows, groupMap),
+		scrutins: rows.map((r) => ({
+			id: r.id,
+			title: r.title,
+			date: r.date as string,
+			result: r.result
+		}))
+	};
 }

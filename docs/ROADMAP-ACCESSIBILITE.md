@@ -6,7 +6,7 @@
 > Contexte déclencheur : post viral affirmant "le RN défend les travailleurs" alors que
 > le groupe a voté contre l'augmentation du SMIC à 1500€ net (20/07/2022).
 >
-> Dernière mise à jour : 2026-03-02
+> Dernière mise à jour : 2026-03-05
 
 ---
 
@@ -227,7 +227,7 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation.
 
-**Avancement : 3 / 8 étapes**
+**Avancement : 4 / 8 étapes**
 
 ### ✅ Terminé
 
@@ -240,10 +240,11 @@ Ces features partagent des briques communes. Ordre suggéré pour maximiser la r
 - [x] **Étape 3 — Cartes de vote texte** _(~1-2 jours — 2026-03-02)_
       Bouton "Copier le résumé" + champ `title_simple`, timezone-safe, error handling
 
-### ⬜ À faire (court terme)
-
-- [ ] **Étape 4 — Fiches thématiques pilote** _(~1 semaine)_
+- [x] **Étape 4 — Fiches thématiques pilote** _(~1 semaine — 2026-03-05)_
       2-3 thèmes (Pouvoir d'achat, Retraites) avec tagging manuel de ~20 scrutins
+      Implémentation complète : table `scrutin_tags`, bilan par scrutins, pages `/themes`, cache TTL, JSDoc
+
+### ⬜ À faire (court terme)
 
 - [ ] **Étape 5 — Cartes image (OG)** _(~2-3 jours)_
       Images Open Graph générées côté serveur pour partage sur réseaux sociaux

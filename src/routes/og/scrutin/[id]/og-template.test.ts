@@ -235,20 +235,17 @@ describe('buildTemplate — groupes', () => {
 		expect(html).toContain('Résultat global');
 	});
 
-	it('should cap individual groups at 3 (aggregate + 3 = 4 rows total)', () => {
+	it('should show all groups (no cap)', () => {
 		const html = buildTemplate({
 			...BASE_PARAMS,
 			groups: [RN, NFP, ENS, LR, UDI] // 5 groupes
 		});
-		// UDI et LR sont les plus petits — l'un des deux doit être absent
-		// Les 3 plus grands (RN, ENS, NFP) doivent être présents
+		// Tous les groupes doivent être présents
 		expect(html).toContain('Rassemblement National');
 		expect(html).toContain('Nouveau Front Populaire');
 		expect(html).toContain('Ensemble');
-		// LR (37 votants) et UDI (14 votants) ne peuvent pas tous les deux être là
-		const lrPresent = html.includes('Les Républicains');
-		const udiPresent = html.includes('UDI');
-		expect(lrPresent && udiPresent).toBe(false);
+		expect(html).toContain('Les Républicains');
+		expect(html).toContain('UDI');
 	});
 
 	it('should sort groups by total voters descending', () => {
@@ -296,6 +293,15 @@ describe('buildTemplate — pourcentages', () => {
 		widths.forEach((w) => {
 			expect(w).toBeLessThanOrEqual(100);
 		});
+	});
+
+	it('should show "abs" label and gray color when pour equals contre', () => {
+		const tied = makeGroup({ name: 'Tied', pour: 50, contre: 50, abstention: 0 });
+		const html = buildTemplate({ ...BASE_PARAMS, groups: [tied] });
+		// Le label doit indiquer l'abstention
+		expect(html).toContain('abs');
+		// La couleur grise doit apparaître (dot + pourcentage du groupe)
+		expect(html).toContain('#475569');
 	});
 });
 

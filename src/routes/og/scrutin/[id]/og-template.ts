@@ -9,6 +9,7 @@
  * - Styles inline seulement
  * - Pas de pseudo-éléments
  * - gap et border-radius sont supportés
+ * - flex-wrap est supporté
  */
 
 export type GroupData = {
@@ -43,14 +44,26 @@ export function formatDate(dateStr: string): string {
 }
 
 /**
- * Génère le HTML du template OG pour un scrutin.
+ * Génère le HTML du template OG pour un scrutin (1200×630px).
  *
- * @param params.title - Titre du scrutin (déjà tronqué si nécessaire)
- * @param params.date - Date formatée en français
+ * Layout :
+ * - Header : logo NosElus + "Assemblée Nationale"
+ * - Corps : étiquette "VOTE OFFICIEL", titre, date, badge adopté/rejeté
+ * - Section votes (si données disponibles) :
+ *   - Barre agrégat globale (jauge pour/contre pleine largeur)
+ *   - Grille 3 colonnes listant tous les groupes ayant voté,
+ *     triés par nombre de votants décroissant
+ * - Footer : URL du scrutin + note de tri
+ *
+ * Couleur des groupes : vert (#22c55e) si majoritairement pour,
+ * rouge (#ef4444) si majoritairement contre, gris (#475569) si égalité.
+ *
+ * @param params.title - Titre du scrutin (titleSimple si disponible, sinon title brut)
+ * @param params.date - Date formatée en français (ex. "20 juillet 2022")
  * @param params.result - "adopté" | "rejeté" | null
- * @param params.groups - Données de votes par groupe (tous les groupes)
+ * @param params.groups - Données de votes par groupe (tous les groupes, non filtrés)
  * @param params.scrutinId - Identifiant du scrutin pour l'URL source
- * @returns HTML string compatible satori (flexbox inline styles)
+ * @returns HTML string compatible satori (flexbox inline styles uniquement)
  */
 export function buildTemplate(params: {
 	title: string;
@@ -78,64 +91,92 @@ export function buildTemplate(params: {
 	const globalPourPct = grandTotal > 0 ? Math.round((totalPour / grandTotal) * 100) : 0;
 	const globalContrePct = grandTotal > 0 ? Math.round((totalContre / grandTotal) * 100) : 0;
 	const globalMainPct = globalPourPct >= globalContrePct ? globalPourPct : globalContrePct;
-	const globalMainLabel = globalPourPct >= globalContrePct ? 'pour' : 'contre';
+	const globalMainLabel =
+		globalPourPct > globalContrePct ? 'pour' : globalContrePct > globalPourPct ? 'contre' : 'abs';
 
-	// Top 3 groupes individuels par nombre de votants
-	const topGroups = groups
+	// Tous les groupes avec des votes, triés par nombre de votants décroissant
+	const allGroups = groups
 		.map((g) => {
 			const total = g.pour + g.contre + g.abstention;
 			const pourPct = total > 0 ? Math.round((g.pour / total) * 100) : 0;
 			const contrePct = total > 0 ? Math.round((g.contre / total) * 100) : 0;
+			const mainPct = pourPct >= contrePct ? pourPct : contrePct;
+			const mainLabel = pourPct > contrePct ? 'pour' : contrePct > pourPct ? 'contre' : 'abs';
+			const color = pourPct > contrePct ? '#22c55e' : contrePct > pourPct ? '#ef4444' : '#475569';
 			return {
 				label: escapeHtml(g.name),
 				total,
 				pourPct,
 				contrePct: Math.min(contrePct, 100 - pourPct),
-				mainPct: pourPct >= contrePct ? pourPct : contrePct,
-				mainLabel: pourPct >= contrePct ? 'pour' : 'contre'
+				mainPct,
+				mainLabel,
+				color
 			};
 		})
 		.filter((g) => g.total > 0)
-		.sort((a, b) => b.total - a.total)
-		.slice(0, 3);
+		.sort((a, b) => b.total - a.total);
 
-	const renderBar = (
-		label: string,
+	// Barre agrégat globale (pleine largeur avec jauge)
+	const renderAggregateBar = (
 		pourPct: number,
 		contrePct: number,
 		mainPct: number,
-		mainLabel: string,
-		isAggregate: boolean
+		mainLabel: string
 	) =>
 		`<div style="display:flex;flex-direction:row;align-items:center;gap:14px;">` +
-		`<span style="display:flex;font-size:${isAggregate ? '14px' : '12px'};font-weight:${isAggregate ? '700' : '400'};color:${isAggregate ? '#e2e8f0' : '#94a3b8'};width:180px;flex-shrink:0;overflow:hidden;">${label}</span>` +
-		`<div style="display:flex;flex:1;height:${isAggregate ? '12px' : '8px'};background:#1e293b;border-radius:5px;overflow:hidden;">` +
+		`<span style="display:flex;font-size:14px;font-weight:700;color:#e2e8f0;width:180px;flex-shrink:0;overflow:hidden;">Résultat global</span>` +
+		`<div style="display:flex;flex:1;height:12px;background:#1e293b;border-radius:5px;overflow:hidden;">` +
 		`<div style="display:flex;width:${pourPct}%;height:100%;background:#22c55e;"></div>` +
 		`<div style="display:flex;width:${contrePct}%;height:100%;background:#ef4444;"></div>` +
 		`</div>` +
-		`<span style="display:flex;font-size:13px;color:${isAggregate ? '#e2e8f0' : '#94a3b8'};width:90px;justify-content:flex-end;">${mainPct}% ${mainLabel}</span>` +
+		`<span style="display:flex;font-size:13px;color:#e2e8f0;width:90px;justify-content:flex-end;">${mainPct}% ${mainLabel}</span>` +
 		`</div>`;
 
-	const separator =
-		topGroups.length > 0
-			? `<div style="display:flex;height:1px;background:#1e293b;margin:2px 0;"></div>`
-			: '';
+	// Vignette compacte pour chaque groupe (une ligne par groupe dans sa colonne)
+	const renderCompactGroup = (g: (typeof allGroups)[0]) =>
+		`<div style="display:flex;flex-direction:row;align-items:center;gap:6px;">` +
+		`<div style="display:flex;width:7px;height:7px;border-radius:4px;background:${g.color};flex-shrink:0;"></div>` +
+		`<span style="display:flex;flex:1;font-size:14px;color:#64748b;overflow:hidden;">${g.label}</span>` +
+		`<span style="display:flex;font-size:14px;font-weight:700;color:${g.color};width:84px;justify-content:flex-end;">${g.mainPct}% ${g.mainLabel}</span>` +
+		`</div>`;
+
+	// Séparateur vertical entre colonnes
+	const colDivider = `<div style="display:flex;width:1px;background:#1e293b;margin:0 14px;"></div>`;
+
+	// Répartition en 3 colonnes équilibrées : chaque taille est arrondie au
+	// supérieur pour que la colonne 3 ne soit jamais plus longue que les autres.
+	const renderThreeColumns = (items: typeof allGroups) => {
+		const n = items.length;
+		const s1 = Math.ceil(n / 3);
+		const s2 = Math.ceil((n - s1) / 2);
+		const cols = [items.slice(0, s1), items.slice(s1, s1 + s2), items.slice(s1 + s2)];
+		return (
+			`<div style="display:flex;flex-direction:row;">` +
+			cols
+				.map(
+					(col) =>
+						`<div style="display:flex;flex:1;flex-direction:column;gap:5px;">` +
+						col.map(renderCompactGroup).join('') +
+						`</div>`
+				)
+				.join(colDivider) +
+			`</div>`
+		);
+	};
 
 	const groupsHtml =
 		grandTotal > 0
-			? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:24px;">` +
-				renderBar(
-					'Résultat global',
+			? `<div style="display:flex;flex-direction:column;gap:6px;margin-top:20px;">` +
+				renderAggregateBar(
 					globalPourPct,
 					Math.min(globalContrePct, 100 - globalPourPct),
 					globalMainPct,
-					globalMainLabel,
-					true
+					globalMainLabel
 				) +
-				separator +
-				topGroups
-					.map((g) => renderBar(g.label, g.pourPct, g.contrePct, g.mainPct, g.mainLabel, false))
-					.join('') +
+				(allGroups.length > 0
+					? `<div style="display:flex;height:1px;background:#1e293b;margin:2px 0;"></div>` +
+						renderThreeColumns(allGroups)
+					: '') +
 				`</div>`
 			: '';
 
@@ -158,8 +199,9 @@ export function buildTemplate(params: {
     </div>
     ${groupsHtml}
     <div style="display:flex;height:1px;background:#1e293b;margin-top:24px;margin-bottom:20px;"></div>
-    <div style="display:flex;">
+    <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;">
       <span style="font-size:15px;color:#334155;">noselus.fr/an/scrutins/${scrutinId}</span>
+      <span style="font-size:12px;color:#475569;">groupes triés par nombre de votants</span>
     </div>
   </div>`;
 }

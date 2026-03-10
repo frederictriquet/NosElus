@@ -1,6 +1,6 @@
 # Tâches implémentées
 
-> Dernière mise à jour : 2026-02-28
+> Dernière mise à jour : 2026-03-10
 > Sources : ROADMAP.md, ROADMAP2.md, FEATURES.md, FEATURES2.md, PROPOSAL.md, docs/features/\*
 
 ---
@@ -153,3 +153,13 @@
 ## Légal
 
 - Mentions légales et RGPD
+
+## Cartes OG — Amélioration affichage groupes (2026-03-10)
+
+- Layout compact 3 colonnes : tous les groupes visibles (pas de cap à 3/4)
+- Tri par nombre de votants décroissant (groupes majeurs en haut à gauche)
+- Logique couleur stricte (`>` vs `>=`) : vert pour/rouge contre/gris pour égalité & abstentions
+- Séparateurs verticaux entre colonnes
+- Barre agrégat global pleine largeur + liste groupes compacts (format : `● Nom  XX% direction`)
+- Note au footer : "groupes triés par nombre de votants"
+- 39 tests unitaires validant tous les cas (égalité, abstentions, affichage complet)

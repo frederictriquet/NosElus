@@ -101,11 +101,13 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		.groupBy(votes.groupId, organs.name, organs.shortName, votes.position);
 
 	const groupMap = aggregateGroupVotes(groupVotes);
-	const rawTitle = scrutin.titleSimple ?? scrutin.title;
+	// titleSimple est déjà court (5-12 mots, ≤300 chars) — pas besoin de tronquer.
+	// On ne tronque que le titre brut en fallback.
+	const displayTitle = scrutin.titleSimple ?? truncate(scrutin.title, 80);
 	const font = await loadFont(url.origin);
 
 	const html = buildTemplate({
-		title: truncate(rawTitle, 80),
+		title: displayTitle,
 		date: formatDate(scrutin.date),
 		result: scrutin.result,
 		groups: Array.from(groupMap.values()),

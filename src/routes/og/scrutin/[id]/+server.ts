@@ -4,6 +4,8 @@ import { ImageResponse } from '@ethercorps/sveltekit-og';
 import { db, scrutins, votes, organs } from '$lib/server/db';
 import { eq, count } from 'drizzle-orm';
 import { truncate, formatDate, buildTemplate, type GroupData } from './og-template';
+import { dev } from '$app/environment';
+import { readFile } from 'fs/promises';
 
 type GroupVoteRow = {
 	groupId: string | null;
@@ -50,14 +52,23 @@ let fontPromise: Promise<ArrayBuffer> | null = null;
  * Le résultat est mis en cache au niveau du module via une promesse partagée,
  * garantissant un seul fetch même en cas de requêtes concurrentes au démarrage.
  *
+ * En dev, Vite peut corrompre les binaires via fetch — on lit directement le filesystem.
+ * En production, adapter-node sert les fichiers statiques — le self-fetch est fiable.
+ *
  * @param origin - Origine du serveur (ex. "https://noselus.fr") pour construire l'URL absolue
  */
 async function loadFont(origin: string): Promise<ArrayBuffer> {
 	if (!fontPromise) {
-		fontPromise = fetch(`${origin}/fonts/Inter-Regular.ttf`).then((res) => {
-			if (!res.ok) throw new Error(`Chargement police échoué: ${res.status}`);
-			return res.arrayBuffer();
-		});
+		if (dev) {
+			fontPromise = readFile('static/fonts/Inter-Regular.ttf').then(
+				(buf) => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+			);
+		} else {
+			fontPromise = fetch(`${origin}/fonts/Inter-Regular.ttf`).then((res) => {
+				if (!res.ok) throw new Error(`Chargement police échoué: ${res.status}`);
+				return res.arrayBuffer();
+			});
+		}
 	}
 	return fontPromise;
 }
@@ -90,7 +101,6 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		.groupBy(votes.groupId, organs.name, organs.shortName, votes.position);
 
 	const groupMap = aggregateGroupVotes(groupVotes);
-
 	const rawTitle = scrutin.titleSimple ?? scrutin.title;
 	const font = await loadFont(url.origin);
 
@@ -102,9 +112,16 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		scrutinId: scrutin.id
 	});
 
-	return new ImageResponse(html, {
+	const imageResponse = new ImageResponse(html, {
 		width: 1200,
 		height: 630,
 		fonts: [{ name: 'Inter', data: font, weight: 400, style: 'normal' }]
+	});
+	const buffer = await imageResponse.arrayBuffer();
+	return new Response(buffer, {
+		headers: {
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=3600'
+		}
 	});
 };

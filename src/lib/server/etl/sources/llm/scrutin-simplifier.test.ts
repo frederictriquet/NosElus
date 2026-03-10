@@ -1,12 +1,12 @@
 /**
  * Tests unitaires pour scrutin-simplifier.ts
  *
- * Seule parseSimplifiedTitle() est testée ici (fonction pure, sans dépendance DB/LLM).
+ * parseSimplifiedTitle() et buildPrompt() sont testées ici (fonctions pures).
  * Les fonctions nécessitant Ollama ou la DB sont couvertes par des tests d'intégration séparés.
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseSimplifiedTitle } from './scrutin-simplifier';
+import { parseSimplifiedTitle, buildPrompt } from './scrutin-simplifier';
 
 // ============================================================
 // parseSimplifiedTitle — happy paths
@@ -137,5 +137,31 @@ describe('parseSimplifiedTitle — priorité des clés', () => {
 	it('should fall back to "titre_simple" when "titre" and "title" are absent', () => {
 		const raw = '{"titre_simple": "Budget social 2024"}';
 		expect(parseSimplifiedTitle(raw)).toBe('Budget social 2024');
+	});
+});
+
+// ============================================================
+// buildPrompt — structure du prompt
+// ============================================================
+
+describe('buildPrompt', () => {
+	it('should include the title in the prompt', () => {
+		const prompt = buildPrompt('Loi sur le SMIC', null);
+		expect(prompt).toContain('Loi sur le SMIC');
+	});
+
+	it('should include a category hint when category is provided', () => {
+		const prompt = buildPrompt('Loi sur le SMIC', 'vote-final');
+		expect(prompt).toContain('[type: vote-final]');
+	});
+
+	it('should not include a category hint when category is null', () => {
+		const prompt = buildPrompt('Loi sur le SMIC', null);
+		expect(prompt).not.toContain('[type:');
+	});
+
+	it('should request a JSON response format', () => {
+		const prompt = buildPrompt('Loi sur le SMIC', null);
+		expect(prompt).toContain('{"titre":');
 	});
 });

@@ -40,7 +40,7 @@ Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
  * @param title - Titre juridique du scrutin
  * @param category - Catégorie du scrutin (vote-final, amendement, article…)
  */
-function buildPrompt(title: string, category: string | null): string {
+export function buildPrompt(title: string, category: string | null): string {
 	const categoryHint = category ? ` [type: ${category}]` : '';
 
 	return `TITRE DE SCRUTIN PARLEMENTAIRE${categoryHint}:

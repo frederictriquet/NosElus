@@ -230,18 +230,25 @@ describe('buildTemplate — groupes', () => {
 		expect(html).not.toContain('#ef4444');
 	});
 
-	it('should cap displayed groups at 4', () => {
+	it('should always show a global aggregate bar', () => {
+		const html = buildTemplate({ ...BASE_PARAMS, groups: [RN, NFP] });
+		expect(html).toContain('Résultat global');
+	});
+
+	it('should cap individual groups at 3 (aggregate + 3 = 4 rows total)', () => {
 		const html = buildTemplate({
 			...BASE_PARAMS,
 			groups: [RN, NFP, ENS, LR, UDI] // 5 groupes
 		});
-		// UDI est le 5e groupe le plus petit — doit être absent
-		expect(html).not.toContain('UDI');
-		// Les 4 plus grands doivent être présents (noms complets)
+		// UDI et LR sont les plus petits — l'un des deux doit être absent
+		// Les 3 plus grands (RN, ENS, NFP) doivent être présents
 		expect(html).toContain('Rassemblement National');
 		expect(html).toContain('Nouveau Front Populaire');
 		expect(html).toContain('Ensemble');
-		expect(html).toContain('Les Républicains');
+		// LR (37 votants) et UDI (14 votants) ne peuvent pas tous les deux être là
+		const lrPresent = html.includes('Les Républicains');
+		const udiPresent = html.includes('UDI');
+		expect(lrPresent && udiPresent).toBe(false);
 	});
 
 	it('should sort groups by total voters descending', () => {

@@ -48,7 +48,7 @@ export function formatDate(dateStr: string): string {
  * @param params.title - Titre du scrutin (déjà tronqué si nécessaire)
  * @param params.date - Date formatée en français
  * @param params.result - "adopté" | "rejeté" | null
- * @param params.groups - Données de votes par groupe
+ * @param params.groups - Données de votes par groupe (tous les groupes)
  * @param params.scrutinId - Identifiant du scrutin pour l'URL source
  * @returns HTML string compatible satori (flexbox inline styles)
  */
@@ -70,6 +70,17 @@ export function buildTemplate(params: {
      </div>`
 		: '';
 
+	// Agrégat global sur l'ensemble des groupes (tous les votants)
+	const totalPour = groups.reduce((s, g) => s + g.pour, 0);
+	const totalContre = groups.reduce((s, g) => s + g.contre, 0);
+	const totalAbstention = groups.reduce((s, g) => s + g.abstention, 0);
+	const grandTotal = totalPour + totalContre + totalAbstention;
+	const globalPourPct = grandTotal > 0 ? Math.round((totalPour / grandTotal) * 100) : 0;
+	const globalContrePct = grandTotal > 0 ? Math.round((totalContre / grandTotal) * 100) : 0;
+	const globalMainPct = globalPourPct >= globalContrePct ? globalPourPct : globalContrePct;
+	const globalMainLabel = globalPourPct >= globalContrePct ? 'pour' : 'contre';
+
+	// Top 3 groupes individuels par nombre de votants
 	const topGroups = groups
 		.map((g) => {
 			const total = g.pour + g.contre + g.abstention;
@@ -86,24 +97,46 @@ export function buildTemplate(params: {
 		})
 		.filter((g) => g.total > 0)
 		.sort((a, b) => b.total - a.total)
-		.slice(0, 4);
+		.slice(0, 3);
+
+	const renderBar = (
+		label: string,
+		pourPct: number,
+		contrePct: number,
+		mainPct: number,
+		mainLabel: string,
+		isAggregate: boolean
+	) =>
+		`<div style="display:flex;flex-direction:row;align-items:center;gap:14px;">` +
+		`<span style="display:flex;font-size:${isAggregate ? '14px' : '12px'};font-weight:${isAggregate ? '700' : '400'};color:${isAggregate ? '#e2e8f0' : '#94a3b8'};width:180px;flex-shrink:0;overflow:hidden;">${label}</span>` +
+		`<div style="display:flex;flex:1;height:${isAggregate ? '12px' : '8px'};background:#1e293b;border-radius:5px;overflow:hidden;">` +
+		`<div style="display:flex;width:${pourPct}%;height:100%;background:#22c55e;"></div>` +
+		`<div style="display:flex;width:${contrePct}%;height:100%;background:#ef4444;"></div>` +
+		`</div>` +
+		`<span style="display:flex;font-size:13px;color:${isAggregate ? '#e2e8f0' : '#94a3b8'};width:90px;justify-content:flex-end;">${mainPct}% ${mainLabel}</span>` +
+		`</div>`;
+
+	const separator =
+		topGroups.length > 0
+			? `<div style="display:flex;height:1px;background:#1e293b;margin:2px 0;"></div>`
+			: '';
 
 	const groupsHtml =
-		topGroups.length > 0
-			? `<div style="display:flex;flex-direction:column;gap:10px;margin-top:28px;">
-        ${topGroups
-					.map(
-						(g) => `<div style="display:flex;flex-direction:row;align-items:center;gap:14px;">
-            <span style="display:flex;font-size:13px;color:#94a3b8;width:180px;flex-shrink:0;overflow:hidden;">${g.label}</span>
-            <div style="display:flex;flex:1;height:10px;background:#1e293b;border-radius:5px;overflow:hidden;">
-              <div style="display:flex;width:${g.pourPct}%;height:10px;background:#22c55e;"></div>
-              <div style="display:flex;width:${g.contrePct}%;height:10px;background:#ef4444;"></div>
-            </div>
-            <span style="display:flex;font-size:13px;color:#94a3b8;width:90px;justify-content:flex-end;">${g.mainPct}% ${g.mainLabel}</span>
-          </div>`
-					)
-					.join('')}
-      </div>`
+		grandTotal > 0
+			? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:24px;">` +
+				renderBar(
+					'Résultat global',
+					globalPourPct,
+					Math.min(globalContrePct, 100 - globalPourPct),
+					globalMainPct,
+					globalMainLabel,
+					true
+				) +
+				separator +
+				topGroups
+					.map((g) => renderBar(g.label, g.pourPct, g.contrePct, g.mainPct, g.mainLabel, false))
+					.join('') +
+				`</div>`
 			: '';
 
 	const titleSize = title.length > 60 ? '36px' : '44px';

@@ -4,6 +4,7 @@
 	import GroupVotesStackedBar from '$lib/components/GroupVotesStackedBar.svelte';
 	import GroupName from '$lib/components/GroupName.svelte';
 	import { formatVoteCard } from './vote-card';
+	import { page } from '$app/stores';
 
 	let { data } = $props();
 
@@ -58,6 +59,16 @@
 
 <svelte:head>
 	<title>Scrutin n°{data.scrutin.number} - NosElus</title>
+	<meta property="og:title" content={data.scrutin.titleSimple ?? data.scrutin.title} />
+	<meta
+		property="og:description"
+		content="Vote officiel de l'Assemblée nationale — {formatDate(data.scrutin.date)}"
+	/>
+	<meta property="og:image" content="{$page.url.origin}/og/scrutin/{data.scrutin.id}.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:type" content="article" />
+	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
 <div class="page-header">

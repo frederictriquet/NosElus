@@ -1,17 +1,17 @@
 # Guide d'Utilisation des ETL
 
-Documentation synthétique des 35 pipelines ETL disponibles.
+Documentation synthétique des 36 pipelines ETL disponibles.
 
 ## 📋 Vue d'Ensemble
 
-| Catégorie           | Nombre | Description                                 |
-| ------------------- | ------ | ------------------------------------------- |
-| Assemblée Nationale | 10     | Import députés, scrutins, lois, amendements |
-| Sénat               | 4      | Import sénateurs, lois, statistiques        |
-| Parlement Européen  | 7      | Import eurodéputés, votes, lois PE          |
-| Analyse IA          | 2      | Classifications et analyses LLM (Ollama)    |
-| Enrichissement      | 1      | Textes complets via API                     |
-| Utilitaires         | 6      | Couleurs, positions politiques, stats       |
+| Catégorie           | Nombre | Description                                      |
+| ------------------- | ------ | ------------------------------------------------ |
+| Assemblée Nationale | 10     | Import députés, scrutins, lois, amendements      |
+| Sénat               | 4      | Import sénateurs, lois, statistiques             |
+| Parlement Européen  | 7      | Import eurodéputés, votes, lois PE               |
+| Analyse IA          | 3      | Classifications, analyses et titres LLM (Ollama) |
+| Enrichissement      | 1      | Textes complets via API                          |
+| Utilitaires         | 6      | Couleurs, positions politiques, stats            |
 
 ## 🔧 Options CLI Standard
 
@@ -78,12 +78,50 @@ Tous les scripts ETL supportent :
 
 ⚠️ **Prérequis** : `ollama serve` + `ollama pull mistral-nemo`
 
-| Objectif                     | Commande                         | Prérequis                           | Résultats                          |
-| ---------------------------- | -------------------------------- | ----------------------------------- | ---------------------------------- |
-| **Classifier scrutins AN**   | `make etl-an-classify-scrutins`  | `etl-an-scrutins`                   | Catégories sémantiques (via LLM)   |
-| **Analyser lois AN**         | `make etl-an-analyze-laws`       | `etl-an-laws`                       | Analyses texte complet AN (Ollama) |
-| **Analyser lois PE**         | `make etl-europarl-analyze-laws` | `etl-europarl-laws`                 | Analyses texte complet PE (Ollama) |
-| **Analyser toutes les lois** | `make etl-analyze-laws`          | `etl-an-laws` + `etl-europarl-laws` | Lance AN + PE                      |
+| Objectif                       | Commande                         | Prérequis                           | Résultats                              |
+| ------------------------------ | -------------------------------- | ----------------------------------- | -------------------------------------- |
+| **Classifier scrutins AN**     | `make etl-an-classify-scrutins`  | `etl-an-scrutins`                   | Catégories sémantiques (via LLM)       |
+| **Simplifier titres scrutins** | `make etl-simplify-scrutins`     | `etl-an-scrutins`                   | `title_simple` pour les cartes partage |
+| **Analyser lois AN**           | `make etl-an-analyze-laws`       | `etl-an-laws`                       | Analyses texte complet AN (Ollama)     |
+| **Analyser lois PE**           | `make etl-europarl-analyze-laws` | `etl-europarl-laws`                 | Analyses texte complet PE (Ollama)     |
+| **Analyser toutes les lois**   | `make etl-analyze-laws`          | `etl-an-laws` + `etl-europarl-laws` | Lance AN + PE                          |
+
+### Utilisation détaillée : `etl-simplify-scrutins`
+
+```bash
+# Batch standard (100 scrutins les plus populaires en premier)
+make etl-simplify-scrutins
+
+# Passer des arguments supplémentaires
+make etl-simplify-scrutins ARGS="--limit 50 --category vote-final"
+
+# Simulation sans écriture DB
+npm run etl:simplify-scrutins -- --dry-run --limit 10
+
+# Par catégorie et/ou législature
+npm run etl:simplify-scrutins -- --category vote-final --legislature 17
+
+# Regénérer un scrutin spécifique
+npm run etl:simplify-scrutins -- --redo VTANR5L17V5244
+
+# Avec un autre modèle Ollama
+npm run etl:simplify-scrutins -- --model mistral --limit 20
+```
+
+**Options disponibles** :
+
+| Option            | Description                                         | Défaut         |
+| ----------------- | --------------------------------------------------- | -------------- |
+| `--limit N`       | Nombre de scrutins à traiter                        | 100            |
+| `--category CAT`  | Filtrer par catégorie (`vote-final`, `amendement`…) | tous           |
+| `--legislature N` | Filtrer par législature (14, 15, 16, 17)            | toutes         |
+| `--model MODEL`   | Modèle Ollama à utiliser                            | `mistral-nemo` |
+| `--dry-run`       | Simulation sans écriture                            | false          |
+| `--redo ID`       | Regénère un scrutin précis (écrase l'existant)      | -              |
+
+**Priorité** : les scrutins avec le plus de votants sont traités en premier (scrutins emblématiques).
+
+**Idempotence** : les scrutins ayant déjà un `title_simple` sont automatiquement ignorés.
 
 ---
 
@@ -150,10 +188,11 @@ make etl-europarl-laws            # Nouvelles procédures PE
 make etl-an-law-texts             # Textes AN via Légifrance PISTE
 make etl-europarl-law-texts       # Textes PE via OEIL/communiqués
 
-# 3. Analyse IA — résumés et classification (nécessite Ollama)
+# 3. Analyse IA — résumés, classification et titres (nécessite Ollama)
 make etl-an-analyze-laws          # Résumés IA des nouvelles lois AN
 make etl-europarl-analyze-laws    # Résumés IA des nouvelles lois PE
 make etl-an-classify-scrutins     # Classification sémantique des scrutins
+make etl-simplify-scrutins        # Titres simplifiés pour les cartes partage
 ```
 
 ### Mise à jour mensuelle

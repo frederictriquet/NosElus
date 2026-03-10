@@ -1,6 +1,6 @@
 # Tâches à faire
 
-> Dernière mise à jour : 2026-02-28
+> Dernière mise à jour : 2026-03-10
 > Sources : ROADMAP.md, ROADMAP2.md, FEATURES.md, FEATURES2.md, PROPOSAL.md, docs/features/\*
 
 ---

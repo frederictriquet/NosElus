@@ -61,6 +61,7 @@
 		"etl:colors": "node --import tsx scripts/etl/sync-group-colors.ts",
 		"etl:political-positions": "node --import tsx scripts/etl/import-political-positions.ts",
 		"etl:seed-pe-positions": "node --import tsx scripts/etl/seed-pe-positions.ts",
+		"etl:simplify-scrutins": "node --import tsx scripts/etl/simplify-scrutins.ts",
 		"lint": "npm run lint:format && npm run lint:types",
 		"lint:format": "prettier --check \"src/**/*.{js,ts,svelte,css,md,json}\"",
 		"lint:types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

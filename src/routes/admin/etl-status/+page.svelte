@@ -84,6 +84,28 @@
 		}
 	}
 
+	/** Commande Makefile pour resynchroniser une source */
+	const SYNC_COMMANDS: Record<string, string> = {
+		'assemblee/actors': 'make etl-an-actors',
+		'assemblee/mandates': 'make etl-an-actors',
+		'assemblee/organs': 'make etl-colors',
+		'assemblee/scrutins': 'make etl-an-scrutins',
+		'assemblee/votes': 'make etl-an-scrutins',
+		'assemblee/laws': 'make etl-an-laws',
+		'europarl/meps': 'make etl-europarl-meps',
+		'europarl/historical_meps': 'make etl-europarl-historical',
+		'europarl/votes': 'make etl-europarl-votes',
+		'europarl/activity-stats': 'make etl-europarl-activity-stats',
+		'senat/senators': 'make etl-senat-senators',
+		'senat/mandates-history': 'make etl-senat-mandates-history',
+		'senat/activity-stats': 'make etl-senat-activity-stats',
+		'nossenateurs/activity-stats': 'make etl-senat-nossenateurs-stats'
+	};
+
+	function getSyncCommand(source: string, entityType: string): string | null {
+		return SYNC_COMMANDS[`${source}/${entityType}`] ?? null;
+	}
+
 	/** Format date pour affichage */
 	function formatDate(date: Date | string): string {
 		const d = typeof date === 'string' ? new Date(date) : date;
@@ -126,10 +148,12 @@
 								<th>Status</th>
 								<th>Âge</th>
 								<th>Enregistrements</th>
+								<th>Resynchroniser</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each syncRows as row}
+								{@const cmd = getSyncCommand(row.source, row.entityType)}
 								<tr>
 									<td><code>{row.source}</code></td>
 									<td>{row.entityType}</td>
@@ -146,6 +170,23 @@
 										</span>
 									</td>
 									<td class="number">{row.recordsProcessed.toLocaleString('fr-FR')}</td>
+									<td>
+										{#if cmd}
+											<div class="command-cell">
+												<code>{cmd}</code>
+												<button
+													class="copy-btn"
+													onclick={() => copyCommand(cmd)}
+													title="Copier la commande"
+													aria-label="Copier {cmd}"
+												>
+													📋
+												</button>
+											</div>
+										{:else}
+											<span class="no-cmd">—</span>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -398,6 +439,11 @@
 	.stale {
 		color: var(--color-danger);
 		font-weight: 600;
+	}
+
+	.no-cmd {
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
 	}
 
 	.badge {

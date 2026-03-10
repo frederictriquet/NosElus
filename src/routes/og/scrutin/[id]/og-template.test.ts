@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { truncate, formatDate, buildTemplate, type GroupData } from './og-template';
+import { truncate, escapeHtml, formatDate, buildTemplate, type GroupData } from './og-template';
 
 // ============================================================
 // Fixtures
@@ -42,6 +42,36 @@ const BASE_PARAMS = {
 	groups: [RN, NFP],
 	scrutinId: 'VTANR5L16V0063'
 };
+
+// ============================================================
+// escapeHtml
+// ============================================================
+
+describe('escapeHtml', () => {
+	it('should leave plain strings unchanged', () => {
+		expect(escapeHtml('Augmentation du SMIC')).toBe('Augmentation du SMIC');
+	});
+
+	it('should escape ampersand', () => {
+		expect(escapeHtml('Code civil & pénal')).toBe('Code civil &amp; pénal');
+	});
+
+	it('should escape less-than', () => {
+		expect(escapeHtml('art. 1<bis>')).toBe('art. 1&lt;bis&gt;');
+	});
+
+	it('should escape greater-than', () => {
+		expect(escapeHtml('a > b')).toBe('a &gt; b');
+	});
+
+	it('should escape multiple characters in one string', () => {
+		expect(escapeHtml('<div>&</div>')).toBe('&lt;div&gt;&amp;&lt;/div&gt;');
+	});
+
+	it('should handle empty string', () => {
+		expect(escapeHtml('')).toBe('');
+	});
+});
 
 // ============================================================
 // truncate

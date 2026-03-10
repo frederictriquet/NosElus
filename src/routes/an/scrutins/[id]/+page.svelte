@@ -64,7 +64,7 @@
 		property="og:description"
 		content="Vote officiel de l'Assemblée nationale — {formatDate(data.scrutin.date)}"
 	/>
-	<meta property="og:image" content="{$page.url.origin}/og/scrutin/{data.scrutin.id}.png" />
+	<meta property="og:image" content="{$page.url.origin}/og/scrutin/{data.scrutin.id}" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
 	<meta property="og:type" content="article" />

@@ -24,6 +24,11 @@ export function truncate(s: string, max: number): string {
 	return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 
+/** Échappe les caractères HTML spéciaux pour éviter de casser le template satori. */
+export function escapeHtml(s: string): string {
+	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
  * Formate une date ISO "YYYY-MM-DD" en français.
  * Utilise un parsing explicite pour éviter le décalage UTC.
@@ -56,6 +61,9 @@ export function buildTemplate(params: {
 }): string {
 	const { title, date, result, groups, scrutinId } = params;
 
+	const safeTitle = escapeHtml(title);
+	const safeDate = escapeHtml(date);
+
 	const resultBadge = result
 		? `<div style="display:flex;padding:6px 20px;border-radius:100px;background:${result === 'adopté' ? '#14532d' : '#7f1d1d'};">
        <span style="font-size:15px;font-weight:700;color:${result === 'adopté' ? '#4ade80' : '#f87171'};">${result === 'adopté' ? 'ADOPTÉ' : 'REJETÉ'}</span>
@@ -68,7 +76,7 @@ export function buildTemplate(params: {
 			const pourPct = total > 0 ? Math.round((g.pour / total) * 100) : 0;
 			const contrePct = total > 0 ? Math.round((g.contre / total) * 100) : 0;
 			return {
-				label: g.shortName ?? g.name,
+				label: escapeHtml(g.shortName ?? g.name),
 				total,
 				pourPct,
 				contrePct: Math.min(contrePct, 100 - pourPct),
@@ -109,9 +117,9 @@ export function buildTemplate(params: {
       <div style="display:flex;margin-bottom:14px;">
         <span style="font-size:12px;font-weight:700;color:#3b82f6;letter-spacing:3px;">VOTE OFFICIEL</span>
       </div>
-      <div style="display:flex;font-size:${titleSize};font-weight:700;color:#f1f5f9;line-height:1.2;margin-bottom:24px;">${title}</div>
+      <div style="display:flex;font-size:${titleSize};font-weight:700;color:#f1f5f9;line-height:1.2;margin-bottom:24px;">${safeTitle}</div>
       <div style="display:flex;flex-direction:row;align-items:center;gap:16px;">
-        <span style="font-size:20px;color:#64748b;">${date}</span>
+        <span style="font-size:20px;color:#64748b;">${safeDate}</span>
         ${resultBadge}
       </div>
     </div>

@@ -191,16 +191,16 @@ describe('buildTemplate — badge de résultat', () => {
 // ============================================================
 
 describe('buildTemplate — groupes', () => {
-	it('should include group shortName in the output', () => {
+	it('should include group full name in the output', () => {
 		const html = buildTemplate(BASE_PARAMS);
-		expect(html).toContain('RN');
-		expect(html).toContain('NFP');
+		expect(html).toContain('Rassemblement National');
+		expect(html).toContain('Nouveau Front Populaire');
 	});
 
-	it('should use full name when shortName is null', () => {
-		const noShort = makeGroup({ name: 'Groupe Sans Sigle', pour: 10, contre: 0, abstention: 0 });
-		const html = buildTemplate({ ...BASE_PARAMS, groups: [noShort] });
-		expect(html).toContain('Groupe Sans Sigle');
+	it('should use full name even when shortName is available', () => {
+		const html = buildTemplate({ ...BASE_PARAMS, groups: [RN] });
+		expect(html).toContain('Rassemblement National');
+		expect(html).not.toContain('>RN<');
 	});
 
 	it('should exclude groups with total votes of 0', () => {
@@ -212,8 +212,8 @@ describe('buildTemplate — groupes', () => {
 			abstention: 0
 		});
 		const html = buildTemplate({ ...BASE_PARAMS, groups: [ghost, NFP] });
-		expect(html).not.toContain('GHO');
-		expect(html).toContain('NFP');
+		expect(html).not.toContain('Fantôme');
+		expect(html).toContain('Nouveau Front Populaire');
 	});
 
 	it('should show no groups section when all groups have 0 votes', () => {
@@ -237,19 +237,19 @@ describe('buildTemplate — groupes', () => {
 		});
 		// UDI est le 5e groupe le plus petit — doit être absent
 		expect(html).not.toContain('UDI');
-		// Les 4 plus grands doivent être présents
-		expect(html).toContain('RN');
-		expect(html).toContain('NFP');
-		expect(html).toContain('ENS');
-		expect(html).toContain('LR');
+		// Les 4 plus grands doivent être présents (noms complets)
+		expect(html).toContain('Rassemblement National');
+		expect(html).toContain('Nouveau Front Populaire');
+		expect(html).toContain('Ensemble');
+		expect(html).toContain('Les Républicains');
 	});
 
 	it('should sort groups by total voters descending', () => {
 		// NFP : 60, ENS : 100, LR : 37 — ENS doit apparaître avant NFP
 		const html = buildTemplate({ ...BASE_PARAMS, groups: [LR, NFP, ENS] });
-		const ensIdx = html.indexOf('ENS');
-		const nfpIdx = html.indexOf('NFP');
-		const lrIdx = html.indexOf('LR');
+		const ensIdx = html.indexOf('Ensemble');
+		const nfpIdx = html.indexOf('Nouveau Front Populaire');
+		const lrIdx = html.indexOf('Les Républicains');
 		expect(ensIdx).toBeLessThan(nfpIdx); // ENS (100) avant NFP (60)
 		expect(nfpIdx).toBeLessThan(lrIdx); // NFP (60) avant LR (37)
 	});

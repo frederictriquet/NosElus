@@ -76,7 +76,7 @@ export function buildTemplate(params: {
 			const pourPct = total > 0 ? Math.round((g.pour / total) * 100) : 0;
 			const contrePct = total > 0 ? Math.round((g.contre / total) * 100) : 0;
 			return {
-				label: escapeHtml(g.shortName ?? g.name),
+				label: escapeHtml(g.name),
 				total,
 				pourPct,
 				contrePct: Math.min(contrePct, 100 - pourPct),
@@ -94,7 +94,7 @@ export function buildTemplate(params: {
         ${topGroups
 					.map(
 						(g) => `<div style="display:flex;flex-direction:row;align-items:center;gap:14px;">
-            <span style="display:flex;font-size:14px;color:#94a3b8;width:72px;flex-shrink:0;">${g.label}</span>
+            <span style="display:flex;font-size:13px;color:#94a3b8;width:180px;flex-shrink:0;overflow:hidden;">${g.label}</span>
             <div style="display:flex;flex:1;height:10px;background:#1e293b;border-radius:5px;overflow:hidden;">
               <div style="display:flex;width:${g.pourPct}%;height:10px;background:#22c55e;"></div>
               <div style="display:flex;width:${g.contrePct}%;height:10px;background:#ef4444;"></div>

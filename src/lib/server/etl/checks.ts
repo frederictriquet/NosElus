@@ -182,7 +182,7 @@ export async function loadSyncStatus(): Promise<SyncStatusRow[]> {
 /**
  * Exécute tous les checks ETL et retourne les suggestions.
  *
- * **Pattern CTE SQL** : Une seule requête agrège 35+ métriques
+ * **Pattern CTE SQL** : Une seule requête agrège 36+ métriques
  * pour éviter N+1 queries.
  *
  * **Logique de sévérité** :
@@ -213,6 +213,8 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		total_scrutins_an: number;
 		scrutins_an_with_law: number;
 		scrutins_an_with_category: number;
+		scrutins_an_vote_final_total: number;
+		scrutins_an_vote_final_no_title_simple: number;
 		total_scrutins_pe: number;
 		scrutins_pe_with_law: number;
 		// Actors
@@ -296,6 +298,11 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 					AND law_id IS NOT NULL) as scrutins_an_with_law,
 				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
 					AND category IS NOT NULL) as scrutins_an_with_category,
+				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
+					AND category = 'vote-final') as scrutins_an_vote_final_total,
+				COUNT(*) FILTER (WHERE (legislature LIKE 'AN-%' OR legislature ~ '^[0-9]+$')
+					AND category = 'vote-final'
+					AND title_simple IS NULL) as scrutins_an_vote_final_no_title_simple,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%') as total_scrutins_pe,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%'
 					AND law_id IS NOT NULL) as scrutins_pe_with_law
@@ -586,6 +593,21 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 			{ critical: 50, warning: 25, info: 10 },
 			'make etl-europarl-law-texts',
 			'PE'
+		)
+	);
+
+	const scrutinsANVoteFinalTotal = Number(row.scrutins_an_vote_final_total) || 0;
+	const scrutinsANVoteFinalNoTitleSimple = Number(row.scrutins_an_vote_final_no_title_simple) || 0;
+	checks.push(
+		completenessCheck(
+			'scrutins-an-no-title-simple',
+			'Scrutins AN (vote-final) avec titre simplifié',
+			`${scrutinsANVoteFinalNoTitleSimple} scrutins vote-final sans titre simplifié (cartes partage OG)`,
+			scrutinsANVoteFinalNoTitleSimple,
+			scrutinsANVoteFinalTotal,
+			{ warning: 50, info: 10 },
+			'make etl-simplify-scrutins ARGS="--category vote-final"',
+			'AN'
 		)
 	);
 

@@ -227,7 +227,7 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation.
 
-**Avancement : 4 / 8 étapes**
+**Avancement : 5 / 8 étapes**
 
 ### ✅ Terminé
 
@@ -244,10 +244,12 @@ Ces features partagent des briques communes. Ordre suggéré pour maximiser la r
       2-3 thèmes (Pouvoir d'achat, Retraites) avec tagging manuel de ~20 scrutins
       Implémentation complète : table `scrutin_tags`, bilan par scrutins, pages `/themes`, cache TTL, JSDoc
 
-### ⬜ À faire (court terme)
+- [x] **Étape 5 — Cartes image (OG)** _(~1 jour — 2026-03-10)_
+      Route `/og/scrutin/[id].png` générée côté serveur via `@ethercorps/sveltekit-og` + satori + resvg
+      Template dark : titre, date, résultat (adopté/rejeté), barres pour/contre par groupe (top 4)
+      Police Inter bundlée, cache module-level, balises og:image + twitter:card sur les pages scrutin
 
-- [ ] **Étape 5 — Cartes image (OG)** _(~2-3 jours)_
-      Images Open Graph générées côté serveur pour partage sur réseaux sociaux
+### ⬜ À faire (moyen/long terme)
 
 ### ⬜ À faire (moyen/long terme)
 

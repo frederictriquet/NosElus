@@ -606,7 +606,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 			scrutinsANVoteFinalNoTitleSimple,
 			scrutinsANVoteFinalTotal,
 			{ warning: 50, info: 10 },
-			'make etl-simplify-scrutins ARGS="--category vote-final"',
+			'make etl-simplify-scrutins',
 			'AN'
 		)
 	);

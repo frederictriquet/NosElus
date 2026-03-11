@@ -189,7 +189,7 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM)
 	@echo "$(CYAN)Simplification des titres de scrutins (LLM)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
-	npm run etl:simplify-scrutins -- $(ARGS)
+	npm run etl:simplify-scrutins -- --category vote-final $(ARGS)
 
 etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"

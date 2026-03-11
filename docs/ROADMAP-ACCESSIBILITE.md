@@ -6,7 +6,7 @@
 > Contexte déclencheur : post viral affirmant "le RN défend les travailleurs" alors que
 > le groupe a voté contre l'augmentation du SMIC à 1500€ net (20/07/2022).
 >
-> Dernière mise à jour : 2026-03-05
+> Dernière mise à jour : 2026-03-11
 
 ---
 
@@ -227,7 +227,7 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation.
 
-**Avancement : 5 / 8 étapes**
+**Avancement : 5.5 / 8 étapes**
 
 ### ✅ Terminé
 
@@ -249,12 +249,13 @@ Ces features partagent des briques communes. Ordre suggéré pour maximiser la r
       Template dark : titre, date, résultat (adopté/rejeté), barres pour/contre par groupe (top 4)
       Police Inter bundlée, cache module-level, balises og:image + twitter:card sur les pages scrutin
 
-### ⬜ À faire (moyen/long terme)
+### 🔄 En cours
+
+- [~] **Étape 6 — Vérifier Phase 2 — Verdict semi-auto** _(~2 jours — 2026-03-11)_
+  Détection direction (mots-clés lexicaux) + calcul verdict (✅/❌/🟡) vs vote réel groupe
+  Seuil verdict : ≥60% pour confirmer/infirmer, sinon nuancé
 
 ### ⬜ À faire (moyen/long terme)
-
-- [ ] **Étape 6 — Vérifier Phase 2 — Verdict semi-auto** _(~1 mois)_
-      LLM (mistral-nemo) extrait sujet/acteur/direction → verdict ✅ / ❌ / 🟡
 
 - [ ] **Étape 7 — Recherche sémantique** _(à planifier)_
       pgvector + embeddings sur les scrutins

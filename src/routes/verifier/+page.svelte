@@ -63,8 +63,30 @@
 			{/if}
 		</div>
 
+		{#if data.verdict}
+			<div
+				class="verdict-banner"
+				class:verdict-confirme={data.verdict.verdict === 'confirmé'}
+				class:verdict-infirme={data.verdict.verdict === 'infirmé'}
+				class:verdict-nuance={data.verdict.verdict === 'nuancé'}
+			>
+				<span class="verdict-icon">
+					{#if data.verdict.verdict === 'confirmé'}✅{:else if data.verdict.verdict === 'infirmé'}❌{:else}🟡{/if}
+				</span>
+				<span class="verdict-label">
+					{#if data.verdict.verdict === 'confirmé'}Confirmé{:else if data.verdict.verdict === 'infirmé'}Infirmé{:else}Nuancé{/if}
+				</span>
+				<span class="verdict-detail">
+					sur {data.verdict.scrutinCount} scrutin{data.verdict.scrutinCount > 1 ? 's' : ''} —
+					{data.verdict.confirmPct}% confirment
+				</span>
+			</div>
+		{/if}
+
 		<p class="disclaimer">
-			Les résultats ci-dessous sont des votes officiels. L'interprétation reste à votre charge.
+			Les résultats ci-dessous sont des votes officiels.
+			{#if !data.verdict}L'interprétation reste à votre charge.{:else}Le verdict est calculé
+				automatiquement — un vote ne résume pas la position complète d'un groupe.{/if}
 		</p>
 
 		<div class="scrutins-list">
@@ -175,6 +197,50 @@
 		border-radius: 999px;
 		font-size: 0.75rem;
 		font-weight: 600;
+	}
+
+	.verdict-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		border-radius: var(--radius);
+		margin-bottom: 1rem;
+		font-weight: 600;
+	}
+
+	.verdict-confirme {
+		background: var(--color-success-bg, #dcfce7);
+		color: var(--color-success, #166534);
+		border-left: 4px solid var(--color-success, #166534);
+	}
+
+	.verdict-infirme {
+		background: var(--color-danger-bg, #fde2e2);
+		color: var(--color-danger, #991b1b);
+		border-left: 4px solid var(--color-danger, #991b1b);
+	}
+
+	.verdict-nuance {
+		background: var(--color-warning-bg, #fef9c3);
+		color: var(--color-warning-text, #92400e);
+		border-left: 4px solid var(--color-warning, #d97706);
+	}
+
+	.verdict-icon {
+		font-size: 1.125rem;
+		flex-shrink: 0;
+	}
+
+	.verdict-label {
+		font-size: 0.9375rem;
+		font-weight: 700;
+	}
+
+	.verdict-detail {
+		font-size: 0.8125rem;
+		font-weight: 400;
+		opacity: 0.8;
 	}
 
 	.disclaimer {

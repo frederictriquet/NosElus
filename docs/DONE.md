@@ -1,6 +1,6 @@
 # Tâches implémentées
 
-> Dernière mise à jour : 2026-03-10
+> Dernière mise à jour : 2026-03-12
 > Sources : ROADMAP.md, ROADMAP2.md, FEATURES.md, FEATURES2.md, PROPOSAL.md, docs/features/\*
 
 ---
@@ -153,6 +153,19 @@
 ## Légal
 
 - Mentions légales et RGPD
+
+## Vérifier une affirmation — Verdict semi-automatique (2026-03-12)
+
+- Détection de direction lexicale dans les affirmations en langue naturelle
+  - Marqueurs pour/contre/abstention en français
+  - Word-boundary robuste sur les caractères accentués : `(?<![a-zA-ZÀ-ÿ])marker(?![a-zA-ZÀ-ÿ])` → "favorable" ne matche plus dans "défavorable"
+  - Ambiguïté (pour + contre simultanés) → direction null, pas de verdict
+- Calcul de verdict par agrégation sur les scrutins du groupe détecté
+  - Seuil ≥ 60% sur les scrutins avec données de vote → ✅ Confirmé / ❌ Infirmé / 🟡 Nuancé
+  - Badge verdict coloré sur `/verifier` avec compte de scrutins et % de confirmation
+  - Disclaimer adaptatif rappelant les limites d'un verdict automatique
+- Fonctions pures dans `$lib/server/verdict.ts` (sans I/O, testables unitairement)
+- 47 tests (30 unitaires verdict.ts + 17 intégration verifier.test.ts)
 
 ## Cartes OG — Amélioration affichage groupes (2026-03-10)
 

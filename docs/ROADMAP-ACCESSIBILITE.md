@@ -227,7 +227,7 @@ Verdict : ✅ Confirmé par 2 scrutins officiels — Source : Assemblée Nationa
 
 Ces features partagent des briques communes. Ordre suggéré pour maximiser la réutilisation.
 
-**Avancement : 5.5 / 8 étapes**
+**Avancement : 6 / 8 étapes**
 
 ### ✅ Terminé
 
@@ -249,11 +249,11 @@ Ces features partagent des briques communes. Ordre suggéré pour maximiser la r
       Template dark : titre, date, résultat (adopté/rejeté), barres pour/contre par groupe (top 4)
       Police Inter bundlée, cache module-level, balises og:image + twitter:card sur les pages scrutin
 
-### 🔄 En cours
+### ✅ Terminé (suite)
 
-- [~] **Étape 6 — Vérifier Phase 2 — Verdict semi-auto** _(~2 jours — 2026-03-11)_
-  Détection direction (mots-clés lexicaux) + calcul verdict (✅/❌/🟡) vs vote réel groupe
-  Seuil verdict : ≥60% pour confirmer/infirmer, sinon nuancé
+- [x] **Étape 6 — Vérifier Phase 2 — Verdict semi-auto** _(~2 jours — 2026-03-12)_
+      Détection direction (mots-clés lexicaux) + calcul verdict (✅/❌/🟡) vs vote réel groupe
+      Seuil verdict : ≥60% pour confirmer/infirmer, sinon nuancé — 47 tests unitaires + intégration
 
 ### ⬜ À faire (moyen/long terme)
 

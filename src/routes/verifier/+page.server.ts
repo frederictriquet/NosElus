@@ -15,6 +15,7 @@ import type { PageServerLoad } from './$types';
 import { db, organs } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import { searchScrutins, extractGroupVote } from '$lib/server/api/helpers';
+import { detectDirection, computeVerdict } from '$lib/server/verdict';
 
 // Cache en mémoire pour la liste des groupes (même pattern que /recherche, TTL 1h)
 let groupsCache: Array<{ id: string; shortName: string | null }> | null = null;
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	const limit = 20;
 
 	if (!query || query.length < 2) {
-		return { query, scrutins: null, matchedGroupShortName: null };
+		return { query, scrutins: null, matchedGroupShortName: null, direction: null, verdict: null };
 	}
 
 	const allGroups = await getAllGroups();
@@ -66,9 +67,14 @@ export const load: PageServerLoad = async ({ url }) => {
 		groupVote: matchedGroup ? extractGroupVote(s.groupResults, matchedGroup.id) : null
 	}));
 
+	const direction = detectDirection(query);
+	const verdict = matchedGroup && direction ? computeVerdict(scrutins, direction) : null;
+
 	return {
 		query,
 		matchedGroupShortName: matchedGroup?.shortName ?? null,
-		scrutins
+		scrutins,
+		direction,
+		verdict
 	};
 };

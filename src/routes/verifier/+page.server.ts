@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	const limit = 20;
 
 	if (!query || query.length < 2) {
-		return { query, scrutins: null, matchedGroupShortName: null };
+		return { query, scrutins: null, matchedGroupShortName: null, direction: null, verdict: null };
 	}
 
 	const allGroups = await getAllGroups();

@@ -266,3 +266,97 @@ describe('/verifier load — performance et limites', () => {
 		expect(result.scrutins.length).toBeLessThanOrEqual(20);
 	});
 });
+
+// ============================================================
+// Verdict semi-automatique — champs direction et verdict
+// ============================================================
+
+describe('/verifier load — champ direction', () => {
+	it('should return direction: null when no direction marker in query', async () => {
+		if (!dbAvailable) return;
+
+		const result = (await load(makeEvent('SMIC RN'))) as {
+			direction: string | null;
+		};
+
+		expect(result.direction).toBeNull();
+	});
+
+	it('should return direction: "contre" for query with contre marker', async () => {
+		if (!dbAvailable) return;
+
+		const result = (await load(makeEvent("Le RN a voté contre l'augmentation du SMIC"))) as {
+			direction: string | null;
+		};
+
+		expect(result.direction).toBe('contre');
+	});
+
+	it('should return direction: null when query is empty', async () => {
+		if (!dbAvailable) return;
+
+		const result = (await load(makeEvent(''))) as {
+			direction: string | null;
+		};
+
+		expect(result.direction).toBeNull();
+	});
+});
+
+describe('/verifier load — champ verdict', () => {
+	it('should return verdict: null when no group detected', async () => {
+		if (!dbAvailable) return;
+
+		// Pas de groupe dans la query → pas de verdict possible
+		const result = (await load(makeEvent("quelqu'un a voté contre le SMIC"))) as {
+			verdict: unknown;
+			matchedGroupShortName: string | null;
+		};
+
+		expect(result.matchedGroupShortName).toBeNull();
+		expect(result.verdict).toBeNull();
+	});
+
+	it('should return verdict: null when no direction detected', async () => {
+		if (!dbAvailable) return;
+
+		// Groupe détecté mais pas de direction → pas de verdict
+		const result = (await load(makeEvent('SMIC RN'))) as {
+			verdict: unknown;
+			direction: string | null;
+			matchedGroupShortName: string | null;
+		};
+
+		expect(result.matchedGroupShortName).toBe('RN');
+		expect(result.direction).toBeNull();
+		expect(result.verdict).toBeNull();
+	});
+
+	it('should return verdict object when group and direction are both detected', async () => {
+		if (!dbAvailable) return;
+
+		const result = (await load(makeEvent("Le RN a voté contre l'augmentation du SMIC"))) as {
+			verdict: {
+				verdict: string;
+				confirmPct: number;
+				scrutinCount: number;
+			} | null;
+			direction: string | null;
+			matchedGroupShortName: string | null;
+		};
+
+		expect(result.matchedGroupShortName).toBe('RN');
+		expect(result.direction).toBe('contre');
+
+		// Si des scrutins avec groupVote RN existent, le verdict doit être calculé
+		if (result.verdict !== null) {
+			expect(result.verdict).toHaveProperty('verdict');
+			expect(result.verdict).toHaveProperty('confirmPct');
+			expect(result.verdict).toHaveProperty('scrutinCount');
+			expect(['confirmé', 'infirmé', 'nuancé']).toContain(result.verdict.verdict);
+			expect(result.verdict.confirmPct).toBeGreaterThanOrEqual(0);
+			expect(result.verdict.confirmPct).toBeLessThanOrEqual(100);
+			expect(result.verdict.scrutinCount).toBeGreaterThan(0);
+		}
+	});
+});

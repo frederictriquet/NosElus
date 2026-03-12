@@ -49,8 +49,7 @@ const POUR_MARKERS = [
 	'appuie',
 	'appuient',
 	'adopte',
-	'adoptent',
-	'pro'
+	'adoptent'
 ];
 
 /** Marqueurs lexicaux indiquant un vote CONTRE. */
@@ -68,8 +67,7 @@ const CONTRE_MARKERS = [
 	'voté contre',
 	'défavorable',
 	'opposé',
-	'opposés',
-	'anti'
+	'opposés'
 ];
 
 /** Marqueurs lexicaux indiquant une ABSTENTION. */
@@ -82,6 +80,17 @@ const ABSTENTION_MARKERS = [
 	'abstentions',
 	'ne vote pas'
 ];
+
+/**
+ * Vérifie si un marqueur est présent dans un texte en respectant les limites de mots.
+ * Utilise un lookbehind/lookahead sur [a-zA-ZÀ-ÿ] pour gérer correctement les caractères
+ * accentués (ex: "favorable" ne doit pas matcher dans "défavorable").
+ */
+function matchesMarker(text: string, marker: string): boolean {
+	const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const regex = new RegExp(`(?<![a-zA-ZÀ-ÿ])${escaped}(?![a-zA-ZÀ-ÿ])`, 'i');
+	return regex.test(text);
+}
 
 // ============================================================
 // detectDirection
@@ -98,9 +107,9 @@ const ABSTENTION_MARKERS = [
 export function detectDirection(query: string): Direction | null {
 	const lower = query.toLowerCase();
 
-	const hasPour = POUR_MARKERS.some((m) => lower.includes(m));
-	const hasContre = CONTRE_MARKERS.some((m) => lower.includes(m));
-	const hasAbstention = ABSTENTION_MARKERS.some((m) => lower.includes(m));
+	const hasPour = POUR_MARKERS.some((m) => matchesMarker(lower, m));
+	const hasContre = CONTRE_MARKERS.some((m) => matchesMarker(lower, m));
+	const hasAbstention = ABSTENTION_MARKERS.some((m) => matchesMarker(lower, m));
 
 	// Ambiguïté : plusieurs directions détectées → null
 	const count = (hasPour ? 1 : 0) + (hasContre ? 1 : 0) + (hasAbstention ? 1 : 0);

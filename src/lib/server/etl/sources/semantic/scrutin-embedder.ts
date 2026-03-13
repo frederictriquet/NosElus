@@ -52,6 +52,27 @@ export function cosineSimilarity(a: Float32Array, b: Float32Array): number {
  * @param threshold - Score minimum pour qu'une paire soit conservée
  * @returns Paires (scrutinId, similarId, score) à insérer dans scrutin_similar
  */
+/**
+ * Insère (score, j) dans un top-K trié par score décroissant.
+ * Mémoire constante : jamais plus de K entrées par scrutin.
+ */
+function pushTopK(
+	arr: Array<{ score: number; j: number }>,
+	score: number,
+	j: number,
+	k: number
+): void {
+	if (arr.length >= k && score <= arr[arr.length - 1].score) return;
+	arr.push({ score, j });
+	// Insertion sort — k est petit (≤20), coût négligeable
+	for (let i = arr.length - 1; i > 0 && arr[i].score > arr[i - 1].score; i--) {
+		const tmp = arr[i];
+		arr[i] = arr[i - 1];
+		arr[i - 1] = tmp;
+	}
+	if (arr.length > k) arr.pop();
+}
+
 export function computeTopNeighbors(
 	ids: string[],
 	embeddings: Float32Array[],
@@ -59,19 +80,17 @@ export function computeTopNeighbors(
 	threshold = DEFAULT_THRESHOLD
 ): Array<{ scrutinId: string; similarId: string; score: number }> {
 	const n = ids.length;
-	// Pour chaque scrutin i, liste des (score, j) candidats
-	const candidatesPerScrutin: Array<Array<{ score: number; j: number }>> = Array.from(
-		{ length: n },
-		() => []
-	);
+	// Top-K heap par scrutin : mémoire O(N × K) au lieu de O(N × matched_pairs).
+	// Évite le OOM sur 20k scrutins très similaires (ex: votes de décharge PE).
+	const topK: Array<Array<{ score: number; j: number }>> = Array.from({ length: n }, () => []);
 
 	// Calcul pairwise O(N²/2) — acceptable offline (20K × 20K / 2 = 200M ops)
 	for (let i = 0; i < n; i++) {
 		for (let j = i + 1; j < n; j++) {
 			const score = cosineSimilarity(embeddings[i], embeddings[j]);
 			if (score >= threshold) {
-				candidatesPerScrutin[i].push({ score, j });
-				candidatesPerScrutin[j].push({ score, j: i });
+				pushTopK(topK[i], score, j, neighbors);
+				pushTopK(topK[j], score, i, neighbors);
 			}
 		}
 	}
@@ -79,10 +98,7 @@ export function computeTopNeighbors(
 	const results: Array<{ scrutinId: string; similarId: string; score: number }> = [];
 
 	for (let i = 0; i < n; i++) {
-		// Trier par score décroissant et garder les N meilleurs
-		const top = candidatesPerScrutin[i].sort((a, b) => b.score - a.score).slice(0, neighbors);
-
-		for (const { score, j } of top) {
+		for (const { score, j } of topK[i]) {
 			results.push({
 				scrutinId: ids[i],
 				similarId: ids[j],

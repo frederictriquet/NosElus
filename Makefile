@@ -279,6 +279,8 @@ etl-all-legislatures: ## Import toutes législatures AN (14→17)
 	@$(MAKE) etl-an-all ETL_LEGISLATURE=16
 	@echo "$(CYAN)Import législature 17 (XVIIe - 2024-)...$(RESET)"
 	@$(MAKE) etl-an-all ETL_LEGISLATURE=17
+	@echo "$(CYAN)Pré-calcul des voisins sémantiques (tous scrutins)...$(RESET)"
+	@$(MAKE) etl-generate-similar ARGS="--limit 25000"
 	@echo "$(GREEN)✓ Toutes les législatures importées$(RESET)"
 
 # =============================================================================
@@ -300,8 +302,11 @@ init: ## Initialisation complète du projet (install, db, data)
 	@echo "$(CYAN)3/4 - Application des migrations...$(RESET)"
 	@$(MAKE) db-migrate
 	@echo ""
-	@echo "$(CYAN)4/4 - Import des données (legislature $(ETL_LEGISLATURE))...$(RESET)"
+	@echo "$(CYAN)4/5 - Import des données (legislature $(ETL_LEGISLATURE))...$(RESET)"
 	@$(MAKE) etl-an-all
+	@echo ""
+	@echo "$(CYAN)5/5 - Pré-calcul des voisins sémantiques (embeddings)...$(RESET)"
+	@$(MAKE) etl-generate-similar
 	@echo ""
 	@echo "$(GREEN)✓ Initialisation terminée!$(RESET)"
 	@echo "  Lancez 'make dev' pour démarrer le serveur de développement"

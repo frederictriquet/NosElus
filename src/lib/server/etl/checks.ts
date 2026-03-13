@@ -627,7 +627,7 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 			scrutinsWithoutNeighbors,
 			totalScrutins,
 			{ critical: 100, warning: 50, info: 10 },
-			'npm run etl:generate-similar',
+			'make etl-generate-similar',
 			'ALL'
 		)
 	);

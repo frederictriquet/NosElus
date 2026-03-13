@@ -9,6 +9,7 @@
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
         etl-simplify-scrutins etl-an-classify-scrutins etl-analyze-laws etl-an-analyze-laws etl-europarl-analyze-laws \
+        etl-generate-similar \
         etl-an-law-texts \
         etl-an-nosdeputes-stats etl-senat-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
@@ -190,6 +191,10 @@ etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM
 	@echo "$(CYAN)Simplification des titres de scrutins (LLM)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:simplify-scrutins -- --category vote-final $(ARGS)
+
+etl-generate-similar: ## Pré-calculer les voisins sémantiques des scrutins (embeddings offline)
+	@echo "$(CYAN)Génération des voisins sémantiques (embeddings @huggingface/transformers)...$(RESET)"
+	npm run etl:generate-similar $(ARGS)
 
 etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"

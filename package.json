@@ -62,6 +62,7 @@
 		"etl:political-positions": "node --import tsx scripts/etl/import-political-positions.ts",
 		"etl:seed-pe-positions": "node --import tsx scripts/etl/seed-pe-positions.ts",
 		"etl:simplify-scrutins": "node --import tsx scripts/etl/simplify-scrutins.ts",
+		"etl:generate-similar": "node --import tsx scripts/etl/generate-similar-scrutins.ts",
 		"lint": "npm run lint:format && npm run lint:types",
 		"lint:format": "prettier --check \"src/**/*.{js,ts,svelte,css,md,json}\"",
 		"lint:types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -76,6 +77,7 @@
 	"devDependencies": {
 		"@commitlint/cli": "^20.2.0",
 		"@commitlint/config-conventional": "^20.2.0",
+		"@huggingface/transformers": "^3.8.1",
 		"@playwright/test": "^1.57.0",
 		"@stryker-mutator/core": "^9.4.0",
 		"@stryker-mutator/typescript-checker": "^9.4.0",

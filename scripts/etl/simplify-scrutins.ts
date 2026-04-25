@@ -1,6 +1,6 @@
 /**
  * Script ETL pour générer des titres simplifiés pour les scrutins parlementaires
- * via un LLM local (Ollama/mistral-nemo).
+ * via la CLI Claude.
  *
  * Usage:
  *   npm run etl:simplify-scrutins
@@ -10,9 +10,7 @@
  *   npm run etl:simplify-scrutins -- --dry-run
  *
  * Prérequis:
- *   1. Ollama installé: https://ollama.com
- *   2. Modèle téléchargé: ollama pull mistral-nemo
- *   3. Ollama lancé: ollama serve
+ *   - CLI Claude installée et connectée (claude --version)
  */
 
 import 'dotenv/config';
@@ -21,6 +19,7 @@ import {
 	simplifyScrutinTitle,
 	saveScrutinTitleSimple
 } from '../../src/lib/server/etl/sources/llm/scrutin-simplifier.js';
+import { detectClaude } from '../../src/lib/server/etl/sources/llm/claude-cli.js';
 import { db } from '../../src/lib/server/db/index.js';
 import { scrutins } from '../../src/lib/server/db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -30,7 +29,6 @@ interface Args {
 	limit: number;
 	category?: string;
 	legislature?: string;
-	model: string;
 	dryRun: boolean;
 	help: boolean;
 	redo?: string; // ID de scrutin à re-générer (écrase title_simple existant)
@@ -39,7 +37,6 @@ interface Args {
 function parseArgs(argv: string[]): Args {
 	const args: Args = {
 		limit: 100,
-		model: 'mistral-nemo',
 		dryRun: false,
 		help: false
 	};
@@ -57,10 +54,6 @@ function parseArgs(argv: string[]): Args {
 				break;
 			case '--legislature':
 				args.legislature = argv[++i];
-				break;
-			case '--model':
-			case '-m':
-				args.model = argv[++i] || 'mistral-nemo';
 				break;
 			case '--dry-run':
 			case '-n':
@@ -88,7 +81,6 @@ Options:
   -l, --limit <n>        Nombre max de scrutins à traiter (défaut: 100)
   -c, --category <cat>   Filtrer par catégorie (vote-final, amendement, article…)
   --legislature <leg>    Filtrer par législature (ex: 17, 16)
-  -m, --model <name>     Modèle Ollama à utiliser (défaut: mistral-nemo)
   -r, --redo <id>        Re-générer le titre d'un scrutin spécifique (écrase l'existant)
   -n, --dry-run          Mode simulation, n'écrit pas en base
   -h, --help             Affiche cette aide
@@ -105,21 +97,8 @@ Exemples:
   npm run etl:simplify-scrutins -- --redo VTANR5L17V5244           # re-générer un scrutin
 
 Prérequis:
-  1. Installer Ollama: https://ollama.com
-  2. Télécharger le modèle: ollama pull mistral-nemo
-  3. Lancer Ollama: ollama serve (dans un terminal séparé)
+  CLI Claude installée et connectée (claude --version)
 `);
-}
-
-async function checkOllamaConnection(baseUrl: string): Promise<boolean> {
-	try {
-		const response = await fetch(`${baseUrl}/api/tags`, {
-			signal: AbortSignal.timeout(5000)
-		});
-		return response.ok;
-	} catch {
-		return false;
-	}
 }
 
 async function main() {
@@ -135,23 +114,22 @@ async function main() {
 	console.log('='.repeat(60));
 	console.log('');
 
-	// Vérifier la connexion à Ollama
-	console.log('Vérification de la connexion à Ollama...');
-	const ollamaOk = await checkOllamaConnection('http://localhost:11434');
+	// Vérifier la disponibilité de la CLI Claude
+	console.log('Vérification de la CLI Claude...');
+	const claudeOk = await detectClaude();
 
-	if (!ollamaOk) {
+	if (!claudeOk) {
 		console.error('');
-		console.error('ERREUR: Impossible de se connecter à Ollama.');
+		console.error('ERREUR: CLI Claude introuvable.');
 		console.error('');
 		console.error('Assurez-vous que:');
-		console.error('  1. Ollama est installé: https://ollama.com');
-		console.error('  2. Ollama est lancé: ollama serve');
-		console.error(`  3. Le modèle est téléchargé: ollama pull ${args.model}`);
+		console.error('  1. La CLI Claude est installée');
+		console.error('  2. Vous êtes connecté (claude --version)');
 		console.error('');
 		process.exit(1);
 	}
 
-	console.log('  ✓ Ollama est accessible');
+	console.log('  ✓ CLI Claude disponible');
 	console.log('');
 
 	// Mode re-génération d'un scrutin spécifique
@@ -180,7 +158,7 @@ async function main() {
 		}
 		console.log('');
 
-		const titleSimple = await simplifyScrutinTitle(scrutin, { model: args.model });
+		const titleSimple = await simplifyScrutinTitle(scrutin);
 
 		if (!titleSimple) {
 			console.error('Erreur: titre non généré');
@@ -190,7 +168,7 @@ async function main() {
 		console.log(`Nouveau titre simple: "${titleSimple}"`);
 
 		if (!args.dryRun) {
-			await saveScrutinTitleSimple(args.redo, titleSimple);
+			await saveScrutinTitleSimple(args.redo!, titleSimple);
 			console.log('✓ Sauvegardé en base');
 		} else {
 			console.log('[DRY RUN] Non sauvegardé');
@@ -201,7 +179,6 @@ async function main() {
 
 	// Mode batch
 	console.log('Configuration:');
-	console.log(`  Modèle: ${args.model}`);
 	console.log(`  Limite: ${args.limit} scrutins`);
 	if (args.category) console.log(`  Catégorie: ${args.category}`);
 	if (args.legislature) console.log(`  Législature: ${args.legislature}`);
@@ -213,7 +190,6 @@ async function main() {
 			limit: args.limit,
 			category: args.category,
 			legislature: args.legislature,
-			model: args.model,
 			dryRun: args.dryRun
 		});
 
@@ -238,7 +214,7 @@ async function main() {
 			{
 				dryRun: args.dryRun,
 				legislature: args.legislature,
-				additionalInfo: { model: args.model, category: args.category }
+				additionalInfo: { category: args.category }
 			}
 		);
 

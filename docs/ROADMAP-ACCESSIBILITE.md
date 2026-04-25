@@ -255,10 +255,13 @@ Ces features partagent des briques communes. Ordre suggéré pour maximiser la r
       Détection direction (mots-clés lexicaux) + calcul verdict (✅/❌/🟡) vs vote réel groupe
       Seuil verdict : ≥60% pour confirmer/infirmer, sinon nuancé — 47 tests unitaires + intégration
 
-### ⬜ À faire (moyen/long terme)
+### 🔄 En cours
 
-- [ ] **Étape 7 — Recherche sémantique** _(à planifier)_
-      pgvector + embeddings sur les scrutins
+- [~] **Étape 7 — Recherche sémantique** _(EN COURS — 2026-03-12)_
+  Pré-calcul de voisins sémantiques offline (@huggingface/transformers, dev-only)
+  Table `scrutin_similar` en production (~16 MB), zéro pgvector ni embedding en prod
+
+### ⬜ À faire (moyen/long terme)
 
 - [ ] **Étape 8 — RAG complet** _(ambitieux)_
       Réponse en langage naturel sourcée via LLM

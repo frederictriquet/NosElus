@@ -194,7 +194,7 @@ etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM
 
 etl-generate-similar: ## Pré-calculer les voisins sémantiques des scrutins (embeddings offline)
 	@echo "$(CYAN)Génération des voisins sémantiques (embeddings @huggingface/transformers)...$(RESET)"
-	npm run etl:generate-similar $(ARGS); true
+	npm run etl:generate-similar $(ARGS)
 
 etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"

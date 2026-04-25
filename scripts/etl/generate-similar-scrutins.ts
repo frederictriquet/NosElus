@@ -24,6 +24,9 @@ import {
 	DEFAULT_NEIGHBORS,
 	DEFAULT_THRESHOLD
 } from '../../src/lib/server/etl/sources/semantic/scrutin-embedder.js';
+import { updateSyncMetadata } from '../../src/lib/server/etl/utils.js';
+import { notifyETLComplete } from '../../src/lib/server/etl/notifications.js';
+import { client } from '../../src/lib/server/db/index.js';
 
 interface Args {
 	limit: number;
@@ -82,6 +85,16 @@ Note: Ce script ne traite que les scrutins sans entrées dans scrutin_similar.
 `);
 }
 
+/**
+ * Libère le pipeline WASM et ferme le pool DB, puis laisse Node sortir
+ * naturellement. Ne PAS appeler process.exit() après WASM : le teardown
+ * natif du runtime ONNX provoque un SIGABRT (exit 134).
+ */
+async function shutdown(embedder: { dispose: () => Promise<void> } | null) {
+	if (embedder) await embedder.dispose();
+	await client.end();
+}
+
 async function main() {
 	const args = parseArgs(process.argv.slice(2));
 	if (args.help) {
@@ -95,24 +108,35 @@ async function main() {
 	console.log(`   Seuil     : ${args.threshold}`);
 	console.log(`   Dry-run   : ${args.dryRun}`);
 
-	// Chargement dynamique pour ne pas importer en production
-	const { pipeline } = await import('@huggingface/transformers');
-
-	console.log('\n📦 Chargement du modèle (premier run = téléchargement ~118 MB)...');
-	const embedder = await pipeline('feature-extraction', EMBEDDING_MODEL, {
-		dtype: 'q8'
-	});
-	console.log('✅ Modèle chargé');
-
-	// Récupérer les scrutins à traiter
+	// Vérification avant chargement WASM : évite le crash de teardown si rien à faire
 	console.log(`\n📋 Récupération des scrutins sans voisins (max ${args.limit})...`);
 	const scrutinsToProcess = await getScrutinsWithoutNeighbors(args.limit);
 	console.log(`   ${scrutinsToProcess.length} scrutins à traiter`);
 
 	if (scrutinsToProcess.length === 0) {
 		console.log('✅ Tous les scrutins ont déjà des voisins. Rien à faire.');
-		process.exit(0);
+		await updateSyncMetadata('semantic', 'similar-scrutins', {
+			total: 0,
+			inserted: 0,
+			updated: 0,
+			skipped: 0,
+			errors: 0
+		});
+		await notifyETLComplete(
+			'generate-similar-scrutins',
+			{ total: 0, inserted: 0, updated: 0, skipped: 0, errors: 0 },
+			{ dryRun: args.dryRun }
+		);
+		await client.end();
+		return;
 	}
+
+	// Chargement dynamique pour ne pas importer en production
+	const { pipeline } = await import('@huggingface/transformers');
+
+	console.log('\n📦 Chargement du modèle (premier run = téléchargement ~118 MB)...');
+	const embedder = await pipeline('feature-extraction', EMBEDDING_MODEL, { dtype: 'q8' });
+	console.log('✅ Modèle chargé');
 
 	// Générer les embeddings par batch
 	const EMBED_BATCH = 32;
@@ -154,7 +178,13 @@ async function main() {
 			.slice(0, 5)
 			.forEach((p) => console.log(`   ${p.scrutinId} ↔ ${p.similarId} (score: ${p.score})`));
 		console.log('\nDry-run terminé. Aucune écriture effectuée.');
-		process.exit(0);
+		await notifyETLComplete(
+			'generate-similar-scrutins',
+			{ total: pairs.length, inserted: 0, updated: 0, skipped: pairs.length, errors: 0 },
+			{ dryRun: true }
+		);
+		await shutdown(embedder);
+		return;
 	}
 
 	// Insertion en base
@@ -163,11 +193,27 @@ async function main() {
 	console.log(`✅ ${inserted} paires insérées`);
 	console.log('\n🎉 generate-similar-scrutins terminé avec succès');
 
-	process.exit(0);
+	const stats = {
+		total: pairs.length,
+		inserted,
+		updated: 0,
+		skipped: pairs.length - inserted,
+		errors: 0
+	};
+	await updateSyncMetadata('semantic', 'similar-scrutins', stats);
+	await notifyETLComplete('generate-similar-scrutins', stats, { dryRun: false });
+	await shutdown(embedder);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
 	console.error('❌ Erreur fatale:', err);
+	const stats = { total: 0, inserted: 0, updated: 0, skipped: 0, errors: 1 };
+	try {
+		await updateSyncMetadata('semantic', 'similar-scrutins', stats, { status: 'failed' });
+		await notifyETLComplete('generate-similar-scrutins', stats, { dryRun: false });
+	} catch {
+		// Ne pas masquer l'erreur originale
+	}
 	process.exit(1);
 });
 

@@ -1,15 +1,15 @@
 /**
- * Analyseur de textes de lois utilisant un LLM local via Ollama.
+ * Analyseur de textes de lois via la CLI Claude.
  *
  * Prérequis:
- *   - Ollama installé et lancé (ollama serve)
- *   - Modèle téléchargé (ollama pull mistral-nemo)
+ *   - CLI Claude installée et connectée (claude --version)
  */
 
 import { db } from '../../../db';
 import { laws, lawSummaries, lawTags, tags } from '../../../db/schema';
 import { eq, isNull, and, or, desc, asc, gt, like, sql } from 'drizzle-orm';
 import type { Law, NewLawSummary, NewLawTag } from '../../../db/schema';
+import { callClaude } from './claude-cli';
 
 /**
  * Mapping entre le nom affiché au LLM et le slug DB.
@@ -68,26 +68,6 @@ export interface LawAnalysis {
 	rawResponse?: string;
 }
 
-export interface AnalyzerConfig {
-	model: string;
-	baseUrl: string;
-	temperature: number;
-	maxTokens: number;
-	timeout: number;
-}
-
-const DEFAULT_CONFIG: AnalyzerConfig = {
-	model: 'mistral-nemo',
-	baseUrl: 'http://localhost:11434',
-	temperature: 0.3, // Bas pour des réponses cohérentes
-	maxTokens: 768,
-	timeout: 300000 // 5 minutes (textes de loi complets)
-};
-
-const SYSTEM_PROMPT = `Tu es un expert en analyse de textes législatifs français.
-Tu dois rendre les lois accessibles au grand public.
-Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
-
 function buildUserPrompt(
 	lawTitle: string,
 	lawDescription: string | null,
@@ -95,7 +75,11 @@ function buildUserPrompt(
 ): string {
 	const text = lawDescription ? `${lawTitle}\n\n${lawDescription}` : lawTitle;
 
-	return `TEXTE DE LOI À ANALYSER:
+	return `Tu es un expert en analyse de textes législatifs français.
+Tu dois rendre les lois accessibles au grand public.
+Réponds UNIQUEMENT avec un objet JSON, rien d'autre.
+
+TEXTE DE LOI À ANALYSER:
 """
 ${text}
 """
@@ -242,17 +226,16 @@ export function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAn
 }
 
 /**
- * Analyse une loi avec Ollama (LLM local).
+ * Analyse une loi via la CLI Claude.
  *
  * Envoie le titre et la description de la loi au modèle LLM qui génère :
  * - Un résumé accessible au grand public (1-3 phrases)
  * - Des tags de catégorisation (2-4 tags parmi ceux disponibles)
  *
  * @param law - Loi à analyser (seuls title et description sont nécessaires)
- * @param config - Configuration Ollama (optionnel, utilise DEFAULT_CONFIG sinon)
  * @param tagMappings - Tags pré-chargés (optionnel, chargés depuis la DB si absent)
  * @returns Analyse avec résumé et tags (slugs DB)
- * @throws {Error} Si Ollama n'est pas accessible ou si le timeout est dépassé
+ * @throws {Error} Si la CLI Claude n'est pas accessible
  *
  * @example
  * ```typescript
@@ -267,36 +250,13 @@ export function parseResponse(rawText: string, tagMappings: TagMapping[]): LawAn
  */
 export async function analyzeLaw(
 	law: Pick<Law, 'title' | 'description'>,
-	config: Partial<AnalyzerConfig> = {},
 	tagMappings?: TagMapping[]
 ): Promise<LawAnalysis> {
-	const cfg = { ...DEFAULT_CONFIG, ...config };
 	const mappings = tagMappings ?? (await getAvailableTags());
 	const tagNames = mappings.map((t) => t.promptName);
 	const prompt = buildUserPrompt(law.title, law.description, tagNames);
-
-	const response = await fetch(`${cfg.baseUrl}/api/generate`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			model: cfg.model,
-			prompt,
-			system: SYSTEM_PROMPT,
-			stream: false,
-			options: {
-				temperature: cfg.temperature,
-				num_predict: cfg.maxTokens
-			}
-		}),
-		signal: AbortSignal.timeout(cfg.timeout)
-	});
-
-	if (!response.ok) {
-		throw new Error(`Ollama error: ${response.status} ${response.statusText}`);
-	}
-
-	const data = (await response.json()) as { response: string };
-	return parseResponse(data.response.trim(), mappings);
+	const raw = await callClaude(prompt);
+	return parseResponse(raw, mappings);
 }
 
 /**
@@ -427,11 +387,10 @@ export async function analyzeLawsBatch(
 		limit?: number;
 		legislature?: string;
 		chamber?: 'AN' | 'PE';
-		model?: string;
 		dryRun?: boolean;
 	} = {}
 ): Promise<AnalyzeBatchResult> {
-	const { limit = 100, legislature, chamber, model = 'mistral-nemo', dryRun = false } = options;
+	const { limit = 100, legislature, chamber, dryRun = false } = options;
 
 	const [lawsToAnalyze, tagMappings] = await Promise.all([
 		getUnanalyzedLaws(limit, legislature, chamber),
@@ -461,7 +420,7 @@ export async function analyzeLawsBatch(
 				continue;
 			}
 
-			const analysis = await analyzeLaw(law, { model }, tagMappings);
+			const analysis = await analyzeLaw(law, tagMappings);
 
 			if (analysis.summary.startsWith('Erreur:')) {
 				console.log(`  → Error: ${analysis.summary}`);
@@ -469,7 +428,7 @@ export async function analyzeLawsBatch(
 				continue;
 			}
 
-			await saveLawAnalysis(law.id, analysis, model);
+			await saveLawAnalysis(law.id, analysis, 'claude');
 
 			console.log(`  → Summary: ${analysis.summary.slice(0, 60)}...`);
 			console.log(`  → Tags: ${analysis.tags.join(', ')}`);

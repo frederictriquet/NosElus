@@ -43,3 +43,6 @@ data/cache/
 
 # Serena workflow (temporary)
 .serena/memories/workflow-current.md
+
+# Auto Claude data directory
+.auto-claude/

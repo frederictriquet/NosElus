@@ -2,7 +2,7 @@
  * Tests unitaires pour scrutin-simplifier.ts
  *
  * parseSimplifiedTitle() et buildPrompt() sont testées ici (fonctions pures).
- * Les fonctions nécessitant Ollama ou la DB sont couvertes par des tests d'intégration séparés.
+ * Les fonctions nécessitant la CLI Claude ou la DB sont couvertes par des tests d'intégration séparés.
  */
 
 import { describe, it, expect } from 'vitest';

@@ -11,7 +11,8 @@ import {
 	searchSynonyms,
 	searchNoiseWords,
 	tags,
-	scrutinTags
+	scrutinTags,
+	scrutinSimilar
 } from '$lib/server/db';
 import {
 	eq,
@@ -20,6 +21,8 @@ import {
 	sql,
 	notLike,
 	inArray,
+	not,
+	gte,
 	count,
 	desc,
 	asc,
@@ -1313,7 +1316,31 @@ export async function searchScrutins(query: string, limit = 20) {
 			.orderBy(desc(scrutins.date))
 			.limit(limit - direct.length);
 
-		return [...direct, ...viaLaws];
+		const combined = [...direct, ...viaLaws];
+		if (combined.length >= limit) return combined;
+
+		// 3. Voisins sémantiques des scrutins déjà trouvés (pré-calculés en ETL)
+		// Zéro calcul en production : simple JOIN sur scrutin_similar.
+		// Si la table est vide (ETL pas encore tourné), retourne combined sans erreur.
+		if (combined.length > 0) {
+			const foundIds = combined.map((s) => s.id);
+			const semantic = await db
+				.select(scrutinFields)
+				.from(scrutins)
+				.innerJoin(scrutinSimilar, eq(scrutinSimilar.similarId, scrutins.id))
+				.where(
+					and(
+						inArray(scrutinSimilar.scrutinId, foundIds),
+						not(inArray(scrutins.id, foundIds)),
+						gte(scrutinSimilar.score, 0.8)
+					)
+				)
+				.orderBy(desc(scrutinSimilar.score))
+				.limit(limit - combined.length);
+			return [...combined, ...semantic];
+		}
+
+		return combined;
 	} catch {
 		// Fallback ILIKE si tsquery échoue
 		return db

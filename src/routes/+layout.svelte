@@ -123,6 +123,8 @@
 			>
 		</p>
 		<nav class="footer-links">
+			<a href="/faq">FAQ</a>
+			<span class="footer-separator">·</span>
 			<a href="/mentions-legales">Mentions légales</a>
 			<span class="footer-separator">·</span>
 			<a href="/politique-de-confidentialite">Politique de confidentialité</a>

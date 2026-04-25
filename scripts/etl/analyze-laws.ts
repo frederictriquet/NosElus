@@ -1,16 +1,13 @@
 /**
- * Script ETL pour analyser les textes de lois avec un LLM local (Ollama).
+ * Script ETL pour analyser les textes de lois via la CLI Claude.
  *
  * Usage:
  *   npm run etl:analyze-laws
  *   npm run etl:analyze-laws -- --limit 50
- *   npm run etl:analyze-laws -- --model llama3.1
  *   npm run etl:analyze-laws -- --dry-run
  *
  * Prérequis:
- *   1. Ollama installé: https://ollama.com
- *   2. Modèle téléchargé: ollama pull mistral-nemo
- *   3. Ollama lancé: ollama serve
+ *   - CLI Claude installée et connectée (claude --version)
  */
 
 import 'dotenv/config';
@@ -20,6 +17,7 @@ import {
 	saveLawAnalysis,
 	getAvailableTags
 } from '../../src/lib/server/etl/sources/llm/law-analyzer.js';
+import { detectClaude } from '../../src/lib/server/etl/sources/llm/claude-cli.js';
 import { db } from '../../src/lib/server/db/index.js';
 import { laws, lawSummaries } from '../../src/lib/server/db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -29,7 +27,6 @@ interface Args {
 	limit: number;
 	legislature?: string;
 	chamber?: 'AN' | 'PE';
-	model: string;
 	dryRun: boolean;
 	help: boolean;
 	reanalyze?: string; // ID de loi à ré-analyser
@@ -38,7 +35,6 @@ interface Args {
 function parseArgs(argv: string[]): Args {
 	const args: Args = {
 		limit: 100,
-		model: 'mistral-nemo',
 		dryRun: false,
 		help: false
 	};
@@ -56,10 +52,6 @@ function parseArgs(argv: string[]): Args {
 			case '--chamber':
 			case '-c':
 				args.chamber = argv[++i] as 'AN' | 'PE';
-				break;
-			case '--model':
-			case '-m':
-				args.model = argv[++i] || 'mistral';
 				break;
 			case '--dry-run':
 			case '-n':
@@ -90,7 +82,6 @@ Options:
   -l, --limit <n>       Nombre max de lois à analyser (défaut: 100)
   -c, --chamber <AN|PE> Filtrer par chambre (AN ou PE)
   --legislature <leg>   Filtrer par législature (ex: 17)
-  -m, --model <name>    Modèle Ollama à utiliser (défaut: mistral-nemo)
   -r, --reanalyze <id>  Ré-analyser une loi spécifique (supprime l'ancien résumé)
   -n, --dry-run         Mode simulation, n'écrit pas en base
   -h, --help            Affiche cette aide
@@ -99,27 +90,13 @@ Tags disponibles (depuis la DB):
   ${tagNames}
 
 Exemples:
-  npm run etl:analyze-laws                      # Analyse 100 lois
-  npm run etl:analyze-laws -- --limit 50        # Analyse 50 lois
-  npm run etl:analyze-laws -- --model llama3.1  # Utilise Llama 3.1
-  npm run etl:analyze-laws -- --dry-run         # Simulation
+  npm run etl:analyze-laws                   # Analyse 100 lois
+  npm run etl:analyze-laws -- --limit 50     # Analyse 50 lois
+  npm run etl:analyze-laws -- --dry-run      # Simulation
 
 Prérequis:
-  1. Installer Ollama: https://ollama.com
-  2. Télécharger un modèle: ollama pull mistral-nemo
-  3. Lancer Ollama: ollama serve (dans un terminal séparé)
+  CLI Claude installée et connectée (claude --version)
 `);
-}
-
-async function checkOllamaConnection(baseUrl: string): Promise<boolean> {
-	try {
-		const response = await fetch(`${baseUrl}/api/tags`, {
-			signal: AbortSignal.timeout(5000)
-		});
-		return response.ok;
-	} catch {
-		return false;
-	}
 }
 
 async function main() {
@@ -135,29 +112,27 @@ async function main() {
 	console.log('='.repeat(60));
 	console.log('');
 
-	// Vérifier la connexion à Ollama
-	console.log('Vérification de la connexion à Ollama...');
-	const ollamaOk = await checkOllamaConnection('http://localhost:11434');
+	// Vérifier la disponibilité de la CLI Claude
+	console.log('Vérification de la CLI Claude...');
+	const claudeOk = await detectClaude();
 
-	if (!ollamaOk) {
+	if (!claudeOk) {
 		console.error('');
-		console.error('ERREUR: Impossible de se connecter à Ollama.');
+		console.error('ERREUR: CLI Claude introuvable.');
 		console.error('');
 		console.error('Assurez-vous que:');
-		console.error('  1. Ollama est installé: https://ollama.com');
-		console.error('  2. Ollama est lancé: ollama serve');
-		console.error(`  3. Le modèle est téléchargé: ollama pull ${args.model}`);
+		console.error('  1. La CLI Claude est installée');
+		console.error('  2. Vous êtes connecté (claude --version)');
 		console.error('');
 		process.exit(1);
 	}
 
-	console.log('  ✓ Ollama est accessible');
+	console.log('  ✓ CLI Claude disponible');
 	console.log('');
 
 	// Mode ré-analyse d'une loi spécifique
 	if (args.reanalyze) {
 		console.log(`Ré-analyse de la loi: ${args.reanalyze}`);
-		console.log(`  Modèle: ${args.model}`);
 		console.log('');
 
 		try {
@@ -187,7 +162,7 @@ async function main() {
 
 			// Analyser
 			console.log('Analyse en cours...');
-			const analysis = await analyzeLaw(law, { model: args.model }, tagMappings);
+			const analysis = await analyzeLaw(law, tagMappings);
 
 			if (analysis.summary.startsWith('Erreur:')) {
 				console.error(`Erreur: ${analysis.summary}`);
@@ -197,7 +172,7 @@ async function main() {
 
 			// Sauvegarder
 			if (!args.dryRun) {
-				await saveLawAnalysis(args.reanalyze, analysis, args.model);
+				await saveLawAnalysis(args.reanalyze, analysis, 'claude');
 				console.log('Résumé sauvegardé');
 			}
 
@@ -233,7 +208,6 @@ async function main() {
 	}
 
 	console.log('Configuration:');
-	console.log(`  Modèle: ${args.model}`);
 	console.log(`  Limite: ${args.limit} lois`);
 	if (args.chamber) {
 		console.log(`  Chambre: ${args.chamber}`);
@@ -251,7 +225,6 @@ async function main() {
 			limit: args.limit,
 			legislature: args.legislature,
 			chamber: args.chamber,
-			model: args.model,
 			dryRun: args.dryRun
 		});
 
@@ -279,7 +252,7 @@ async function main() {
 			{
 				dryRun: args.dryRun,
 				legislature: args.legislature,
-				additionalInfo: { model: args.model }
+				additionalInfo: {}
 			}
 		);
 

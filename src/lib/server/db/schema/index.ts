@@ -21,6 +21,7 @@ export {
 	type SearchNoiseWord,
 	type NewSearchNoiseWord
 } from './search-noise-words';
+export { scrutinSimilar, type ScrutinSimilar, type NewScrutinSimilar } from './scrutin-similar';
 
 // Relations
 export {

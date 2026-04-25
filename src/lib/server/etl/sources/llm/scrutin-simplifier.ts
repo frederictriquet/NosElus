@@ -1,41 +1,22 @@
 /**
  * Génère un titre simplifié en français courant pour les scrutins parlementaires
- * à partir de leur titre juridique, via un LLM local (Ollama/mistral-nemo).
+ * à partir de leur titre juridique, via la CLI Claude.
  *
  * Prérequis:
- *   - Ollama installé et lancé (ollama serve)
- *   - Modèle téléchargé (ollama pull mistral-nemo)
+ *   - CLI Claude installée et connectée (claude --version)
  */
 
 import { db } from '../../../db';
 import { scrutins } from '../../../db/schema';
 import { eq, isNull, and, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
+import { callClaude } from './claude-cli';
 
 type Scrutin = InferSelectModel<typeof scrutins>;
 
-export interface SimplifierConfig {
-	model: string;
-	baseUrl: string;
-	temperature: number;
-	maxTokens: number;
-	timeout: number;
-}
-
-const DEFAULT_CONFIG: SimplifierConfig = {
-	model: 'mistral-nemo',
-	baseUrl: 'http://localhost:11434',
-	temperature: 0.2, // Très bas pour des titres cohérents et factuels
-	maxTokens: 128, // Un titre court ne nécessite pas beaucoup de tokens
-	timeout: 60000 // 1 minute — titre court, réponse rapide
-};
-
-const SYSTEM_PROMPT = `Tu es un expert en communication politique française.
-Tu reformules des titres de scrutins parlementaires en langage courant pour le grand public.
-Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
-
 /**
  * Construit le prompt de simplification pour un scrutin.
+ * Le contexte système est inclus directement dans le prompt.
  *
  * @param title - Titre juridique du scrutin
  * @param category - Catégorie du scrutin (vote-final, amendement, article…)
@@ -43,7 +24,11 @@ Réponds UNIQUEMENT avec un objet JSON, rien d'autre.`;
 export function buildPrompt(title: string, category: string | null): string {
 	const categoryHint = category ? ` [type: ${category}]` : '';
 
-	return `TITRE DE SCRUTIN PARLEMENTAIRE${categoryHint}:
+	return `Tu es un expert en communication politique française.
+Tu reformules des titres de scrutins parlementaires en langage courant pour le grand public.
+Réponds UNIQUEMENT avec un objet JSON, rien d'autre.
+
+TITRE DE SCRUTIN PARLEMENTAIRE${categoryHint}:
 """
 ${title}
 """
@@ -105,41 +90,17 @@ export function parseSimplifiedTitle(rawText: string): string | null {
 }
 
 /**
- * Appelle le LLM pour générer un titre simplifié pour un scrutin.
+ * Appelle la CLI Claude pour générer un titre simplifié pour un scrutin.
  *
  * @param scrutin - Scrutin à simplifier
- * @param config - Configuration Ollama (partielle, merge avec DEFAULT_CONFIG)
- * @returns Titre simplifié ou null si erreur
+ * @returns Titre simplifié ou null si parsing échoue
  */
 export async function simplifyScrutinTitle(
-	scrutin: Pick<Scrutin, 'id' | 'title' | 'category'>,
-	config: Partial<SimplifierConfig> = {}
+	scrutin: Pick<Scrutin, 'id' | 'title' | 'category'>
 ): Promise<string | null> {
-	const cfg = { ...DEFAULT_CONFIG, ...config };
 	const prompt = buildPrompt(scrutin.title, scrutin.category);
-
-	const response = await fetch(`${cfg.baseUrl}/api/generate`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			model: cfg.model,
-			prompt,
-			system: SYSTEM_PROMPT,
-			stream: false,
-			options: {
-				temperature: cfg.temperature,
-				num_predict: cfg.maxTokens
-			}
-		}),
-		signal: AbortSignal.timeout(cfg.timeout)
-	});
-
-	if (!response.ok) {
-		throw new Error(`Ollama error: ${response.status} ${response.statusText}`);
-	}
-
-	const data = (await response.json()) as { response: string };
-	return parseSimplifiedTitle(data.response.trim());
+	const raw = await callClaude(prompt);
+	return parseSimplifiedTitle(raw);
 }
 
 /**
@@ -207,7 +168,6 @@ export interface SimplifyBatchOptions {
 	limit?: number;
 	category?: string;
 	legislature?: string;
-	model?: string;
 	dryRun?: boolean;
 }
 
@@ -221,7 +181,7 @@ export interface SimplifyBatchOptions {
 export async function simplifyScrutinsBatch(
 	options: SimplifyBatchOptions = {}
 ): Promise<SimplifyBatchResult> {
-	const { limit = 100, category, legislature, model = 'mistral-nemo', dryRun = false } = options;
+	const { limit = 100, category, legislature, dryRun = false } = options;
 
 	const scrutinsToProcess = await getUnsimplifiedScrutins({ limit, category, legislature });
 
@@ -247,7 +207,7 @@ export async function simplifyScrutinsBatch(
 		}
 
 		try {
-			const titleSimple = await simplifyScrutinTitle(scrutin, { model });
+			const titleSimple = await simplifyScrutinTitle(scrutin);
 
 			if (!titleSimple) {
 				console.log(`  → Erreur: titre non généré`);

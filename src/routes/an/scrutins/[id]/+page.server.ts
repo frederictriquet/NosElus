@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import {
 	db,
 	scrutins,
+	scrutinSimilar,
 	votes,
 	actors,
 	organs,
@@ -10,7 +11,7 @@ import {
 	lawTags,
 	tags
 } from '$lib/server/db';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, desc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { getTightLabel, DEFAULT_TIGHT_THRESHOLD } from '$lib/server/api/helpers';
 
@@ -149,6 +150,26 @@ export const load: PageServerLoad = async ({ params }) => {
 			.limit(100);
 	};
 
+	// Scrutins sémantiquement proches (pré-calculés en ETL, zéro calcul ici)
+	const loadSimilarScrutins = async () => {
+		return db
+			.select({
+				id: scrutins.id,
+				number: scrutins.number,
+				title: scrutins.title,
+				titleSimple: scrutins.titleSimple,
+				date: scrutins.date,
+				result: scrutins.result,
+				category: scrutins.category,
+				score: scrutinSimilar.score
+			})
+			.from(scrutinSimilar)
+			.innerJoin(scrutins, eq(scrutinSimilar.similarId, scrutins.id))
+			.where(eq(scrutinSimilar.scrutinId, params.id))
+			.orderBy(desc(scrutinSimilar.score))
+			.limit(5);
+	};
+
 	// Calculate tight vote metadata
 	const margin = scrutin.margin;
 	const isTightVote = margin <= DEFAULT_TIGHT_THRESHOLD;
@@ -163,6 +184,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		// Streamed data
 		relatedLaw: loadRelatedLaw(),
 		groupBreakdown: loadGroupBreakdown(),
-		voters: loadVoters()
+		voters: loadVoters(),
+		similarScrutins: loadSimilarScrutins()
 	};
 };

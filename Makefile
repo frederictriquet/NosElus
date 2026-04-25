@@ -9,6 +9,7 @@
         etl-senat-laws etl-senat-senators etl-senat-mandates-history \
         etl-europarl-meps etl-europarl-historical etl-europarl-votes etl-europarl-laws etl-europarl-activity-stats etl-europarl-law-texts etl-europarl-enrich-groups \
         etl-simplify-scrutins etl-an-classify-scrutins etl-analyze-laws etl-an-analyze-laws etl-europarl-analyze-laws \
+        etl-generate-similar \
         etl-an-law-texts \
         etl-an-nosdeputes-stats etl-senat-nossenateurs-stats etl-senat-activity-stats \
         etl-colors etl-external-colors etl-political-positions etl-seed-pe-positions \
@@ -191,6 +192,10 @@ etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:simplify-scrutins -- --category vote-final $(ARGS)
 
+etl-generate-similar: ## Pré-calculer les voisins sémantiques des scrutins (embeddings offline)
+	@echo "$(CYAN)Génération des voisins sémantiques (embeddings @huggingface/transformers)...$(RESET)"
+	npm run etl:generate-similar $(ARGS)
+
 etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
 	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
@@ -274,6 +279,8 @@ etl-all-legislatures: ## Import toutes législatures AN (14→17)
 	@$(MAKE) etl-an-all ETL_LEGISLATURE=16
 	@echo "$(CYAN)Import législature 17 (XVIIe - 2024-)...$(RESET)"
 	@$(MAKE) etl-an-all ETL_LEGISLATURE=17
+	@echo "$(CYAN)Pré-calcul des voisins sémantiques (tous scrutins)...$(RESET)"
+	@$(MAKE) etl-generate-similar ARGS="--limit 25000"
 	@echo "$(GREEN)✓ Toutes les législatures importées$(RESET)"
 
 # =============================================================================
@@ -295,8 +302,11 @@ init: ## Initialisation complète du projet (install, db, data)
 	@echo "$(CYAN)3/4 - Application des migrations...$(RESET)"
 	@$(MAKE) db-migrate
 	@echo ""
-	@echo "$(CYAN)4/4 - Import des données (legislature $(ETL_LEGISLATURE))...$(RESET)"
+	@echo "$(CYAN)4/5 - Import des données (legislature $(ETL_LEGISLATURE))...$(RESET)"
 	@$(MAKE) etl-an-all
+	@echo ""
+	@echo "$(CYAN)5/5 - Pré-calcul des voisins sémantiques (embeddings)...$(RESET)"
+	@$(MAKE) etl-generate-similar
 	@echo ""
 	@echo "$(GREEN)✓ Initialisation terminée!$(RESET)"
 	@echo "  Lancez 'make dev' pour démarrer le serveur de développement"

@@ -170,6 +170,35 @@
 	</AsyncCard>
 </div>
 
+<!-- Scrutins similaires -->
+{#await data.similarScrutins then similar}
+	{#if similar.length > 0}
+		<section class="card similar-section" style="margin-top: 1.5rem;">
+			<h2>Scrutins similaires</h2>
+			<ul class="similar-list">
+				{#each similar as s}
+					<li>
+						<a href="/an/scrutins/{s.id}" class="similar-item">
+							<div class="similar-meta">
+								<span class="similar-number">n°{s.number}</span>
+								{#if s.result}
+									<span
+										class="result-badge"
+										class:adopted={s.result === 'adopté'}
+										class:rejected={s.result === 'rejeté'}>{s.result}</span
+									>
+								{/if}
+								<span class="similar-date">{formatDate(s.date)}</span>
+							</div>
+							<div class="similar-title">{s.titleSimple ?? s.title}</div>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+{/await}
+
 <!-- Info -->
 <section class="card" style="margin-top: 1.5rem;">
 	<h2>Informations</h2>
@@ -392,6 +421,60 @@
 		font-size: 0.75rem;
 		text-transform: capitalize;
 		color: var(--color-text-muted);
+	}
+
+	/* Scrutins similaires */
+	.similar-section h2 {
+		margin-bottom: 0.75rem;
+	}
+
+	.similar-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.similar-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.625rem 0.75rem;
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		color: var(--color-text);
+		border-left: 3px solid var(--color-border);
+		transition: all 0.15s;
+	}
+
+	.similar-item:hover {
+		background: var(--color-bg-hover);
+		border-left-color: var(--color-primary);
+	}
+
+	.similar-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.similar-number {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.similar-date {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	.similar-title {
+		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	/* Info list */

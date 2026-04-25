@@ -217,6 +217,8 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 		scrutins_an_vote_final_no_title_simple: number;
 		total_scrutins_pe: number;
 		scrutins_pe_with_law: number;
+		scrutins_without_neighbors: number;
+		total_scrutins: number;
 		// Actors
 		total_actors_an: number;
 		total_actors_pe: number;
@@ -305,7 +307,9 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 					AND title_simple IS NULL) as scrutins_an_vote_final_no_title_simple,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%') as total_scrutins_pe,
 				COUNT(*) FILTER (WHERE legislature LIKE 'PE-%'
-					AND law_id IS NOT NULL) as scrutins_pe_with_law
+					AND law_id IS NOT NULL) as scrutins_pe_with_law,
+				COUNT(*) as total_scrutins,
+				COUNT(*) FILTER (WHERE id NOT IN (SELECT DISTINCT scrutin_id FROM scrutin_similar)) as scrutins_without_neighbors
 			FROM scrutins
 		),
 		actor_counts AS (
@@ -608,6 +612,23 @@ export async function loadETLChecks(): Promise<ETLCheckResult[]> {
 			{ warning: 50, info: 10 },
 			'make etl-simplify-scrutins',
 			'AN'
+		)
+	);
+
+	const totalScrutins = Number(row.total_scrutins) || 0;
+	const scrutinsWithoutNeighbors = Number(row.scrutins_without_neighbors) || 0;
+	checks.push(
+		completenessCheck(
+			'scrutins-no-semantic-neighbors',
+			'Scrutins avec voisins sémantiques',
+			scrutinsWithoutNeighbors === 0
+				? 'Tous les scrutins ont leurs voisins sémantiques pré-calculés'
+				: `${scrutinsWithoutNeighbors} scrutins sans voisins sémantiques (recherche enrichie désactivée)`,
+			scrutinsWithoutNeighbors,
+			totalScrutins,
+			{ critical: 100, warning: 50, info: 10 },
+			'make etl-generate-similar',
+			'ALL'
 		)
 	);
 

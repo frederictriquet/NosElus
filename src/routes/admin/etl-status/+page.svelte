@@ -99,7 +99,8 @@
 		'senat/senators': 'make etl-senat-senators',
 		'senat/mandates-history': 'make etl-senat-mandates-history',
 		'senat/activity-stats': 'make etl-senat-activity-stats',
-		'nossenateurs/activity-stats': 'make etl-senat-nossenateurs-stats'
+		'nossenateurs/activity-stats': 'make etl-senat-nossenateurs-stats',
+		'semantic/similar-scrutins': 'make etl-generate-similar'
 	};
 
 	function getSyncCommand(source: string, entityType: string): string | null {

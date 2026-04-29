@@ -283,12 +283,11 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		box-shadow: var(--shadow-sm);
 	}
 
 	h2 {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin: 0 0 1rem 0;
 		color: var(--color-text);
 	}
@@ -313,7 +312,7 @@
 	}
 
 	.mandate-name {
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.mandate-short {

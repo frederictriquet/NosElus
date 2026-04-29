@@ -63,7 +63,7 @@
 	}
 
 	.group-name {
-		font-weight: 600;
+		font-weight: 700;
 		font-size: 1.125rem;
 	}
 
@@ -77,6 +77,7 @@
 	.group-short {
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	.group-members {

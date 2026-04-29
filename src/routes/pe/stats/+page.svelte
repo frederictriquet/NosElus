@@ -510,6 +510,7 @@
 		position: absolute;
 		bottom: -1.5rem;
 		font-size: 0.75rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -620,6 +621,7 @@
 	}
 	.scrutin-date {
 		font-size: 0.65rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -729,6 +731,7 @@
 		justify-content: space-between;
 		margin-top: 0.5rem;
 		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -764,6 +767,7 @@
 	}
 
 	.dist-label {
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 

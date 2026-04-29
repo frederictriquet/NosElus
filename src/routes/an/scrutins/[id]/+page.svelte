@@ -292,7 +292,7 @@
 
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 1rem;
 	}
 
@@ -410,7 +410,7 @@
 
 	.voter-name {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -477,7 +477,7 @@
 
 	.similar-title {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	/* Info list */
@@ -500,6 +500,7 @@
 
 	.info-row dt {
 		font-size: 0.75rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 		margin: 0;
 	}
@@ -507,5 +508,6 @@
 	.info-row dd {
 		margin: 0;
 		font-size: 0.875rem;
+		font-weight: 500;
 	}
 </style>

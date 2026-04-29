@@ -141,7 +141,7 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 1rem;
 	}
 
@@ -161,6 +161,7 @@
 
 	.scrutin-number-label {
 		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -200,10 +201,12 @@
 	}
 
 	.vote-total-label {
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
 	.votes-count-info {
+		font-weight: 500;
 		color: var(--color-text-muted);
 		margin-bottom: 1rem;
 	}

@@ -104,7 +104,7 @@
 		padding: 0.5rem 0.75rem;
 		border-bottom: 2px solid var(--color-border);
 		color: var(--color-text-muted);
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.words-table tr:not(:last-child) td {

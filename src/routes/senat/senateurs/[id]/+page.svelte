@@ -310,7 +310,8 @@
 
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 		margin-bottom: 0.5rem;
 	}
 
@@ -363,7 +364,7 @@
 	}
 
 	.info-item dd {
-		font-weight: 500;
+		font-weight: 600;
 		margin: 0;
 		text-align: right;
 	}
@@ -433,9 +434,7 @@
 	}
 
 	.mandate-color {
-		width: 4px;
-		border-radius: 2px;
-		flex-shrink: 0;
+		display: none;
 	}
 
 	.mandate-content {
@@ -451,7 +450,7 @@
 	}
 
 	.mandate-name {
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.mandate-short {

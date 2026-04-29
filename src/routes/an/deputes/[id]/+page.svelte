@@ -698,7 +698,7 @@
 
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 0.5rem;
 	}
 
@@ -895,7 +895,7 @@
 
 	.amendment-number {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.amendment-article {
@@ -921,7 +921,6 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		box-shadow: var(--shadow-sm);
 	}
 
 	.mandates-section {
@@ -955,9 +954,11 @@
 	}
 
 	.mandate-color {
-		width: 4px;
-		border-radius: 2px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
 		flex-shrink: 0;
+		align-self: center;
 	}
 
 	.mandate-content {
@@ -973,7 +974,7 @@
 	}
 
 	.mandate-name {
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.mandate-short {
@@ -1078,7 +1079,7 @@
 
 	.law-title {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 		color: var(--color-text);
 		overflow: hidden;
 		text-overflow: ellipsis;

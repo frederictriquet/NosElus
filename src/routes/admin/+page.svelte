@@ -352,7 +352,7 @@
 		border: none;
 		border-radius: var(--radius);
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
 		transition: background 0.15s;
 	}
@@ -438,6 +438,7 @@
 
 	.groups-list h2 {
 		font-size: 1.125rem;
+		font-weight: 700;
 		margin: 0;
 	}
 

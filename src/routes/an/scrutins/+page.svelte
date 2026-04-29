@@ -157,6 +157,7 @@
 
 	.scrutin-number {
 		font-size: 0.875rem;
+		font-weight: 600;
 		color: var(--color-text-muted);
 	}
 

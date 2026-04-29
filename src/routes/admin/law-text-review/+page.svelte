@@ -476,6 +476,8 @@
 
 	h1 {
 		font-size: 1.75rem;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 		margin-bottom: 0.5rem;
 	}
 
@@ -617,7 +619,7 @@
 	/* Infos loi */
 	.law-title {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 		margin: 0 0 0.75rem 0;
 	}
@@ -667,7 +669,7 @@
 
 	.candidate-title {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 	}
 
@@ -803,7 +805,7 @@
 
 	.result-title {
 		font-size: 0.8125rem;
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.result-score {
@@ -840,7 +842,7 @@
 	}
 
 	.preview-title {
-		font-weight: 500;
+		font-weight: 600;
 		font-size: 0.8125rem;
 		margin-bottom: 0.5rem;
 	}

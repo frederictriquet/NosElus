@@ -319,16 +319,17 @@
 
 	.results-section h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 1rem;
 		display: flex;
 		align-items: baseline;
 		gap: 0.5rem;
+		letter-spacing: -0.015em;
 	}
 
 	.section-count {
 		font-size: 0.875rem;
-		font-weight: 400;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -369,7 +370,7 @@
 	}
 
 	.group-name {
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.group-short {
@@ -417,7 +418,7 @@
 
 	.scrutin-title {
 		display: block;
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 	}
 
@@ -548,7 +549,7 @@
 
 	.law-title {
 		display: block;
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 	}
 

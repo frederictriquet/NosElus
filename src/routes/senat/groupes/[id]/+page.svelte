@@ -224,7 +224,8 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 	}
 
 	.group-header {
@@ -288,6 +289,7 @@
 
 	.stat-label {
 		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
 	}
@@ -338,6 +340,7 @@
 
 	.stat-label-sm {
 		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 

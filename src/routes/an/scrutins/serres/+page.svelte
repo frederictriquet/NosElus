@@ -293,6 +293,7 @@
 		color: var(--color-text-muted);
 		border-radius: var(--radius-sm);
 		font-size: 0.75rem;
+		font-weight: 500;
 	}
 
 	.tight-vote-badge {
@@ -331,11 +332,12 @@
 	.scrutin-date {
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	.scrutin-title {
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 600;
 		margin: 0 0 0.75rem 0;
 		line-height: 1.4;
 	}
@@ -423,5 +425,6 @@
 	.page-info {
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 </style>

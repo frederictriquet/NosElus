@@ -178,8 +178,13 @@
 
 	.home-search-input {
 		flex: 1;
-		font-size: 1rem;
-		padding: 0.75rem 1rem;
+		font-size: 1.0625rem;
+		padding: 0.875rem 1.25rem;
+	}
+
+	.home-search-form .btn {
+		min-height: 3.25rem;
+		padding: 0.875rem 1.5rem;
 	}
 
 	.home-hints {
@@ -232,7 +237,20 @@
 		transition:
 			transform 0.2s,
 			box-shadow 0.2s,
-			border-color 0.2s;
+			border-color 0.2s,
+			background 0.2s;
+	}
+
+	.chamber-card.an {
+		background: rgba(37, 99, 235, 0.03);
+	}
+
+	.chamber-card.senat {
+		background: rgba(147, 51, 234, 0.03);
+	}
+
+	.chamber-card.pe {
+		background: rgba(3, 105, 161, 0.03);
 	}
 
 	.chamber-card:hover {
@@ -243,24 +261,27 @@
 
 	.chamber-card.an:hover {
 		border-color: var(--color-primary);
+		background: rgba(37, 99, 235, 0.07);
 	}
 
 	.chamber-card.senat:hover {
 		border-color: var(--chamber-senat);
+		background: rgba(147, 51, 234, 0.07);
 	}
 
 	.chamber-card.pe:hover {
 		border-color: var(--chamber-pe);
+		background: rgba(3, 105, 161, 0.07);
 	}
 
 	.chamber-icon {
-		width: 80px;
-		height: 80px;
+		width: 96px;
+		height: 96px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
-		margin-bottom: 1rem;
+		margin-bottom: 1.25rem;
 	}
 
 	.chamber-card.an .chamber-icon {
@@ -279,9 +300,21 @@
 	}
 
 	.chamber-title {
-		font-size: 1.25rem;
-		font-weight: 600;
+		font-size: 1.375rem;
+		font-weight: 700;
 		margin: 0 0 0.5rem 0;
+	}
+
+	.chamber-card.an .chamber-title {
+		color: var(--color-primary);
+	}
+
+	.chamber-card.senat .chamber-title {
+		color: var(--chamber-senat);
+	}
+
+	.chamber-card.pe .chamber-title {
+		color: var(--chamber-pe);
 	}
 
 	.chamber-stats {

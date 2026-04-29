@@ -100,7 +100,8 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 	}
 
 	.group-color {

@@ -278,6 +278,7 @@
 		cursor: pointer;
 		transition: all 0.2s;
 		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	.filter-btn:hover {
@@ -391,6 +392,7 @@
 
 	.chamber-stat-label {
 		font-size: 0.8125rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 		margin-top: 0.25rem;
 	}
@@ -423,6 +425,7 @@
 
 	.stat-label {
 		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 

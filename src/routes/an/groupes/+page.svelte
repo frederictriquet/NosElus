@@ -55,7 +55,7 @@
 	}
 
 	.group-name {
-		font-weight: 600;
+		font-weight: 700;
 		font-size: 1.125rem;
 	}
 
@@ -72,6 +72,6 @@
 	}
 
 	.group-members {
-		opacity: 0.8;
+		font-weight: 500;
 	}
 </style>

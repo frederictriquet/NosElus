@@ -524,6 +524,7 @@
 		margin-top: 0.5rem;
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	/* Table cell helpers */
@@ -653,7 +654,7 @@
 
 	.category-pct {
 		color: var(--color-text-muted);
-		font-weight: 400;
+		font-weight: 500;
 	}
 
 	.results-chart {
@@ -713,6 +714,7 @@
 		bottom: -1.5rem;
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	.activity-value {
@@ -1002,5 +1004,6 @@
 		bottom: -1.25rem;
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 </style>

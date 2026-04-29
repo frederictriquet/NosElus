@@ -43,7 +43,7 @@
 </div>
 
 <div class="filters">
-	<form onsubmit={handleSearch} class="search-box" style="flex: 1; max-width: 400px;">
+	<form onsubmit={handleSearch} class="search-box search-box-form">
 		<input
 			type="text"
 			class="input"
@@ -79,7 +79,7 @@
 		<p>Aucun scrutin trouvé</p>
 	</div>
 {:else}
-	<div style="display: flex; flex-direction: column; gap: 1rem;">
+	<div class="scrutins-list">
 		{#each data.scrutins as scrutin}
 			{@const total = scrutin.totalFor + scrutin.totalAgainst + scrutin.totalAbstention || 1}
 			<a
@@ -158,5 +158,16 @@
 	.scrutin-number {
 		font-size: 0.875rem;
 		color: var(--color-text-muted);
+	}
+
+	.search-box-form {
+		flex: 1;
+		max-width: 400px;
+	}
+
+	.scrutins-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
 	}
 </style>

@@ -16,10 +16,8 @@
 </svelte:head>
 
 <div class="page-header">
-	<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-		<span style="font-size: 0.875rem; color: var(--color-text-muted);"
-			>Scrutin n°{data.scrutin.number}</span
-		>
+	<div class="scrutin-header-meta">
+		<span class="scrutin-number-label">Scrutin n°{data.scrutin.number}</span>
 		<span
 			class="scrutin-result"
 			class:adopted={data.scrutin.result === 'adopté'}
@@ -28,7 +26,7 @@
 			{data.scrutin.result}
 		</span>
 	</div>
-	<h1 class="page-title" style="font-size: 1.5rem;">{data.scrutin.title}</h1>
+	<h1 class="page-title page-title--sm">{data.scrutin.title}</h1>
 	<p class="page-subtitle">
 		{new Date(data.scrutin.date).toLocaleDateString('fr-FR', {
 			weekday: 'long',
@@ -41,7 +39,7 @@
 
 <div class="card" style="margin-bottom: 2rem;">
 	<h2>Résultats du vote (tous les eurodéputés)</h2>
-	<div class="vote-bar" style="height: 32px; border-radius: 16px; margin: 1rem 0;">
+	<div class="vote-bar vote-bar--results">
 		<div class="vote-bar-for" style="width: {(data.scrutin.totalFor / totalVotes) * 100}%"></div>
 		<div
 			class="vote-bar-against"
@@ -52,28 +50,24 @@
 			style="width: {(data.scrutin.totalAbstention / totalVotes) * 100}%"
 		></div>
 	</div>
-	<div style="display: flex; justify-content: space-around; text-align: center;">
+	<div class="vote-totals">
 		<div>
-			<div style="font-size: 2rem; font-weight: 700; color: var(--color-success);">
-				{data.scrutin.totalFor}
-			</div>
-			<div style="color: var(--color-text-muted);">Pour</div>
+			<div class="vote-total-value vote-total-value--for">{data.scrutin.totalFor}</div>
+			<div class="vote-total-label">Pour</div>
 		</div>
 		<div>
-			<div style="font-size: 2rem; font-weight: 700; color: var(--color-danger);">
-				{data.scrutin.totalAgainst}
-			</div>
-			<div style="color: var(--color-text-muted);">Contre</div>
+			<div class="vote-total-value vote-total-value--against">{data.scrutin.totalAgainst}</div>
+			<div class="vote-total-label">Contre</div>
 		</div>
 		<div>
-			<div style="font-size: 2rem; font-weight: 700; color: var(--color-warning);">
+			<div class="vote-total-value vote-total-value--abstention">
 				{data.scrutin.totalAbstention}
 			</div>
-			<div style="color: var(--color-text-muted);">Abstention</div>
+			<div class="vote-total-label">Abstention</div>
 		</div>
 		<div>
-			<div style="font-size: 2rem; font-weight: 700;">{data.scrutin.totalVoters}</div>
-			<div style="color: var(--color-text-muted);">Votants</div>
+			<div class="vote-total-value">{data.scrutin.totalVoters}</div>
+			<div class="vote-total-label">Votants</div>
 		</div>
 	</div>
 </div>
@@ -81,7 +75,7 @@
 <AsyncCard title="Votes des eurodéputés français" promise={data.voteDetails} minHeight="300px">
 	{#snippet children(voteDetails)}
 		{#if voteDetails.totalVotes > 0}
-			<p style="color: var(--color-text-muted); margin-bottom: 1rem;">
+			<p class="votes-count-info">
 				{voteDetails.totalVotes} votes enregistrés (eurodéputés français)
 			</p>
 
@@ -155,5 +149,62 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 		gap: 0.75rem;
+	}
+
+	/* En-tête du scrutin */
+	.scrutin-header-meta {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.scrutin-number-label {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	.page-title--sm {
+		font-size: 1.5rem;
+	}
+
+	/* Barre de vote résultats */
+	.vote-bar--results {
+		height: 32px;
+		border-radius: 16px;
+		margin: 1rem 0;
+	}
+
+	/* Totaux du vote */
+	.vote-totals {
+		display: flex;
+		justify-content: space-around;
+		text-align: center;
+	}
+
+	.vote-total-value {
+		font-size: 2rem;
+		font-weight: 700;
+	}
+
+	.vote-total-value--for {
+		color: var(--color-success);
+	}
+
+	.vote-total-value--against {
+		color: var(--color-danger);
+	}
+
+	.vote-total-value--abstention {
+		color: var(--color-warning);
+	}
+
+	.vote-total-label {
+		color: var(--color-text-muted);
+	}
+
+	.votes-count-info {
+		color: var(--color-text-muted);
+		margin-bottom: 1rem;
 	}
 </style>

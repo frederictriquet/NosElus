@@ -366,7 +366,7 @@
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
 		line-height: 1.5;
-		border-left: 3px solid var(--color-border);
+		border: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 	}
 
@@ -375,25 +375,25 @@
 	}
 
 	.status-context-pending {
-		border-left-color: var(--color-warning, #d97706);
+		border-color: var(--color-warning, #d97706);
 		background: var(--color-warning-bg, #fef3c7);
 		color: var(--color-warning, #92400e);
 	}
 
 	.status-context-adopted {
-		border-left-color: var(--color-success);
+		border-color: var(--color-success);
 		background: var(--color-success-bg, #dcfce7);
 		color: var(--color-success);
 	}
 
 	.status-context-rejected {
-		border-left-color: var(--color-danger);
+		border-color: var(--color-danger);
 		background: var(--color-danger-bg, #fde2e2);
 		color: var(--color-danger);
 	}
 
 	.status-context-withdrawn {
-		border-left-color: var(--color-text-muted);
+		border-color: var(--color-text-muted);
 	}
 
 	/* Contextual explanations in sections */

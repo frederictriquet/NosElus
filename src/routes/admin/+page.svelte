@@ -294,7 +294,6 @@
 		padding: 2rem;
 		width: 100%;
 		max-width: 400px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
 
 	.login-card h1 {
@@ -309,9 +308,9 @@
 	}
 
 	.error-banner {
-		background: #fee;
-		border: 1px solid #fcc;
-		color: #c33;
+		background: var(--color-danger-bg);
+		border: 1px solid var(--color-danger);
+		color: var(--color-danger);
 		padding: 0.75rem;
 		border-radius: var(--radius);
 		margin-bottom: 1rem;
@@ -359,7 +358,7 @@
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: var(--color-primary-dark, #2563eb);
+		background: var(--color-primary-dark);
 	}
 
 	.btn-primary:disabled {
@@ -536,7 +535,7 @@
 	}
 
 	.btn-save:hover:not(:disabled) {
-		background: var(--color-primary-dark, #2563eb);
+		background: var(--color-primary-dark);
 	}
 
 	.btn-save:disabled {

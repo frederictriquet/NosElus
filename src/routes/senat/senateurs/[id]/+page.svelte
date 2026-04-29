@@ -324,7 +324,7 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
 	}
 
 	.mandates-section {
@@ -429,7 +429,7 @@
 
 	.mandate-item.current {
 		background: var(--color-primary-bg, rgba(59, 130, 246, 0.08));
-		border-left: 3px solid var(--color-primary);
+		border: 1px solid var(--color-primary);
 	}
 
 	.mandate-color {

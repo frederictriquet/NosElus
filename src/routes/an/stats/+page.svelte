@@ -91,7 +91,7 @@
 				distribution.abstention +
 				(distribution['non-votant'] || 0)}
 			{#if totalDistribution > 0}
-				<div class="vote-bar" style="height: 32px; border-radius: 16px; margin: 1.5rem 0;">
+				<div class="vote-bar vote-bar-distribution">
 					<div
 						class="vote-bar-for"
 						style="width: {(distribution.pour / totalDistribution) * 100}%"
@@ -111,9 +111,9 @@
 						></div>
 					{/if}
 				</div>
-				<div style="display: flex; justify-content: space-around; text-align: center;">
+				<div class="vote-distribution-labels">
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+						<div class="dist-value dist-value--success">
 							{((distribution.pour / totalDistribution) * 100).toFixed(1)}%
 						</div>
 						<div style="color: var(--color-text-muted);">
@@ -121,7 +121,7 @@
 						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+						<div class="dist-value dist-value--danger">
 							{((distribution.contre / totalDistribution) * 100).toFixed(1)}%
 						</div>
 						<div style="color: var(--color-text-muted);">
@@ -129,7 +129,7 @@
 						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+						<div class="dist-value dist-value--warning">
 							{((distribution.abstention / totalDistribution) * 100).toFixed(1)}%
 						</div>
 						<div style="color: var(--color-text-muted);">
@@ -138,7 +138,7 @@
 					</div>
 					{#if distribution['non-votant'] > 0}
 						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+							<div class="dist-value dist-value--muted">
 								{((distribution['non-votant'] / totalDistribution) * 100).toFixed(1)}%
 							</div>
 							<div style="color: var(--color-text-muted);">
@@ -171,9 +171,7 @@
 						<span>{scrutinResults.rejeté}</span>
 					</div>
 				</div>
-				<div
-					style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-text-muted);"
-				>
+				<div class="results-chart-labels">
 					<span>Adoptés</span>
 					<span>Rejetés</span>
 				</div>
@@ -253,7 +251,7 @@
 							{#each filteredGroups as group}
 								<tr>
 									<td>
-										<div style="display: flex; align-items: center; gap: 0.5rem;">
+										<div class="group-color-cell">
 											<span
 												style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor ||
 													'#ccc'}"
@@ -261,18 +259,12 @@
 											<GroupName shortName={group.groupShortName} fullName={group.groupName} />
 										</div>
 									</td>
-									<td style="text-align: right; color: var(--color-success);"
-										>{group.pourVotes.toLocaleString('fr-FR')}</td
-									>
-									<td style="text-align: right; color: var(--color-danger);"
-										>{group.contreVotes.toLocaleString('fr-FR')}</td
-									>
-									<td style="text-align: right; color: var(--color-warning);"
+									<td class="td-right td-success">{group.pourVotes.toLocaleString('fr-FR')}</td>
+									<td class="td-right td-danger">{group.contreVotes.toLocaleString('fr-FR')}</td>
+									<td class="td-right td-warning"
 										>{group.abstentionVotes.toLocaleString('fr-FR')}</td
 									>
-									<td style="text-align: right; font-weight: 600;"
-										>{group.totalVotes.toLocaleString('fr-FR')}</td
-									>
+									<td class="td-right td-bold">{group.totalVotes.toLocaleString('fr-FR')}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -490,6 +482,78 @@
 </div>
 
 <style>
+	/* Distribution value labels */
+	.dist-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+	}
+
+	.dist-value--success {
+		color: var(--color-success);
+	}
+
+	.dist-value--danger {
+		color: var(--color-danger);
+	}
+
+	.dist-value--warning {
+		color: var(--color-warning);
+	}
+
+	.dist-value--muted {
+		color: var(--color-text-muted);
+	}
+
+	/* Vote distribution */
+	.vote-bar-distribution {
+		height: 32px;
+		border-radius: 16px;
+		margin: 1.5rem 0;
+	}
+
+	.vote-distribution-labels {
+		display: flex;
+		justify-content: space-around;
+		text-align: center;
+	}
+
+	/* Results chart labels */
+	.results-chart-labels {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	/* Table cell helpers */
+	.td-right {
+		text-align: right;
+	}
+
+	.td-success {
+		color: var(--color-success);
+	}
+
+	.td-danger {
+		color: var(--color-danger);
+	}
+
+	.td-warning {
+		color: var(--color-warning);
+	}
+
+	.td-bold {
+		font-weight: 600;
+	}
+
+	/* Group table cell */
+	.group-color-cell {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	/* Skeleton loading */
 	.stat-card.loading {
 		display: flex;

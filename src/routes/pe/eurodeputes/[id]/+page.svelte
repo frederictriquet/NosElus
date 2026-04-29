@@ -89,9 +89,7 @@
 							></div>
 						{/if}
 					</div>
-					<div
-						style="display: flex; justify-content: space-around; margin-top: 1rem; text-align: center;"
-					>
+					<div class="vote-stats-row">
 						<div>
 							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
 								{voteStats.distribution.pour}
@@ -406,6 +404,14 @@
 	.vote-position.abstention {
 		background: var(--color-warning-bg, #fef3c7);
 		color: var(--color-warning);
+	}
+
+	/* Statistiques de vote */
+	.vote-stats-row {
+		display: flex;
+		justify-content: space-around;
+		margin-top: 1rem;
+		text-align: center;
 	}
 
 	/* Vote bar */

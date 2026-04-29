@@ -121,9 +121,9 @@
 </div>
 
 {#if data.recentScrutins.length > 0}
-	<section class="card" style="margin-top: 2rem;">
+	<section class="card recent-scrutins">
 		<h2>Derniers scrutins</h2>
-		<div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+		<div class="scrutins-list">
 			{#each data.recentScrutins as scrutin}
 				{@const total = scrutin.totalFor + scrutin.totalAgainst + scrutin.totalAbstention || 1}
 				<a
@@ -160,7 +160,7 @@
 				</a>
 			{/each}
 		</div>
-		<div style="margin-top: 1rem; text-align: center;">
+		<div class="scrutins-footer">
 			<a href="/an/scrutins" class="btn btn-secondary">Voir tous les scrutins</a>
 		</div>
 	</section>
@@ -226,18 +226,18 @@
 		padding: 2rem 1.5rem;
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow);
+		border: 2px solid var(--color-border);
 		text-decoration: none;
 		color: inherit;
 		transition:
 			transform 0.2s,
-			box-shadow 0.2s;
-		border: 2px solid transparent;
+			box-shadow 0.2s,
+			border-color 0.2s;
 	}
 
 	.chamber-card:hover {
 		transform: translateY(-4px);
-		box-shadow: var(--shadow-lg);
+		box-shadow: var(--shadow-md);
 		text-decoration: none;
 	}
 
@@ -246,11 +246,11 @@
 	}
 
 	.chamber-card.senat:hover {
-		border-color: #9333ea;
+		border-color: var(--chamber-senat);
 	}
 
 	.chamber-card.pe:hover {
-		border-color: #0369a1;
+		border-color: var(--chamber-pe);
 	}
 
 	.chamber-icon {
@@ -270,12 +270,12 @@
 
 	.chamber-card.senat .chamber-icon {
 		background: rgba(147, 51, 234, 0.1);
-		color: #9333ea;
+		color: var(--chamber-senat);
 	}
 
 	.chamber-card.pe .chamber-icon {
 		background: rgba(3, 105, 161, 0.1);
-		color: #0369a1;
+		color: var(--chamber-pe);
 	}
 
 	.chamber-title {
@@ -307,5 +307,21 @@
 
 	.scrutin-card:hover {
 		text-decoration: none;
+	}
+
+	.recent-scrutins {
+		margin-top: 2rem;
+	}
+
+	.scrutins-list {
+		margin-top: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.scrutins-footer {
+		margin-top: 1rem;
+		text-align: center;
 	}
 </style>

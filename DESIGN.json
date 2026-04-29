@@ -1,0 +1,342 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-04-28T00:00:00Z",
+	"title": "Design System: NosElus",
+	"extensions": {
+		"colorMeta": {
+			"primary": {
+				"role": "primary",
+				"displayName": "Bleu République",
+				"canonical": "oklch(51% 0.24 264)",
+				"tonalRamp": [
+					"oklch(18% 0.10 264)",
+					"oklch(28% 0.15 264)",
+					"oklch(38% 0.20 264)",
+					"oklch(51% 0.24 264)",
+					"oklch(61% 0.22 264)",
+					"oklch(72% 0.17 264)",
+					"oklch(84% 0.10 264)",
+					"oklch(94% 0.04 264)"
+				]
+			},
+			"primary-dark": {
+				"role": "primary",
+				"displayName": "Bleu République Profond",
+				"canonical": "oklch(44% 0.22 264)",
+				"tonalRamp": [
+					"oklch(14% 0.08 264)",
+					"oklch(24% 0.13 264)",
+					"oklch(34% 0.18 264)",
+					"oklch(44% 0.22 264)",
+					"oklch(55% 0.21 264)",
+					"oklch(67% 0.16 264)",
+					"oklch(80% 0.09 264)",
+					"oklch(92% 0.04 264)"
+				]
+			},
+			"success": {
+				"role": "semantic-vote",
+				"displayName": "Vert Suffrage",
+				"canonical": "oklch(72% 0.23 145)",
+				"tonalRamp": [
+					"oklch(20% 0.08 145)",
+					"oklch(33% 0.13 145)",
+					"oklch(46% 0.18 145)",
+					"oklch(59% 0.21 145)",
+					"oklch(72% 0.23 145)",
+					"oklch(82% 0.17 145)",
+					"oklch(90% 0.10 145)",
+					"oklch(96% 0.04 145)"
+				]
+			},
+			"danger": {
+				"role": "semantic-vote",
+				"displayName": "Rouge Opposition",
+				"canonical": "oklch(63% 0.24 27)",
+				"tonalRamp": [
+					"oklch(18% 0.08 27)",
+					"oklch(30% 0.14 27)",
+					"oklch(42% 0.19 27)",
+					"oklch(54% 0.22 27)",
+					"oklch(63% 0.24 27)",
+					"oklch(75% 0.19 27)",
+					"oklch(86% 0.11 27)",
+					"oklch(95% 0.04 27)"
+				]
+			},
+			"warning": {
+				"role": "semantic-vote",
+				"displayName": "Ambre Réserve",
+				"canonical": "oklch(79% 0.18 80)",
+				"tonalRamp": [
+					"oklch(25% 0.07 80)",
+					"oklch(38% 0.11 80)",
+					"oklch(52% 0.15 80)",
+					"oklch(65% 0.17 80)",
+					"oklch(79% 0.18 80)",
+					"oklch(87% 0.13 80)",
+					"oklch(93% 0.08 80)",
+					"oklch(97% 0.03 80)"
+				]
+			},
+			"neutral-absent": {
+				"role": "semantic-vote",
+				"displayName": "Gris Absence",
+				"canonical": "oklch(68% 0.03 240)",
+				"tonalRamp": [
+					"oklch(18% 0.01 240)",
+					"oklch(30% 0.02 240)",
+					"oklch(42% 0.02 240)",
+					"oklch(55% 0.03 240)",
+					"oklch(68% 0.03 240)",
+					"oklch(79% 0.02 240)",
+					"oklch(89% 0.01 240)",
+					"oklch(96% 0.005 240)"
+				]
+			},
+			"neutral-bg": {
+				"role": "neutral",
+				"displayName": "Brume Ardoise",
+				"canonical": "oklch(98% 0.005 240)",
+				"tonalRamp": [
+					"oklch(12% 0.02 240)",
+					"oklch(24% 0.02 240)",
+					"oklch(38% 0.02 240)",
+					"oklch(52% 0.01 240)",
+					"oklch(66% 0.01 240)",
+					"oklch(79% 0.01 240)",
+					"oklch(90% 0.005 240)",
+					"oklch(98% 0.005 240)"
+				]
+			},
+			"neutral-surface": {
+				"role": "neutral",
+				"displayName": "Blanc Bureau",
+				"canonical": "oklch(100% 0 0)",
+				"tonalRamp": [
+					"oklch(10% 0.01 240)",
+					"oklch(22% 0.01 240)",
+					"oklch(36% 0.01 240)",
+					"oklch(50% 0.01 240)",
+					"oklch(65% 0.01 240)",
+					"oklch(78% 0.01 240)",
+					"oklch(91% 0.005 240)",
+					"oklch(100% 0 0)"
+				]
+			},
+			"neutral-text": {
+				"role": "neutral",
+				"displayName": "Encre Profonde",
+				"canonical": "oklch(22% 0.03 243)",
+				"tonalRamp": [
+					"oklch(10% 0.02 243)",
+					"oklch(22% 0.03 243)",
+					"oklch(34% 0.03 243)",
+					"oklch(47% 0.03 243)",
+					"oklch(60% 0.03 243)",
+					"oklch(73% 0.02 243)",
+					"oklch(85% 0.01 243)",
+					"oklch(95% 0.005 243)"
+				]
+			},
+			"neutral-text-muted": {
+				"role": "neutral",
+				"displayName": "Ardoise Secondaire",
+				"canonical": "oklch(52% 0.04 240)",
+				"tonalRamp": [
+					"oklch(14% 0.02 240)",
+					"oklch(25% 0.03 240)",
+					"oklch(37% 0.03 240)",
+					"oklch(52% 0.04 240)",
+					"oklch(64% 0.03 240)",
+					"oklch(76% 0.02 240)",
+					"oklch(87% 0.01 240)",
+					"oklch(95% 0.005 240)"
+				]
+			},
+			"neutral-border": {
+				"role": "neutral",
+				"displayName": "Liséré Discret",
+				"canonical": "oklch(92% 0.01 240)",
+				"tonalRamp": [
+					"oklch(14% 0.01 240)",
+					"oklch(28% 0.01 240)",
+					"oklch(43% 0.01 240)",
+					"oklch(58% 0.01 240)",
+					"oklch(72% 0.01 240)",
+					"oklch(82% 0.01 240)",
+					"oklch(90% 0.01 240)",
+					"oklch(96% 0.005 240)"
+				]
+			}
+		},
+		"typographyMeta": {
+			"display": { "displayName": "Display", "purpose": "Titres de page. Un seul par vue." },
+			"headline": {
+				"displayName": "Headline",
+				"purpose": "En-têtes de cartes et sections principales."
+			},
+			"title": { "displayName": "Title", "purpose": "Sous-sections, labels de blocs de données." },
+			"body": { "displayName": "Body", "purpose": "Texte courant. Max 65-75ch." },
+			"label": { "displayName": "Label", "purpose": "Boutons, onglets, en-têtes de colonnes." },
+			"caption": {
+				"displayName": "Caption",
+				"purpose": "Badges de vote, métadonnées de second plan."
+			}
+		},
+		"shadows": [
+			{
+				"name": "ambient",
+				"value": "0 1px 2px rgba(0,0,0,0.05)",
+				"purpose": "Hover léger sur une carte interactive."
+			},
+			{
+				"name": "elevated",
+				"value": "0 4px 6px rgba(0,0,0,0.1)",
+				"purpose": "Dropdowns et sélecteurs flottants ouverts."
+			},
+			{
+				"name": "modal",
+				"value": "0 4px 12px rgba(0,0,0,0.15)",
+				"purpose": "Couche modale au-dessus de tout."
+			}
+		],
+		"motion": [
+			{
+				"name": "ease-out-standard",
+				"value": "cubic-bezier(0, 0, 0.2, 1)",
+				"purpose": "Transitions d'état par défaut (couleur, ombre, opacité)."
+			},
+			{
+				"name": "duration-short",
+				"value": "150ms",
+				"purpose": "Transitions de hover rapides (header links)."
+			},
+			{
+				"name": "duration-base",
+				"value": "200ms",
+				"purpose": "Transitions de composants (boutons, inputs, cartes)."
+			},
+			{
+				"name": "duration-data",
+				"value": "300ms",
+				"purpose": "Transitions de données (segments de vote bar)."
+			}
+		],
+		"breakpoints": [
+			{ "name": "mobile", "value": "640px" },
+			{ "name": "tablet", "value": "768px" },
+			{ "name": "desktop", "value": "1024px" }
+		]
+	},
+	"components": [
+		{
+			"name": "Bouton Primaire",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "Action principale. Bleu République, compact, retour d'état immédiat.",
+			"html": "<button class=\"ds-btn-primary\">Rechercher</button>",
+			"css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; background: #2563eb; color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; border: none; cursor: pointer; transition: background 0.2s cubic-bezier(0,0,0.2,1), box-shadow 0.2s; } .ds-btn-primary:hover { background: #1d4ed8; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.25); } .ds-btn-primary:active { background: #1d4ed8; transform: translateY(1px); }"
+		},
+		{
+			"name": "Bouton Secondaire",
+			"kind": "button",
+			"refersTo": "button-secondary",
+			"description": "Action secondaire. Surface blanche, bordure discrète.",
+			"html": "<button class=\"ds-btn-secondary\">Filtrer</button>",
+			"css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; background: #ffffff; color: #1e293b; padding: 0.5rem 1rem; border-radius: 0.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; border: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s, border-color 0.2s; } .ds-btn-secondary:hover { background: #f8fafc; border-color: #94a3b8; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); } .ds-btn-secondary:active { background: #f1f5f9; }"
+		},
+		{
+			"name": "Champ de recherche",
+			"kind": "input",
+			"refersTo": "input",
+			"description": "Input texte standard. Focus ring Bleu République.",
+			"html": "<div class=\"ds-input-wrap\"><input class=\"ds-input\" type=\"text\" placeholder=\"Rechercher un élu, un scrutin…\" /></div>",
+			"css": ".ds-input-wrap { width: 100%; max-width: 400px; } .ds-input { width: 100%; padding: 0.5rem 1rem; background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 1rem; line-height: 1.6; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+		},
+		{
+			"name": "Badge Vote",
+			"kind": "chip",
+			"refersTo": "badge",
+			"description": "Indicateur de position de vote. Couleurs sémantiques strictes.",
+			"html": "<span class=\"ds-vote-badge ds-vote-pour\">Pour</span><span class=\"ds-vote-badge ds-vote-contre\">Contre</span><span class=\"ds-vote-badge ds-vote-abstention\">Abstention</span>",
+			"css": ".ds-vote-badge { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.75rem; font-weight: 500; line-height: 1.4; } .ds-vote-pour { background: rgba(34,197,94,0.15); color: #15803d; } .ds-vote-contre { background: rgba(239,68,68,0.15); color: #b91c1c; } .ds-vote-abstention { background: rgba(245,158,11,0.15); color: #b45309; }"
+		},
+		{
+			"name": "Carte de données",
+			"kind": "card",
+			"refersTo": "button-secondary",
+			"description": "Conteneur d'une unité de données. Plat au repos, ombre Ambient au hover.",
+			"html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Scrutin n°42</h3><p class=\"ds-card-meta\">Assemblée nationale · 12 mars 2026</p><p class=\"ds-card-body\">Projet de loi relatif à la simplification de la vie des entreprises et des collectivités.</p></div>",
+			"css": ".ds-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: box-shadow 0.2s cubic-bezier(0,0,0.2,1); } .ds-card:hover { box-shadow: 0 1px 2px rgba(0,0,0,0.05); } .ds-card-title { margin: 0 0 0.25rem; font-size: 1.25rem; font-weight: 600; color: #1e293b; line-height: 1.4; } .ds-card-meta { margin: 0 0 0.75rem; font-size: 0.875rem; color: #64748b; line-height: 1.4; } .ds-card-body { margin: 0; font-size: 1rem; color: #1e293b; line-height: 1.6; }"
+		},
+		{
+			"name": "Onglets de chambre",
+			"kind": "nav",
+			"refersTo": "button-secondary",
+			"description": "Navigation par chambre parlementaire. Ligne basse, pas de fond actif.",
+			"html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">Assemblée nationale</button><button class=\"ds-tab\">Sénat</button><button class=\"ds-tab\">Parlement européen</button></nav>",
+			"css": ".ds-tabs { display: flex; border-bottom: 1px solid #e2e8f0; gap: 0; } .ds-tab { padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 2px solid transparent; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.875rem; font-weight: 500; color: #64748b; cursor: pointer; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px; white-space: nowrap; } .ds-tab:hover { color: #1e293b; } .ds-tab-active { color: #2563eb; border-bottom-color: #2563eb; } .ds-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(37,99,235,0.2); }"
+		},
+		{
+			"name": "Barre de votes (signature)",
+			"kind": "custom",
+			"refersTo": "button-secondary",
+			"description": "Répartition visuelle des votes pour/contre/abstention/absent. Composant distinctif de NosElus.",
+			"html": "<div class=\"ds-vote-wrap\"><div class=\"ds-vote-bar\"><div class=\"ds-seg ds-seg-pour\" style=\"width:62%\"></div><div class=\"ds-seg ds-seg-contre\" style=\"width:28%\"></div><div class=\"ds-seg ds-seg-abstention\" style=\"width:8%\"></div><div class=\"ds-seg ds-seg-absent\" style=\"width:2%\"></div></div><div class=\"ds-vote-legend\"><span class=\"ds-vl ds-vl-pour\">62% pour</span><span class=\"ds-vl ds-vl-contre\">28% contre</span><span class=\"ds-vl ds-vl-abstention\">8% abstention</span><span class=\"ds-vl ds-vl-absent\">2% absents</span></div></div>",
+			"css": ".ds-vote-wrap { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-vote-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #e2e8f0; gap: 1px; } .ds-seg { height: 100%; transition: width 0.3s cubic-bezier(0,0,0.2,1); } .ds-seg-pour { background: #22c55e; } .ds-seg-contre { background: #ef4444; } .ds-seg-abstention { background: #f59e0b; } .ds-seg-absent { background: #94a3b8; } .ds-vote-legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; } .ds-vl { font-size: 0.75rem; font-weight: 500; } .ds-vl-pour { color: #15803d; } .ds-vl-contre { color: #b91c1c; } .ds-vl-abstention { color: #b45309; } .ds-vl-absent { color: #64748b; }"
+		}
+	],
+	"narrative": {
+		"northStar": "Le Bureau du Citoyen",
+		"overview": "NosElus est un espace de travail civique : sobre, rangé, efficace. L'utilisateur arrive avec une question précise — qui a voté quoi, quel groupe s'est positionné comment — et l'interface lui répond sans détour. Aucun geste éditorial ne s'interpose entre l'élu et la donnée. La confiance se construit par la précision, pas par la mise en scène.\n\nLe système visuel est Restrained : des neutres teintés d'ardoise, un seul accent primaire utilisé avec parcimonie. Les couleurs sémantiques (vert/rouge/ambre) portent le sens des votes, elles ne décorent pas. Les surfaces sont plates au repos ; les ombres répondent à l'interaction. Toute couleur qui ne transporte pas d'information est supprimée.\n\nCe que ce système refuse : l'austérité froide des sites gouvernementaux français, le chrome surchargé des dashboards corporate, les palettes saturées des applications politiques partisanes. NosElus n'a pas de parti pris visuel — la neutralité est structurelle.",
+		"keyCharacteristics": [
+			"Densité modérée : les données respirent sans générosité excessive",
+			"Plat au repos, réactif aux états — les ombres signalent l'interaction, pas la hiérarchie",
+			"Hiérarchie typographique par taille et poids uniquement, jamais par couleur d'accentuation",
+			"Couleurs sémantiques (vert/rouge/ambre) strictement réservées aux résultats de vote",
+			"Accessibilité structurelle : WCAG AA sur toutes les surfaces, thème high-contrast natif"
+		],
+		"rules": [
+			{
+				"name": "The Neutrality Rule",
+				"body": "Les couleurs sémantiques (vert, rouge, ambre) sont réservées aux données de vote. Leur usage ailleurs — alerte UI, badge de statut, icône décorative — est interdit. Sur NosElus, rouge signifie 'contre', pas 'erreur'.",
+				"section": "colors"
+			},
+			{
+				"name": "The One Voice Rule",
+				"body": "Le Bleu République occupe ≤10% d'une surface donnée. Sa rareté est le point.",
+				"section": "colors"
+			},
+			{
+				"name": "The Single Scale Rule",
+				"body": "Taille et poids uniquement pour la hiérarchie. Pas d'italique décoratif, pas de lettre-espacement modifié sur le body, pas de UPPERCASE sauf sur les badges de vote.",
+				"section": "typography"
+			},
+			{
+				"name": "The Flat-By-Default Rule",
+				"body": "Une carte au repos n'a pas d'ombre — elle a une bordure. L'ombre apparaît uniquement quand un élément passe en état interactif ou flottant. Si tu t'apprêtes à ajouter box-shadow à un composant statique, utilise border: 1px solid #e2e8f0 à la place.",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"Do utiliser le Bleu République uniquement pour signaler une action ou un état actif.",
+			"Do réserver vert (#22c55e), rouge (#ef4444) et ambre (#f59e0b) aux seules données de vote.",
+			"Do laisser les surfaces plates au repos. Bordure Liséré Discret à la place d'une ombre permanente.",
+			"Do exprimer la hiérarchie par la taille et le poids uniquement.",
+			"Do respecter une largeur maximale de 65-75ch sur tout bloc de prose.",
+			"Do viser WCAG AA sur toutes les surfaces, AAA sur les données de vote et la navigation.",
+			"Do rendre le focus ring visible sur tous les éléments interactifs."
+		],
+		"donts": [
+			"Don't reproduire l'austérité froide des sites gouvernementaux français.",
+			"Don't tomber dans le dashboard corporate : pas de hero-metric, pas de tableaux surchargés de chrome.",
+			"Don't utiliser des couleurs vives ou partisanes évoquant une couleur politique identifiable.",
+			"Don't ajouter border-left ou border-right supérieur à 1px comme stripe coloré sur une carte.",
+			"Don't utiliser background-clip: text avec un gradient.",
+			"Don't dupliquer les couleurs sémantiques hors de leur contexte de vote.",
+			"Don't ouvrir une modale comme première réponse à un besoin d'interaction.",
+			"Don't ajouter des ombres à des composants statiques."
+		]
+	}
+}

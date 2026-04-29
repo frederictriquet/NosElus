@@ -368,7 +368,7 @@
 		border-radius: var(--radius-md);
 		text-decoration: none;
 		color: var(--color-text);
-		border-left: 3px solid transparent;
+		border: 1px solid var(--color-border);
 		transition: all 0.2s;
 	}
 
@@ -377,15 +377,18 @@
 	}
 
 	.voter-card[data-position='pour'] {
-		border-left-color: var(--color-success);
+		border-color: var(--color-success);
+		background: var(--color-success-bg);
 	}
 
 	.voter-card[data-position='contre'] {
-		border-left-color: var(--color-danger);
+		border-color: var(--color-danger);
+		background: var(--color-danger-bg);
 	}
 
 	.voter-card[data-position='abstention'] {
-		border-left-color: var(--color-warning);
+		border-color: var(--color-warning);
+		background: var(--color-warning-bg);
 	}
 
 	.voter-photo {
@@ -446,13 +449,13 @@
 		border-radius: var(--radius-md);
 		text-decoration: none;
 		color: var(--color-text);
-		border-left: 3px solid var(--color-border);
+		border: 1px solid var(--color-border);
 		transition: all 0.15s;
 	}
 
 	.similar-item:hover {
 		background: var(--color-bg-hover);
-		border-left-color: var(--color-primary);
+		border-color: var(--color-primary);
 	}
 
 	.similar-meta {

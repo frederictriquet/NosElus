@@ -403,7 +403,7 @@
 		padding: 2rem;
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow);
+		border: 1px solid var(--color-border);
 	}
 
 	.agreement-value {

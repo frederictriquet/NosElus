@@ -89,7 +89,7 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		box-shadow: var(--shadow);
+		border: 1px solid var(--color-border);
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;

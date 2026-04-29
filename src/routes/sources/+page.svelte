@@ -223,7 +223,7 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.25rem;
-		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
 		transition:
 			box-shadow 0.2s,
 			transform 0.2s;
@@ -283,7 +283,7 @@
 		padding: 1.5rem;
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
 	}
 
 	.license-section h2 {

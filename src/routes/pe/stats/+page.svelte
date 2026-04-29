@@ -63,7 +63,7 @@
 				distribution.abstention +
 				(distribution['non-votant'] || 0)}
 			{#if totalDistribution > 0}
-				<div class="vote-bar" style="height: 32px; border-radius: 16px; margin: 1.5rem 0;">
+				<div class="vote-bar vote-bar--stats">
 					<div
 						class="vote-bar-for"
 						style="width: {(distribution.pour / totalDistribution) * 100}%"
@@ -83,37 +83,37 @@
 						></div>
 					{/if}
 				</div>
-				<div style="display: flex; justify-content: space-around; text-align: center;">
+				<div class="vote-distribution-totals">
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">
+						<div class="dist-value dist-value--for">
 							{((distribution.pour / totalDistribution) * 100).toFixed(1)}%
 						</div>
-						<div style="color: var(--color-text-muted);">
+						<div class="dist-label">
 							Pour ({distribution.pour.toLocaleString('fr-FR')})
 						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-danger);">
+						<div class="dist-value dist-value--against">
 							{((distribution.contre / totalDistribution) * 100).toFixed(1)}%
 						</div>
-						<div style="color: var(--color-text-muted);">
+						<div class="dist-label">
 							Contre ({distribution.contre.toLocaleString('fr-FR')})
 						</div>
 					</div>
 					<div>
-						<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">
+						<div class="dist-value dist-value--abstention">
 							{((distribution.abstention / totalDistribution) * 100).toFixed(1)}%
 						</div>
-						<div style="color: var(--color-text-muted);">
+						<div class="dist-label">
 							Abstention ({distribution.abstention.toLocaleString('fr-FR')})
 						</div>
 					</div>
 					{#if distribution['non-votant'] > 0}
 						<div>
-							<div style="font-size: 1.5rem; font-weight: 700; color: var(--color-text-muted);">
+							<div class="dist-value dist-value--muted">
 								{((distribution['non-votant'] / totalDistribution) * 100).toFixed(1)}%
 							</div>
-							<div style="color: var(--color-text-muted);">
+							<div class="dist-label">
 								Non-votants ({distribution['non-votant'].toLocaleString('fr-FR')})
 							</div>
 						</div>
@@ -143,9 +143,7 @@
 						<span>{scrutinResults.rejeté}</span>
 					</div>
 				</div>
-				<div
-					style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-text-muted);"
-				>
+				<div class="results-legend">
 					<span>Adoptés</span>
 					<span>Rejetés</span>
 				</div>
@@ -226,10 +224,7 @@
 							{#each filteredGroups as group}
 								<tr>
 									<td>
-										<a
-											href="/pe/groupes/{group.groupId}"
-											style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;"
-										>
+										<a href="/pe/groupes/{group.groupId}" class="group-link">
 											<span
 												style="width: 12px; height: 12px; border-radius: 50%; background: {group.groupColor ||
 													'#ccc'}"
@@ -237,18 +232,12 @@
 											<GroupName shortName={group.groupShortName} fullName={group.groupName} />
 										</a>
 									</td>
-									<td style="text-align: right; color: var(--color-success);"
-										>{group.pourVotes.toLocaleString('fr-FR')}</td
-									>
-									<td style="text-align: right; color: var(--color-danger);"
-										>{group.contreVotes.toLocaleString('fr-FR')}</td
-									>
-									<td style="text-align: right; color: var(--color-warning);"
+									<td class="col-right col-for">{group.pourVotes.toLocaleString('fr-FR')}</td>
+									<td class="col-right col-against">{group.contreVotes.toLocaleString('fr-FR')}</td>
+									<td class="col-right col-abstention"
 										>{group.abstentionVotes.toLocaleString('fr-FR')}</td
 									>
-									<td style="text-align: right; font-weight: 600;"
-										>{group.totalVotes.toLocaleString('fr-FR')}</td
-									>
+									<td class="col-right col-total">{group.totalVotes.toLocaleString('fr-FR')}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -725,5 +714,84 @@
 		bottom: -1.25rem;
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
+	}
+
+	/* Répartition des votes - totaux */
+	.vote-distribution-totals {
+		display: flex;
+		justify-content: space-around;
+		text-align: center;
+	}
+
+	/* Légende adoptés/rejetés */
+	.results-legend {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	/* Lien groupe politique dans le tableau */
+	.group-link {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	/* Valeurs de distribution des votes */
+	.dist-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+	}
+
+	.dist-value--for {
+		color: var(--color-success);
+	}
+
+	.dist-value--against {
+		color: var(--color-danger);
+	}
+
+	.dist-value--abstention {
+		color: var(--color-warning);
+	}
+
+	.dist-value--muted {
+		color: var(--color-text-muted);
+	}
+
+	.dist-label {
+		color: var(--color-text-muted);
+	}
+
+	/* Colonnes du tableau des groupes */
+	.col-right {
+		text-align: right;
+	}
+
+	.col-for {
+		color: var(--color-success);
+	}
+
+	.col-against {
+		color: var(--color-danger);
+	}
+
+	.col-abstention {
+		color: var(--color-warning);
+	}
+
+	.col-total {
+		font-weight: 600;
+	}
+
+	/* Barre de vote dans la card de répartition */
+	.vote-bar--stats {
+		height: 32px;
+		border-radius: 16px;
+		margin: 1.5rem 0;
 	}
 </style>

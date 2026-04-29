@@ -156,7 +156,7 @@
 		background: var(--color-surface);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		box-shadow: var(--shadow);
+		border: 1px solid var(--color-border);
 	}
 
 	.form-label {
@@ -212,19 +212,19 @@
 	.verdict-confirme {
 		background: var(--color-success-bg, #dcfce7);
 		color: var(--color-success, #166534);
-		border-left: 4px solid var(--color-success, #166534);
+		border: 1px solid var(--color-success, #166534);
 	}
 
 	.verdict-infirme {
 		background: var(--color-danger-bg, #fde2e2);
 		color: var(--color-danger, #991b1b);
-		border-left: 4px solid var(--color-danger, #991b1b);
+		border: 1px solid var(--color-danger, #991b1b);
 	}
 
 	.verdict-nuance {
 		background: var(--color-warning-bg, #fef9c3);
 		color: var(--color-warning-text, #92400e);
-		border-left: 4px solid var(--color-warning, #d97706);
+		border: 1px solid var(--color-warning, #d97706);
 	}
 
 	.verdict-icon {
@@ -246,7 +246,7 @@
 	.disclaimer {
 		font-size: 0.8125rem;
 		color: var(--color-text-muted);
-		border-left: 3px solid var(--color-border, #e5e7eb);
+		border-left: 1px solid var(--color-border);
 		padding-left: 0.75rem;
 		margin-bottom: 1.5rem;
 	}

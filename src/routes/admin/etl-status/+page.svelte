@@ -514,19 +514,23 @@
 
 	/* Lignes par sévérité */
 	.row-critical {
-		border-left: 4px solid var(--color-danger);
+		border-left: 1px solid var(--color-danger);
+		background: var(--color-danger-bg);
 	}
 
 	.row-warning {
-		border-left: 4px solid var(--color-warning);
+		border-left: 1px solid var(--color-warning);
+		background: var(--color-warning-bg);
 	}
 
 	.row-info {
-		border-left: 4px solid var(--color-primary);
+		border-left: 1px solid var(--color-primary);
+		background: var(--color-primary-bg);
 	}
 
 	.row-ok {
-		border-left: 4px solid var(--color-success);
+		border-left: 1px solid var(--color-success);
+		background: var(--color-success-bg);
 	}
 
 	/* Cellules */

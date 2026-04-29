@@ -147,6 +147,7 @@
 
 	.main {
 		flex: 1 0 auto;
+		padding-top: 2rem;
 		padding-bottom: 2rem;
 	}
 

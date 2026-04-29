@@ -485,9 +485,9 @@
 	}
 
 	.success-banner {
-		background: #d4edda;
-		border: 1px solid #c3e6cb;
-		color: #155724;
+		background: var(--color-success-bg);
+		border: 1px solid var(--color-success);
+		color: var(--color-success);
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius, 6px);
 		margin-bottom: 1rem;
@@ -564,18 +564,18 @@
 	}
 
 	.reason-low_score {
-		background: #fff3cd;
-		color: #856404;
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
 	}
 
 	.reason-not_found {
-		background: #f8d7da;
-		color: #721c24;
+		background: var(--color-danger-bg);
+		color: var(--color-danger);
 	}
 
 	.reason-text_too_short {
-		background: #d1ecf1;
-		color: #0c5460;
+		background: var(--color-primary-bg);
+		color: var(--color-primary);
 	}
 
 	.score-badge {
@@ -708,50 +708,54 @@
 	}
 
 	.btn-approve {
-		background: #d4edda;
-		color: #155724;
-		border-color: #c3e6cb;
+		background: var(--color-success-bg);
+		color: var(--color-success);
+		border-color: var(--color-success);
 	}
 
 	.btn-approve:hover:not(:disabled) {
-		background: #c3e6cb;
+		background: var(--color-success);
+		color: var(--color-surface);
 	}
 
 	.btn-search {
-		background: #cce5ff;
-		color: #004085;
-		border-color: #b8daff;
+		background: var(--color-primary-bg);
+		color: var(--color-primary);
+		border-color: var(--color-primary);
 	}
 
 	.btn-search:hover:not(:disabled) {
-		background: #b8daff;
+		background: var(--color-primary);
+		color: var(--color-surface);
 	}
 
 	.btn-dismiss {
-		background: #f8d7da;
-		color: #721c24;
-		border-color: #f5c6cb;
+		background: var(--color-danger-bg);
+		color: var(--color-danger);
+		border-color: var(--color-danger);
 	}
 
 	.btn-dismiss:hover:not(:disabled) {
-		background: #f5c6cb;
+		background: var(--color-danger);
+		color: var(--color-surface);
 	}
 
 	.btn-preview {
-		background: #e2e3e5;
-		color: #383d41;
-		border-color: #d6d8db;
+		background: var(--color-bg);
+		color: var(--color-text-muted);
+		border-color: var(--color-border);
 	}
 
 	.btn-preview:hover:not(:disabled) {
-		background: #d6d8db;
+		background: var(--color-surface);
+		border-color: var(--color-text-muted);
 	}
 
 	/* Panneau de recherche */
 	.search-panel {
 		padding: 1rem;
-		background: var(--color-bg);
-		border-top: 2px solid var(--color-primary);
+		background: var(--color-primary-bg);
+		border-top: 1px solid var(--color-primary);
 	}
 
 	.search-bar {

@@ -10,7 +10,7 @@
 </svelte:head>
 
 <div class="page-header">
-	<div style="display: flex; align-items: center; gap: 1rem;">
+	<div class="group-header">
 		<div class="group-color" style="background: {data.group.color || '#ccc'}"></div>
 		<div>
 			<h1 class="page-title">{data.group.name}</h1>
@@ -201,13 +201,13 @@
 
 <section class="card" style="margin-top: 1.5rem;">
 	<h2>Informations</h2>
-	<dl style="margin-top: 1rem;">
-		<div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
-			<dt style="color: var(--color-text-muted); width: 120px;">Sigle</dt>
+	<dl class="info-dl">
+		<div class="info-dl-row">
+			<dt>Sigle</dt>
 			<dd>{data.group.shortName || '-'}</dd>
 		</div>
-		<div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
-			<dt style="color: var(--color-text-muted); width: 120px;">Chambre</dt>
+		<div class="info-dl-row">
+			<dt>Chambre</dt>
 			<dd>Sénat</dd>
 		</div>
 	</dl>
@@ -227,6 +227,12 @@
 		font-weight: 600;
 	}
 
+	.group-header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
 	.group-color {
 		width: 64px;
 		height: 64px;
@@ -243,6 +249,21 @@
 		margin: 0;
 	}
 
+	.info-dl {
+		margin-top: 1rem;
+	}
+
+	.info-dl-row {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.info-dl-row dt {
+		color: var(--color-text-muted);
+		width: 120px;
+	}
+
 	/* Stats grid */
 	.stats-grid {
 		display: grid;
@@ -256,7 +277,7 @@
 		border-radius: var(--radius-lg);
 		padding: 1.25rem;
 		text-align: center;
-		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
 	}
 
 	.stat-value {

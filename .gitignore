@@ -46,3 +46,6 @@ data/cache/
 
 # Auto Claude data directory
 .auto-claude/
+
+# Claude Code runtime state
+.claude/state/

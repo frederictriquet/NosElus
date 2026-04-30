@@ -132,6 +132,7 @@
 	.stat-label {
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	.laws-section {
@@ -141,6 +142,7 @@
 	h2 {
 		margin-bottom: 1rem;
 		font-size: 1.25rem;
+		font-weight: 700;
 	}
 
 	.laws-table {

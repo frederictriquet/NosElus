@@ -203,7 +203,7 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 0.5rem;
 	}
 
@@ -427,6 +427,7 @@
 
 	.group-count {
 		font-size: 0.75rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 

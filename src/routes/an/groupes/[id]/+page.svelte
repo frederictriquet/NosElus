@@ -185,7 +185,7 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.group-color {
@@ -291,7 +291,7 @@
 	}
 
 	.vote-title {
-		font-weight: 500;
+		font-weight: 600;
 		margin-bottom: 0.25rem;
 		overflow: hidden;
 		text-overflow: ellipsis;

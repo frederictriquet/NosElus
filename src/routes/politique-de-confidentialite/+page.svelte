@@ -206,6 +206,7 @@
 	}
 
 	.legal-section td {
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 

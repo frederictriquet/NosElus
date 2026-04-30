@@ -206,11 +206,12 @@
 
 	.source-category h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 1rem;
 		color: var(--color-text);
 		padding-bottom: 0.5rem;
 		border-bottom: 2px solid var(--color-primary);
+		letter-spacing: -0.015em;
 	}
 
 	.sources-grid {
@@ -272,6 +273,7 @@
 
 	.data-tag {
 		font-size: 0.75rem;
+		font-weight: 500;
 		padding: 0.25rem 0.5rem;
 		background: var(--color-bg);
 		border-radius: 4px;
@@ -288,7 +290,7 @@
 
 	.license-section h2 {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin: 0 0 1rem 0;
 	}
 

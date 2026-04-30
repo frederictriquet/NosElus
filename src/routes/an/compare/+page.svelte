@@ -286,7 +286,7 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin-bottom: 1rem;
 	}
 
@@ -448,6 +448,7 @@
 
 	.agreement-label {
 		font-size: 1.25rem;
+		font-weight: 500;
 		color: var(--color-text);
 		margin-top: 0.5rem;
 	}
@@ -557,6 +558,7 @@
 
 	.disagreement-title {
 		font-size: 0.875rem;
+		font-weight: 500;
 		line-height: 1.4;
 	}
 

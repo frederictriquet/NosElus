@@ -110,7 +110,7 @@
 
 	.theme-name {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin: 0;
 		flex: 1;
 	}
@@ -140,7 +140,7 @@
 	.group-name {
 		width: 4rem;
 		font-weight: 600;
-		color: var(--color-text-muted);
+		color: var(--color-text);
 		flex-shrink: 0;
 	}
 
@@ -197,7 +197,7 @@
 		font-size: 0.875rem;
 		color: var(--color-primary);
 		text-decoration: none;
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.theme-link:hover {

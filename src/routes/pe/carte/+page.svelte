@@ -199,7 +199,8 @@
 <style>
 	h2 {
 		font-size: 1.25rem;
-		font-weight: 600;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 		margin-bottom: 0.5rem;
 	}
 
@@ -307,6 +308,7 @@
 
 	.legend-count {
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	/* Bar Chart */
@@ -406,6 +408,7 @@
 	.group-count {
 		font-size: 0.75rem;
 		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 
 	.group-meps {

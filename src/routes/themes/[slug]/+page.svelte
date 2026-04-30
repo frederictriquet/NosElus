@@ -176,7 +176,7 @@
 
 	.section-title {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 700;
 		margin: 0 0 0.5rem 0;
 	}
 
@@ -262,7 +262,7 @@
 	}
 
 	.verdict-detail {
-		font-weight: 400;
+		font-weight: 500;
 		color: var(--color-text-muted);
 		font-size: 0.75rem;
 	}
@@ -332,7 +332,7 @@
 	}
 
 	.scrutin-title {
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 		margin-bottom: 0.25rem;
 		font-size: 0.9375rem;
@@ -347,7 +347,7 @@
 		padding: 0.25rem 0.625rem;
 		border-radius: 4px;
 		font-size: 0.75rem;
-		font-weight: 500;
+		font-weight: 600;
 		text-transform: capitalize;
 		flex-shrink: 0;
 	}

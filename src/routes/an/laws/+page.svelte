@@ -227,6 +227,7 @@
 
 	.law-type {
 		font-size: 0.75rem;
+		font-weight: 500;
 		color: var(--color-text-muted);
 	}
 
@@ -255,7 +256,7 @@
 
 	.law-title {
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 600;
 		margin: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;

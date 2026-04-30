@@ -239,7 +239,7 @@
 
 	.verdict-detail {
 		font-size: 0.8125rem;
-		font-weight: 400;
+		font-weight: 500;
 		opacity: 0.8;
 	}
 
@@ -280,7 +280,7 @@
 	}
 
 	.scrutin-title {
-		font-weight: 500;
+		font-weight: 600;
 		line-height: 1.4;
 		margin-bottom: 0.25rem;
 	}
@@ -330,7 +330,7 @@
 		padding: 0.25rem 0.625rem;
 		border-radius: 4px;
 		font-size: 0.75rem;
-		font-weight: 500;
+		font-weight: 600;
 		text-transform: capitalize;
 		flex-shrink: 0;
 	}

@@ -368,6 +368,8 @@
 
 	.section h2 {
 		font-size: 1.5rem;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 		margin-bottom: 1rem;
 	}
 
@@ -540,7 +542,7 @@
 
 	.check-label {
 		display: block;
-		font-weight: 500;
+		font-weight: 600;
 		font-size: 0.875rem;
 	}
 

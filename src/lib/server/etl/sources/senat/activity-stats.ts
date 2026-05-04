@@ -209,11 +209,24 @@ export async function importSenatActivityStats(config: ETLConfig): Promise<Impor
 		}
 
 		try {
-			// Fetch activity events for this senator
+			// Fetch activity events for this senator (retry avec backoff exponentiel)
 			const activityUrl = `${SENAT_CALENDAR_BASE_URL}/sen_${senator.matricule}.json`;
-			const activityResponse = await fetch(activityUrl);
+			let activityResponse: Response | null = null;
+			const maxRetries = 3;
+			for (let attempt = 0; attempt < maxRetries; attempt++) {
+				if (attempt > 0) {
+					await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+				}
+				try {
+					activityResponse = await fetch(activityUrl);
+					break;
+				} catch {
+					if (attempt === maxRetries - 1)
+						throw new Error(`fetch failed after ${maxRetries} attempts`);
+				}
+			}
 
-			if (!activityResponse.ok) {
+			if (!activityResponse || !activityResponse.ok) {
 				stats.skipped++;
 				processed++;
 				continue;
@@ -275,8 +288,7 @@ export async function importSenatActivityStats(config: ETLConfig): Promise<Impor
 			console.log(`[Senat Activity Stats] Processed ${processed}/${activeSenators.length}`);
 		}
 
-		// Small delay to avoid overwhelming the server
-		await new Promise((resolve) => setTimeout(resolve, 50));
+		await new Promise((resolve) => setTimeout(resolve, 200));
 	}
 
 	console.log(`[Senat Activity Stats] Matched ${statsToInsert.length} senators`);

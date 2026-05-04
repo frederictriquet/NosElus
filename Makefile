@@ -189,7 +189,6 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 
 etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM)
 	@echo "$(CYAN)Simplification des titres de scrutins (LLM)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:simplify-scrutins -- --category vote-final $(ARGS)
 
 etl-generate-similar: ## Pré-calculer les voisins sémantiques des scrutins (embeddings offline)
@@ -198,17 +197,14 @@ etl-generate-similar: ## Pré-calculer les voisins sémantiques des scrutins (em
 
 etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (LLM)
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:classify-scrutins
 
 etl-an-analyze-laws: ## Analyser lois AN avec LLM (Ollama)
 	@echo "$(CYAN)Analyse des lois AN avec LLM (Ollama)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:analyze-laws -- --chamber AN $(ARGS)
 
 etl-europarl-analyze-laws: ## Analyser lois PE avec LLM (Ollama)
 	@echo "$(CYAN)Analyse des lois PE avec LLM (Ollama)...$(RESET)"
-	@echo "$(YELLOW)Prérequis: ollama serve + ollama pull mistral-nemo$(RESET)"
 	npm run etl:analyze-laws -- --chamber PE $(ARGS)
 
 etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser toutes les lois avec LLM (Ollama)

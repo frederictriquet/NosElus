@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import '../app.css';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
@@ -7,7 +7,7 @@
 
 	// Déterminer quelle chambre est active
 	const activeChamber = $derived(() => {
-		const path = $page.url.pathname;
+		const path = page.url.pathname;
 		if (path.startsWith('/an')) return 'an';
 		if (path.startsWith('/senat')) return 'senat';
 		if (path.startsWith('/pe')) return 'pe';
@@ -38,7 +38,26 @@
 		</nav>
 		<div class="header-links">
 			<ThemeToggle />
-			<a href="/sources" class="header-link" class:active={$page.url.pathname === '/sources'}>
+			<a href="/calendrier" class="header-link" class:active={page.url.pathname === '/calendrier'}>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="18"
+					height="18"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+					<line x1="16" y1="2" x2="16" y2="6"></line>
+					<line x1="8" y1="2" x2="8" y2="6"></line>
+					<line x1="3" y1="10" x2="21" y2="10"></line>
+				</svg>
+				<span class="link-label">Calendrier</span>
+			</a>
+			<a href="/sources" class="header-link" class:active={page.url.pathname === '/sources'}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="18"
@@ -59,7 +78,7 @@
 			<a
 				href="/stats/data-quality"
 				class="header-link"
-				class:active={$page.url.pathname === '/stats/data-quality'}
+				class:active={page.url.pathname === '/stats/data-quality'}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +100,7 @@
 			<a
 				href="/recherche"
 				class="header-link"
-				class:active={$page.url.pathname.startsWith('/recherche')}
+				class:active={page.url.pathname.startsWith('/recherche')}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.3](https://github.com/frederictriquet/NosElus/compare/noselus-v0.0.2...noselus-v0.0.3) (2026-05-05)
+
+
+### Features
+
+* add /calendrier page with per-chamber indicators and navigation ([0165227](https://github.com/frederictriquet/NosElus/commit/016522777d7b2fed5addadf1a0d941ae3d3b12a7))
+* calendar page with per-chamber indicators ([ded660d](https://github.com/frederictriquet/NosElus/commit/ded660d5c55e5ac6ecdaf17aaf3b74e86a4c3447))
+* **design:** apply bolder pass sitewide — stronger hierarchy and weight contrast ([#59](https://github.com/frederictriquet/NosElus/issues/59)) ([1d1870d](https://github.com/frederictriquet/NosElus/commit/1d1870d7c5355b6efcb166d185e4922f7fac88f0))
+* **semantic:** complete semantic search feature ([#57](https://github.com/frederictriquet/NosElus/issues/57)) ([896ff2d](https://github.com/frederictriquet/NosElus/commit/896ff2dc78ac3848b79fbd401b4a5264ec4fcf7f))
+
+
+### Bug Fixes
+
+* add retry logic and increase delay in senat activity ETL ([a02458d](https://github.com/frederictriquet/NosElus/commit/a02458d59e36e34adbf084ee9c32070ae51fb1a1))
+
 ## [0.0.2](https://github.com/frederictriquet/NosElus/compare/noselus-v0.0.1...noselus-v0.0.2) (2026-04-25)
 
 

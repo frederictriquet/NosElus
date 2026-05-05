@@ -32,6 +32,7 @@
 			Vous avez lu une affirmation politique ? Vérifiez-la →
 		</a>
 		<a href="/themes" class="verifier-link"> Explorez par thème : retraites, pouvoir d'achat… → </a>
+		<a href="/calendrier" class="verifier-link"> Calendrier des votes → </a>
 	</div>
 </div>
 

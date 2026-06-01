@@ -1,7 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { db, actors, organs, mandates } from '$lib/server/db';
 import { ilike, or, eq, sql, desc } from 'drizzle-orm';
-import { searchLaws, searchScrutins, extractGroupVote } from '$lib/server/api/helpers';
+import {
+	searchLaws,
+	searchScrutins,
+	extractGroupVote,
+	type SearchFilters
+} from '$lib/server/api/helpers';
 
 // Cache en mémoire pour la liste des groupes parlementaires (table stable, TTL 1h)
 let groupsCache: Array<{ id: string; shortName: string | null }> | null = null;
@@ -22,13 +27,27 @@ function escapeRegExp(s: string): string {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function parseSearchFilters(url: URL): SearchFilters {
+	const chamber = url.searchParams.get('chamber') as 'AN' | 'PE' | null;
+	const result = url.searchParams.get('result') as 'adopté' | 'rejeté' | null;
+	const yearStr = url.searchParams.get('year');
+	const year = yearStr ? parseInt(yearStr, 10) : undefined;
+	return {
+		chamber: chamber ?? undefined,
+		result: result ?? undefined,
+		year: Number.isFinite(year) ? year : undefined
+	};
+}
+
 export const load: PageServerLoad = async ({ url }) => {
 	const query = url.searchParams.get('q') || '';
+	const filters = parseSearchFilters(url);
 	const limit = 20;
 
 	if (!query || query.length < 2) {
 		return {
 			query,
+			filters,
 			results: null
 		};
 	}
@@ -122,7 +141,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		: query;
 
 	// Search scrutins (fulltext + ranking ts_rank, sans le nom de groupe)
-	const rawScrutins = await searchScrutins(searchQuery || query, limit);
+	const rawScrutins = await searchScrutins(searchQuery || query, limit, filters);
 
 	// Enrichir avec le % de vote du groupe détecté
 	const scrutinsResults = rawScrutins.map((s) => ({
@@ -136,10 +155,11 @@ export const load: PageServerLoad = async ({ url }) => {
 	}));
 
 	// Search laws (full-text search, ranking ts_rank)
-	const lawsResults = await searchLaws(query, limit);
+	const lawsResults = await searchLaws(query, limit, filters);
 
 	return {
 		query,
+		filters,
 		matchedGroupShortName: matchedGroup?.shortName ?? null,
 		results: {
 			actors: actorsWithGroups,

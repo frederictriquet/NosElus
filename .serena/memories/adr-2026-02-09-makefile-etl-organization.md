@@ -111,7 +111,7 @@ etl-pe-enrich-groups: ## Enrichit les noms des groupes PE
 ##@ ETL - Enrichissement & Analyse
 
 etl-an-classify-scrutins: ## Classifier les scrutins AN par catégorie sémantique
-etl-analyze-laws: ## Analyser les lois avec LLM (Ollama)
+etl-analyze-laws: ## Analyser les lois avec LLM
 etl-an-law-texts: ## Import textes complets AN via Légifrance PISTE
 
 ##@ ETL - Statistiques d'activité

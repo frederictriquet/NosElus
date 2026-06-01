@@ -113,7 +113,7 @@ db-reset: ## Reset complet de la DB (ATTENTION: destructif!)
 etl-an-download: ## Télécharge les données de l'Assemblée Nationale
 	@echo "$(CYAN)Téléchargement des données AN...$(RESET)"
 	@mkdir -p $(ETL_DATA_DIR)
-	npm run etl:an-download
+	ETL_ASSEMBLEE_LEGISLATURE=$(ETL_LEGISLATURE) npm run etl:an-download
 
 etl-an-all: ## Import complet AN (organs, actors, mandates, scrutins, votes)
 	@echo "$(CYAN)Import complet AN - Legislature $(ETL_LEGISLATURE)$(RESET)"
@@ -185,7 +185,7 @@ etl-europarl-enrich-groups: ## Enrichit noms des groupes PE
 	@echo "$(CYAN)Enrichissement des noms de groupes PE...$(RESET)"
 	npm run etl:europarl-enrich-groups
 
-##@ ETL - Analyse IA (nécessite Ollama)
+##@ ETL - Analyse IA
 
 etl-simplify-scrutins: ## Générer titres simplifiés pour les scrutins AN (LLM)
 	@echo "$(CYAN)Simplification des titres de scrutins (LLM)...$(RESET)"
@@ -199,15 +199,15 @@ etl-an-classify-scrutins: ## Classifier scrutins AN par catégorie sémantique (
 	@echo "$(CYAN)Classification des scrutins (LLM)...$(RESET)"
 	npm run etl:classify-scrutins
 
-etl-an-analyze-laws: ## Analyser lois AN avec LLM (Ollama)
-	@echo "$(CYAN)Analyse des lois AN avec LLM (Ollama)...$(RESET)"
+etl-an-analyze-laws: ## Analyser lois AN avec LLM
+	@echo "$(CYAN)Analyse des lois AN avec LLM...$(RESET)"
 	npm run etl:analyze-laws -- --chamber AN $(ARGS)
 
-etl-europarl-analyze-laws: ## Analyser lois PE avec LLM (Ollama)
-	@echo "$(CYAN)Analyse des lois PE avec LLM (Ollama)...$(RESET)"
+etl-europarl-analyze-laws: ## Analyser lois PE avec LLM
+	@echo "$(CYAN)Analyse des lois PE avec LLM...$(RESET)"
 	npm run etl:analyze-laws -- --chamber PE $(ARGS)
 
-etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser toutes les lois avec LLM (Ollama)
+etl-analyze-laws: etl-an-analyze-laws etl-europarl-analyze-laws ## Analyser toutes les lois avec LLM
 
 ##@ ETL - Enrichissement
 

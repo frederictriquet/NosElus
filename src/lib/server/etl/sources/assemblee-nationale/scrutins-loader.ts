@@ -12,6 +12,18 @@ const SCRUTINS_URLS: Record<string, string> = {
 // Use persistent cache directory (survives reboots)
 const CACHE_DIR = process.env.ETL_CACHE_DIR || path.join(process.cwd(), 'data', 'cache');
 
+// SCRUTINS_CACHE_TTL_HOURS : durée de validité du cache en heures (défaut: 24).
+// Mettre à 0 pour désactiver le TTL et conserver le comportement permanent.
+const CACHE_TTL_MS = Number(process.env.SCRUTINS_CACHE_TTL_HOURS ?? 24) * 60 * 60 * 1000;
+
+function isCacheFresh(dir: string): boolean {
+	const jsonDir = path.join(dir, 'json');
+	if (!fs.existsSync(jsonDir)) return false;
+	if (CACHE_TTL_MS === 0) return true;
+	const { mtimeMs } = fs.statSync(jsonDir);
+	return Date.now() - mtimeMs < CACHE_TTL_MS;
+}
+
 function getScrutinsDir(legislature: string): string {
 	return path.join(CACHE_DIR, `scrutins_${legislature}`);
 }
@@ -30,10 +42,14 @@ export async function downloadScrutins(legislature: string): Promise<void> {
 
 	const dir = getScrutinsDir(legislature);
 
-	// Check if data already exists
-	if (fs.existsSync(path.join(dir, 'json'))) {
-		console.log(`[AN Scrutins] Legislature ${legislature} already extracted, skipping download`);
+	// Vérifier la fraîcheur du cache (TTL via SCRUTINS_CACHE_TTL_HOURS)
+	if (isCacheFresh(dir)) {
+		console.log(`[AN Scrutins] Legislature ${legislature} cache frais, téléchargement ignoré`);
 		return;
+	}
+	if (fs.existsSync(path.join(dir, 'json'))) {
+		console.log(`[AN Scrutins] Legislature ${legislature} cache expiré, re-téléchargement...`);
+		fs.rmSync(path.join(dir, 'json'), { recursive: true, force: true });
 	}
 
 	console.log(`[AN Scrutins] Downloading scrutins for legislature ${legislature}...`);
@@ -59,9 +75,8 @@ export async function loadScrutins(legislature: string): Promise<ANScrutin[]> {
 	const dir = getScrutinsDir(legislature);
 	const jsonDir = path.join(dir, 'json');
 
-	if (!fs.existsSync(jsonDir)) {
-		await downloadScrutins(legislature);
-	}
+	// downloadScrutins gère le TTL en interne
+	await downloadScrutins(legislature);
 
 	const files = fs.readdirSync(jsonDir).filter((f) => f.endsWith('.json'));
 	console.log(`[AN Scrutins] Loading ${files.length} scrutins for legislature ${legislature}...`);
@@ -86,7 +101,6 @@ export async function loadAllScrutins(): Promise<ANScrutin[]> {
 	const allScrutins: ANScrutin[] = [];
 
 	for (const legislature of Object.keys(SCRUTINS_URLS)) {
-		await downloadScrutins(legislature);
 		const scrutins = await loadScrutins(legislature);
 		allScrutins.push(...scrutins);
 	}

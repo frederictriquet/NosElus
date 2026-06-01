@@ -278,7 +278,7 @@ if (fullText.length > MAX_DESCRIPTION_LENGTH) {
 | **Fichiers créés**        | 3 (client.ts, import-law-texts-piste.ts, ADR-003)    |
 | **Fichiers modifiés**     | 5 (UI, Makefile, package.json, .env.example, README) |
 | **Lois enrichies**        | 32 (avec texte complet)                              |
-| **Résumés IA générés**    | 50 (Mistral via Ollama)                              |
+| **Résumés IA générés**    | 50                                                   |
 | **Success rate matching** | 96% (48/50 titres)                                   |
 | **Build TypeScript**      | 0 erreurs                                            |
 | **Temps build**           | 21.98s                                               |

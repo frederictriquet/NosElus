@@ -37,7 +37,8 @@ export async function detectClaude(): Promise<boolean> {
  */
 export async function callClaude(prompt: string): Promise<string> {
 	return new Promise((resolve, reject) => {
-		const proc = spawn('claude', ['--print', '--output-format', 'text'], {
+		const model = process.env.CLAUDE_ETL_MODEL ?? 'claude-sonnet-4-6';
+		const proc = spawn('claude', ['--print', '--output-format', 'text', '--model', model], {
 			stdio: ['pipe', 'pipe', 'pipe']
 		});
 

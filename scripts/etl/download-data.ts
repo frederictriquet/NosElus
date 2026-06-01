@@ -25,7 +25,7 @@ const DATASETS: DatasetInfo[] = [
 	},
 	{
 		name: 'Scrutins',
-		url: `${BASE_URL}/${LEGISLATURE}/vp/scrutins/Scrutins.json.zip`,
+		url: `${BASE_URL}/${LEGISLATURE}/loi/scrutins/Scrutins.json.zip`,
 		outputDir: 'scrutins'
 	}
 ];

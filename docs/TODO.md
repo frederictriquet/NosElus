@@ -126,7 +126,7 @@
 
 ## ETL / Données
 
-- ETL IA avec Ollama (classification + analyse) — prérequis : `ollama serve` (en cours)
+- ETL IA (classification + analyse via LLM) — en cours
 - Investigation DOSLEG Sénat — probablement exploitable
 - Forcer re-téléchargement des données ETL depuis zéro (documentation)
 - Traiter le TODO `src/routes/api/quiz/group-votes/+server.ts:98` — legislature PE-10

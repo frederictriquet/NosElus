@@ -43,6 +43,13 @@
 		}
 	}
 
+	function applyFilter(key: string, value: string) {
+		const params = new URLSearchParams($page.url.searchParams);
+		if (value) params.set(key, value);
+		else params.delete(key);
+		goto(`?${params}`, { keepFocus: true });
+	}
+
 	function getChamberLabel(chamber: string | null): string {
 		switch (chamber) {
 			case 'AN':
@@ -53,19 +60,6 @@
 				return 'Eurodéputé';
 			default:
 				return 'Élu';
-		}
-	}
-
-	function getChamberRoute(chamber: string | null): string {
-		switch (chamber) {
-			case 'AN':
-				return 'deputes';
-			case 'SENAT':
-				return 'senateurs';
-			case 'PE':
-				return 'eurodeputes';
-			default:
-				return 'deputes';
 		}
 	}
 
@@ -122,6 +116,41 @@
 		<button type="submit" class="btn btn-primary">Rechercher</button>
 	</form>
 </div>
+
+{#if data.query && data.query.length >= 2}
+	<div class="filters-row">
+		<select
+			value={data.filters?.chamber ?? ''}
+			onchange={(e) => applyFilter('chamber', e.currentTarget.value)}
+			class="input filter-select"
+		>
+			<option value="">Toutes les chambres</option>
+			<option value="AN">Assemblée nationale</option>
+			<option value="PE">Parlement européen</option>
+		</select>
+
+		<select
+			value={data.filters?.result ?? ''}
+			onchange={(e) => applyFilter('result', e.currentTarget.value)}
+			class="input filter-select"
+		>
+			<option value="">Tous les résultats</option>
+			<option value="adopté">Adopté</option>
+			<option value="rejeté">Rejeté</option>
+		</select>
+
+		<select
+			value={data.filters?.year?.toString() ?? ''}
+			onchange={(e) => applyFilter('year', e.currentTarget.value)}
+			class="input filter-select"
+		>
+			<option value="">Toutes les années</option>
+			{#each Array.from({ length: new Date().getFullYear() - 2017 + 1 }, (_, i) => 2017 + i).reverse() as year}
+				<option value={year.toString()}>{year}</option>
+			{/each}
+		</select>
+	</div>
+{/if}
 
 {#if data.results}
 	<div class="results-summary">
@@ -301,6 +330,43 @@
 		flex: 1;
 		font-size: 1.125rem;
 		padding: 0.75rem 1rem;
+	}
+
+	/* Ligne de filtres : flex horizontal compact sous la barre de recherche */
+	.filters-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 1.5rem;
+	}
+
+	/* Select compact — écrase le width: 100% hérité de .input */
+	.filter-select {
+		width: fit-content;
+		min-width: 0;
+		font-size: 0.875rem;
+		padding: 0.375rem 2rem 0.375rem 0.75rem;
+		cursor: pointer;
+		background-color: var(--color-bg-secondary, var(--color-surface));
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md, var(--radius));
+		color: var(--color-text);
+		/* Flèche native conservée */
+		appearance: auto;
+	}
+
+	.filter-select:focus {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+
+	/* Sur mobile : les selects peuvent passer à la ligne */
+	@media (max-width: 640px) {
+		.filter-select {
+			flex: 1 1 auto;
+		}
 	}
 
 	.results-summary {

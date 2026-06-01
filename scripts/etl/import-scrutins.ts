@@ -41,16 +41,6 @@ async function main() {
 	}
 	console.log('');
 
-	if (!config.dataDir) {
-		console.error('ERROR: ETL_DATA_DIR environment variable is required');
-		console.error('');
-		console.error('Please download the Assemblée nationale data first:');
-		console.error('  1. Clone: git clone https://git.tricoteuses.fr/data/assemblee.git');
-		console.error('  2. Set: export ETL_DATA_DIR=/path/to/assemblee');
-		console.error('');
-		process.exit(1);
-	}
-
 	try {
 		// Import scrutins first
 		console.log('\n--- Importing Scrutins ---');

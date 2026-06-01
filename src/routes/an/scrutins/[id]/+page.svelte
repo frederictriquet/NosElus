@@ -107,9 +107,9 @@
 			class:copy-error={copyError}
 			onclick={copyVoteCard}
 			disabled={resolvedGroups.length === 0}
-			title="Copier un résumé du vote prêt à partager"
+			title="Copier une synthèse du vote prête à partager"
 		>
-			{copied ? '✓ Copié !' : copyError ? '✗ Échec de la copie' : '📋 Copier le résumé'}
+			{copied ? '✓ Copié !' : copyError ? '✗ Échec de la copie' : '📋 Copier la synthèse'}
 		</button>
 	</div>
 </div>

@@ -32,7 +32,7 @@ Remplacer les résumés LLM basés sur titre par des résumés basés sur le tex
 ## Résultats Livrés
 
 - **32 lois enrichies** avec textes complets Légifrance
-- **50 résumés IA générés** (Mistral via Ollama)
+- **50 résumés IA générés**
 - **96% matching success rate** (48/50 scrutins)
 - **0 erreurs TypeScript**, build réussi
 - **PR #8** : feat(laws): add Légifrance PISTE integration for full law texts

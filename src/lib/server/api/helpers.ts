@@ -23,6 +23,7 @@ import {
 	inArray,
 	not,
 	gte,
+	lte,
 	count,
 	desc,
 	asc,
@@ -1164,26 +1165,44 @@ const lawFields = {
 	theme: laws.theme
 };
 
-export async function searchLaws(query: string, limit = 20) {
+export interface SearchFilters {
+	chamber?: 'AN' | 'PE';
+	result?: 'adopté' | 'rejeté';
+	year?: number;
+}
+
+export async function searchLaws(query: string, limit = 20, filters: SearchFilters = {}) {
 	const expandedQuery = await expandQueryTerms(query);
 	const searchTerm = `%${query}%`;
 	const authorMatch = authorMatchLawIds(searchTerm);
 
+	// Construction des conditions de filtre optionnelles
+	const filterConds: ReturnType<typeof eq>[] = [];
+	if (filters.chamber === 'AN') filterConds.push(sql`${laws.legislature} NOT LIKE 'PE-%'`);
+	if (filters.chamber === 'PE') filterConds.push(sql`${laws.legislature} LIKE 'PE-%'`);
+	if (filters.year) {
+		filterConds.push(gte(laws.depositDate, `${filters.year}-01-01`));
+		filterConds.push(lte(laws.depositDate, `${filters.year}-12-31`));
+	}
+
 	try {
-		const tsQuery = sql`plainto_tsquery('french', ${expandedQuery})`;
+		const tsQuery = sql`websearch_to_tsquery('french', ${expandedQuery})`;
+		const baseWhere = or(sql`${lawsSearchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatch));
 
 		return await db
 			.select(lawFields)
 			.from(laws)
-			.where(or(sql`${lawsSearchVector} @@ ${tsQuery}`, inArray(laws.id, authorMatch)))
+			.where(and(baseWhere, ...filterConds))
 			.orderBy(desc(sql`ts_rank(${lawsSearchVector}, ${tsQuery})`))
 			.limit(limit);
 	} catch {
 		// Fallback ILIKE si tsquery échoue
+		const baseWhere = or(ilike(laws.title, searchTerm), inArray(laws.id, authorMatch));
+
 		return db
 			.select(lawFields)
 			.from(laws)
-			.where(or(ilike(laws.title, searchTerm), inArray(laws.id, authorMatch)))
+			.where(and(baseWhere, ...filterConds))
 			.orderBy(desc(laws.depositDate))
 			.limit(limit);
 	}
@@ -1280,20 +1299,30 @@ async function stripScrutinNoiseWords(query: string): Promise<string> {
  *    absents des titres parlementaires formels (acronymes, noms courants…)
  * Fallback ILIKE si tsquery échoue.
  */
-export async function searchScrutins(query: string, limit = 20) {
+export async function searchScrutins(query: string, limit = 20, filters: SearchFilters = {}) {
 	const expandedQuery = await expandQueryTerms(query);
 	const ftsQuery = await stripScrutinNoiseWords(expandedQuery);
+
+	// Construction des conditions de filtre optionnelles
+	const filterConds: ReturnType<typeof eq>[] = [];
+	if (filters.chamber === 'AN') filterConds.push(sql`${scrutins.legislature} NOT LIKE 'PE-%'`);
+	if (filters.chamber === 'PE') filterConds.push(sql`${scrutins.legislature} LIKE 'PE-%'`);
+	if (filters.result) filterConds.push(eq(scrutins.result, filters.result));
+	if (filters.year) {
+		filterConds.push(gte(scrutins.date, `${filters.year}-01-01`));
+		filterConds.push(lte(scrutins.date, `${filters.year}-12-31`));
+	}
+
 	try {
 		// 1. Scrutins dont le titre/description matche directement
+		const directFts = sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')) @@ websearch_to_tsquery('french', ${ftsQuery})`;
 		const direct = await db
 			.select(scrutinFields)
 			.from(scrutins)
-			.where(
-				sql`to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')) @@ plainto_tsquery('french', ${ftsQuery})`
-			)
+			.where(and(directFts, ...filterConds))
 			.orderBy(
 				desc(
-					sql`ts_rank(to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')), plainto_tsquery('french', ${ftsQuery}))`
+					sql`ts_rank(to_tsvector('french', coalesce(${scrutins.title}, '') || ' ' || coalesce(${scrutins.description}, '')), websearch_to_tsquery('french', ${ftsQuery}))`
 				)
 			)
 			.limit(limit);
@@ -1309,8 +1338,9 @@ export async function searchScrutins(query: string, limit = 20) {
 			.innerJoin(laws, eq(scrutins.lawId, laws.id))
 			.where(
 				and(
-					sql`${lawsVec} @@ plainto_tsquery('french', ${ftsQuery})`,
-					sql`NOT (${scrutinsVec} @@ plainto_tsquery('french', ${ftsQuery}))`
+					sql`${lawsVec} @@ websearch_to_tsquery('french', ${ftsQuery})`,
+					sql`NOT (${scrutinsVec} @@ websearch_to_tsquery('french', ${ftsQuery}))`,
+					...filterConds
 				)
 			)
 			.orderBy(desc(scrutins.date))
@@ -1332,7 +1362,8 @@ export async function searchScrutins(query: string, limit = 20) {
 					and(
 						inArray(scrutinSimilar.scrutinId, foundIds),
 						not(inArray(scrutins.id, foundIds)),
-						gte(scrutinSimilar.score, 0.8)
+						gte(scrutinSimilar.score, 0.8),
+						...filterConds
 					)
 				)
 				.orderBy(desc(scrutinSimilar.score))
@@ -1343,10 +1374,12 @@ export async function searchScrutins(query: string, limit = 20) {
 		return combined;
 	} catch {
 		// Fallback ILIKE si tsquery échoue
+		const fallbackWhere = and(ilike(scrutins.title, `%${query}%`), ...filterConds);
+
 		return db
 			.select(scrutinFields)
 			.from(scrutins)
-			.where(ilike(scrutins.title, `%${query}%`))
+			.where(fallbackWhere)
 			.orderBy(desc(scrutins.date))
 			.limit(limit);
 	}

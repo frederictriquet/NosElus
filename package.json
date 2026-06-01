@@ -91,8 +91,8 @@
 		"@types/d3-scale": "^4.0.9",
 		"@types/d3-shape": "^3.1.8",
 		"@types/leaflet": "^1.9.21",
-		"@vitest/coverage-v8": "^4.0.18",
-		"@vitest/ui": "^4.0.15",
+		"@vitest/coverage-v8": "^4.1.8",
+		"@vitest/ui": "^4.1.8",
 		"drizzle-kit": "^0.31.8",
 		"happy-dom": "^20.9.0",
 		"husky": "^9.1.7",
@@ -105,7 +105,7 @@
 		"tsx": "^4.21.0",
 		"typescript": "^5.6.3",
 		"vite": "^5.4.11",
-		"vitest": "^4.0.15"
+		"vitest": "^4.1.8"
 	},
 	"overrides": {
 		"cookie": "^0.7.0",

@@ -114,7 +114,7 @@
 	"dependencies": {
 		"@ethercorps/sveltekit-og": "^4.2.1",
 		"@frederictriquet/femtologger": "^0.1.4",
-		"@tricoteuses/assemblee": "^2.5.31",
+		"@tricoteuses/assemblee": "^3.2.13",
 		"d3-scale": "^4.0.2",
 		"d3-shape": "^3.2.0",
 		"dotenv": "^17.2.4",

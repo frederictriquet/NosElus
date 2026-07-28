@@ -84,7 +84,7 @@
 		"@stryker-mutator/vitest-runner": "^9.4.0",
 		"@sveltejs/adapter-auto": "^3.2.5",
 		"@sveltejs/adapter-node": "^5.4.0",
-		"@sveltejs/kit": "^2.58.0",
+		"@sveltejs/kit": "^2.70.1",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.9",
